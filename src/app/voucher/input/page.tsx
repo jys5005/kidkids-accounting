@@ -64,8 +64,9 @@ export default function VoucherInputPage() {
     recognition.continuous = false
 
     recognition.onstart = () => setListeningRowId(rowId)
-    recognition.onresult = (e: { results: { 0: { 0: { transcript: string } } }[] }) => {
-      const text = e.results[0][0].transcript
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (e: any) => {
+      const text = e.results[0][0].transcript as string
       setRows(prev => prev.map(r => r.id === rowId ? { ...r, summary: r.summary ? `${r.summary} ${text}` : text } : r))
     }
     recognition.onend = () => { setListeningRowId(null); recognitionRef.current = null }
