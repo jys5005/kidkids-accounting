@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { categories } from './Sidebar'
 
@@ -19,9 +19,22 @@ function useClock() {
   return time
 }
 
+function useUser() {
+  const [user, setUser] = useState<{ userId: string; type: string } | null>(null)
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setUser(data))
+      .catch(() => {})
+  }, [])
+  return user
+}
+
 export default function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const clock = useClock()
+  const user = useUser()
 
   const activeKey = categories.find((cat) =>
     cat.menus.some((m) =>
@@ -87,9 +100,21 @@ export default function Header() {
                   </svg>
                 </div>
                 <div className="leading-none">
-                  <p className="text-[11px] font-medium text-slate-700">홍길동</p>
-                  <p className="text-[9px] text-slate-400">대표</p>
+                  <p className="text-[11px] font-medium text-slate-700">{user?.userId ?? '...'}</p>
+                  <p className="text-[9px] text-slate-400">{user?.type === 'center' ? '원장' : user?.type === 'admin' ? '관리자' : '교사'}</p>
                 </div>
+                <button
+                  onClick={async () => {
+                    await fetch('/api/auth/logout', { method: 'POST' })
+                    window.location.href = 'http://localhost:4000/login'
+                  }}
+                  className="ml-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors"
+                  title="로그아웃"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
