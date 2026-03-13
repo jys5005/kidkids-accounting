@@ -66,6 +66,7 @@ const categories: MenuCategory[] = [
           { label: '급식비정산서', href: '/reconciliation/meal' },
         ],
       },
+      { label: '데이터이관', href: '/data-migration' },
       { label: '설정', href: '/settings' },
     ],
   },

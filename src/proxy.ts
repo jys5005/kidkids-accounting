@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/api/auth']
+const PUBLIC_PATHS = ['/api/auth', '/api/by24', '/api/kidshome', '/api/sunote']
 const TONGHAP_URL = process.env.TONGHAP_URL || 'http://localhost:4000'
 
 export function proxy(request: NextRequest) {
