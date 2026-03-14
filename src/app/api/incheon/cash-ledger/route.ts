@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PLATFORM_URL = 'http://localhost:4000'
-
 export const maxDuration = 600
 
-/** Proxy to childcare-platform sunote transfer API */
+const PLATFORM_URL = 'http://localhost:4000'
+
+/** Proxy to childcare-platform incheon cash-ledger API */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const res = await fetch(`${PLATFORM_URL}/api/sunote/transfer`, {
+    const res = await fetch(`${PLATFORM_URL}/api/incheon/cash-ledger`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const msg = e instanceof Error ? e.message : String(e)
     if (msg.includes('abort') || msg.includes('timeout')) {
       return NextResponse.json(
-        { error: '이관 처리 시간이 초과되었습니다. (10분)' },
+        { error: '스크래핑 시간 초과 (10분)' },
         { status: 504 }
       )
     }

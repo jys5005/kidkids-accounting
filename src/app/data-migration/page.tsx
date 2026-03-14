@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 
 interface CashLedgerRow {
@@ -31,15 +31,15 @@ interface CashLedgerResult {
 }
 
 const SOURCE_OPTIONS = [
-  { value: 'by24', label: '보육나라', url: 'by24.co.kr', features: ['현금출납부'] },
-  { value: 'prime', label: '프라임전자장부', url: '', features: [] },
-  { value: 'kidshome', label: '키즈홈', url: 'ikidshome.co.kr', features: ['현금출납부'] },
-  { value: 'kidkids', label: '키드키즈', url: 'kidkids.net', features: [] },
-  { value: 'easys', label: '이편한시스템', url: '', features: [] },
-  { value: 'mores', label: '더편한시스템', url: '', features: [] },
-  { value: 'incheon', label: '인천시어린이집관리시스템', url: '', features: [] },
-  { value: 'seoul', label: '서울시어린이집관리시스템', url: '', features: [] },
-  { value: 'wisean', label: '와이즈안', url: '', features: [] },
+  { value: 'by24', label: '보육나라', url: 'by24.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
+  { value: 'prime', label: '프라임전자장부', url: '', features: [], authType: 'idpw' as const },
+  { value: 'kidshome', label: '키즈홈', url: 'ikidshome.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
+  { value: 'kidkids', label: '키드키즈', url: 'kidkids.net', features: [], authType: 'idpw' as const },
+  { value: 'easys', label: '이편한시스템', url: '', features: [], authType: 'idpw' as const },
+  { value: 'mores', label: '더편한시스템', url: '', features: [], authType: 'idpw' as const },
+  { value: 'incheon', label: '인천시어린이집관리시스템', url: 'aincheon.co.kr', features: ['현금출납부'], authType: 'cert' as const },
+  { value: 'seoul', label: '서울시어린이집관리시스템', url: '', features: [], authType: 'idpw' as const },
+  { value: 'wisean', label: '와이즈안', url: '', features: [], authType: 'idpw' as const },
 ] as const
 
 type SourceType = typeof SOURCE_OPTIONS[number]['value']
@@ -226,6 +226,25 @@ export default function DataMigrationPage() {
   const [startYm, setStartYm] = useState('')
   const [endYm, setEndYm] = useState('')
 
+  // 프로그램 인증 정보 (등록된 정보 자동 로드)
+  const [programAuth, setProgramAuth] = useState<{ authType: string; hasUserId?: boolean; hasUserPw?: boolean; certName?: string; hasCertPw?: boolean; savedAt?: string } | null>(null)
+  const [authLoading, setAuthLoading] = useState(false)
+
+  // 소스 변경 시 등록된 인증 정보 자동 로드
+  useEffect(() => {
+    setAuthLoading(true)
+    setProgramAuth(null)
+    fetch(`/api/settings/program-auth?programId=${source}`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data) {
+          setProgramAuth(json.data)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setAuthLoading(false))
+  }, [source])
+
   // 월 옵션 생성
   const monthOptions = (() => {
     const opts: { value: string; label: string }[] = []
@@ -243,9 +262,15 @@ export default function DataMigrationPage() {
 
   // 출발지에서 데이터 가져오기
   const handleFetch = async () => {
-    if (!sourceId || !sourcePw) {
-      setError(`${currentSource.label} 아이디/비밀번호를 입력하세요.`)
-      return
+    // 등록된 인증 정보가 없고, 직접 입력도 없는 경우
+    if (!programAuth) {
+      if (currentSource.authType === 'cert') {
+        setError('인증서가 등록되지 않았습니다. 통합e 인증설정에서 등록하세요.')
+        return
+      } else if (!sourceId || !sourcePw) {
+        setError(`${currentSource.label} 아이디/비밀번호를 입력하세요.`)
+        return
+      }
     }
     setLoading(true)
     setError('')
@@ -254,10 +279,15 @@ export default function DataMigrationPage() {
     setTransferResult('')
 
     try {
+      const authFields = programAuth
+        ? (currentSource.authType === 'cert' ? { useSavedCert: true } : { useSavedAuth: true })
+        : currentSource.authType === 'cert'
+          ? { useSavedCert: true }
+          : { userId: sourceId, password: sourcePw }
       const body =
         mode === 'single'
-          ? { userId: sourceId, password: sourcePw, yearMonth }
-          : { userId: sourceId, password: sourcePw, startYm, endYm }
+          ? { ...authFields, yearMonth }
+          : { ...authFields, startYm, endYm }
 
       const res = await fetch(`/api/${source}/cash-ledger`, {
         method: 'POST',
@@ -382,6 +412,7 @@ export default function DataMigrationPage() {
           userId: sunoteId,
           password: sunotePw,
           data: [monthData],
+          mode: source === 'kidshome' ? 'excel' : undefined,
           customMappings: Object.keys(customMappings).length > 0 ? customMappings : undefined,
         }),
       })
@@ -433,6 +464,7 @@ export default function DataMigrationPage() {
             userId: sunoteId,
             password: sunotePw,
             data: [monthData],
+            mode: source === 'kidshome' ? 'excel' : undefined,
             customMappings: Object.keys(customMappings).length > 0 ? customMappings : undefined,
           }),
         })
@@ -618,26 +650,69 @@ export default function DataMigrationPage() {
           </div>
 
           <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">아이디</label>
-              <input
-                type="text"
-                value={sourceId}
-                onChange={(e) => setSourceId(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                placeholder={`${currentSource.label} 아이디`}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">비밀번호</label>
-              <input
-                type="password"
-                value={sourcePw}
-                onChange={(e) => setSourcePw(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                placeholder="비밀번호"
-              />
-            </div>
+            {/* 인증 정보 영역 */}
+            {authLoading ? (
+              <div className="text-xs text-slate-400 py-2">인증 정보 확인 중...</div>
+            ) : programAuth ? (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-600 text-lg">&#x2713;</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-emerald-800">
+                      {programAuth.authType === 'cert'
+                        ? `인증서 등록됨: ${programAuth.certName}`
+                        : '아이디/비밀번호 등록됨'}
+                    </p>
+                    <p className="text-xs text-emerald-600 mt-0.5">
+                      통합e 인증설정에서 등록 · 바로 사용 가능
+                      {programAuth.savedAt && ` · ${new Date(programAuth.savedAt).toLocaleDateString('ko-KR')}`}
+                    </p>
+                  </div>
+                  <a href="http://localhost:4000/dashboard/settings/cis-auth"
+                    target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50">
+                    수정
+                  </a>
+                </div>
+              </div>
+            ) : currentSource.authType === 'cert' ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-xs text-amber-700 font-medium">인증서가 등록되지 않았습니다.</p>
+                <a href="http://localhost:4000/dashboard/settings/cis-auth"
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-xs text-amber-700 font-medium underline">
+                  통합e 인증설정에서 등록하기
+                </a>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">아이디</label>
+                  <input
+                    type="text"
+                    value={sourceId}
+                    onChange={(e) => setSourceId(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    placeholder={`${currentSource.label} 아이디`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">비밀번호</label>
+                  <input
+                    type="password"
+                    value={sourcePw}
+                    onChange={(e) => setSourcePw(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    placeholder="비밀번호"
+                  />
+                </div>
+                <a href="http://localhost:4000/dashboard/settings/cis-auth"
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-blue-500 hover:text-blue-700">
+                  통합e에 인증정보 등록하면 자동 사용됩니다
+                </a>
+              </>
+            )}
 
             {/* 조회 모드 */}
             <div className="flex gap-2">
@@ -724,6 +799,72 @@ export default function DataMigrationPage() {
                 '데이터 가져오기'
               )}
             </button>
+
+            {/* 저장된 데이터 불러오기 */}
+            {(source === 'kidshome' || source === 'by24' || source === 'incheon') && (
+              <button
+                onClick={async () => {
+                  const storedUserId = currentSource.authType === 'cert' ? (certInfo?.certName || '') : sourceId
+                  if (!storedUserId) { setError(currentSource.authType === 'cert' ? '등록된 인증서가 없습니다.' : '아이디를 입력하세요.'); return }
+                  setLoading(true); setError('')
+                  try {
+                    let storedUrl = `/api/${source}/stored?userId=${encodeURIComponent(storedUserId)}&latest=1`
+                    if (mode === 'single' && yearMonth) {
+                      storedUrl += `&startYm=${yearMonth}&endYm=${yearMonth}`
+                    } else if (mode === 'range' && startYm && endYm) {
+                      storedUrl += `&startYm=${startYm}&endYm=${endYm}`
+                    }
+                    const res = await fetch(storedUrl)
+                    const json = await res.json()
+                    if (!res.ok) throw new Error(json.error || '저장된 데이터 없음')
+                    const results = json.data as CashLedgerResult[]
+                    if (!results || results.length === 0) throw new Error('저장된 데이터가 없습니다')
+                    // autoMap 적용
+                    if (source in MAPPING_TABLE) {
+                      const mapping = MAPPING_TABLE[source as keyof typeof MAPPING_TABLE]
+                      const allItems = [...mapping.income, ...mapping.expense]
+                      const subCodeMap: Record<string, Record<string, string>> = {
+                        '1221': { '입학준비금': '1221-111', '현장학습비': '1221-112', '차량운행비': '1221-113', '부모부담행사비': '1221-121', '조석식비': '1221-131', '기타시도특성화비': '1221-141', '특성화비': '1221-141' },
+                        '1324': { '누리과정지원금': '1324-1' }, '1323': { '환경개선비': '1323-1' },
+                        '2142': { '퇴직금': '2142-112', '퇴직적립금': '2142-121' }, '2211': { '누리': '2211-1' },
+                        '2421': { '입학준비금': '2421-111', '현장학습비': '2421-121', '차량운행비': '2421-131', '부모부담행사비': '2421-141', '조석식비': '2421-151', '기타시도특성화비': '2421-161', '특성화비': '2421-161' },
+                      }
+                      const mapped = results.map(r => ({
+                        ...r,
+                        rows: r.rows.map(row => {
+                          if (row.accountCode) return row
+                          const name = row.accountName.replace(/[.\s·]/g, '')
+                          const match = allItems.find(m => m.by24Name.replace(/[.\s·]/g, '').trim() === name)
+                          if (!match) return row
+                          let code = match.sunote
+                          const subMap = subCodeMap[code]
+                          if (subMap) {
+                            const bm = row.summary.match(/\[([^\]]+)\]/)
+                            if (bm) { for (const [kw, sc] of Object.entries(subMap)) { if (bm[1].includes(kw)) { code = sc; break } } }
+                            if (code === '2142') {
+                              if (row.summary.includes('퇴직적립') || row.summary.includes('퇴직연금')) code = '2142-121'
+                              else if (row.summary.includes('퇴직금')) code = '2142-112'
+                              else code = '2142-121'
+                            }
+                          }
+                          return { ...row, accountCode: code }
+                        }),
+                      }))
+                      setMultiData(mapped)
+                    } else {
+                      setMultiData(results)
+                    }
+                    setData(null)
+                    setTransferResult(`저장된 데이터 불러옴: ${json.months?.length || results.length}개월, ${json.totalRows || results.reduce((s: number, r: CashLedgerResult) => s + r.rows.length, 0)}건 (${json.scrapedAt?.substring(0, 16) || ''})`)
+                  } catch (e) { setError(e instanceof Error ? e.message : String(e)) }
+                  finally { setLoading(false) }
+                }}
+                disabled={loading}
+                className="w-full py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 disabled:opacity-50"
+              >
+                저장된 데이터 불러오기
+              </button>
+            )}
           </div>
         </div>
 
@@ -1032,6 +1173,7 @@ export default function DataMigrationPage() {
                       <th className="px-3 py-2 text-center w-20">발행번호</th>
                       <th className="px-3 py-2 text-center w-20">코드</th>
                       <th className="px-3 py-2 text-left">계정과목</th>
+                      <th className="px-3 py-2 text-left">세목</th>
                       <th className="px-3 py-2 text-left">적요</th>
                       <th className="px-3 py-2 text-right w-28">수입금액</th>
                       <th className="px-3 py-2 text-right w-28">지출금액</th>
@@ -1079,6 +1221,7 @@ export default function DataMigrationPage() {
                           )}
                         </td>
                         <td className="px-3 py-2 text-slate-700">{row.accountName}</td>
+                        <td className="px-3 py-2 text-slate-500 text-xs">{(row as any).subAccountName || ''}</td>
                         <td className="px-3 py-2 text-slate-600">{row.summary}</td>
                         <td className="px-3 py-2 text-right text-blue-600 font-medium">
                           {row.income ? fmtAmt(row.income) : ''}
