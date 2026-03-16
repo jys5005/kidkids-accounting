@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PLATFORM_URL = 'http://localhost:4000'
+const PLATFORM_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'
 
 /** Proxy to childcare-platform kidshome stored data API */
 export async function GET(req: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(data, { status: res.status })
   } catch {
     return NextResponse.json(
-      { error: '통합e 서버(localhost:4000)에 연결할 수 없습니다.' },
+      { error: '통합e 서버에 연결할 수 없습니다.' },
       { status: 502 }
     )
   }

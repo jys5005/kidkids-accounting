@@ -67,7 +67,7 @@ export default function SettingsPage() {
             <h2 className="font-semibold text-slate-800">보육통합정보시스템 (CIS)</h2>
           </div>
           <a
-            href="http://localhost:4000/dashboard/settings/cis-auth"
+            href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-blue-600 hover:text-blue-700 font-medium"
@@ -97,7 +97,7 @@ export default function SettingsPage() {
             <span className="text-xs text-slate-400">({programCount}개 등록)</span>
           </div>
           <a
-            href="http://localhost:4000/dashboard/settings/cis-auth"
+            href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-blue-600 hover:text-blue-700 font-medium"

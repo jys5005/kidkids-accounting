@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const maxDuration = 300 // 5분
 
-const PLATFORM_URL = 'http://localhost:4000'
+const PLATFORM_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'
 
 /** Proxy to childcare-platform kidshome cash-ledger API */
 export async function POST(req: NextRequest) {
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     const msg = e instanceof Error && e.name === 'TimeoutError'
       ? '스크래핑 시간 초과 (5분). 기간을 줄여서 다시 시도하세요.'
-      : '통합e 서버(localhost:4000)에 연결할 수 없습니다.'
+      : '통합e 서버에 연결할 수 없습니다.'
     return NextResponse.json({ error: msg }, { status: 502 })
   }
 }

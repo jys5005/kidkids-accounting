@@ -689,7 +689,7 @@ export default function DataMigrationPage() {
                       {programAuth.savedAt && ` · ${new Date(programAuth.savedAt).toLocaleDateString('ko-KR')}`}
                     </p>
                   </div>
-                  <a href="http://localhost:4000/dashboard/settings/cis-auth"
+                  <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
                     target="_blank" rel="noopener noreferrer"
                     className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50">
                     수정
@@ -699,7 +699,7 @@ export default function DataMigrationPage() {
             ) : currentSource.authType === 'cert' ? (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-xs text-amber-700 font-medium">인증서가 등록되지 않았습니다.</p>
-                <a href="http://localhost:4000/dashboard/settings/cis-auth"
+                <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
                   target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 mt-2 text-xs text-amber-700 font-medium underline">
                   통합e 인증설정에서 등록하기
@@ -727,7 +727,7 @@ export default function DataMigrationPage() {
                     placeholder="비밀번호"
                   />
                 </div>
-                <a href="http://localhost:4000/dashboard/settings/cis-auth"
+                <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
                   target="_blank" rel="noopener noreferrer"
                   className="text-xs text-blue-500 hover:text-blue-700">
                   통합e에 인증정보 등록하면 자동 사용됩니다

@@ -81,7 +81,7 @@ export default function Header() {
             </nav>
             <div className="flex items-center gap-3 border-l border-slate-200 pl-3">
               <a
-                href="http://localhost:4000/dashboard"
+                href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white
@@ -116,7 +116,7 @@ export default function Header() {
                 <button
                   onClick={async () => {
                     await fetch('/api/auth/logout', { method: 'POST' })
-                    window.location.href = 'http://localhost:4000/login'
+                    window.location.href = `${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/login`
                   }}
                   className="ml-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors"
                   title="로그아웃"
