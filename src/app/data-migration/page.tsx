@@ -825,7 +825,7 @@ export default function DataMigrationPage() {
             {(source === 'kidshome' || source === 'by24' || source === 'incheon') && (
               <button
                 onClick={async () => {
-                  const storedUserId = currentSource.authType === 'cert' ? (certInfo?.certName || '') : sourceId
+                  const storedUserId = currentSource.authType === 'cert' ? (programAuth?.certName || '') : sourceId
                   if (!storedUserId) { setError(currentSource.authType === 'cert' ? '등록된 인증서가 없습니다.' : '아이디를 입력하세요.'); return }
                   setLoading(true); setError('')
                   try {
