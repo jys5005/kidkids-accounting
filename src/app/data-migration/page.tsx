@@ -131,7 +131,13 @@ const MAPPING_TABLE = {
       { by24: '', by24Name: '정부지원보육료', sunote: '1111', sunoteNote: '' },
       { by24: '', by24Name: '부모부담보육료', sunote: '1112', sunoteNote: '' },
       { by24: '', by24Name: '특별활동비', sunote: '1211', sunoteNote: '' },
-      { by24: '', by24Name: '기타필요경비', sunote: '1221', sunoteNote: '세목 수동 확인' },
+      { by24: '', by24Name: '기타필요경비', sunote: '1221', sunoteNote: '', group: true },
+      { by24: '', by24Name: '  입학준비금', sunote: '1221-111', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  현장학습비', sunote: '1221-112', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  차량운행비', sunote: '1221-113', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  부모부담행사비', sunote: '1221-121', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  조석식비', sunote: '1221-131', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  특성화비', sunote: '1221-141', sunoteNote: '', sub: true },
       { by24: '', by24Name: '인건비보조금', sunote: '1311', sunoteNote: '' },
       { by24: '', by24Name: '기관보육료', sunote: '1321', sunoteNote: '' },
       { by24: '', by24Name: '연장보육료', sunote: '1322', sunoteNote: '' },
@@ -156,7 +162,9 @@ const MAPPING_TABLE = {
       { by24: '', by24Name: '보육교직원수당', sunote: '2122', sunoteNote: '' },
       { by24: '', by24Name: '기타인건비', sunote: '2131', sunoteNote: '' },
       { by24: '', by24Name: '법정부담금', sunote: '2141', sunoteNote: '' },
-      { by24: '', by24Name: '퇴직금및퇴직적립금', sunote: '2142', sunoteNote: '적요에 퇴직금→2142-112, 적립금→2142-121' },
+      { by24: '', by24Name: '퇴직금및퇴직적립금', sunote: '2142', sunoteNote: '', group: true },
+      { by24: '', by24Name: '  퇴직금', sunote: '2142-112', sunoteNote: '적요 키워드 자동', sub: true },
+      { by24: '', by24Name: '  퇴직적립금', sunote: '2142-121', sunoteNote: '적요 키워드 자동', sub: true },
       { by24: '', by24Name: '수용비및수수료', sunote: '2211', sunoteNote: '' },
       { by24: '', by24Name: '공공요금및제세공과금', sunote: '2212', sunoteNote: '' },
       { by24: '', by24Name: '연료비', sunote: '2213', sunoteNote: '' },
@@ -173,7 +181,13 @@ const MAPPING_TABLE = {
       { by24: '', by24Name: '영유아복리비', sunote: '2314', sunoteNote: '' },
       { by24: '', by24Name: '급식.간식재료비', sunote: '2315', sunoteNote: '' },
       { by24: '', by24Name: '특별활동비지출', sunote: '2411', sunoteNote: '' },
-      { by24: '', by24Name: '기타필요경비지출', sunote: '2421', sunoteNote: '세목 수동 확인' },
+      { by24: '', by24Name: '기타필요경비지출', sunote: '2421', sunoteNote: '', group: true },
+      { by24: '', by24Name: '  입학준비금', sunote: '2421-111', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  현장학습비', sunote: '2421-121', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  차량운행비', sunote: '2421-131', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  부모부담행사비', sunote: '2421-141', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  조석식비', sunote: '2421-151', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  특성화비', sunote: '2421-161', sunoteNote: '', sub: true },
       { by24: '', by24Name: '적립금', sunote: '2511', sunoteNote: '' },
       { by24: '', by24Name: '단기차입금상환', sunote: '2611', sunoteNote: '' },
       { by24: '', by24Name: '장기차입금상환', sunote: '2612', sunoteNote: '' },
@@ -222,6 +236,11 @@ export default function DataMigrationPage() {
   const [customMappings, setCustomMappings] = useState<Record<string, string>>({}) // by24 code → sunote code
   const [showMappings, setShowMappings] = useState(false)
   const [showMappingModal, setShowMappingModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteStartYm, setDeleteStartYm] = useState('')
+  const [deleteEndYm, setDeleteEndYm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteResult, setDeleteResult] = useState('')
   const [mode, setMode] = useState<'single' | 'range'>('single')
   const [startYm, setStartYm] = useState('')
   const [endYm, setEndYm] = useState('')
@@ -340,7 +359,7 @@ export default function DataMigrationPage() {
             })
             if (!match) return row
 
-            let code = match.sunote
+            let code: string = match.sunote
 
             // 적요에서 [세목명] 추출 → 세부코드 매핑
             const subMap = subCodeMap[code]
@@ -368,10 +387,14 @@ export default function DataMigrationPage() {
       if (mode === 'single') {
         const mapped = autoMap([json as CashLedgerResult])
         setData(mapped[0])
+        setTransferResult(`조회 완료: 1개월, ${mapped[0].rows.length}건 (${new Date().toISOString().substring(0, 16)})`)
       } else {
         const mapped = autoMap(json as CashLedgerResult[])
         setMultiData(mapped)
+        const total = mapped.reduce((s, r) => s + r.rows.length, 0)
+        setTransferResult(`조회 완료: ${mapped.length}개월, ${total}건 (${new Date().toISOString().substring(0, 16)})`)
       }
+      setTransferredYms({})
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -412,7 +435,6 @@ export default function DataMigrationPage() {
           userId: sunoteId,
           password: sunotePw,
           data: [monthData],
-          mode: source === 'kidshome' ? 'excel' : undefined,
           customMappings: Object.keys(customMappings).length > 0 ? customMappings : undefined,
         }),
       })
@@ -464,7 +486,6 @@ export default function DataMigrationPage() {
             userId: sunoteId,
             password: sunotePw,
             data: [monthData],
-            mode: source === 'kidshome' ? 'excel' : undefined,
             customMappings: Object.keys(customMappings).length > 0 ? customMappings : undefined,
           }),
         })
@@ -836,7 +857,7 @@ export default function DataMigrationPage() {
                           const name = row.accountName.replace(/[.\s·]/g, '')
                           const match = allItems.find(m => m.by24Name.replace(/[.\s·]/g, '').trim() === name)
                           if (!match) return row
-                          let code = match.sunote
+                          let code: string = match.sunote
                           const subMap = subCodeMap[code]
                           if (subMap) {
                             const bm = row.summary.match(/\[([^\]]+)\]/)
@@ -855,6 +876,9 @@ export default function DataMigrationPage() {
                       setMultiData(results)
                     }
                     setData(null)
+                    setTransferredYms({})
+                    setUnmappedCodes([])
+                    setError('')
                     setTransferResult(`저장된 데이터 불러옴: ${json.months?.length || results.length}개월, ${json.totalRows || results.reduce((s: number, r: CashLedgerResult) => s + r.rows.length, 0)}건 (${json.scrapedAt?.substring(0, 16) || ''})`)
                   } catch (e) { setError(e instanceof Error ? e.message : String(e)) }
                   finally { setLoading(false) }
@@ -874,10 +898,21 @@ export default function DataMigrationPage() {
             <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
               <span className="text-emerald-600 font-bold text-sm">2</span>
             </div>
-            <div>
+            <div className="flex-1">
               <h2 className="font-semibold text-slate-800">수전자장부 (목적지)</h2>
               <p className="text-xs text-slate-400">sunote.co.kr</p>
             </div>
+            <button
+              onClick={() => {
+                setDeleteStartYm('')
+                setDeleteEndYm('')
+                setDeleteResult('')
+                setShowDeleteModal(true)
+              }}
+              className="px-3 py-1.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium"
+            >
+              현금출납부 삭제
+            </button>
           </div>
 
           <div className="space-y-3">
@@ -901,6 +936,13 @@ export default function DataMigrationPage() {
                 placeholder="비밀번호"
               />
             </div>
+
+            {/* 에러 알림 */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 animate-pulse">
+                <p className="text-sm text-red-600 font-medium">{error}</p>
+              </div>
+            )}
 
             {/* 이관 요약 */}
             {totalRows > 0 && (
@@ -1151,8 +1193,8 @@ export default function DataMigrationPage() {
             </div>
           </div>
 
-          {displayData.map((result) => (
-            <div key={result.yearMonth} className="border-b border-slate-100 last:border-0">
+          {displayData.map((result, di) => (
+            <div key={`${result.yearMonth}-${result.rows.length}-${di}`} className="border-b border-slate-100 last:border-0">
               {/* 월별 요약 */}
               <div className="px-6 py-3 bg-slate-50 flex items-center gap-4 text-sm">
                 <span className="font-medium text-slate-700">
@@ -1279,15 +1321,15 @@ export default function DataMigrationPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {mapping.income.map((m) => {
-                            const is4to4 = m.by24.length === 4 && m.sunote.length === 4 && !('group' in m && m.group)
-                            const isSub = m.by24.length === 7 && m.sunote.includes('-')
-                            const subMatch = isSub && m.by24.substring(4) === m.sunote.split('-')[1]
+                          {mapping.income.map((m, i) => {
+                            const isGroup = 'group' in m && m.group
+                            const isSub = 'sub' in m && m.sub || (m.by24.length === 7 && m.sunote.includes('-'))
+                            const is4to4 = !isGroup && !isSub && m.sunote.length === 4
                             return (
-                            <tr key={m.by24} className={`border-t hover:bg-slate-50 ${'group' in m && m.group ? 'border-slate-200 bg-blue-50/50' : 'border-slate-100'}`}>
-                              <td className={`px-2 py-1.5 font-mono ${m.by24.length > 4 ? 'text-slate-400 pl-4 text-[11px]' : 'text-slate-700 font-medium'}`}>{m.by24}</td>
-                              <td className={`px-2 py-1.5 ${m.by24.length > 4 ? 'text-slate-500' : 'text-slate-600 font-medium'}`}>{m.by24Name}</td>
-                              <td className={`px-2 py-1.5 font-mono font-medium ${is4to4 ? 'text-blue-600' : isSub ? (subMatch ? 'text-blue-600' : 'text-red-600') : 'text-amber-600'}`}>{m.sunote}</td>
+                            <tr key={`${m.sunote}-${i}`} className={`border-t hover:bg-slate-50 ${isGroup ? 'border-slate-200 bg-blue-50/50' : 'border-slate-100'}`}>
+                              <td className={`px-2 py-1.5 font-mono ${isSub ? 'text-slate-400 pl-4 text-[11px]' : 'text-slate-700 font-medium'}`}>{m.by24}</td>
+                              <td className={`px-2 py-1.5 ${isSub ? 'text-slate-500 pl-4' : 'text-slate-600 font-medium'}`}>{m.by24Name}</td>
+                              <td className={`px-2 py-1.5 font-mono font-medium ${isSub ? 'text-orange-600' : is4to4 ? 'text-blue-600' : 'text-amber-600'}`}>{m.sunote}</td>
                               <td className="px-2 py-1.5 text-slate-400">{m.sunoteNote}</td>
                             </tr>
                             )
@@ -1309,15 +1351,15 @@ export default function DataMigrationPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {mapping.expense.map((m) => {
-                            const is4to4 = m.by24.length === 4 && m.sunote.length === 4 && !('group' in m && m.group)
-                            const isSub = m.by24.length === 7 && m.sunote.includes('-')
-                            const subMatch = isSub && m.by24.substring(4) === m.sunote.split('-')[1]
+                          {mapping.expense.map((m, i) => {
+                            const isGroup = 'group' in m && m.group
+                            const isSub = 'sub' in m && m.sub || (m.by24.length === 7 && m.sunote.includes('-'))
+                            const is4to4 = !isGroup && !isSub && m.sunote.length === 4
                             return (
-                            <tr key={m.by24} className={`border-t hover:bg-slate-50 ${'group' in m && m.group ? 'border-slate-200 bg-red-50/50' : 'border-slate-100'}`}>
-                              <td className={`px-2 py-1.5 font-mono ${m.by24.length > 4 ? 'text-slate-400 pl-4 text-[11px]' : 'text-slate-700 font-medium'}`}>{m.by24}</td>
-                              <td className={`px-2 py-1.5 ${m.by24.length > 4 ? 'text-slate-500' : 'text-slate-600 font-medium'}`}>{m.by24Name}</td>
-                              <td className={`px-2 py-1.5 font-mono font-medium ${is4to4 ? 'text-blue-600' : isSub ? (subMatch ? 'text-blue-600' : 'text-red-600') : 'text-amber-600'}`}>{m.sunote}</td>
+                            <tr key={`${m.sunote}-${i}`} className={`border-t hover:bg-slate-50 ${isGroup ? 'border-slate-200 bg-red-50/50' : 'border-slate-100'}`}>
+                              <td className={`px-2 py-1.5 font-mono ${isSub ? 'text-slate-400 pl-4 text-[11px]' : 'text-slate-700 font-medium'}`}>{m.by24}</td>
+                              <td className={`px-2 py-1.5 ${isSub ? 'text-slate-500 pl-4' : 'text-slate-600 font-medium'}`}>{m.by24Name}</td>
+                              <td className={`px-2 py-1.5 font-mono font-medium ${isSub ? 'text-orange-600' : is4to4 ? 'text-blue-600' : 'text-amber-600'}`}>{m.sunote}</td>
                               <td className="px-2 py-1.5 text-slate-400">{m.sunoteNote}</td>
                             </tr>
                             )
@@ -1328,6 +1370,96 @@ export default function DataMigrationPage() {
                   </>
                 )
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 삭제 모달 */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => !deleting && setShowDeleteModal(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-[420px] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <h3 className="font-bold text-slate-800">수전자장부 현금출납부 삭제</h3>
+              <button onClick={() => !deleting && setShowDeleteModal(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              {!sunoteId || !sunotePw ? (
+                <p className="text-sm text-red-600">수전자장부 아이디/비밀번호를 먼저 입력하세요.</p>
+              ) : (
+                <>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-slate-600 mb-1">시작월</label>
+                      <select
+                        value={deleteStartYm}
+                        onChange={(e) => { setDeleteStartYm(e.target.value); if (!deleteEndYm) setDeleteEndYm(e.target.value) }}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                      >
+                        <option value="">선택</option>
+                        {Array.from({ length: 36 }, (_, i) => {
+                          const d = new Date(); d.setMonth(d.getMonth() - i)
+                          const v = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`
+                          return <option key={v} value={v}>{d.getFullYear()}년 {d.getMonth() + 1}월</option>
+                        })}
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-slate-600 mb-1">종료월</label>
+                      <select
+                        value={deleteEndYm}
+                        onChange={(e) => setDeleteEndYm(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                      >
+                        <option value="">선택</option>
+                        {Array.from({ length: 36 }, (_, i) => {
+                          const d = new Date(); d.setMonth(d.getMonth() - i)
+                          const v = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`
+                          return <option key={v} value={v}>{d.getFullYear()}년 {d.getMonth() + 1}월</option>
+                        })}
+                      </select>
+                    </div>
+                  </div>
+                  {deleteResult && (
+                    <div className={`p-3 rounded-lg text-sm ${deleteResult.includes('실패') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                      {deleteResult}
+                    </div>
+                  )}
+                  <button
+                    disabled={!deleteStartYm || !deleteEndYm || deleting}
+                    onClick={async () => {
+                      setDeleting(true)
+                      setDeleteResult('')
+                      try {
+                        // 월 목록 생성
+                        const yms: string[] = []
+                        let y = parseInt(deleteStartYm.substring(0, 4)), m = parseInt(deleteStartYm.substring(4, 6))
+                        const ey = parseInt(deleteEndYm.substring(0, 4)), em = parseInt(deleteEndYm.substring(4, 6))
+                        while (y < ey || (y === ey && m <= em)) {
+                          yms.push(`${y}${String(m).padStart(2, '0')}`)
+                          m++; if (m > 12) { m = 1; y++ }
+                        }
+                        const res = await fetch('/api/sunote/delete', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ userId: sunoteId, password: sunotePw, yearMonths: yms }),
+                        })
+                        const json = await res.json()
+                        if (!res.ok) throw new Error(json.error || '삭제 실패')
+                        setDeleteResult(`삭제 완료: ${json.deleted}건 (${yms.length}개월)`)
+                      } catch (e) {
+                        setDeleteResult(`삭제 실패: ${e instanceof Error ? e.message : String(e)}`)
+                      } finally {
+                        setDeleting(false)
+                      }
+                    }}
+                    className="w-full py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {deleting ? '삭제 중...' : '삭제 실행'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
