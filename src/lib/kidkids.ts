@@ -1,4 +1,5 @@
-import puppeteer, { type Browser, type Page } from 'puppeteer'
+import puppeteer, { type Browser, type Page } from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 
 const BASE_URL = 'https://kas.kidkids.net'
 
@@ -6,9 +7,12 @@ let browser: Browser | null = null
 
 async function getBrowser(): Promise<Browser> {
   if (browser && browser.connected) return browser
+  const isVercel = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME
   browser = await puppeteer.launch({
+    args: isVercel ? chromium.args : ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    defaultViewport: chromium.defaultViewport,
+    executablePath: isVercel ? await chromium.executablePath() : undefined,
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   })
   return browser
 }
