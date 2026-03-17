@@ -20,8 +20,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: '어린이집 재무회계',
-  description: '어린이집 재무회계 관리 시스템',
+  title: '수전자장부 어린이집 관리시스템',
+  description: '수전자장부 어린이집 관리시스템',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50 min-h-screen flex flex-col`}>
         <Header />
-        <main className="flex-1 p-5 overflow-auto">
+        <main className="flex-1 p-5 overflow-auto text-sm font-medium">
           <div className="max-w-6xl mx-auto">
             {children}
           </div>

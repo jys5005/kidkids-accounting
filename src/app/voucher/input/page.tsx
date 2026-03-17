@@ -197,36 +197,65 @@ export default function VoucherInputPage() {
         </div>
       </div>
 
-      {/* 버튼 바 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button onClick={addRow} className="px-3 py-1.5 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
-            + 전표추가
-          </button>
-          <button
-            onClick={deleteRows}
-            className={`px-3 py-1.5 text-[11px] font-medium rounded-lg transition-colors ${
-              checked.size > 0
-                ? 'text-red-600 bg-red-50 border border-red-200 hover:bg-red-100'
-                : 'text-slate-400 bg-slate-50 border border-slate-200 cursor-not-allowed'
-            }`}
-          >
-            삭제{checked.size > 0 && ` (${checked.size})`}
-          </button>
-          <button className="px-3 py-1.5 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-            전표복사
-          </button>
+      {/* 기능키 툴바 */}
+      <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 flex items-center overflow-visible">
+        {/* 전표 그룹 */}
+        <div className="flex items-center gap-1 relative group/slip">
+          <span className="px-2 py-1.5 text-[11px] font-bold whitespace-nowrap text-amber-700 bg-amber-100 rounded cursor-default">
+            <svg className="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+            전표
+          </span>
+          <div className="absolute left-0 bottom-full mb-1 w-64 bg-amber-50 text-slate-700 text-[11px] rounded-lg p-3 shadow-xl border border-amber-200 z-50 hidden group-hover/slip:block leading-relaxed">
+            <p><strong className="text-amber-700">등록</strong> : 수기로 전표를 추가시 사용</p>
+            <p><strong className="text-amber-700">합산</strong> : 동일날짜 2개이상 전표를 선택후 합산처리</p>
+            <p><strong className="text-amber-700">삭제</strong> : 등록된 전표를 삭제시 사용</p>
+            <p><strong className="text-amber-700">일괄분리</strong> : 금액이 같은 전표를 다량으로 분리</p>
+            <p><strong className="text-amber-700">미계정전환</strong> : 기 지정된 전표를 미계정으로 전환시 사용</p>
+          </div>
+          <button onClick={addRow} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">등록</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">합산</button>
+          <button onClick={deleteRows} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">삭제</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">일괄분리</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">미계정전환</button>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-            엑셀 다운로드
-          </button>
-          <button className="px-3 py-1.5 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-            전표출력
-          </button>
-          <button className="px-3 py-1.5 text-[11px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
-            저장
-          </button>
+        <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
+        {/* 적요 그룹 */}
+        <div className="flex items-center gap-1">
+          <span className="px-2 py-1.5 text-[11px] font-bold whitespace-nowrap text-slate-400 bg-slate-100 rounded cursor-default" title="적요 관련 기능">
+            <svg className="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+            적요
+          </span>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">삭제</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">치환</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">세목추가</button>
+        </div>
+        <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
+        {/* 매핑 그룹 */}
+        <div className="flex items-center gap-1">
+          <span className="px-2 py-1.5 text-[11px] font-bold whitespace-nowrap text-pink-400 bg-pink-50 rounded cursor-default" title="매핑 관련 기능">
+            <svg className="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+            매핑
+          </span>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">원아경비</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">거래처.적요.결제방식</button>
+        </div>
+        <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
+        {/* 정렬 그룹 */}
+        <div className="flex items-center gap-1">
+          <span className="px-2 py-1.5 text-[11px] font-bold whitespace-nowrap text-green-400 bg-green-50 rounded cursor-default" title="정렬 관련 기능">
+            <svg className="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+            정렬
+          </span>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">수입부우선</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">전표번호</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">전체</button>
+        </div>
+        <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
+        {/* 출력 그룹 */}
+        <div className="flex items-center gap-1 ml-auto">
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-blue-300 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 sub-tab-hover">엑셀</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">출력</button>
+          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover">저장</button>
         </div>
       </div>
 

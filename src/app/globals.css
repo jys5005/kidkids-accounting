@@ -25,6 +25,16 @@ body {
   display: none;
 }
 
+.sub-tab-hover {
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.sub-tab-hover:hover {
+  transform: perspective(800px) rotateY(15deg);
+  background: rgba(255,255,255,0.9) !important;
+  color: #b91c1c !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
 @media (max-width: 768px) {
   table {
     font-size: 12px;

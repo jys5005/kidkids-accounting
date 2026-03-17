@@ -33,7 +33,8 @@ const categories: MenuCategory[] = [
           { label: '예산작성', href: '/budget/create' },
           { label: '과목전용', href: '/budget/transfer' },
           { label: '예산보고서', href: '/budget/report' },
-          { label: '예산대비 집행현황', href: '/budget/execution' },
+          { label: '예산대비집행현황', href: '/budget/execution' },
+          { label: '보육통합예산보고', href: '/budget/cis-accounting-report' },
         ],
       },
       {
@@ -44,40 +45,98 @@ const categories: MenuCategory[] = [
           { label: '잔액비교', href: '/voucher/balance' },
           { label: '거래내역', href: '/voucher/transactions' },
           { label: '계좌내역', href: '/voucher/bank' },
+          { label: '영수증연동', href: '/voucher/receipt' },
         ],
       },
-      { label: '현금출납부', href: '/cash-ledger' },
-      { label: '월회계보고', href: '/monthly-report' },
+      {
+        label: '현금출납부',
+        children: [
+          { label: '현금출납부', href: '/cash-ledger' },
+          { label: '현금출납부 기간별', href: '/cash-ledger/period' },
+          { label: '총계정원장', href: '/cash-ledger/general-ledger' },
+          { label: '총계정원장 기간별', href: '/cash-ledger/general-ledger-period' },
+          { label: '계정과목별총괄표', href: '/cash-ledger/account-summary' },
+          { label: '월별수입지출합계', href: '/cash-ledger/monthly-total' },
+          { label: '합계잔액시산표', href: '/cash-ledger/trial-balance' },
+          { label: '월별비교', href: '/cash-ledger/monthly-compare' },
+        ],
+      },
+      {
+        label: '월회계보고',
+        children: [
+          { label: '월회계보고', href: '/monthly-report' },
+          { label: '전표검증', href: '/monthly-report/verify' },
+          { label: '재무회계분석자료', href: '/monthly-report/analysis' },
+        ],
+      },
       {
         label: '결산관리',
         children: [
           { label: '결산보고서', href: '/settlement/report' },
           { label: '월별결산서', href: '/settlement/monthly' },
           { label: '연말결산서', href: '/settlement/annual' },
+          { label: '보육통합결산보고', href: '/settlement/cis' },
         ],
       },
       {
         label: '정산관리',
         children: [
-          { label: '보조금명세서', href: '/reconciliation/subsidy' },
+          { label: '정부보조금명세서', href: '/reconciliation/subsidy' },
           { label: '보조금정산서', href: '/reconciliation/settlement' },
           { label: '누리과정정산서', href: '/reconciliation/nuri' },
           { label: '필요경비정산서', href: '/reconciliation/expense' },
           { label: '급식비정산서', href: '/reconciliation/meal' },
         ],
       },
+      {
+        label: '설정',
+        children: [
+          { label: '결제방식관리', href: '/settings/payment-method' },
+          { label: '결제방식매칭관리', href: '/settings/payment-matching' },
+          { label: '적요코드매칭관리', href: '/settings/summary-matching' },
+          { label: '거래처관리', href: '/settings/counterpart' },
+          { label: '4대보험요율관리', href: '/settings/insurance-rate' },
+          { label: '보육통합인증키', href: '/settings/cis-auth' },
+        ],
+      },
       { label: '데이터이관', href: '/data-migration' },
-      { label: '설정', href: '/settings' },
     ],
   },
   {
     key: 'staff',
     label: '교직원',
     menus: [
-      { label: '교직원현황', href: '/staff' },
-      { label: '급여관리', href: '/staff/payroll' },
-      { label: '4대보험', href: '/staff/insurance' },
-      { label: '퇴직금관리', href: '/staff/retirement' },
+      {
+        label: '교직원현황',
+        children: [
+          { label: '교직원정보', href: '/staff/info' },
+          { label: 'CIS호출', href: '/staff/cis' },
+          { label: '출근부', href: '/staff/attendance' },
+          { label: '휴지통', href: '/staff/trash' },
+          { label: '증명서', href: '/staff/certificate' },
+          { label: '공문서', href: '/staff/document' },
+        ],
+      },
+      {
+        label: '급여관리',
+        children: [
+          { label: '급여대장', href: '/staff/payroll/ledger' },
+          { label: '급여명세서', href: '/staff/payroll/slip' },
+        ],
+      },
+      {
+        label: '4대보험',
+        children: [
+          { label: '취득신고', href: '/staff/insurance/acquisition' },
+          { label: '보수월액변경', href: '/staff/insurance/salary-change' },
+          { label: '상실신고', href: '/staff/insurance/loss' },
+          { label: '납입유예신청', href: '/staff/insurance/deferment' },
+          { label: '납입유예해지신청', href: '/staff/insurance/deferment-cancel' },
+          { label: '사업장적용신고', href: '/staff/insurance/workplace-apply' },
+          { label: '사업장탈퇴신고', href: '/staff/insurance/workplace-withdraw' },
+          { label: 'EDI사무위탁출력물', href: '/staff/insurance/edi-print' },
+        ],
+      },
       { label: '연말정산', href: '/staff/year-end' },
     ],
   },
@@ -85,27 +144,60 @@ const categories: MenuCategory[] = [
     key: 'children',
     label: '아동',
     menus: [
-      { label: '아동현황', href: '/children' },
-      { label: '보육료관리', href: '/children/fee' },
-      { label: '필요경비', href: '/children/expense' },
-      { label: '특별활동비', href: '/children/activity' },
+      {
+        label: '아동관리',
+        children: [
+          { label: '아동현황', href: '/children/status' },
+          { label: '반편성관리', href: '/children/class' },
+          { label: '보호자관리', href: '/children/guardian' },
+        ],
+      },
+      { label: '보육료납부', href: '/children/fee' },
+      { label: '출석부', href: '/children/attendance' },
     ],
   },
   {
     key: 'supplies',
     label: '물품',
     menus: [
-      { label: '물품현황', href: '/supplies' },
-      { label: '재물조사', href: '/supplies/inventory' },
+      {
+        label: '물품관리',
+        children: [
+          { label: '물품현황', href: '/supplies/status' },
+        ],
+      },
     ],
   },
   {
     key: 'community',
     label: '커뮤니티',
     menus: [
-      { label: '공지사항', href: '/community/notice' },
-      { label: '질의응답', href: '/community/qna' },
-      { label: '자료실', href: '/community/resources' },
+      {
+        label: '게시판',
+        children: [
+          { label: '공지사항', href: '/community/notice' },
+          { label: 'Q&A', href: '/community/qna' },
+          { label: '자주하는질문', href: '/community/faq' },
+        ],
+      },
+      {
+        label: '자료실',
+        children: [
+          { label: '자료실', href: '/community/resources' },
+          { label: '원장님자료실', href: '/community/principal-resources' },
+          { label: '공제서류', href: '/community/deduction-docs' },
+        ],
+      },
+      {
+        label: '계산기',
+        children: [
+          { label: '급간식계산기', href: '/community/calculator/meal' },
+          { label: '퇴직금계산기', href: '/community/calculator/retirement' },
+          { label: '퇴직소득세계산기', href: '/community/calculator/retirement-tax' },
+          { label: '4대보험계산기', href: '/community/calculator/insurance' },
+          { label: '연말정산계산기', href: '/community/calculator/year-end' },
+        ],
+      },
     ],
   },
 ]
