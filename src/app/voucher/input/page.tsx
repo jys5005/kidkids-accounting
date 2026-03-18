@@ -14,23 +14,62 @@ interface VoucherRow {
   note: string
   approved: boolean
   evidence?: ('세금계산서' | '계산서' | '현금영수증' | '쿠팡' | '네이버' | '11번가' | '지마켓' | '옥션' | '오아시스' | '4대보험')[]
+  copySelected?: boolean
+  inputMethod?: '은행' | '수기' | '일괄' | '엑셀' | '분리' | '합산'
+  accountCode?: string
 }
 
 const sampleData: VoucherRow[] = [
-  { id: 1, date: '2026-03-03', type: '수입', account: '정부지원 보육료', subAccount: '', summary: '3월 정부지원 보육료 입금', amount: 15524000, counterpart: '사회보장정보원', note: '', approved: true },
-  { id: 2, date: '2026-03-03', type: '수입', account: '인건비 보조금', subAccount: '', summary: '3월 인건비 보조금 입금', amount: 8594960, counterpart: '구청', note: '', approved: true },
-  { id: 3, date: '2026-03-05', type: '지출', account: '보육교직원급여', subAccount: '', summary: '3월 교직원 기본급 지급', amount: 4404593, counterpart: '교직원', note: '지출-자동이체', approved: true, evidence: ['세금계산서'] },
-  { id: 4, date: '2026-03-05', type: '지출', account: '보육교직원수당', subAccount: '', summary: '3월 직책수당 지급', amount: 850000, counterpart: '교직원', note: '지출-계좌이체', approved: true, evidence: ['계산서'] },
-  { id: 5, date: '2026-03-05', type: '지출', account: '법정부담금', subAccount: '', summary: '3월 국민연금 사업주부담금', amount: 396450, counterpart: '국민연금공단', note: '지출-현금결제', approved: false, evidence: ['현금영수증'] },
-  { id: 6, date: '2026-03-05', type: '지출', account: '법정부담금', subAccount: '', summary: '3월 건강보험 사업주부담금', amount: 310270, counterpart: '건강보험공단', note: '지출-지로', approved: false, evidence: ['4대보험'] },
-  { id: 7, date: '2026-03-06', type: '지출', account: '급식·간식재료비', subAccount: '', summary: '3월 급간식 식재료 구입(쿠팡)', amount: 1850000, counterpart: '쿠팡', note: '지출-카드결제', approved: true, evidence: ['쿠팡'] },
-  { id: 8, date: '2026-03-06', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '사무용품 구입(네이버)', amount: 125000, counterpart: '네이버', note: '지출-카드결제', approved: false, evidence: ['네이버'] },
-  { id: 11, date: '2026-03-08', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '11번가 구입', amount: 55000, counterpart: '11번가', note: '지출-카드결제', approved: false, evidence: ['11번가'] },
-  { id: 12, date: '2026-03-08', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '지마켓 구입', amount: 33000, counterpart: '지마켓', note: '지출-카드결제', approved: false, evidence: ['지마켓'] },
-  { id: 13, date: '2026-03-08', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '옥션 구입', amount: 22000, counterpart: '옥션', note: '지출-카드결제', approved: false, evidence: ['옥션'] },
-  { id: 14, date: '2026-03-08', type: '지출', account: '급식·간식재료비', subAccount: '', summary: '오아시스 식재료', amount: 88000, counterpart: '오아시스', note: '지출-카드결제', approved: true, evidence: ['오아시스'] },
-  { id: 9, date: '2026-03-07', type: '수입', account: '이자수입', subAccount: '', summary: '보통예금 이자', amount: 8320, counterpart: '국민은행', note: '', approved: true },
-  { id: 10, date: '2026-03-07', type: '지출', account: '공공요금 및 제세공과금', subAccount: '', summary: '2월 전기요금 납부', amount: 487600, counterpart: '한국전력', note: '자동이체', approved: true },
+  { id: 1, date: '2026-03-03', type: '수입', account: '정부지원 보육료', subAccount: '', summary: '3월 정부지원 보육료 입금', amount: 15524000, counterpart: '사회보장정보원', note: '', approved: true, inputMethod: '은행' },
+  { id: 2, date: '2026-03-03', type: '수입', account: '인건비 보조금', subAccount: '', summary: '3월 인건비 보조금 입금', amount: 8594960, counterpart: '구청', note: '', approved: true, inputMethod: '은행' },
+  { id: 3, date: '2026-03-03', type: '수입', account: '기관보육료', subAccount: '', summary: '3월 기관보육료 입금', amount: 3200000, counterpart: '사회보장정보원', note: '', approved: true, inputMethod: '은행' },
+  { id: 4, date: '2026-03-03', type: '수입', account: '연장보육료', subAccount: '', summary: '3월 연장보육료', amount: 1450000, counterpart: '사회보장정보원', note: '', approved: true, inputMethod: '은행' },
+  { id: 5, date: '2026-03-05', type: '지출', account: '보육교직원급여', subAccount: '', summary: '3월 교직원 기본급 지급', amount: 4404593, counterpart: '교직원', note: '자동이체', approved: true, evidence: ['세금계산서'], inputMethod: '은행' },
+  { id: 6, date: '2026-03-05', type: '지출', account: '보육교직원급여', subAccount: '', summary: '3월 교직원 기본급(2)', amount: 3850000, counterpart: '교직원', note: '자동이체', approved: true, evidence: ['세금계산서'], inputMethod: '은행' },
+  { id: 7, date: '2026-03-05', type: '지출', account: '보육교직원수당', subAccount: '', summary: '3월 직책수당 지급', amount: 850000, counterpart: '교직원', note: '계좌이체', approved: true, evidence: ['계산서'], inputMethod: '수기' },
+  { id: 8, date: '2026-03-05', type: '지출', account: '보육교직원수당', subAccount: '', summary: '3월 시간외수당', amount: 420000, counterpart: '교직원', note: '계좌이체', approved: true, evidence: ['계산서'], inputMethod: '수기' },
+  { id: 9, date: '2026-03-05', type: '지출', account: '법정부담금', subAccount: '', summary: '3월 국민연금 사업주부담금', amount: 396450, counterpart: '국민연금공단', note: '현금결제', approved: false, evidence: ['현금영수증'], inputMethod: '일괄' },
+  { id: 10, date: '2026-03-05', type: '지출', account: '법정부담금', subAccount: '', summary: '3월 건강보험 사업주부담금', amount: 310270, counterpart: '건강보험공단', note: '지로', approved: false, evidence: ['4대보험'], inputMethod: '일괄' },
+  { id: 11, date: '2026-03-05', type: '지출', account: '법정부담금', subAccount: '', summary: '3월 고용보험 사업주부담금', amount: 185400, counterpart: '근로복지공단', note: '자동이체', approved: false, evidence: ['4대보험'], inputMethod: '일괄' },
+  { id: 12, date: '2026-03-05', type: '지출', account: '법정부담금', subAccount: '', summary: '3월 산재보험 사업주부담금', amount: 98700, counterpart: '근로복지공단', note: '자동이체', approved: false, evidence: ['4대보험'], inputMethod: '일괄' },
+  { id: 13, date: '2026-03-05', type: '지출', account: '퇴직금 및 퇴직적립금', subAccount: '퇴직적립금', summary: '3월 퇴직적립금', amount: 650000, counterpart: '퇴직연금', note: '자동이체', approved: true, inputMethod: '은행' },
+  { id: 14, date: '2026-03-06', type: '지출', account: '급식·간식재료비', subAccount: '', summary: '3월 급간식 식재료 구입(쿠팡)', amount: 1850000, counterpart: '쿠팡', note: '카드결제', approved: true, evidence: ['쿠팡'], inputMethod: '엑셀' },
+  { id: 15, date: '2026-03-06', type: '지출', account: '급식·간식재료비', subAccount: '', summary: '급간식 추가 구입', amount: 320000, counterpart: '쿠팡', note: '카드결제', approved: true, evidence: ['쿠팡'], inputMethod: '엑셀' },
+  { id: 16, date: '2026-03-06', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '사무용품 구입(네이버)', amount: 125000, counterpart: '네이버', note: '카드결제', approved: false, evidence: ['네이버'], inputMethod: '엑셀' },
+  { id: 17, date: '2026-03-06', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '복사용지 구입', amount: 45000, counterpart: '오피스디포', note: '카드결제', approved: false, evidence: ['현금영수증'], inputMethod: '수기' },
+  { id: 18, date: '2026-03-07', type: '수입', account: '이자수입', subAccount: '', summary: '보통예금 이자', amount: 8320, counterpart: '국민은행', note: '', approved: true, inputMethod: '은행' },
+  { id: 19, date: '2026-03-07', type: '지출', account: '공공요금 및 제세공과금', subAccount: '', summary: '2월 전기요금 납부', amount: 487600, counterpart: '한국전력', note: '자동이체', approved: true, inputMethod: '은행' },
+  { id: 20, date: '2026-03-07', type: '지출', account: '공공요금 및 제세공과금', subAccount: '', summary: '2월 수도요금 납부', amount: 156000, counterpart: '수도사업소', note: '자동이체', approved: true, inputMethod: '은행' },
+  { id: 21, date: '2026-03-07', type: '지출', account: '공공요금 및 제세공과금', subAccount: '', summary: '2월 도시가스 납부', amount: 234000, counterpart: '도시가스', note: '자동이체', approved: true, inputMethod: '은행' },
+  { id: 22, date: '2026-03-07', type: '지출', account: '공공요금 및 제세공과금', subAccount: '', summary: '3월 통신비', amount: 89000, counterpart: 'KT', note: '자동이체', approved: true, inputMethod: '은행' },
+  { id: 23, date: '2026-03-08', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '11번가 구입', amount: 55000, counterpart: '11번가', note: '카드결제', approved: false, evidence: ['11번가'], inputMethod: '수기' },
+  { id: 24, date: '2026-03-08', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '지마켓 구입', amount: 33000, counterpart: '지마켓', note: '카드결제', approved: false, evidence: ['지마켓'], inputMethod: '분리' },
+  { id: 25, date: '2026-03-08', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '옥션 구입', amount: 22000, counterpart: '옥션', note: '카드결제', approved: false, evidence: ['옥션'], inputMethod: '합산' },
+  { id: 26, date: '2026-03-08', type: '지출', account: '급식·간식재료비', subAccount: '', summary: '오아시스 식재료', amount: 88000, counterpart: '오아시스', note: '카드결제', approved: true, evidence: ['오아시스'], inputMethod: '수기' },
+  { id: 27, date: '2026-03-10', type: '수입', account: '부모부담 보육료', subAccount: '', summary: '3월 부모부담 보육료(1차)', amount: 2340000, counterpart: '학부모', note: '', approved: true, inputMethod: '은행' },
+  { id: 28, date: '2026-03-10', type: '수입', account: '부모부담 보육료', subAccount: '', summary: '3월 부모부담 보육료(2차)', amount: 1560000, counterpart: '학부모', note: '', approved: true, inputMethod: '은행' },
+  { id: 29, date: '2026-03-10', type: '수입', account: '기타 필요경비', subAccount: '현장학습비', summary: '3월 현장학습비 수납', amount: 450000, counterpart: '학부모', note: '', approved: true, inputMethod: '은행' },
+  { id: 30, date: '2026-03-10', type: '수입', account: '기타 필요경비', subAccount: '차량운행비', summary: '3월 차량운행비 수납', amount: 780000, counterpart: '학부모', note: '', approved: true, inputMethod: '은행' },
+  { id: 31, date: '2026-03-11', type: '지출', account: '여비', subAccount: '', summary: '출장비 지급', amount: 150000, counterpart: '교직원', note: '계좌이체', approved: false, inputMethod: '수기' },
+  { id: 32, date: '2026-03-11', type: '지출', account: '차량비', subAccount: '', summary: '차량 유류비', amount: 120000, counterpart: '주유소', note: '카드결제', approved: true, evidence: ['현금영수증'], inputMethod: '수기' },
+  { id: 33, date: '2026-03-11', type: '지출', account: '복리후생비', subAccount: '', summary: '교직원 건강검진비', amount: 350000, counterpart: '건강검진센터', note: '카드결제', approved: false, evidence: ['세금계산서'], inputMethod: '수기' },
+  { id: 34, date: '2026-03-12', type: '지출', account: '교재·교구 구입비', subAccount: '', summary: '교재 구입', amount: 280000, counterpart: '교보문고', note: '카드결제', approved: true, evidence: ['현금영수증'], inputMethod: '엑셀' },
+  { id: 35, date: '2026-03-12', type: '지출', account: '교재·교구 구입비', subAccount: '', summary: '교구 구입', amount: 560000, counterpart: '아이스크림몰', note: '카드결제', approved: true, evidence: ['세금계산서'], inputMethod: '엑셀' },
+  { id: 36, date: '2026-03-12', type: '지출', account: '행사비', subAccount: '', summary: '봄소풍 행사비', amount: 430000, counterpart: '행사업체', note: '계좌이체', approved: false, inputMethod: '수기' },
+  { id: 37, date: '2026-03-13', type: '지출', account: '영유아복리비', subAccount: '', summary: '영유아 간식 지원', amount: 180000, counterpart: '마트', note: '카드결제', approved: true, evidence: ['현금영수증'], inputMethod: '수기' },
+  { id: 38, date: '2026-03-13', type: '지출', account: '기타 운영비', subAccount: '', summary: '소독비', amount: 200000, counterpart: '소독업체', note: '계좌이체', approved: true, evidence: ['세금계산서'], inputMethod: '수기' },
+  { id: 39, date: '2026-03-14', type: '수입', account: '그 밖의 지원금', subAccount: '', summary: '특별지원금 입금', amount: 500000, counterpart: '구청', note: '', approved: true, inputMethod: '은행' },
+  { id: 40, date: '2026-03-14', type: '지출', account: '업무추진비', subAccount: '', summary: '원장 업무추진비', amount: 300000, counterpart: '', note: '카드결제', approved: false, inputMethod: '수기' },
+  { id: 41, date: '2026-03-15', type: '지출', account: '교직원연수·연구비', subAccount: '', summary: '교사 연수비', amount: 250000, counterpart: '연수원', note: '계좌이체', approved: true, inputMethod: '수기' },
+  { id: 42, date: '2026-03-15', type: '지출', account: '시설장비 유지비', subAccount: '', summary: 'CCTV 점검비', amount: 150000, counterpart: '보안업체', note: '계좌이체', approved: true, evidence: ['세금계산서'], inputMethod: '수기' },
+  { id: 43, date: '2026-03-16', type: '지출', account: '급식·간식재료비', subAccount: '', summary: '식재료 추가 구입', amount: 670000, counterpart: '농협하나로마트', note: '카드결제', approved: true, evidence: ['현금영수증'], inputMethod: '수기' },
+  { id: 44, date: '2026-03-16', type: '지출', account: '수용비 및 수수료', subAccount: '', summary: '세탁비', amount: 85000, counterpart: '세탁소', note: '현금결제', approved: false, evidence: ['현금영수증'], inputMethod: '수기' },
+  { id: 45, date: '2026-03-17', type: '수입', account: '비지정후원금', subAccount: '', summary: '후원금 입금', amount: 100000, counterpart: '후원자', note: '', approved: true, inputMethod: '은행' },
+  { id: 46, date: '2026-03-17', type: '지출', account: '원장급여', subAccount: '', summary: '3월 원장 급여', amount: 3500000, counterpart: '원장', note: '자동이체', approved: true, evidence: ['세금계산서'], inputMethod: '은행' },
+  { id: 47, date: '2026-03-17', type: '지출', account: '원장수당', subAccount: '', summary: '3월 원장 수당', amount: 500000, counterpart: '원장', note: '자동이체', approved: true, inputMethod: '은행' },
+  { id: 48, date: '2026-03-18', type: '지출', account: '연료비', subAccount: '', summary: '난방유 구입', amount: 450000, counterpart: '에너지업체', note: '계좌이체', approved: true, evidence: ['세금계산서'], inputMethod: '수기' },
+  { id: 49, date: '2026-03-18', type: '지출', account: '기타 인건비', subAccount: '', summary: '대체교사 인건비', amount: 380000, counterpart: '대체교사', note: '계좌이체', approved: false, inputMethod: '수기' },
+  { id: 50, date: '2026-03-18', type: '수입', account: '전입금', subAccount: '', summary: '법인 전입금', amount: 2000000, counterpart: '법인', note: '', approved: true, inputMethod: '은행' },
 ]
 
 const accountOptions = ['보육료', '보조금', '인건비', '4대보험', '운영비', '기타수입', '전입금', '차입금']
@@ -84,6 +123,8 @@ const expenseAccounts: AccItem[] = [
   { value: '기타 인건비', label: '기타 인건비' },
   { value: '법정부담금', label: '법정부담금' },
   { value: '퇴직금 및 퇴직적립금', label: '퇴직금 및 퇴직적립금' },
+  { value: '세목:퇴직금', label: '퇴직금', isSub: true },
+  { value: '세목:퇴직적립금', label: '퇴직적립금', isSub: true },
   { value: '수용비 및 수수료', label: '수용비 및 수수료' },
   { value: '공공요금 및 제세공과금', label: '공공요금 및 제세공과금' },
   { value: '연료비', label: '연료비' },
@@ -125,6 +166,94 @@ const expenseAccounts: AccItem[] = [
   { value: '예비비', label: '예비비' },
 ]
 
+// 계정과목 → 코드 매핑 (목 4자리)
+const accountCodeMap: Record<string, string> = {
+  // 수입
+  '정부지원 보육료': '1111',
+  '부모부담 보육료': '1112',
+  '특별활동비': '1211',
+  '기타 필요경비': '1221',
+  '인건비 보조금': '1311',
+  '기관보육료': '1312',
+  '연장보육료': '1321',
+  '공공형 운영비': '1323',
+  '그 밖의 지원금': '1324',
+  '자본보조금': '1331',
+  '전입금': '1411',
+  '단기차입금': '1511',
+  '장기차입금': '1521',
+  '지정후원금': '1611',
+  '비지정후원금': '1612',
+  '적립금 처분 수입': '1711',
+  '과년도 수입': '1811',
+  '이자수입': '1911',
+  '그 밖의 잡수입': '1921',
+  '전년도 이월금': '1991',
+  '전년도 이월사업비': '1992',
+  // 지출
+  '원장급여': '2111',
+  '원장수당': '2112',
+  '보육교직원급여': '2121',
+  '보육교직원수당': '2122',
+  '기타 인건비': '2131',
+  '법정부담금': '2141',
+  '퇴직금 및 퇴직적립금': '2142',
+  '수용비 및 수수료': '2211',
+  '공공요금 및 제세공과금': '2212',
+  '연료비': '2213',
+  '여비': '2214',
+  '차량비': '2215',
+  '복리후생비': '2216',
+  '기타 운영비': '2217',
+  '업무추진비': '2218',
+  '직책급': '2219',
+  '회의비': '2220',
+  '교직원연수·연구비': '2311',
+  '교재·교구 구입비': '2312',
+  '행사비': '2313',
+  '영유아복리비': '2314',
+  '급식·간식재료비': '2315',
+  '특별활동비지출': '2411',
+  '기타 필요경비 지출': '2421',
+  '적립금': '2511',
+  '단기 차입금 상환': '2611',
+  '장기 차입금 상환': '2621',
+  '보조금 반환금': '2631',
+  '보호자 반환금': '2632',
+  '법인회계 전출금': '2641',
+  '시설비': '2711',
+  '시설장비 유지비': '2712',
+  '자산취득비': '2721',
+  '과년도 지출': '2811',
+  '잡지출': '2911',
+  '예비비': '2991',
+}
+// 세목 → 5자리 코드
+const subAccountCodeMap: Record<string, string> = {
+  '입학준비금': '12211',
+  '현장학습비': '12212',
+  '차량운행비': '12213',
+  '부모부담행사비': '12214',
+  '조석식비': '12215',
+  '특성화비': '12216',
+  '퇴직금': '21423',
+  '퇴직적립금': '21424',
+  '임대료': '22171',
+  '건물융자금의이자': '22172',
+  '차량할부금': '27211',
+}
+
+// 코드 → 계정과목 역매핑
+const codeToAccount: Record<string, { account: string; subAccount: string }> = {}
+Object.entries(accountCodeMap).forEach(([name, code]) => {
+  codeToAccount[code] = { account: name, subAccount: '' }
+})
+Object.entries(subAccountCodeMap).forEach(([name, code]) => {
+  const parentCode = code.substring(0, 4)
+  const parentName = Object.entries(accountCodeMap).find(([, c]) => c === parentCode)?.[0] || ''
+  codeToAccount[code] = { account: parentName, subAccount: name }
+})
+
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 
 export default function VoucherInputPage() {
@@ -141,13 +270,15 @@ export default function VoucherInputPage() {
   const [filterYearMonth, setFilterYearMonth] = useState('2026-03')
   const [filterDayFrom, setFilterDayFrom] = useState(0) // 0 = 전체
   const [filterDayTo, setFilterDayTo] = useState(0)
+  const [sortMode, setSortMode] = useState<'' | '수입부우선' | '전표번호' | '전체'>('')
   const [showToolbar, setShowToolbar] = useState(false)
   const [showColumnSettings, setShowColumnSettings] = useState(false)
   const columnSettingsRef = useRef<HTMLDivElement>(null)
   const [visibleColumns, setVisibleColumns] = useState({
-    no: false, date: true, type: false, summary: true,
-    income: true, expense: true, account: true, sub: true,
-    counterpart: false, payment: false, sort: false,
+    no: true, date: true, type: true, summary: true,
+    evidence: true, register: true, attach: true,
+    income: true, expense: true, account: true, sub: true, accountCode: true,
+    counterpart: true, payment: true, sort: true,
   })
   const [showCalendar, setShowCalendar] = useState(false)
   const [showAccountDropdown, setShowAccountDropdown] = useState(false)
@@ -177,10 +308,18 @@ export default function VoucherInputPage() {
           setEditingCell(null)
         }
       }
+      // 복사 버튼 외부 클릭 시 초기화
+      if (rows.some(r => r.copySelected)) {
+        const target = e.target as HTMLElement
+        if (!target.closest('button')) {
+          setRows(prev => prev.map(r => r.copySelected ? { ...r, copySelected: false } : r))
+        }
+      }
     }
-    if (showCalendar || showAccountDropdown || showColumnSettings || editingCell) document.addEventListener('mousedown', handler)
+    const hasCopy = rows.some(r => r.copySelected)
+    if (showCalendar || showAccountDropdown || showColumnSettings || editingCell || hasCopy) document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [showCalendar, showAccountDropdown, showColumnSettings, editingCell])
+  }, [showCalendar, showAccountDropdown, showColumnSettings, editingCell, rows])
 
   const startVoice = useCallback((rowId: number) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -299,27 +438,27 @@ export default function VoucherInputPage() {
   return (
     <div className="space-y-4">
       {/* 상단 조건부 */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 hover:bg-slate-50/50 transition-colors">
+      <div className="bg-white rounded-xl border-2 border-slate-400 p-5 hover:bg-slate-50/50 transition-colors shadow-sm">
         <div className="flex items-end gap-4 flex-wrap">
-            <div>
-              <label className="text-[11px] text-slate-500 block mb-1 font-medium">출납년월</label>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-slate-500 font-medium whitespace-nowrap">출납년월</label>
               <select
                 value={filterYearMonth}
                 onChange={e => { setFilterYearMonth(e.target.value); setFilterDayFrom(0); setFilterDayTo(0) }}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-700"
+                className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700"
               >
                 {yearMonthOptions.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>
-            <div className="relative" ref={calendarRef}>
-              <label className="text-[11px] text-slate-500 block mb-1 font-medium">일자</label>
+            <div className="relative flex items-center gap-1.5" ref={calendarRef}>
+              <label className="text-xs text-slate-500 font-medium whitespace-nowrap">일자</label>
               <button
                 onClick={() => setShowCalendar(!showCalendar)}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 flex items-center gap-1.5"
+                className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 flex items-center gap-1.5"
               >
-                <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                 </svg>
                 {filterDayFrom > 0 && filterDayTo > 0
@@ -398,10 +537,9 @@ export default function VoucherInputPage() {
                 </div>
               )}
             </div>
-            <div className="relative" ref={accountDropdownRef}>
-              <label className="text-[11px] text-slate-500 block mb-1 font-medium">계정과목</label>
+            <div className="relative flex items-center gap-1.5" ref={accountDropdownRef}>
+              <label className="text-xs text-slate-500 font-medium whitespace-nowrap">계정과목</label>
               <div className="flex items-center gap-1">
-                <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
                   {(['전체', '수입', '지출'] as const).map(g => (
                     <button
                       key={g}
@@ -410,14 +548,17 @@ export default function VoucherInputPage() {
                         setFilterAccount(g === '전체' ? '전체' : g === '수입' ? '수입전체' : '지출전체')
                         setShowAccountDropdown(true)
                       }}
-                      className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
-                        filterAccountGroup === g ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                      className={`px-3 py-1.5 rounded-lg border-2 text-xs font-medium transition-colors flex items-center gap-1 ${
+                        filterAccountGroup === g ? 'bg-white text-blue-700 border-blue-500 shadow-sm' : 'text-slate-500 border-slate-400 hover:text-slate-700'
                       }`}
                     >
-                      {g}
+                      {g === '전체' && filterAccountGroup === '전체' && filterAccount !== '전체' ? filterAccount
+                        : g === '수입' && filterAccountGroup === '수입' && filterAccount !== '수입전체' ? filterAccount
+                        : g === '지출' && filterAccountGroup === '지출' && filterAccount !== '지출전체' ? filterAccount
+                        : g}
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                     </button>
                   ))}
-                </div>
               </div>
               {showAccountDropdown && (
                 <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 w-[220px] max-h-[320px] overflow-y-auto">
@@ -438,7 +579,7 @@ export default function VoucherInputPage() {
                       >
                         {a.isSub ? (
                           <span className="flex items-center gap-1">
-                            <span className="inline-block px-1 py-0 rounded bg-sky-200 text-sky-700 text-[9px] font-bold">세목</span>
+                            <span className="inline-block px-1 py-0 rounded bg-sky-200 text-sky-700 text-[12px] font-bold">세목</span>
                             {a.label}
                           </span>
                         ) : a.label}
@@ -457,7 +598,7 @@ export default function VoucherInputPage() {
                       >
                         {a.isSub ? (
                           <span className="flex items-center gap-1">
-                            <span className="inline-block px-1 py-0 rounded bg-rose-200 text-rose-700 text-[9px] font-bold">세목</span>
+                            <span className="inline-block px-1 py-0 rounded bg-rose-200 text-rose-700 text-[12px] font-bold">세목</span>
                             {a.label}
                           </span>
                         ) : a.label}
@@ -467,127 +608,153 @@ export default function VoucherInputPage() {
                 </div>
               )}
             </div>
-            <div>
-              <label className="text-[11px] text-slate-500 block mb-1 font-medium">입력방식</label>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-slate-500 font-medium whitespace-nowrap">입력구분</label>
               <select
                 value={filterInputMethod}
                 onChange={e => setFilterInputMethod(e.target.value)}
-                className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-700"
+                className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700"
               >
                 <option value="전체">전체</option>
-                <option value="은행입력">은행입력</option>
-                <option value="수기입력">수기입력</option>
-                <option value="일괄입력">일괄입력</option>
-                <option value="엑셀입력">엑셀입력</option>
-                <option value="전표분리">전표분리</option>
-                <option value="은행비등록">은행비등록</option>
-                <option value="은행미등록">은행미등록</option>
+                <option value="은행">은행</option>
+                <option value="수기">수기</option>
+                <option value="일괄">일괄</option>
+                <option value="엑셀">엑셀</option>
+                <option value="분리">분리</option>
+                <option value="합산">합산</option>
               </select>
             </div>
-            <div>
-              <label className="text-[11px] text-slate-500 block mb-1 font-medium">금액</label>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-slate-500 font-medium whitespace-nowrap">금액</label>
               <div className="flex items-center gap-1">
                 <input
                   type="text"
                   value={filterAmountFrom}
                   onChange={e => setFilterAmountFrom(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="최소"
-                  className="w-20 px-2 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 text-right"
+                  className="w-24 px-2 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 text-center"
                 />
-                <span className="text-slate-400 text-xs">~</span>
+                <span className="text-slate-400 text-sm">~</span>
                 <input
                   type="text"
                   value={filterAmountTo}
                   onChange={e => setFilterAmountTo(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="최대"
-                  className="w-20 px-2 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 text-right"
+                  className="w-24 px-2 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 text-center"
                 />
               </div>
             </div>
-            <div>
-              <label className="text-[11px] text-slate-500 block mb-1 font-medium">검색</label>
-              <div className="flex items-center gap-0">
-                <select
-                  value={searchKey}
-                  onChange={e => setSearchKey(e.target.value as '적요' | '계정' | '결제방식' | '전표번호')}
-                  className="px-2 py-2 border border-slate-200 rounded-l-lg text-xs font-medium text-slate-700 border-r-0 bg-slate-50"
-                >
-                  <option value="적요">적요</option>
-                  <option value="계정">계정</option>
-                  <option value="결제방식">결제방식</option>
-                  <option value="전표번호">전표번호</option>
-                </select>
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={e => setSearchText(e.target.value)}
-                  placeholder="검색어 입력"
-                  className="w-28 px-2 py-2 border border-slate-200 rounded-r-lg text-xs font-medium text-slate-700"
-                />
-              </div>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-slate-500 font-medium whitespace-nowrap">검색</label>
+              <select
+                value={searchKey}
+                onChange={e => setSearchKey(e.target.value as '적요' | '계정' | '결제방식' | '전표번호')}
+                className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 bg-slate-50"
+              >
+                <option value="적요">적요</option>
+                <option value="계정">계정</option>
+                <option value="결제방식">결제방식</option>
+                <option value="전표번호">전표번호</option>
+              </select>
+              <input
+                type="text"
+                value={searchText}
+                onChange={e => setSearchText(e.target.value)}
+                placeholder="검색어 입력"
+                className="w-32 px-2 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700"
+              />
+              <button className="px-5 py-1.5 text-xs font-semibold text-slate-700 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">조회</button>
+              <button onClick={() => {
+                setFilterYearMonth('2026-03'); setFilterDayFrom(0); setFilterDayTo(0)
+                setFilterType('전체'); setFilterAccountGroup('전체'); setFilterAccount('전체')
+                setFilterInputMethod('전체'); setFilterAmountFrom(''); setFilterAmountTo('')
+                setSearchKey('적요'); setSearchText(''); setSortMode('')
+              }} className="px-5 py-1.5 text-xs font-semibold text-slate-600 bg-slate-200 rounded-lg hover:bg-slate-300 transition-colors">초기화</button>
             </div>
-          <button className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors ml-auto">조회</button>
         </div>
       </div>
 
-      {/* 요약 카드 */}
-      <div className="grid grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl border border-blue-200 p-4 hover:bg-blue-50/50 transition-colors">
-          <p className="text-xs font-bold text-blue-500 mb-1">수입합계</p>
-          <p className="text-xl font-bold text-blue-700">{fmt(totalIncome)}원</p>
-          <div className="flex items-center gap-3 mt-2">
-            <span className="text-xs text-slate-500">전표 <strong className="text-blue-600">{filtered.filter(r => r.type === '수입').length}</strong></span>
-            <span className="text-xs text-slate-500">정상 <strong className="text-blue-600">{filtered.filter(r => r.type === '수입' && r.amount >= 0).length}</strong></span>
-            <span className="text-xs text-slate-500">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</strong></span>
-            <span className="text-xs text-slate-500">삭제 <strong className="text-slate-400">0</strong></span>
-          </div>
+      {/* 요약 데이터 */}
+      <div className="flex items-center gap-3 px-2">
+        <div className="flex items-center gap-3 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-xs font-bold text-blue-700">수입</span>
+          <span className="text-xs text-slate-600">합계 <strong className="text-blue-700">{fmt(totalIncome)}</strong></span>
+          <span className="text-xs text-slate-600">전표 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입').length}</strong></span>
+          <span className="text-xs text-slate-600">정상 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입' && r.amount >= 0).length}</strong></span>
+          <span className="text-xs text-slate-600">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</strong></span>
+          <span className="text-xs text-slate-600">삭제 <strong className="text-slate-400">0</strong></span>
         </div>
-        <div className="bg-white rounded-xl border border-red-200 p-4 hover:bg-red-50/50 transition-colors">
-          <p className="text-xs font-bold text-red-500 mb-1">지출합계</p>
-          <p className="text-xl font-bold text-red-600">{fmt(totalExpense)}원</p>
-          <div className="flex items-center gap-3 mt-2">
-            <span className="text-xs text-slate-500">전표 <strong className="text-red-600">{filtered.filter(r => r.type === '지출').length}</strong></span>
-            <span className="text-xs text-slate-500">정상 <strong className="text-red-600">{filtered.filter(r => r.type === '지출' && r.amount >= 0).length}</strong></span>
-            <span className="text-xs text-slate-500">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</strong></span>
-            <span className="text-xs text-slate-500">삭제 <strong className="text-slate-400">0</strong></span>
-          </div>
+        <div className="flex items-center gap-3 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
+          <span className="text-xs font-bold text-red-600">지출</span>
+          <span className="text-xs text-slate-600">합계 <strong className="text-red-600">{fmt(totalExpense)}</strong></span>
+          <span className="text-xs text-slate-600">전표 <strong className="text-red-600">{filtered.filter(r => r.type === '지출').length}</strong></span>
+          <span className="text-xs text-slate-600">정상 <strong className="text-red-600">{filtered.filter(r => r.type === '지출' && r.amount >= 0).length}</strong></span>
+          <span className="text-xs text-slate-600">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</strong></span>
+          <span className="text-xs text-slate-600">삭제 <strong className="text-slate-400">0</strong></span>
         </div>
-        <div className="bg-white rounded-xl border border-emerald-200 p-4 hover:bg-emerald-50/50 transition-colors">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs font-bold text-emerald-500">회계잔액</p>
-            {totalIncome - totalExpense === totalIncome - totalExpense ? (
-              <span className="text-[10px] font-normal text-sky-600 bg-sky-100 px-2 py-0.5 rounded-full">계좌잔액 일치</span>
-            ) : (
-              <span className="text-[10px] font-normal text-red-600 bg-red-100 px-2 py-0.5 rounded-full">계좌 불일치</span>
-            )}
-          </div>
-          <p className="text-xl font-bold text-emerald-700">{fmt(totalIncome - totalExpense)}원</p>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <span className="text-xs font-bold text-emerald-700">회계잔액</span>
+          <strong className="text-sm text-emerald-700">{fmt(totalIncome - totalExpense)}</strong>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4 hover:bg-slate-50/50 transition-colors">
-          <p className="text-xs font-bold text-slate-500 mb-1">계좌잔액</p>
-          <p className="text-xl font-bold text-slate-700">{fmt(totalIncome - totalExpense)}원</p>
-          <div className="flex flex-col gap-1 mt-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500">국민 1234-56</span>
-              <span className="text-[10px] font-bold text-slate-700">{fmt(totalIncome - totalExpense)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500">농협 9876-54</span>
-              <span className="text-[10px] font-bold text-slate-700">0</span>
-            </div>
-          </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
+          <span className="text-xs font-bold text-slate-700">계좌잔액</span>
+          <strong className="text-sm text-slate-700">{fmt(totalIncome - totalExpense)}</strong>
+          <span className="text-[10px] text-sky-600 bg-sky-100 px-1.5 py-0.5 rounded-full">일치</span>
         </div>
       </div>
 
       {/* 기능키 툴바 */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 flex items-center overflow-visible">
+      <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex items-center overflow-visible" ref={columnSettingsRef}>
+        <div className="relative">
+          <button onClick={() => setShowColumnSettings(!showColumnSettings)}
+            className={`px-3 py-2 rounded transition-colors flex items-center gap-1.5 text-xs font-bold ${showColumnSettings ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`} data-tip="컬럼 설정">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            컬럼설정
+          </button>
+          {showColumnSettings && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-50 w-[180px]">
+              <p className="text-[11px] font-bold text-slate-700 mb-2">컬럼 표시 설정</p>
+              {([
+                ['no', '전표번호'],
+                ['date', '전표일자'],
+                ['type', '구분'],
+                ['summary', '적요'],
+                ['evidence', '증빙(영수/이체/은행/증빙)'],
+                ['register', '등록'],
+                ['attach', '첨부'],
+                ['income', '수입금액'],
+                ['expense', '지출금액'],
+                ['account', '계정과목'],
+                ['sub', '세목'],
+                ['accountCode', '계정코드'],
+                ['counterpart', '거래처'],
+                ['payment', '결제방식'],
+                ['sort', '정렬'],
+              ] as [string, string][]).map(([key, label]) => (
+                <label key={key} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-slate-50 rounded px-1">
+                  <input type="checkbox"
+                    checked={visibleColumns[key as keyof typeof visibleColumns]}
+                    onChange={() => setVisibleColumns(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }))}
+                    className="rounded border-slate-300 text-blue-600 w-3.5 h-3.5" />
+                  <span className="text-xs text-slate-700">{label}</span>
+                </label>
+              ))}
+              <button onClick={() => setShowColumnSettings(false)}
+                className="w-full mt-2 py-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 border-t border-slate-100 pt-2">닫기</button>
+            </div>
+          )}
+        </div>
+        <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
         <button
           onClick={() => setShowToolbar(!showToolbar)}
-          className={`px-2.5 py-1.5 text-[11px] font-bold whitespace-nowrap rounded transition-colors flex items-center gap-1 ${
+          className={`px-3 py-2 text-xs font-bold whitespace-nowrap rounded transition-colors flex items-center gap-1.5 ${
             showToolbar ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
           }`}
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
           </svg>
           기능키
@@ -596,135 +763,114 @@ export default function VoucherInputPage() {
           <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
           {/* 전표 그룹 */}
           <div className="flex items-center gap-1">
-            <span className="px-2 py-1.5 text-[11px] font-bold whitespace-nowrap text-amber-700 bg-amber-100 rounded cursor-default">전표</span>
-            <button onClick={addRow} data-tip="신규전표를 수기로 등록" className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">등록</button>
-            <button data-tip="동일날짜에 선택된 전표를 1개 전표로 합산" className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">합산</button>
-            <button onClick={deleteRows} data-tip="선택한 전표를 삭제처리" className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">삭제</button>
-            <button data-tip="동일금액의 전표를 동일한 금액으로 분리" className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">일괄분리</button>
-            <button data-tip="선택된 전표를 미계정상태로 전환" className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">미계정전환</button>
+            <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-amber-700 bg-amber-100 rounded cursor-default">전표</span>
+            <button onClick={addRow} data-tip="신규전표를 수기로 등록" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">등록</button>
+            <button data-tip="동일날짜에 선택된 전표를 1개 전표로 합산" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">합산</button>
+            <button onClick={deleteRows} data-tip="선택한 전표를 삭제처리" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">삭제</button>
+            <button data-tip="동일금액의 전표를 동일한 금액으로 분리" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">일괄분리</button>
+            <button data-tip="선택된 전표를 미계정상태로 전환" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">미계정전환</button>
           </div>
           <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
           {/* 적요 그룹 */}
           <div className="flex items-center gap-1">
-            <span className="px-2 py-1.5 text-[11px] font-bold whitespace-nowrap text-amber-700 bg-amber-100 rounded cursor-default">적요</span>
-            <button data-tip="선택된 전표의 적요를 삭제" className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">삭제</button>
-            <button data-tip="선택된 전표의 적요를 치환처리" className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">치환</button>
-            <button data-tip="세목지정된 전표적요에 세목내용추가" className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">세목추가</button>
+            <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-amber-700 bg-amber-100 rounded cursor-default">적요</span>
+            <button data-tip="선택된 전표의 적요를 삭제" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">삭제</button>
+            <button data-tip="선택된 전표의 적요를 치환처리" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">치환</button>
+            <button data-tip="세목지정된 전표적요에 세목내용추가" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">세목추가</button>
           </div>
           <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
           {/* 매핑 그룹 */}
           <div className="flex items-center gap-1">
-            <span className="px-2 py-1.5 text-[11px] font-bold whitespace-nowrap text-pink-600 bg-pink-100 rounded cursor-default">매핑</span>
-            <button data-tip="아동관리에 등록아동과 전표에 아동의 필요경비를 자동 매핑" className="tip-pink px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">원아경비</button>
-            <button data-tip="기 설정된 조건에 부합하는 계정으로 동시매핑" className="tip-pink px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">거래처.적요.결제방식</button>
+            <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-pink-600 bg-pink-100 rounded cursor-default">매핑</span>
+            <button data-tip="아동관리에 등록아동과 전표에 아동의 필요경비를 자동 매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">원아경비</button>
+            <button data-tip="기 설정된 조건에 부합하는 계정으로 동시매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">거래처.적요.결제방식</button>
           </div>
           <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
           {/* 정렬 그룹 */}
           <div className="flex items-center gap-1">
-            <span className="px-2 py-1.5 text-[11px] font-bold whitespace-nowrap text-green-600 bg-green-100 rounded cursor-default">정렬</span>
-            <button data-tip="동일날짜에 수입전표가 먼저 정렬처리" className="tip-green px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">수입부우선</button>
-            <button data-tip="전표번호를 순서대로 다시 번호배열처리" className="tip-green px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">전표번호</button>
-            <button data-tip="페이지로 노출된 전표를 1페이지에 모두 노출처리" className="tip-green px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">전체</button>
+            <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-green-600 bg-green-100 rounded cursor-default">
+              정렬{sortMode && <span className="ml-1 text-green-800">({sortMode})</span>}
+            </span>
+            {(['수입부우선', '전표번호', '전체'] as const).map(mode => (
+              <button key={mode}
+                onClick={() => {
+                  setSortMode(mode)
+                  if (mode === '수입부우선') {
+                    setRows(prev => [...prev].sort((a, b) => a.date.localeCompare(b.date) || (a.type === '수입' ? -1 : 1)))
+                  } else if (mode === '전표번호') {
+                    setRows(prev => [...prev].sort((a, b) => a.id - b.id))
+                  }
+                }}
+                className={`tip-green px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border rounded sub-tab-hover ${
+                  sortMode === mode ? 'border-green-500 bg-green-100 text-green-700' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
+                }`}
+              >{mode}</button>
+            ))}
           </div>
         </>}
-        <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
         {/* 출력 그룹 - 항상 표시 */}
         <div className="flex items-center gap-1 ml-auto">
-          <button data-tip="엑셀 다운로드" className="px-2 py-1.5 border border-green-400 rounded bg-green-50 hover:bg-green-100 text-green-700 sub-tab-hover">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <button data-tip="엑셀 다운로드" className="px-3 py-1.5 border border-green-400 rounded bg-green-50 hover:bg-green-100 text-green-700 sub-tab-hover flex items-center gap-1 text-xs font-bold">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M14.5 1H6a2 2 0 00-2 2v18a2 2 0 002 2h12a2 2 0 002-2V6.5L14.5 1zM14 2l5 5h-5V2zM7.5 17.5L10 13l-2.5-4.5h1.8L10.8 11l1.5-2.5h1.8L11.6 13l2.5 4.5h-1.8L10.8 15l-1.5 2.5H7.5z" />
             </svg>
+            엑셀
           </button>
-          <button data-tip="인쇄" className="px-2 py-1.5 border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <button data-tip="인쇄" className="px-3 py-1.5 border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover flex items-center gap-1 text-xs font-bold">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18.75 12h.008v.008h-.008V12zm-3 0h.008v.008h-.008V12z" />
             </svg>
+            인쇄
           </button>
           <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover">저장</button>
         </div>
       </div>
 
       {/* 전표 테이블 */}
-      <div className="flex items-center justify-end mb-1 relative" ref={columnSettingsRef}>
-        <button onClick={() => setShowColumnSettings(!showColumnSettings)}
-          className={`p-1.5 rounded transition-colors ${showColumnSettings ? 'bg-blue-100 text-blue-600' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'}`} data-tip="컬럼 설정">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </button>
-        {showColumnSettings && (
-          <div className="absolute top-full right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-50 w-[180px]">
-            <p className="text-[11px] font-bold text-slate-700 mb-2">컬럼 표시 설정</p>
-            {([
-              ['no', '전표번호'],
-              ['date', '전표일자'],
-              ['type', '구분'],
-              ['summary', '적요'],
-              ['income', '수입금액'],
-              ['expense', '지출금액'],
-              ['account', '계정과목'],
-              ['sub', '세목'],
-              ['counterpart', '거래처'],
-              ['payment', '결제방식'],
-              ['sort', '정렬'],
-            ] as [string, string][]).map(([key, label]) => (
-              <label key={key} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-slate-50 rounded px-1">
-                <input type="checkbox"
-                  checked={visibleColumns[key as keyof typeof visibleColumns]}
-                  onChange={() => setVisibleColumns(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }))}
-                  className="rounded border-slate-300 text-blue-600 w-3.5 h-3.5" />
-                <span className="text-xs text-slate-700">{label}</span>
-              </label>
-            ))}
-            <button onClick={() => setShowColumnSettings(false)}
-              className="w-full mt-2 py-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 border-t border-slate-100 pt-2">닫기</button>
-          </div>
-        )}
-      </div>
-      <div className="bg-white rounded-xl border border-slate-200 hover:shadow-md transition-shadow">
-        <div className="overflow-x-auto">
-          <table className="text-xs w-full">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[30px]">
-                  <input type="checkbox" className="rounded border-slate-300" checked={checked.size === filtered.length && filtered.length > 0} onChange={toggleAll} />
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm relative">
+        <div className="max-h-[calc(100vh-380px)] overflow-y-auto overflow-x-auto">
+          <table className="text-sm w-full">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-[#fffbeb]" style={{boxShadow: 'inset 0 -2px 0 #f5b800, inset 0 2px 0 #f5b800'}}>
+                <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[34px]">
+                  <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.size === filtered.length && filtered.length > 0} onChange={toggleAll} />
                 </th>
-                {visibleColumns.no && <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[36px]">번호</th>}
-                {visibleColumns.date && <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[70px]">일자</th>}
-                {visibleColumns.type && <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[36px]">구분</th>}
-                {visibleColumns.summary && <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[150px]">적요</th>}
-                <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[32px]">영수</th>
-                <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[32px]">이체</th>
-                <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[32px]">은행</th>
-                <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[40px] relative group cursor-help"><span className="whitespace-nowrap">증빙<span className="text-blue-400 text-[9px]">ⓘ</span></span>
-                  <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-slate-800 text-white text-[10px] font-normal rounded-lg px-3 py-2 z-50 w-[140px] shadow-lg">
+                {visibleColumns.no && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[40px]">번호</th>}
+                {visibleColumns.date && <th className="text-center px-1 py-2 font-semibold text-slate-700 w-[62px]">일자</th>}
+                {visibleColumns.type && <th className="text-center px-0.5 py-2 font-semibold text-slate-700 w-[40px]">구분</th>}
+                {visibleColumns.summary && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[170px]">적요</th>}
+                {visibleColumns.evidence && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[36px]">영수</th>}
+                {visibleColumns.evidence && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[36px]">이체</th>}
+                {visibleColumns.evidence && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[36px]">은행</th>}
+                {visibleColumns.evidence && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[44px] relative group cursor-help"><span className="whitespace-nowrap">증빙<span className="text-blue-400 text-[10px]">ⓘ</span></span>
+                  <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-blue-100 text-blue-800 text-[10px] font-normal rounded-lg px-3 py-2 z-50 w-[140px] shadow-lg border border-blue-200">
                     <p className="font-bold mb-1">국세청</p>
                     <p>세금계산서 · 계산서 · 현금영수증</p>
                     <p className="font-bold mt-1.5 mb-1">쇼핑몰</p>
                     <p>쿠팡 · 네이버 · 11번가 · 지마켓 · 옥션 · 오아시스</p>
                     <p className="font-bold mt-1.5 mb-1">4대보험</p>
                     <p>국민연금 · 건강보험 · 고용보험 · 산재보험</p>
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-100 border-l border-t border-blue-200 rotate-45"></div>
                   </div>
-                </th>
-                <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[32px]">등록</th>
-                <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[32px]">첨부</th>
-                {visibleColumns.income && <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[90px]">수입금액</th>}
-                {visibleColumns.expense && <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[90px]">지출금액</th>}
-                <th className="text-center px-0 py-2 font-semibold text-slate-500 w-[28px]">복사</th>
-                {visibleColumns.account && <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[80px]">계정과목</th>}
-                {visibleColumns.sub && <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[70px]">세목</th>}
-                <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[32px]">분리</th>
-                <th className="text-center px-0 py-2 font-semibold text-slate-500 w-[50px]">반납</th>
-                <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[36px]">수수료</th>
-                {visibleColumns.counterpart && <th className="text-center px-1 py-2 font-semibold text-slate-500 w-[70px]">거래처</th>}
-                {visibleColumns.payment && <th className="text-left px-1 py-2 font-semibold text-slate-500 w-[70px]">결제방식</th>}
-                <th className="text-center px-0 py-2 font-semibold text-slate-500 w-[32px]">원아</th>
-                {visibleColumns.sort && <th className="text-center px-0 py-2 font-semibold text-slate-500 w-[32px]">정렬</th>}
+                </th>}
+                {visibleColumns.register && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[36px]">등록</th>}
+                {visibleColumns.attach && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[36px]">첨부</th>}
+                {visibleColumns.income && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[100px]">수입금액</th>}
+                {visibleColumns.expense && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[100px]">지출금액</th>}
+                <th className="text-center px-1 py-2 font-semibold text-slate-700 w-[40px]">복사</th>
+                {visibleColumns.account && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[130px]">계정과목</th>}
+                {visibleColumns.sub && <th className="text-center px-0.5 py-2 font-semibold text-slate-700 w-[68px]">세목</th>}
+                {visibleColumns.accountCode && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[70px]">계정코드</th>}
+                <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[46px]">분리</th>
+                <th className="text-center px-1 py-2 font-semibold text-slate-700 w-[80px]">반납</th>
+                <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[50px]">수수료</th>
+                {visibleColumns.counterpart && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[78px]">거래처</th>}
+                {visibleColumns.payment && <th className="text-center px-1.5 py-2 font-semibold text-slate-700 w-[78px]">결제방식</th>}
+                <th className="text-center px-1 py-2 font-semibold text-slate-700 w-[36px]">원아</th>
+                {visibleColumns.sort && <th className="text-center px-1 py-2 font-semibold text-slate-700 w-[36px]">정렬</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {filtered.map((row, idx) => {
                 const isCell = (field: string) => editingCell?.rowId === row.id && editingCell?.field === field
                 const cellClick = (field: string) => (e: React.MouseEvent) => {
@@ -736,16 +882,20 @@ export default function VoucherInputPage() {
                   <tr
                     key={row.id}
                     className={`transition-colors ${
-                      editingCell?.rowId === row.id ? 'bg-amber-50/70' : checked.has(row.id) ? 'bg-blue-50/60' : 'hover:bg-slate-50/80'
+                      editingCell?.rowId === row.id ? (row.type === '수입' ? 'bg-blue-100' : 'bg-red-100') : checked.has(row.id) ? 'bg-blue-50/60' : (() => {
+                        const nextRow = filtered[idx + 1]
+                        const isLastOfDate = !nextRow || nextRow.date !== row.date
+                        return `bg-white ${row.type === '수입' ? 'hover:bg-blue-100' : 'hover:bg-red-100'} ${isLastOfDate ? 'border-b-2 border-[#f5b800]' : 'border-b border-[#f5b800]/30'}`
+                      })()
                     }`}
                   >
-                    <td className="text-center px-2 py-2">
-                      <input type="checkbox" className="rounded border-slate-300" checked={checked.has(row.id)} onChange={() => toggleCheck(row.id)} />
+                    <td className="text-center px-2 py-1">
+                      <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.has(row.id)} onChange={() => toggleCheck(row.id)} />
                     </td>
-                    {visibleColumns.no && <td className="text-center px-2 py-2 text-slate-400">{idx + 1}</td>}
+                    {visibleColumns.no && <td className="text-center px-2 py-1 text-slate-400">{idx + 1}</td>}
 
                     {/* 전표일자 */}
-                    {visibleColumns.date && <td className="text-center px-2 py-2 cursor-pointer relative" onClick={cellClick('date')}>
+                    {visibleColumns.date && <td className="text-center px-2 py-1 cursor-pointer relative" onClick={cellClick('date')}>
                       <span className={`text-slate-700 ${isCell('date') ? 'font-extrabold text-slate-900 bg-white px-1.5 py-0.5 rounded' : ''}`}>{row.date.slice(5)}</span>
                       {isCell('date') && (() => {
                         const [cy, cm] = row.date.split('-').map(Number)
@@ -800,19 +950,40 @@ export default function VoucherInputPage() {
                     </td>}
 
                     {/* 구분 */}
-                    {visibleColumns.type && <td className="text-center px-2 py-2">
-                      <span className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        displayType === '수입' ? 'bg-blue-100 text-blue-700' : displayType === '지출' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-900 font-extrabold'
-                      }`}>{displayType}</span>
+                    {visibleColumns.type && <td className="text-center px-0.5 py-1">
+                      {(() => {
+                        const m = row.inputMethod || '수기'
+                        const styles: Record<string, string> = {
+                          '은행': 'text-slate-900 border-slate-900',
+                          '수기': 'text-red-600 border-red-600',
+                          '일괄': 'text-orange-600 border-orange-600',
+                          '엑셀': 'text-yellow-800 border-yellow-800',
+                          '분리': 'text-purple-600 border-purple-600',
+                          '합산': 'text-green-700 border-green-700',
+                        }
+                        return <span className={`inline-flex items-center justify-center px-1 py-0 rounded border bg-transparent text-[12px] font-medium ${styles[m] || ''}`}>{m}</span>
+                      })()}
                     </td>}
 
                     {/* 적요 */}
-                    {visibleColumns.summary && <td className="px-2 py-2 cursor-pointer" onClick={cellClick('summary')}>
+                    {visibleColumns.summary && <td className="px-2 py-1 cursor-pointer" onClick={cellClick('summary')}>
                       {isCell('summary') ? (
                         <div onClick={e => e.stopPropagation()}>
                           <textarea value={row.summary} autoFocus rows={3}
+                            ref={el => { if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length) } }}
                             onChange={e => updateRow(row.id, 'summary', e.target.value)}
-                            className="w-full px-2 py-1.5 border border-blue-300 rounded text-xs text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none resize-none bg-white" />
+                            onKeyDown={e => {
+                              if (e.key === 'Tab') {
+                                e.preventDefault()
+                                const nextRow = filtered[idx + 1]
+                                if (nextRow) {
+                                  setEditingCell({ rowId: nextRow.id, field: 'summary' })
+                                } else {
+                                  setEditingCell(null)
+                                }
+                              }
+                            }}
+                            className="w-full px-2 py-1.5 border-2 border-blue-400 rounded text-xs text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none resize-none bg-white" />
                           <div className="flex items-center justify-end mt-1 gap-2">
                             <span className="text-[10px] text-slate-400">{row.summary.length}자</span>
                             <button onClick={() => setEditingCell(null)} className="text-[10px] text-slate-400 hover:text-slate-700 font-medium">닫기</button>
@@ -832,99 +1003,126 @@ export default function VoucherInputPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
                             </svg>
                           </button>
-                          <span className="text-slate-700 text-xs truncate">{row.summary || '-'}</span>
+                          <span className="text-slate-700 text-sm truncate">{row.summary || '-'}</span>
                         </div>
                       )}
                     </td>}
 
-                    {/* 영수 - 현금결제/지로 */}
-                    <td className="text-center px-0 py-2">
+                    {/* 영수 - 현금결제/지로 (카메라 아이콘) */}
+                    {visibleColumns.evidence && <td className="text-center px-0 py-1">
                       {(row.note.includes('현금') || row.note.includes('지로')) && (
-                        <svg className="w-3.5 h-3.5 mx-auto text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" /></svg>
+                        <svg className="w-5 h-5 mx-auto text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                        </svg>
                       )}
-                    </td>
-                    {/* 이체 - 계좌이체/자동이체 */}
-                    <td className="text-center px-0 py-2">
+                    </td>}
+                    {/* 이체 - 계좌이체/자동이체 (이체증 아이콘) */}
+                    {visibleColumns.evidence && <td className="text-center px-0 py-1">
                       {row.note.includes('이체') && (
-                        <svg className="w-3.5 h-3.5 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                        <svg className="w-5 h-5 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
                       )}
-                    </td>
-                    {/* 은행 - 이체와 같은 아이콘 */}
-                    <td className="text-center px-0 py-2">
+                    </td>}
+                    {/* 은행 - 은행거래내역 (서류 아이콘) */}
+                    {visibleColumns.evidence && <td className="text-center px-0 py-1">
                       {row.approved && (
-                        <svg className="w-3.5 h-3.5 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                        <svg className="w-5 h-5 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+                        </svg>
                       )}
-                    </td>
+                    </td>}
                     {/* 증빙 - evidence 배열 기반 뱃지 */}
-                    <td className="text-center px-0 py-1">
+                    {visibleColumns.evidence && <td className="text-center px-0 py-1">
                       {row.evidence && row.evidence.length > 0 && (
                         <div className="flex flex-wrap items-center justify-center gap-0.5">
                           {row.evidence.map(ev => {
+                            const iconEvidence = ['세금계산서', '계산서', '현금영수증']
+                            if (iconEvidence.includes(ev)) {
+                              const bgColor = ev === '세금계산서' ? 'bg-blue-200 border-blue-400' : ev === '계산서' ? 'bg-amber-200 border-amber-400' : 'bg-emerald-200 border-emerald-400'
+                              return (
+                                <span key={ev} className={`inline-flex items-center justify-center rounded border p-0.5 ${bgColor}`} title={ev}>
+                                  <img src="/hometax-favicon.ico" alt="홈택스" className="w-4 h-4 object-contain" />
+                                </span>
+                              )
+                            }
                             const labels: Record<string, [string, string]> = {
-                              '세금계산서': ['세금', 'bg-blue-100 text-blue-700'],
-                              '계산서': ['계산', 'bg-indigo-100 text-indigo-700'],
-                              '현금영수증': ['현금', 'bg-emerald-100 text-emerald-700'],
                               '쿠팡': ['C', 'bg-rose-100 text-rose-600'],
                               '네이버': ['N', 'bg-green-100 text-green-700'],
                               '11번가': ['11', 'bg-red-100 text-red-600'],
                               '지마켓': ['G', 'bg-green-100 text-green-700'],
                               '옥션': ['A', 'bg-orange-100 text-orange-600'],
                               '오아시스': ['O', 'bg-lime-100 text-lime-700'],
-                              '4대보험': ['보험', 'bg-teal-100 text-teal-700'],
                             }
-                            const l = labels[ev]
-                            if (!l) return null
-                            return <span key={ev} className={`inline-block px-1 py-0 rounded text-[7px] font-bold ${l[1]}`} title={ev}>{l[0]}</span>
+                            const faviconMap: Record<string, [string, string]> = {
+                              '4대보험': ['/nhis-favicon.ico', 'border-red-300'],
+                              '쿠팡': ['/coupang-favicon.png', 'border-rose-300'],
+                              '네이버': ['/naver-favicon.ico', 'border-green-300'],
+                              '11번가': ['/11st-favicon.ico', 'border-red-300'],
+                              '지마켓': ['/gmarket-favicon.png', 'border-green-300'],
+                              '옥션': ['/auction-favicon.png', 'border-orange-300'],
+                              '오아시스': ['/oasis-favicon.png', 'border-lime-300'],
+                            }
+                            const fav = faviconMap[ev]
+                            if (fav) {
+                              return (
+                                <span key={ev} className={`inline-flex items-center justify-center rounded border p-0.5 bg-white ${fav[1]}`} title={ev}>
+                                  <img src={fav[0]} alt={ev} className="w-4 h-4 object-contain" />
+                                </span>
+                              )
+                            }
+                            return null
                           })}
                         </div>
                       )}
-                    </td>
+                    </td>}
                     {/* 등록 - 임시: 승인된 건은 등록 데이터 있는 것으로 표시 */}
-                    <td className="text-center px-0 py-2">
+                    {visibleColumns.register && <td className="text-center px-0 py-1">
                       <div className="flex items-center justify-center gap-0.5">
                         {row.approved ? (<>
-                          <button onClick={e => e.stopPropagation()} className="text-blue-600 font-bold">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                          <button onClick={e => e.stopPropagation()} className="text-slate-900">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                           </button>
-                          <span className="text-[9px] font-bold text-blue-600">1</span>
-                          <button onClick={e => e.stopPropagation()} className="text-blue-400 hover:text-blue-600" data-tip="미리보기">
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                          <span className="text-[11px] text-slate-900">1</span>
+                          <button onClick={e => e.stopPropagation()} className="text-slate-700 hover:text-slate-900" data-tip="미리보기">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                           </button>
                         </>) : (
-                          <button onClick={e => e.stopPropagation()} className="text-slate-300 hover:text-blue-600 transition-colors">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                          <button onClick={e => e.stopPropagation()} className="text-slate-300 hover:text-slate-500 transition-colors">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                           </button>
                         )}
                       </div>
-                    </td>
+                    </td>}
                     {/* 첨부 */}
-                    <td className="text-center px-0 py-2">
+                    {visibleColumns.attach && <td className="text-center px-0 py-1">
                       <div className="flex items-center justify-center gap-0.5">
                         {row.approved ? (<>
-                          <button onClick={e => e.stopPropagation()} className="text-blue-600 font-bold">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
+                          <button onClick={e => e.stopPropagation()} className="text-slate-900">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
                           </button>
-                          <span className="text-[9px] font-bold text-blue-600">2</span>
-                          <button onClick={e => e.stopPropagation()} className="text-blue-400 hover:text-blue-600" data-tip="미리보기">
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                          <span className="text-[11px] text-slate-900">2</span>
+                          <button onClick={e => e.stopPropagation()} className="text-slate-700 hover:text-slate-900" data-tip="미리보기">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                           </button>
                         </>) : (
-                          <button onClick={e => e.stopPropagation()} className="text-slate-300 hover:text-blue-600 transition-colors">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
+                          <button onClick={e => e.stopPropagation()} className="text-slate-300 hover:text-slate-500 transition-colors">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
                           </button>
                         )}
                       </div>
-                    </td>
+                    </td>}
 
                     {/* 수입금액 */}
-                    {visibleColumns.income && <td className="text-right px-3 py-2 cursor-pointer" onClick={row.type === '수입' ? cellClick('amount') : undefined}>
+                    {visibleColumns.income && <td className="text-right px-3 py-1 cursor-pointer" onClick={row.type === '수입' ? cellClick('amount') : undefined}>
                       {row.type === '수입' ? (
                         isCell('amount') ? (
                           <input type="text" value={fmt(row.amount)} autoFocus
                             onChange={e => updateRow(row.id, 'amount', Number(e.target.value.replace(/,/g, '')) || 0)}
                             onBlur={() => setEditingCell(null)}
                             onClick={e => e.stopPropagation()}
-                            className="w-full px-1 py-0.5 border border-blue-300 rounded text-xs text-right focus:ring-1 focus:ring-blue-500 outline-none" />
+                            className="w-full px-1 py-0.5 border-2 border-blue-400 rounded text-xs text-right focus:ring-1 focus:ring-blue-500 outline-none" />
                         ) : (
                           <span className="font-medium text-blue-700">{fmt(row.amount)}</span>
                         )
@@ -932,139 +1130,239 @@ export default function VoucherInputPage() {
                     </td>}
 
                     {/* 지출금액 */}
-                    {visibleColumns.expense && <td className="text-right px-3 py-2 cursor-pointer" onClick={row.type === '지출' ? cellClick('amount') : undefined}>
+                    {visibleColumns.expense && <td className="text-right px-3 py-1 cursor-pointer" onClick={row.type === '지출' ? cellClick('amount') : undefined}>
                       {row.type === '지출' ? (
                         isCell('amount') ? (
                           <input type="text" value={fmt(row.amount)} autoFocus
                             onChange={e => updateRow(row.id, 'amount', Number(e.target.value.replace(/,/g, '')) || 0)}
                             onBlur={() => setEditingCell(null)}
                             onClick={e => e.stopPropagation()}
-                            className="w-full px-1 py-0.5 border border-blue-300 rounded text-xs text-right focus:ring-1 focus:ring-blue-500 outline-none" />
+                            className="w-full px-1 py-0.5 border-2 border-blue-400 rounded text-xs text-right focus:ring-1 focus:ring-blue-500 outline-none" />
                         ) : (
                           <span className="font-medium text-red-600">{fmt(row.amount)}</span>
                         )
                       ) : null}
                     </td>}
 
-                    {/* 복사선택 */}
-                    <td className="text-center px-1 py-2">
-                      <input type="checkbox" className="rounded border-slate-300 w-3.5 h-3.5" />
+                    {/* 계정복사 */}
+                    <td className="text-center px-1 py-1">
+                      {(() => {
+                        const copiedRow = rows.find(r => r.copySelected)
+                        if (row.copySelected) {
+                          return <button onClick={e => { e.stopPropagation(); setRows(prev => prev.map(r => r.id === row.id ? { ...r, copySelected: false } : r)) }}
+                            className="px-1.5 py-1 text-xs font-medium border border-blue-500 rounded bg-blue-100 text-blue-700 transition-colors">복사</button>
+                        }
+                        if (copiedRow) {
+                          // 반대 구분이고 금액 있는 행 → 버튼 숨김
+                          if (copiedRow.type !== row.type && row.amount > 0) return null
+                          // 같은 구분의 다른 행 → 붙임 (이미 같은 계정이면 숨김)
+                          if (copiedRow.type === row.type) {
+                            if (row.account === copiedRow.account && row.subAccount === copiedRow.subAccount) return null
+                            return <button onClick={e => {
+                              e.stopPropagation()
+                              setRows(prev => prev.map(r => r.id === row.id ? { ...r, account: copiedRow.account, subAccount: copiedRow.subAccount } : r))
+                            }}
+                              className="px-1.5 py-1 text-xs font-medium border border-amber-400 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors">붙임</button>
+                          }
+                          return null
+                        }
+                        return <button onClick={e => { e.stopPropagation(); setRows(prev => prev.map(r => r.id === row.id ? { ...r, copySelected: true } : r)) }}
+                          className="px-1.5 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600 transition-colors">복사</button>
+                      })()}
                     </td>
 
                     {/* 계정과목 */}
-                    {visibleColumns.account && <td className="text-center px-2 py-2 cursor-pointer" onClick={cellClick('account')}>
+                    {visibleColumns.account && <td className="text-center px-2 py-1 cursor-pointer relative" onClick={cellClick('account')}>
                       {isCell('account') ? (
-                        <select value={row.subAccount || row.account}
-                          ref={el => { if (el) { el.focus(); try { el.showPicker() } catch {} } }}
-                          onChange={e => {
-                            const val = e.target.value
-                            const list = row.type === '수입' ? incomeAccounts : expenseAccounts
-                            const item = list.find(a => a.value === val)
-                            if (item?.isSub) {
-                              updateRow(row.id, 'subAccount', val)
-                            } else {
-                              updateRow(row.id, 'account', val)
-                              updateRow(row.id, 'subAccount', '')
-                            }
-                            setEditingCell(null)
-                          }}
-                          onClick={e => e.stopPropagation()}
-                          className={`w-full px-1 py-0.5 border border-blue-300 rounded text-xs focus:ring-1 focus:ring-blue-500 outline-none ${row.type === '수입' ? 'text-sky-600' : 'text-rose-600'}`}>
-                          {(row.type === '수입' ? incomeAccounts : expenseAccounts).map(a => (
-                            <option key={a.value} value={a.value}>{a.isSub ? `  ㄴ ${a.label}` : a.label}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className={`font-medium ${row.type === '수입' ? 'text-sky-600' : 'text-rose-600'}`}>{row.account}</span>
-                      )}
+                        <div className="absolute left-full ml-2 top-0 bg-white border border-slate-200 rounded-xl shadow-lg z-[100] w-[220px] max-h-[320px] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                          {(row.type === '수입' ? incomeAccounts : expenseAccounts).map(a => {
+                            const isSelected = a.isSub ? row.subAccount === a.label : row.account === a.value
+                            const color = row.type === '수입' ? 'blue' : 'red'
+                            return (
+                              <button key={a.value}
+                                onClick={() => {
+                                  const list = row.type === '수입' ? incomeAccounts : expenseAccounts
+                                  if (a.isSub) {
+                                    const idx = list.indexOf(a)
+                                    let parentAccount = row.account
+                                    for (let i = idx - 1; i >= 0; i--) {
+                                      if (!list[i].isSub) { parentAccount = list[i].value; break }
+                                    }
+                                    updateRow(row.id, 'account', parentAccount)
+                                    updateRow(row.id, 'subAccount', a.label)
+                                  } else {
+                                    updateRow(row.id, 'account', a.value)
+                                    updateRow(row.id, 'subAccount', '')
+                                  }
+                                  setEditingCell(null)
+                                  setRows(prev => prev.map(r => ({ ...r, copySelected: r.id === row.id })))
+                                }}
+                                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
+                                  isSelected ? `bg-${color}-100 font-bold text-${color}-700` : `hover:bg-${color}-50 text-${color === 'blue' ? 'blue' : 'red'}-600`
+                                } ${a.isSub ? 'pl-5' : ''}`}>
+                                {a.isSub ? (
+                                  <span className="flex items-center gap-1">
+                                    <span className={`inline-block px-1 py-0 rounded border text-[12px] font-bold ${row.type === '수입' ? 'border-blue-400 text-blue-600' : 'border-red-400 text-red-600'}`}>세목</span>
+                                    {a.label}
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1">
+                                    <span className={`inline-block px-1 py-0 rounded border text-[12px] font-bold ${row.type === '수입' ? 'border-blue-300 text-blue-500' : 'border-red-300 text-red-500'}`}>목</span>
+                                    {a.label}
+                                  </span>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      ) : null}
+                      <span className={`font-medium ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`}>{row.account}</span>
                     </td>}
 
                     {/* 세목 */}
-                    {visibleColumns.sub && <td className="text-center px-2 py-2">
-                      <span className="text-slate-600 text-[11px]">{row.subAccount || '-'}</span>
+                    {visibleColumns.sub && <td className="text-center px-0.5 py-1">
+                      <span className="text-slate-600 text-sm">{row.subAccount || '-'}</span>
+                    </td>}
+
+                    {/* 계정코드 */}
+                    {visibleColumns.accountCode && <td className="text-center px-1 py-1" onClick={cellClick('accountCode')}>
+                      {isCell('accountCode') ? (
+                        <input type="text" maxLength={5} autoFocus
+                          defaultValue=""
+                          placeholder={(() => {
+                            const autoCode = row.subAccount ? (subAccountCodeMap[row.subAccount] || accountCodeMap[row.account] || '') : (accountCodeMap[row.account] || '')
+                            return row.accountCode || autoCode || ''
+                          })()}
+                          ref={el => { if (el) { el.focus() } }}
+                          onClick={e => e.stopPropagation()}
+                          onChange={e => {
+                            e.target.value = e.target.value.replace(/[^0-9]/g, '')
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === 'Tab') {
+                              e.preventDefault()
+                              const input = e.target as HTMLInputElement
+                              const val = input.value
+                              if (val) {
+                                const currentCode = row.subAccount ? (subAccountCodeMap[row.subAccount] || accountCodeMap[row.account] || '') : (accountCodeMap[row.account] || '')
+                                const match = codeToAccount[val]
+                                if (match && val !== currentCode) {
+                                  setRows(prev => prev.map(r => r.id === row.id ? { ...r, accountCode: val, account: match.account, subAccount: match.subAccount } : r))
+                                } else if (!match) {
+                                  setRows(prev => prev.map(r => r.id === row.id ? { ...r, accountCode: currentCode } : r))
+                                }
+                              }
+                              input.dataset.handled = 'true'
+                              const nextRow = filtered[idx + 1]
+                              if (nextRow) {
+                                setEditingCell({ rowId: nextRow.id, field: 'accountCode' })
+                              } else {
+                                setEditingCell(null)
+                              }
+                            }
+                          }}
+                          onBlur={e => {
+                            if (e.target.dataset.handled) return
+                            const val = e.target.value
+                            if (val) {
+                              const currentCode = row.subAccount ? (subAccountCodeMap[row.subAccount] || accountCodeMap[row.account] || '') : (accountCodeMap[row.account] || '')
+                              const match = codeToAccount[val]
+                              if (match && val !== currentCode) {
+                                setRows(prev => prev.map(r => r.id === row.id ? { ...r, accountCode: val, account: match.account, subAccount: match.subAccount } : r))
+                              } else if (!match) {
+                                setRows(prev => prev.map(r => r.id === row.id ? { ...r, accountCode: currentCode } : r))
+                              }
+                            }
+                            setEditingCell(null)
+                          }}
+                          className={`w-full px-1 py-0.5 border-2 border-blue-400 rounded text-xs text-center focus:ring-1 focus:ring-blue-500 outline-none placeholder:text-slate-300 ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`} />
+                      ) : (
+                        <span className={`text-xs cursor-pointer ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`}>
+                          {(() => {
+                            const autoCode = row.subAccount ? (subAccountCodeMap[row.subAccount] || accountCodeMap[row.account] || '') : (accountCodeMap[row.account] || '')
+                            return row.accountCode || autoCode || '-'
+                          })()}
+                        </span>
+                      )}
                     </td>}
 
                     {/* 분리 */}
-                    <td className="text-center px-1 py-2">
-                      <button onClick={e => e.stopPropagation()} className="px-1.5 py-0.5 text-[10px] font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">분리</button>
+                    <td className="text-center px-1 py-1">
+                      <button onClick={e => e.stopPropagation()} className="px-2 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600 whitespace-nowrap">분리</button>
                     </td>
 
                     {/* 반납 */}
                     <td className="text-center px-1 py-1">
-                      <div className="flex flex-col gap-0.5">
-                        <input type="text" placeholder="전표"
-                          onClick={e => e.stopPropagation()}
-                          className="w-full px-1 py-0 border border-amber-300 rounded text-[9px] text-center text-amber-700 bg-amber-50/50 focus:ring-1 focus:ring-amber-400 outline-none" />
-                        <input type="text" placeholder="계정"
-                          onClick={e => e.stopPropagation()}
-                          className="w-full px-1 py-0 border border-amber-300 rounded text-[9px] text-center text-amber-700 bg-amber-50/50 focus:ring-1 focus:ring-amber-400 outline-none" />
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button onClick={e => e.stopPropagation()} className="px-1.5 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">전표</button>
+                        <button onClick={e => e.stopPropagation()} className="px-1.5 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">계정</button>
                       </div>
                     </td>
 
                     {/* 수수료 */}
-                    <td className="text-center px-1 py-2">
-                      <button onClick={e => e.stopPropagation()} className="px-1.5 py-0.5 text-[10px] font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">수수료</button>
+                    <td className="text-center px-1 py-1">
+                      <button onClick={e => e.stopPropagation()} className="px-2 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">수수료</button>
                     </td>
 
                     {/* 거래처 */}
-                    {visibleColumns.counterpart && <td className="text-center px-2 py-2 cursor-pointer" onClick={cellClick('counterpart')}>
+                    {visibleColumns.counterpart && <td className="text-center px-2 py-1 cursor-pointer" onClick={cellClick('counterpart')}>
                       {isCell('counterpart') ? (
                         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                           <input type="text" value={row.counterpart} autoFocus
                             onChange={e => updateRow(row.id, 'counterpart', e.target.value)}
-                            className="flex-1 min-w-0 px-1 py-0.5 border border-blue-300 rounded text-xs text-center focus:ring-1 focus:ring-blue-500 outline-none" />
+                            className="flex-1 min-w-0 px-1 py-0.5 border-2 border-blue-400 rounded text-xs text-center focus:ring-1 focus:ring-blue-500 outline-none" />
                           <button
                             onClick={() => {/* 거래처 검색 팝업 */}}
                             className="shrink-0 px-1.5 py-0.5 border border-slate-300 rounded bg-slate-50 hover:bg-slate-100 text-[10px] font-medium text-slate-600"
                           >선택</button>
                         </div>
                       ) : (
-                        <span className="text-slate-600 text-[11px] truncate block">{row.counterpart || '-'}</span>
+                        <span className="text-slate-600 text-sm truncate block">{row.counterpart || '-'}</span>
                       )}
                     </td>}
 
                     {/* 결제방식 */}
-                    {visibleColumns.payment && <td className="text-left px-2 py-2 cursor-pointer" onClick={cellClick('note')}>
+                    {visibleColumns.payment && <td className="text-center px-2 py-1 cursor-pointer" onClick={cellClick('note')}>
                       {isCell('note') ? (
                         <select value={row.note} autoFocus
                           onChange={e => { updateRow(row.id, 'note', e.target.value); setEditingCell(null) }}
                           onBlur={() => setEditingCell(null)}
                           onClick={e => e.stopPropagation()}
-                          className="w-full px-1 py-0.5 border border-blue-300 rounded text-xs text-left focus:ring-1 focus:ring-blue-500 outline-none">
+                          className="w-full px-1 py-0.5 border-2 border-blue-400 rounded text-xs text-center focus:ring-1 focus:ring-blue-500 outline-none">
                           <option value="">::선택::</option>
                           {row.type === '수입' ? <>
-                            <option value="수입-카드결제">카드결제</option>
-                            <option value="수입-아이행복카드">아이행복카드</option>
-                            <option value="수입-계좌이체">계좌이체</option>
-                            <option value="수입-자동이체">자동이체</option>
-                            <option value="수입-지로">지로</option>
-                            <option value="수입-현금결제">현금결제</option>
-                            <option value="수입-기타">기타</option>
-                            <option value="수입-보조금">보조금</option>
-                            <option value="수입-전입금">전입금</option>
-                            <option value="수입-지정후원금">지정후원금</option>
-                            <option value="수입-비지정후원금">비지정후원금</option>
+                            <option value="카드결제">카드결제</option>
+                            <option value="아이행복카드">아이행복카드</option>
+                            <option value="계좌이체">계좌이체</option>
+                            <option value="자동이체">자동이체</option>
+                            <option value="지로">지로</option>
+                            <option value="현금결제">현금결제</option>
+                            <option value="기타">기타</option>
+                            <option value="보조금">보조금</option>
+                            <option value="전입금">전입금</option>
+                            <option value="지정후원금">지정후원금</option>
+                            <option value="비지정후원금">비지정후원금</option>
                           </> : <>
-                            <option value="지출-카드결제">카드결제</option>
-                            <option value="지출-아이행복카드">아이행복카드</option>
-                            <option value="지출-계좌이체">계좌이체</option>
-                            <option value="지출-자동이체">자동이체</option>
-                            <option value="지출-지로">지로</option>
-                            <option value="지출-현금결제">현금결제</option>
-                            <option value="지출-기타">기타</option>
-                            <option value="지출-보조금">보조금</option>
-                            <option value="지출-자동이체반납">자동이체반납</option>
+                            <option value="카드결제">카드결제</option>
+                            <option value="아이행복카드">아이행복카드</option>
+                            <option value="계좌이체">계좌이체</option>
+                            <option value="자동이체">자동이체</option>
+                            <option value="지로">지로</option>
+                            <option value="현금결제">현금결제</option>
+                            <option value="기타">기타</option>
+                            <option value="보조금">보조금</option>
+                            <option value="자동이체반납">자동이체반납</option>
                           </>}
                         </select>
                       ) : (
-                        <span className="text-slate-400 text-[11px]">{row.note || '-'}</span>
+                        <span className="text-slate-400 text-sm">{row.note ? row.note.replace(/^(지출|수입)-/, '') : '-'}</span>
                       )}
                     </td>}
 
                     {/* 원아 */}
-                    <td className="text-center px-1 py-2">
+                    <td className="text-center px-1 py-1">
                       {['부모부담 보육료', '특별활동비', '기타 필요경비', '기타 필요경비 지출'].includes(row.account) || row.account.startsWith('세목:') ? (
-                        <span className="text-[10px] text-pink-600 font-medium truncate block">-</span>
+                        <span className="text-sm text-pink-600 font-medium truncate block">-</span>
                       ) : null}
                     </td>
 
@@ -1075,7 +1373,7 @@ export default function VoucherInputPage() {
                       const canUp = dateIdx > 0
                       const canDown = dateIdx < sameDateRows.length - 1
                       return (
-                        <td className="text-center px-1 py-2">
+                        <td className="text-center px-1 py-1">
                           <div className="flex flex-col items-center gap-0.5">
                             {canUp && (
                               <button onClick={(e) => { e.stopPropagation(); setRows(prev => {
@@ -1119,21 +1417,28 @@ export default function VoucherInputPage() {
         </div>
 
         {/* 하단 합계 */}
-        <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-[11px] text-slate-500">수입합계 <strong className="text-blue-700">{fmt(totalIncome)}</strong></span>
-            <span className="text-[11px] text-slate-500">전표건수 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입').length}</strong></span>
-            <span className="text-[11px] text-slate-500">정상 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입' && r.amount >= 0).length}</strong></span>
-            <span className="text-[11px] text-slate-500">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</strong></span>
-            <span className="text-[11px] text-slate-400">|</span>
-            <span className="text-[11px] text-slate-500">지출합계 <strong className="text-red-600">{fmt(totalExpense)}</strong></span>
-            <span className="text-[11px] text-slate-500">전표건수 <strong className="text-red-600">{filtered.filter(r => r.type === '지출').length}</strong></span>
-            <span className="text-[11px] text-slate-500">정상 <strong className="text-red-600">{filtered.filter(r => r.type === '지출' && r.amount >= 0).length}</strong></span>
-            <span className="text-[11px] text-slate-500">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</strong></span>
-            <span className="text-[11px] text-slate-400">|</span>
-            <span className="text-[11px] text-slate-500">잔액 <strong className="text-emerald-700">{fmt(totalIncome - totalExpense)}</strong></span>
+        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+              <span className="text-xs font-bold text-blue-700">수입</span>
+              <span className="text-xs text-slate-600">합계 <strong className="text-blue-700">{fmt(totalIncome)}</strong></span>
+              <span className="text-xs text-slate-600">전표 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입').length}</strong></span>
+              <span className="text-xs text-slate-600">정상 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입' && r.amount >= 0).length}</strong></span>
+              <span className="text-xs text-slate-600">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</strong></span>
+            </div>
+            <div className="flex items-center gap-3 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
+              <span className="text-xs font-bold text-red-600">지출</span>
+              <span className="text-xs text-slate-600">합계 <strong className="text-red-600">{fmt(totalExpense)}</strong></span>
+              <span className="text-xs text-slate-600">전표 <strong className="text-red-600">{filtered.filter(r => r.type === '지출').length}</strong></span>
+              <span className="text-xs text-slate-600">정상 <strong className="text-red-600">{filtered.filter(r => r.type === '지출' && r.amount >= 0).length}</strong></span>
+              <span className="text-xs text-slate-600">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</strong></span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <span className="text-xs font-bold text-emerald-700">잔액</span>
+              <strong className="text-sm text-emerald-700">{fmt(totalIncome - totalExpense)}</strong>
+            </div>
           </div>
-          <span className="text-[10px] text-slate-400">셀 클릭으로 개별 편집</span>
+          <span className="text-xs text-slate-400">셀 클릭으로 개별 편집</span>
         </div>
       </div>
     </div>

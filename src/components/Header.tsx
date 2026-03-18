@@ -285,7 +285,7 @@ export default function Header() {
       {/* 3단: 하위 탭 (children 있는 메뉴 선택 시) */}
       {gnbExpanded && activeMenu && activeMenu.children && (
         <div className="bg-slate-100 border-b-2 border-b-slate-300 mt-2">
-          <div className="max-w-6xl mx-auto px-5 flex items-center gap-2 py-1.5 overflow-x-auto scrollbar-hide">
+          <div className="px-5 flex items-center gap-2 py-1.5 overflow-x-auto scrollbar-hide">
             {activeMenu.children.map((sub) => {
               const isActive = pathname === sub.href || pathname?.startsWith(sub.href + '/')
               return (
@@ -302,6 +302,13 @@ export default function Header() {
                 </Link>
               )
             })}
+            <div className="flex items-center gap-3 ml-auto text-[11px] text-slate-500 whitespace-nowrap">
+              <span>회계담당: <strong className="text-slate-700">홍길동</strong> 010-1111-1111</span>
+              <span className="text-slate-300">|</span>
+              <span>급여관리: <strong className="text-slate-700">032-584-9019</strong></span>
+              <span className="text-slate-300">|</span>
+              <span>팩스: <strong className="text-slate-700">032-584-9019</strong></span>
+            </div>
           </div>
         </div>
       )}
