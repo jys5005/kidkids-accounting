@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import * as XLSX from 'xlsx'
+import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, codeToAccount, type AccItem } from '@/lib/accounts'
 
 interface VoucherRow {
   id: number
@@ -85,175 +86,7 @@ const subAccountMap: Record<string, string[]> = {
   '차입금': ['단기차입금', '장기차입금'],
 }
 
-// 계정과목 필터 목록 (세목은 isSub: true)
-interface AccItem { value: string; label: string; isSub?: boolean }
-const incomeAccounts: AccItem[] = [
-  { value: '정부지원 보육료', label: '정부지원 보육료' },
-  { value: '부모부담 보육료', label: '부모부담 보육료' },
-  { value: '특별활동비', label: '특별활동비' },
-  { value: '기타 필요경비', label: '기타 필요경비' },
-  { value: '세목:입학준비금', label: '입학준비금', isSub: true },
-  { value: '세목:현장학습비', label: '현장학습비', isSub: true },
-  { value: '세목:차량운행비', label: '차량운행비', isSub: true },
-  { value: '세목:부모부담행사비', label: '부모부담행사비', isSub: true },
-  { value: '세목:조석식비', label: '조석식비', isSub: true },
-  { value: '필:특성화비', label: '특성화비', isSub: true },
-  { value: '인건비 보조금', label: '인건비 보조금' },
-  { value: '기관보육료', label: '기관보육료' },
-  { value: '연장보육료', label: '연장보육료' },
-  { value: '공공형 운영비', label: '공공형 운영비' },
-  { value: '그 밖의 지원금', label: '그 밖의 지원금' },
-  { value: '자본보조금', label: '자본보조금' },
-  { value: '전입금', label: '전입금' },
-  { value: '단기차입금', label: '단기차입금' },
-  { value: '장기차입금', label: '장기차입금' },
-  { value: '지정후원금', label: '지정후원금' },
-  { value: '비지정후원금', label: '비지정후원금' },
-  { value: '적립금 처분 수입', label: '적립금 처분 수입' },
-  { value: '과년도 수입', label: '과년도 수입' },
-  { value: '이자수입', label: '이자수입' },
-  { value: '그 밖의 잡수입', label: '그 밖의 잡수입' },
-  { value: '전년도 이월금', label: '전년도 이월금' },
-  { value: '전년도 이월사업비', label: '전년도 이월사업비' },
-]
-const expenseAccounts: AccItem[] = [
-  { value: '원장급여', label: '원장급여' },
-  { value: '원장수당', label: '원장수당' },
-  { value: '보육교직원급여', label: '보육교직원급여' },
-  { value: '보육교직원수당', label: '보육교직원수당' },
-  { value: '기타 인건비', label: '기타 인건비' },
-  { value: '법정부담금', label: '법정부담금' },
-  { value: '퇴직금 및 퇴직적립금', label: '퇴직금 및 퇴직적립금' },
-  { value: '세목:퇴직금', label: '퇴직금', isSub: true },
-  { value: '세목:퇴직적립금', label: '퇴직적립금', isSub: true },
-  { value: '수용비 및 수수료', label: '수용비 및 수수료' },
-  { value: '공공요금 및 제세공과금', label: '공공요금 및 제세공과금' },
-  { value: '연료비', label: '연료비' },
-  { value: '여비', label: '여비' },
-  { value: '차량비', label: '차량비' },
-  { value: '복리후생비', label: '복리후생비' },
-  { value: '기타 운영비', label: '기타 운영비' },
-  { value: '세목:임대료', label: '임대료', isSub: true },
-  { value: '세목:건물융자금의이자', label: '건물융자금의이자', isSub: true },
-  { value: '업무추진비', label: '업무추진비' },
-  { value: '직책급', label: '직책급' },
-  { value: '회의비', label: '회의비' },
-  { value: '교직원연수·연구비', label: '교직원연수·연구비' },
-  { value: '교재·교구 구입비', label: '교재·교구 구입비' },
-  { value: '행사비', label: '행사비' },
-  { value: '영유아복리비', label: '영유아복리비' },
-  { value: '급식·간식재료비', label: '급식·간식재료비' },
-  { value: '특별활동비지출', label: '특별활동비지출' },
-  { value: '기타 필요경비 지출', label: '기타 필요경비 지출' },
-  { value: '세목:입학준비금(지출)', label: '입학준비금', isSub: true },
-  { value: '세목:현장학습비(지출)', label: '현장학습비', isSub: true },
-  { value: '세목:차량운행비(지출)', label: '차량운행비', isSub: true },
-  { value: '세목:부모부담행사비(지출)', label: '부모부담행사비', isSub: true },
-  { value: '세목:조석식비(지출)', label: '조석식비', isSub: true },
-  { value: '필:특성화비(지출)', label: '특성화비', isSub: true },
-  { value: '적립금', label: '적립금' },
-  { value: '단기 차입금 상환', label: '단기 차입금 상환' },
-  { value: '장기 차입금 상환', label: '장기 차입금 상환' },
-  { value: '보조금 반환금', label: '보조금 반환금' },
-  { value: '보호자 반환금', label: '보호자 반환금' },
-  { value: '법인회계 전출금', label: '법인회계 전출금' },
-  { value: '시설비', label: '시설비' },
-  { value: '시설장비 유지비', label: '시설장비 유지비' },
-  { value: '자산취득비', label: '자산취득비' },
-  { value: '세목:차량할부금', label: '차량할부금', isSub: true },
-  { value: '세목:자산취득비(세목)', label: '자산취득비', isSub: true },
-  { value: '과년도 지출', label: '과년도 지출' },
-  { value: '잡지출', label: '잡지출' },
-  { value: '예비비', label: '예비비' },
-]
-
-// 계정과목 → 코드 매핑 (목 4자리)
-const accountCodeMap: Record<string, string> = {
-  // 수입
-  '정부지원 보육료': '1111',
-  '부모부담 보육료': '1112',
-  '특별활동비': '1211',
-  '기타 필요경비': '1221',
-  '인건비 보조금': '1311',
-  '기관보육료': '1312',
-  '연장보육료': '1321',
-  '공공형 운영비': '1323',
-  '그 밖의 지원금': '1324',
-  '자본보조금': '1331',
-  '전입금': '1411',
-  '단기차입금': '1511',
-  '장기차입금': '1521',
-  '지정후원금': '1611',
-  '비지정후원금': '1612',
-  '적립금 처분 수입': '1711',
-  '과년도 수입': '1811',
-  '이자수입': '1911',
-  '그 밖의 잡수입': '1921',
-  '전년도 이월금': '1991',
-  '전년도 이월사업비': '1992',
-  // 지출
-  '원장급여': '2111',
-  '원장수당': '2112',
-  '보육교직원급여': '2121',
-  '보육교직원수당': '2122',
-  '기타 인건비': '2131',
-  '법정부담금': '2141',
-  '퇴직금 및 퇴직적립금': '2142',
-  '수용비 및 수수료': '2211',
-  '공공요금 및 제세공과금': '2212',
-  '연료비': '2213',
-  '여비': '2214',
-  '차량비': '2215',
-  '복리후생비': '2216',
-  '기타 운영비': '2217',
-  '업무추진비': '2218',
-  '직책급': '2219',
-  '회의비': '2220',
-  '교직원연수·연구비': '2311',
-  '교재·교구 구입비': '2312',
-  '행사비': '2313',
-  '영유아복리비': '2314',
-  '급식·간식재료비': '2315',
-  '특별활동비지출': '2411',
-  '기타 필요경비 지출': '2421',
-  '적립금': '2511',
-  '단기 차입금 상환': '2611',
-  '장기 차입금 상환': '2621',
-  '보조금 반환금': '2631',
-  '보호자 반환금': '2632',
-  '법인회계 전출금': '2641',
-  '시설비': '2711',
-  '시설장비 유지비': '2712',
-  '자산취득비': '2721',
-  '과년도 지출': '2811',
-  '잡지출': '2911',
-  '예비비': '2991',
-}
-// 세목 → 5자리 코드
-const subAccountCodeMap: Record<string, string> = {
-  '입학준비금': '12211',
-  '현장학습비': '12212',
-  '차량운행비': '12213',
-  '부모부담행사비': '12214',
-  '조석식비': '12215',
-  '특성화비': '12216',
-  '퇴직금': '21423',
-  '퇴직적립금': '21424',
-  '임대료': '22171',
-  '건물융자금의이자': '22172',
-  '차량할부금': '27211',
-}
-
-// 코드 → 계정과목 역매핑
-const codeToAccount: Record<string, { account: string; subAccount: string }> = {}
-Object.entries(accountCodeMap).forEach(([name, code]) => {
-  codeToAccount[code] = { account: name, subAccount: '' }
-})
-Object.entries(subAccountCodeMap).forEach(([name, code]) => {
-  const parentCode = code.substring(0, 4)
-  const parentName = Object.entries(accountCodeMap).find(([, c]) => c === parentCode)?.[0] || ''
-  codeToAccount[code] = { account: parentName, subAccount: name }
-})
+// 계정과목 데이터: @/lib/accounts.ts 에서 import
 
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 
@@ -297,6 +130,8 @@ export default function VoucherInputPage() {
   const accountDropdownRef = useRef<HTMLDivElement>(null)
   const [editingCell, setEditingCell] = useState<{ rowId: number; field: string } | null>(null)
   const [listeningRowId, setListeningRowId] = useState<number | null>(null)
+  const [draftRow, setDraftRow] = useState<VoucherRow | null>(null)
+  const [detailDropdown, setDetailDropdown] = useState<'income' | 'expense' | 'detailDate' | 'issueDate' | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
 
@@ -409,6 +244,27 @@ export default function VoucherInputPage() {
   const toggleAll = () => {
     if (checked.size === filtered.length) setChecked(new Set())
     else setChecked(new Set(filtered.map(r => r.id)))
+  }
+
+  // 건별등록/상세등록: 모드 변경 또는 행 선택 변경 시만 draftRow 동기화
+  // checked(Set)가 바뀔 때만 실행 — editingCell 변경으로는 실행 안 됨
+  useEffect(() => {
+    const isEditMode = inputMode === '건별등록' || inputMode === '상세등록'
+    if (!isEditMode) { setDraftRow(null); return }
+    const checkedId = checked.size > 0 ? Array.from(checked).pop() : null
+    const row = checkedId ? rows.find(r => r.id === checkedId) : rows[0]
+    if (row) setDraftRow({ ...row })
+    else setDraftRow(null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputMode, checked])
+
+  const saveDraft = () => {
+    if (!draftRow) return
+    setRows(prev => prev.map(r => r.id === draftRow.id ? { ...draftRow } : r))
+  }
+
+  const updateDraft = (field: keyof VoucherRow, value: string | number | boolean) => {
+    setDraftRow(prev => prev ? { ...prev, [field]: value } : prev)
   }
 
   const addRow = () => {
@@ -605,7 +461,7 @@ export default function VoucherInputPage() {
                 </select>
               )}
             </div>
-            {(inputMode === '일괄수정' || inputMode === '건별등록') && <>
+            {(inputMode === '일괄수정' || inputMode === '건별등록' || inputMode === '상세등록') && <>
             <div className="relative flex items-center gap-1.5" ref={accountDropdownRef}>
               <label className="text-xs text-slate-500 font-medium whitespace-nowrap">계정과목</label>
               <div className="flex items-center gap-1">
@@ -844,7 +700,7 @@ export default function VoucherInputPage() {
           ))}
         </div>
         {/* 출력 그룹 */}
-        {(inputMode === '일괄수정' || inputMode === '건별등록') && (
+        {(inputMode === '일괄수정' || inputMode === '건별등록' || inputMode === '상세등록') && (
         <div className="flex items-center gap-1 ml-auto">
           <button data-tip="엑셀 다운로드" className="px-3 py-1.5 border border-green-400 rounded bg-green-50 hover:bg-green-100 text-green-700 sub-tab-hover flex items-center gap-1 text-xs font-bold">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -858,13 +714,13 @@ export default function VoucherInputPage() {
             </svg>
             인쇄
           </button>
-          <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover">저장</button>
-          <button onClick={deleteRows} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>
+          {inputMode !== '건별등록' && inputMode !== '상세등록' && <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover">저장</button>}
+          {inputMode !== '건별등록' && inputMode !== '상세등록' && <button onClick={deleteRows} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>}
         </div>
         )}
         </div>
         {/* 기능키 펼침 - 언더바 아래 (일괄수정에서만) */}
-        {(inputMode === '일괄수정' || inputMode === '건별등록') && showToolbar && (
+        {(inputMode === '일괄수정' || inputMode === '건별등록' || inputMode === '상세등록') && showToolbar && (
           <div className="border-t border-slate-200 mt-2 pt-2 flex items-center flex-wrap gap-y-1">
             {/* 전표 그룹 */}
             <div className="flex items-center gap-1">
@@ -920,27 +776,280 @@ export default function VoucherInputPage() {
 
       {/* 건별등록은 일괄수정과 동일한 테이블 사용 */}
 
-      {inputMode === '상세등록' && <DetailInputPanel rows={rows} setRows={setRows} filterYearMonth={filterYearMonth} incomeAccounts={incomeAccounts} expenseAccounts={expenseAccounts} accountCodeMap={accountCodeMap} subAccountCodeMap={subAccountCodeMap} />}
+      {inputMode === '상세등록' && (() => {
+        const dr = draftRow
+        if (!dr) return <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-slate-400">전표 데이터가 없습니다</div>
+        const origRow = rows.find(r => r.id === dr.id)
+        const isDirty = origRow && (origRow.date !== dr.date || origRow.summary !== dr.summary || origRow.amount !== dr.amount || origRow.account !== dr.account || origRow.subAccount !== dr.subAccount || origRow.accountCode !== dr.accountCode || origRow.counterpart !== dr.counterpart || origRow.note !== dr.note)
+        const checkedId = checked.size > 0 ? Array.from(checked).pop() : null
+        const selectedIdx = checkedId ? filtered.findIndex(r => r.id === checkedId) : 0
+        const accts = dr.type === '수입' ? incomeAccounts : expenseAccounts
+        const parentCode = accountCodeMap[dr.account]
+        const subAccts = accts.filter(a => a.isSub && a.value.startsWith('세목:') && (() => {
+          if (!parentCode) return false
+          const subCode = subAccountCodeMap[a.label] || subAccountCodeMap[a.label.replace('(지출)', '')]
+          return subCode?.startsWith(parentCode)
+        })())
+        const inputCls = "w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400"
+        const labelCls = "text-xs font-semibold text-slate-500 mb-1 block"
+        const formatAmount = (val: string) => { const num = val.replace(/[^0-9-]/g, ''); return num ? Number(num).toLocaleString('ko-KR') : '' }
+        return (
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <h3 className="text-sm font-bold text-slate-700">상세등록</h3>
+                <span className="text-xs text-slate-400">전표 1건씩 선택하여 상세 수정</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={() => { const prev = selectedIdx > 0 ? filtered[selectedIdx - 1] : null; if (prev) { if (isDirty) saveDraft(); setChecked(new Set([prev.id])) } }}
+                  className="px-2 py-0.5 text-[11px] text-slate-500 hover:text-slate-700 border border-slate-200 rounded bg-white">◀</button>
+                <button onClick={() => { const next = filtered[selectedIdx + 1]; if (next) { if (isDirty) saveDraft(); setChecked(new Set([next.id])) } }}
+                  className="px-2 py-0.5 text-[11px] text-slate-500 hover:text-slate-700 border border-slate-200 rounded bg-white">▶</button>
+                <button onClick={() => saveDraft()}
+                  className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover ml-2">수정</button>
+                <button onClick={() => { setRows(prev => prev.filter(r => r.id !== dr.id)); setDraftRow(null); setChecked(new Set()) }}
+                  className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>
+              </div>
+            </div>
+            <div className="p-5">
+              {/* 1행: 일자, 구분, 계정과목, 세목 */}
+              <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto] gap-4 mb-4">
+                <div className="w-28 relative">
+                  <label className={labelCls}>발의일자</label>
+                  <button type="button"
+                    onClick={() => setDetailDropdown(detailDropdown === 'detailDate' ? null : 'detailDate')}
+                    className={`${inputCls} text-center cursor-pointer ${detailDropdown === 'detailDate' ? 'font-extrabold ring-2 ring-blue-400/30 border-blue-400' : ''}`}>
+                    {dr.date.slice(5)}
+                  </button>
+                  {detailDropdown === 'detailDate' && (() => {
+                    const [cy, cm] = dr.date.split('-').map(Number)
+                    const dim = new Date(cy, cm, 0).getDate()
+                    const firstDay = new Date(cy, cm - 1, 1).getDay()
+                    const cd = parseInt(dr.date.slice(8, 10), 10)
+                    return (
+                      <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-50 w-[220px]"
+                        onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-center mb-2">
+                          <span className="text-xs font-bold text-slate-700">{cy}년 {cm}월</span>
+                        </div>
+                        <div className="grid grid-cols-7 gap-0.5 mb-1">
+                          {['일','월','화','수','목','금','토'].map(d => (
+                            <div key={d} className={`text-center text-[10px] font-semibold py-0.5 ${d === '일' ? 'text-red-400' : d === '토' ? 'text-blue-400' : 'text-slate-400'}`}>{d}</div>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-7 gap-0.5">
+                          {Array.from({ length: firstDay }, (_, i) => <div key={`e-${i}`} />)}
+                          {Array.from({ length: dim }, (_, i) => {
+                            const d = i + 1
+                            const dow = new Date(cy, cm - 1, d).getDay()
+                            return (
+                              <button key={d}
+                                onClick={() => {
+                                  updateDraft('date', `${cy}-${String(cm).padStart(2,'0')}-${String(d).padStart(2,'0')}`)
+                                  setDetailDropdown(null)
+                                }}
+                                className={`h-6 rounded text-[11px] font-medium transition-colors ${
+                                  d === cd ? 'bg-blue-600 text-white' : dow === 0 ? 'text-red-500 hover:bg-slate-100' : dow === 6 ? 'text-blue-500 hover:bg-slate-100' : 'text-slate-700 hover:bg-slate-100'
+                                }`}
+                              >{d}</button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+                <div className="w-28 relative">
+                  <label className={labelCls}>발행일자</label>
+                  <button type="button"
+                    onClick={() => setDetailDropdown(detailDropdown === 'issueDate' ? null : 'issueDate')}
+                    className={`${inputCls} text-center cursor-pointer ${detailDropdown === 'issueDate' ? 'font-extrabold ring-2 ring-blue-400/30 border-blue-400' : ''}`}>
+                    {dr.date.slice(5)}
+                  </button>
+                  {detailDropdown === 'issueDate' && (() => {
+                    const [cy, cm] = dr.date.split('-').map(Number)
+                    const dim = new Date(cy, cm, 0).getDate()
+                    const firstDay = new Date(cy, cm - 1, 1).getDay()
+                    const cd = parseInt(dr.date.slice(8, 10), 10)
+                    return (
+                      <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-50 w-[220px]"
+                        onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-center mb-2">
+                          <span className="text-xs font-bold text-slate-700">{cy}년 {cm}월</span>
+                        </div>
+                        <div className="grid grid-cols-7 gap-0.5 mb-1">
+                          {['일','월','화','수','목','금','토'].map(d => (
+                            <div key={d} className={`text-center text-[10px] font-semibold py-0.5 ${d === '일' ? 'text-red-400' : d === '토' ? 'text-blue-400' : 'text-slate-400'}`}>{d}</div>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-7 gap-0.5">
+                          {Array.from({ length: firstDay }, (_, i) => <div key={`e-${i}`} />)}
+                          {Array.from({ length: dim }, (_, i) => {
+                            const d = i + 1
+                            const dow = new Date(cy, cm - 1, d).getDay()
+                            return (
+                              <button key={d}
+                                onClick={() => {
+                                  updateDraft('date', `${cy}-${String(cm).padStart(2,'0')}-${String(d).padStart(2,'0')}`)
+                                  setDetailDropdown(null)
+                                }}
+                                className={`h-6 rounded text-[11px] font-medium transition-colors ${
+                                  d === cd ? 'bg-blue-600 text-white' : dow === 0 ? 'text-red-500 hover:bg-slate-100' : dow === 6 ? 'text-blue-500 hover:bg-slate-100' : 'text-slate-700 hover:bg-slate-100'
+                                }`}
+                              >{d}</button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+                <div className="w-24">
+                  <label className={labelCls}>전표구분</label>
+                  <select value={dr.type} onChange={e => setDraftRow(prev => prev ? { ...prev, type: e.target.value as '수입' | '지출', account: '', subAccount: '' } : prev)}
+                    className={`${inputCls} ${dr.type === '수입' ? 'text-blue-600 font-bold' : 'text-red-600 font-bold'}`}>
+                    <option value="수입">수입</option>
+                    <option value="지출">지출</option>
+                  </select>
+                </div>
+                <div className="flex gap-1">
+                  <div className="w-40">
+                    <label className={labelCls}>계정과목</label>
+                    <div className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 flex items-center gap-1">
+                      {dr.account ? (<>
+                        <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${dr.type === '수입' ? 'border-blue-300 text-blue-500' : 'border-red-300 text-red-500'}`}>목</span>
+                        <span className={`font-bold ${dr.type === '수입' ? 'text-blue-600' : 'text-red-600'}`}>{dr.account}</span>
+                      </>) : <span className="text-slate-300 font-normal">미선택</span>}
+                    </div>
+                  </div>
+                  <div className="w-36">
+                    <label className={labelCls}>세목</label>
+                    <div className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 flex items-center gap-1">
+                      {dr.subAccount ? (<>
+                        <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${dr.type === '수입' ? 'border-blue-400 text-blue-600' : 'border-red-400 text-red-600'}`}>세목</span>
+                        <span className={`font-bold ${dr.type === '수입' ? 'text-blue-700' : 'text-red-700'}`}>{dr.subAccount}</span>
+                      </>) : <span className="text-slate-300">-</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="w-40 relative">
+                  <label className={labelCls}>수입계정</label>
+                  <button type="button" onClick={() => setDetailDropdown(detailDropdown === 'income' ? null : 'income')}
+                    className={`${inputCls} text-left cursor-pointer text-blue-600 font-bold ${detailDropdown === 'income' ? 'ring-2 ring-blue-400/30 border-blue-400' : ''}`}>
+                    계정선택
+                  </button>
+                  {detailDropdown === 'income' && (
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-[100] w-[220px] max-h-[320px] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                      {incomeAccounts.map(a => (
+                        <button key={a.value} onClick={() => {
+                          if (a.isSub) {
+                            const idx = incomeAccounts.indexOf(a); let parent = ''
+                            for (let i = idx - 1; i >= 0; i--) { if (!incomeAccounts[i].isSub) { parent = incomeAccounts[i].value; break } }
+                            setDraftRow(prev => prev ? { ...prev, type: '수입', account: parent, subAccount: a.label } : prev)
+                          } else {
+                            setDraftRow(prev => prev ? { ...prev, type: '수입', account: a.value, subAccount: '' } : prev)
+                          }
+                          setDetailDropdown(null)
+                        }} className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-blue-50 text-blue-600 ${a.isSub ? 'pl-5' : ''}`}>
+                          <span className="flex items-center gap-1">
+                            <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${a.isSub ? 'bg-blue-500 text-white border-blue-500' : 'bg-blue-400 text-white border-blue-400'}`}>{a.isSub ? '세목' : '목'}</span>
+                            {a.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="w-40 relative">
+                  <label className={labelCls}>지출계정</label>
+                  <button type="button" onClick={() => setDetailDropdown(detailDropdown === 'expense' ? null : 'expense')}
+                    className={`${inputCls} text-left cursor-pointer text-red-600 font-bold ${detailDropdown === 'expense' ? 'ring-2 ring-red-400/30 border-red-400' : ''}`}>
+                    계정선택
+                  </button>
+                  {detailDropdown === 'expense' && (
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-[100] w-[220px] max-h-[320px] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                      {expenseAccounts.map(a => (
+                        <button key={a.value} onClick={() => {
+                          if (a.isSub) {
+                            const idx = expenseAccounts.indexOf(a); let parent = ''
+                            for (let i = idx - 1; i >= 0; i--) { if (!expenseAccounts[i].isSub) { parent = expenseAccounts[i].value; break } }
+                            setDraftRow(prev => prev ? { ...prev, type: '지출', account: parent, subAccount: a.label } : prev)
+                          } else {
+                            setDraftRow(prev => prev ? { ...prev, type: '지출', account: a.value, subAccount: '' } : prev)
+                          }
+                          setDetailDropdown(null)
+                        }} className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-red-50 text-red-600 ${a.isSub ? 'pl-5' : ''}`}>
+                          <span className="flex items-center gap-1">
+                            <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${a.isSub ? 'bg-red-500 text-white border-red-500' : 'bg-red-400 text-white border-red-400'}`}>{a.isSub ? '세목' : '목'}</span>
+                            {a.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* 2행: 금액, 적요, 상세적요, 거래처, 결제방식, 증빙 */}
+              <div className="grid grid-cols-[auto_1fr_1fr_auto_auto] gap-4">
+                <div className="w-28">
+                  <label className={labelCls}>금액</label>
+                  <input type="text" value={formatAmount(String(dr.amount))} placeholder="0"
+                    onChange={e => updateDraft('amount', Number(e.target.value.replace(/,/g, '')) || 0)}
+                    className={`${inputCls} text-right font-medium`} />
+                </div>
+                <div>
+                  <label className={labelCls}>적요</label>
+                  <input type="text" value={dr.summary} placeholder="적요 입력"
+                    onChange={e => updateDraft('summary', e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>상세적요</label>
+                  <input type="text" placeholder="상세적요 입력" className={inputCls} />
+                </div>
+                <div className="w-28">
+                  <label className={labelCls}>거래처</label>
+                  <input type="text" value={dr.counterpart} placeholder="거래처"
+                    onChange={e => updateDraft('counterpart', e.target.value)} className={inputCls} />
+                </div>
+                <div className="w-28">
+                  <label className={labelCls}>결제방식</label>
+                  <select value={dr.note} onChange={e => updateDraft('note', e.target.value)} className={inputCls}>
+                    <option value="">선택</option>
+                    <option value="계좌이체">계좌이체</option>
+                    <option value="자동이체">자동이체</option>
+                    <option value="카드결제">카드결제</option>
+                    <option value="아이행복카드">아이행복카드</option>
+                    <option value="현금결제">현금결제</option>
+                    <option value="지로">지로</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
-      {/* 건별등록 - 선택 전표 상세 */}
+      {/* 건별등록 - 선택 전표 상세 (draftRow 기반 편집 + 저장하기) */}
       {inputMode === '건별등록' && (() => {
+        const dr = draftRow
+        if (!dr) return <div className="p-4 bg-[#fffbeb]/50 border border-[#f5b800]/30 rounded-xl text-center text-xs text-slate-400">전표 데이터가 없습니다</div>
         const checkedId = checked.size > 0 ? Array.from(checked).pop() : null
         const selectedIdx = checkedId ? filtered.findIndex(r => r.id === checkedId) : editingCell ? filtered.findIndex(r => r.id === editingCell.rowId) : 0
-        const row = filtered[selectedIdx >= 0 ? selectedIdx : 0]
-        if (!row) return <div className="p-4 bg-[#fffbeb]/50 border border-[#f5b800]/30 rounded-xl text-center text-xs text-slate-400">전표 데이터가 없습니다</div>
-        const autoCode = row.subAccount ? (subAccountCodeMap[row.subAccount] || accountCodeMap[row.account] || '') : (accountCodeMap[row.account] || '')
+        const autoCode = dr.subAccount ? (subAccountCodeMap[dr.subAccount] || accountCodeMap[dr.account] || '') : (accountCodeMap[dr.account] || '')
         const inputCls = "w-full px-1 py-0.5 border-2 border-[#f5b800] rounded text-sm focus:ring-1 focus:ring-[#f5b800]/50 outline-none"
-        const labelCls = "text-[10px] text-slate-400 block mb-1"
-        const accts = row.type === '수입' ? incomeAccounts : expenseAccounts
+        const accts = dr.type === '수입' ? incomeAccounts : expenseAccounts
+        // 원본과 비교해서 변경 여부 확인
+        const origRow = rows.find(r => r.id === dr.id)
+        const isDirty = origRow && (origRow.date !== dr.date || origRow.summary !== dr.summary || origRow.amount !== dr.amount || origRow.account !== dr.account || origRow.subAccount !== dr.subAccount || origRow.accountCode !== dr.accountCode || origRow.counterpart !== dr.counterpart || origRow.note !== dr.note)
         return (
           <div className="bg-white border border-[#f5b800]/30 rounded-xl overflow-x-auto single-input-mode">
             <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#f5b800]/20">
               <h3 className="text-sm font-bold text-slate-700">건별등록</h3>
               <span className="text-xs text-slate-400 flex items-center gap-1"><input type="checkbox" checked readOnly className="rounded border-slate-300 w-4 h-4" />전표 1건씩 선택하여 수정</span>
               <div className="flex items-center gap-1 ml-auto">
-              <button onClick={() => { const prev = selectedIdx > 0 ? filtered[selectedIdx - 1] : null; if (prev) setEditingCell({ rowId: prev.id, field: 'summary' }) }}
+              <button onClick={() => { const prev = selectedIdx > 0 ? filtered[selectedIdx - 1] : null; if (prev) { if (isDirty) saveDraft(); setChecked(new Set([prev.id])) } }}
                 className="px-2 py-0.5 text-[11px] text-slate-500 hover:text-slate-700 border border-slate-200 rounded bg-white">◀</button>
-              <button onClick={() => { const next = filtered[selectedIdx + 1]; if (next) setEditingCell({ rowId: next.id, field: 'summary' }) }}
+              <button onClick={() => { const next = filtered[selectedIdx + 1]; if (next) { if (isDirty) saveDraft(); setChecked(new Set([next.id])) } }}
                 className="px-2 py-0.5 text-[11px] text-slate-500 hover:text-slate-700 border border-slate-200 rounded bg-white">▶</button>
               </div>
             </div>
@@ -960,16 +1069,15 @@ export default function VoucherInputPage() {
                       case 'register': return <th key={key} className={`${thCls} w-[43px]`}>등록</th>
                       case 'attach': return <th key={key} className={`${thCls} w-[43px]`}>첨부</th>
                       case 'amountGroup': return <React.Fragment key={key}>
-                        <th className={`${thCls} w-[160px]`}>{row.type === '수입' ? '수입' : ''}</th>
-                        {row.type === '지출' && <th className={`${thCls} w-[160px]`}>지출</th>}
-                        {row.type === '수입' ? null : <th className={`${thCls} w-[130px]`}>잔액</th>}
+                        <th className={`${thCls} w-[160px]`}>수입</th>
+                        <th className={`${thCls} w-[160px]`}>지출</th>
                       </React.Fragment>
-                      case 'accountGroup': return <React.Fragment key={key}>{inputMode !== '건별등록' && <th className={`${thCls} w-[40px]`}>복사</th>}<th className={`${thCls} w-[130px]`}>계정과목</th><th className={`${thCls} w-[68px]`}>세목</th><th className={`${thCls} w-[70px]`}>계정코드</th>{inputMode !== '건별등록' && <th className={`${thCls} w-[46px]`}>분리</th>}{inputMode !== '건별등록' && <th className={`${thCls} w-[80px]`}>반납</th>}</React.Fragment>
-                      case 'fee': return inputMode === '건별등록' ? null : <th key={key} className={`${thCls} w-[50px]`}>수수료</th>
+                      case 'accountGroup': return <React.Fragment key={key}><th className={`${thCls} w-[130px]`}>계정과목</th><th className={`${thCls} w-[68px]`}>세목</th><th className={`${thCls} w-[70px]`}>계정코드</th><th className={`${thCls} w-[80px]`}>반납</th></React.Fragment>
+                      case 'fee': return null
                       case 'counterpart': return <th key={key} className={`${thCls} w-[78px]`}>거래처</th>
                       case 'payment': return <th key={key} className={`${thCls} w-[78px]`}>결제방식</th>
-                      case 'child': return <th key={key} className={`${thCls} w-[36px]`}>원아</th>
-                      case 'sort': return <th key={key} className={`${thCls} w-[36px]`}>정렬</th>
+                      case 'child': return <React.Fragment key={key}><th className={`${thCls} w-[36px]`}>원아</th><th className={`${thCls} w-[100px]`}></th></React.Fragment>
+                      case 'sort': return null
                       default: return null
                     }
                   })}
@@ -981,26 +1089,26 @@ export default function VoucherInputPage() {
                     if (!visibleColumns[key as keyof typeof visibleColumns]) return null
                     switch(key) {
                       case 'no': return <td key={key} className="px-1 py-1 text-center text-xs text-slate-400">{(selectedIdx >= 0 ? selectedIdx : 0) + 1}</td>
-                      case 'date': return <td key={key} className="px-1 py-1"><input type="text" value={row.date.slice(5)} onChange={e => { const val = e.target.value.replace(/[^0-9-]/g, ''); if (val.match(/^\d{2}-\d{2}$/)) updateRow(row.id, 'date', `${filterYearMonth.slice(0,4)}-${val}`) }} className={`${inputCls} text-center`} /></td>
+                      case 'date': return <td key={key} className="px-1 py-1"><input type="text" value={dr.date.slice(5)} onChange={e => { const val = e.target.value.replace(/[^0-9-]/g, ''); if (val.match(/^\d{2}-\d{2}$/)) updateDraft('date', `${filterYearMonth.slice(0,4)}-${val}`) }} className={`${inputCls} text-center`} /></td>
                       case 'type': return <td key={key} className="px-1 py-1 text-center">{(() => {
-                        const m = row.inputMethod || '수기'
+                        const m = dr.inputMethod || '수기'
                         const st: Record<string, string> = { '은행':'bg-white text-slate-700 border-slate-700', '수기':'bg-white text-blue-600 border-blue-500', '일괄':'bg-white text-orange-600 border-orange-500', '엑셀':'bg-white text-yellow-700 border-yellow-600', '분리':'bg-white text-purple-600 border-purple-500', '합산':'bg-white text-green-700 border-green-600' }
                         return <span className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded border text-[11px] font-bold ${st[m] || 'bg-white text-slate-600 border-slate-400'}`}>{m}</span>
                       })()}</td>
                       case 'summary': return <td key={key} className="px-1 py-1" style={{display: 'flex', alignItems: 'center'}}>
-                        <button onClick={e => { e.stopPropagation(); startVoice(row.id) }}
-                          className={`shrink-0 w-4 h-4 flex items-center justify-center rounded-full transition-all mr-1 ${listeningRowId === row.id ? 'bg-red-500 animate-pulse' : 'bg-slate-200 hover:bg-blue-500 group'}`}>
-                          <svg className={`w-2.5 h-2.5 ${listeningRowId === row.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <button onClick={e => { e.stopPropagation(); startVoice(dr.id) }}
+                          className={`shrink-0 w-4 h-4 flex items-center justify-center rounded-full transition-all mr-1 ${listeningRowId === dr.id ? 'bg-red-500 animate-pulse' : 'bg-slate-200 hover:bg-blue-500 group'}`}>
+                          <svg className={`w-2.5 h-2.5 ${listeningRowId === dr.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
                           </svg>
                         </button>
-                        <input type="text" value={row.summary} onChange={e => updateRow(row.id, 'summary', e.target.value)} className={`${inputCls} flex-1`} />
+                        <input type="text" value={dr.summary} onChange={e => updateDraft('summary', e.target.value)} className={`${inputCls} flex-1`} />
                       </td>
                       case 'evidence': return <React.Fragment key={key}>
-                        <td className="text-center px-0 py-1">{(row.note.includes('현금')||row.note.includes('지로')) && <svg className="w-5 h-5 mx-auto text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>}</td>
-                        <td className="text-center px-0 py-1">{row.note.includes('이체') && <svg className="w-5 h-5 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>}</td>
-                        <td className="text-center px-0 py-1">{row.approved && <svg className="w-5 h-5 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" /></svg>}</td>
-                        <td className="text-center px-0 py-1">{row.evidence && row.evidence.length > 0 ? row.evidence.map(ev => <span key={ev} className="inline-block px-1 py-0 rounded border text-[10px] mr-0.5">{ev}</span>) : '-'}</td>
+                        <td className="text-center px-0 py-1">{(dr.note.includes('현금')||dr.note.includes('지로')) && <svg className="w-5 h-5 mx-auto text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>}</td>
+                        <td className="text-center px-0 py-1">{dr.note.includes('이체') && <svg className="w-5 h-5 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>}</td>
+                        <td className="text-center px-0 py-1">{dr.approved && <svg className="w-5 h-5 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" /></svg>}</td>
+                        <td className="text-center px-0 py-1">{dr.evidence && dr.evidence.length > 0 ? dr.evidence.map(ev => <span key={ev} className="inline-block px-1 py-0 rounded border text-[10px] mr-0.5">{ev}</span>) : '-'}</td>
                       </React.Fragment>
                       case 'register': return <td key={key} className="text-center px-0 py-1">
                         <svg className="w-5 h-5 mx-auto text-slate-400 hover:text-blue-600 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
@@ -1009,55 +1117,38 @@ export default function VoucherInputPage() {
                         <svg className="w-5 h-5 mx-auto text-slate-400 hover:text-blue-600 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
                       </td>
                       case 'amountGroup': return <React.Fragment key={key}>
-                        {row.type === '수입' && <td className="px-1 py-1"><input type="text" value={fmt(row.amount)} onChange={e => updateRow(row.id,'amount',Number(e.target.value.replace(/,/g,''))||0)} className={`${inputCls} text-right font-medium text-blue-600`}/></td>}
-                        {row.type === '지출' && <td className="px-1 py-1"><input type="text" value={fmt(row.amount)} onChange={e => updateRow(row.id,'amount',Number(e.target.value.replace(/,/g,''))||0)} className={`${inputCls} text-right font-medium text-red-600`}/></td>}
-                        {row.type === '지출' && <td className="px-1 py-1 text-right text-xs text-slate-700">-</td>}
+                        <td className="px-1 py-1">{dr.type === '수입' ? <input type="text" value={fmt(dr.amount)} onChange={e => updateDraft('amount',Number(e.target.value.replace(/,/g,''))||0)} className={`${inputCls} text-right font-medium text-blue-600`}/> : null}</td>
+                        <td className="px-1 py-1">{dr.type === '지출' ? <input type="text" value={fmt(dr.amount)} onChange={e => updateDraft('amount',Number(e.target.value.replace(/,/g,''))||0)} className={`${inputCls} text-right font-medium text-red-600`}/> : null}</td>
                       </React.Fragment>
                       case 'accountGroup': return <React.Fragment key={key}>
-                        {inputMode !== '건별등록' && <td className="text-center px-1 py-1">
-                          {(() => {
-                            const copiedRow = rows.find(r => r.copySelected)
-                            if (row.copySelected) {
-                              return <button onClick={e => { e.stopPropagation(); setRows(prev => prev.map(r => r.id === row.id ? { ...r, copySelected: false } : r)) }}
-                                className="px-1.5 py-1 text-xs font-medium border border-blue-500 rounded bg-blue-100 text-blue-700">복사</button>
-                            }
-                            if (copiedRow && copiedRow.type === row.type && !(row.account === copiedRow.account && row.subAccount === copiedRow.subAccount)) {
-                              return <button onClick={e => { e.stopPropagation(); setRows(prev => prev.map(r => r.id === row.id ? { ...r, account: copiedRow.account, subAccount: copiedRow.subAccount } : r)) }}
-                                className="px-1.5 py-1 text-xs font-medium border border-amber-400 rounded bg-amber-50 text-amber-700">붙임</button>
-                            }
-                            return <button onClick={e => { e.stopPropagation(); setRows(prev => prev.map(r => r.id === row.id ? { ...r, copySelected: true } : r)) }}
-                              className="px-1.5 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">복사</button>
-                          })()}
-                        </td>}
-                        <td className="px-1 py-1"><select value={row.account} onChange={e => updateRow(row.id,'account',e.target.value)} className={`${inputCls} ${row.type==='수입'?'text-blue-600':'text-red-600'}`}><option value="">선택</option>{accts.filter(a=>!a.isSub).map(a=><option key={a.value} value={a.value}>{a.label}</option>)}</select></td>
-                        <td className="px-1 py-1"><input type="text" value={row.subAccount||''} readOnly className={`${inputCls} bg-slate-50 text-slate-500`}/></td>
-                        <td className="px-1 py-1"><input type="text" value={row.accountCode||autoCode||''} onChange={e => { const code=e.target.value.replace(/[^0-9]/g,'').slice(0,5); updateRow(row.id,'accountCode',code); const found=codeToAccount[code]; if(found){updateRow(row.id,'account',found.account);updateRow(row.id,'subAccount',found.subAccount)} }} className={`${inputCls} text-center font-mono ${row.type==='수입'?'text-blue-600':'text-red-600'}`}/></td>
+                        <td className="px-1 py-1"><select value={dr.account} onChange={e => updateDraft('account',e.target.value)} className={`${inputCls} ${dr.type==='수입'?'text-blue-600':'text-red-600'}`}><option value="">선택</option>{accts.filter(a=>!a.isSub).map(a=><option key={a.value} value={a.value}>{a.label}</option>)}</select></td>
+                        <td className="px-1 py-1"><input type="text" value={dr.subAccount||''} readOnly className={`${inputCls} bg-slate-50 text-slate-500`}/></td>
+                        <td className="px-1 py-1"><input type="text" value={dr.accountCode||autoCode||''} onChange={e => { const code=e.target.value.replace(/[^0-9]/g,'').slice(0,5); updateDraft('accountCode',code); const found=codeToAccount[code]; if(found){setDraftRow(prev => prev ? {...prev, accountCode: code, account: found.account, subAccount: found.subAccount} : prev)} }} className={`${inputCls} text-center font-mono ${dr.type==='수입'?'text-blue-600':'text-red-600'}`}/></td>
                         <td className="text-center px-1 py-1">
-                          <button onClick={e => e.stopPropagation()} className="px-2 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">분리</button>
+                          <button onClick={() => {
+                            if (dr.amount < 0) {
+                              setDraftRow(prev => prev ? { ...prev, type: prev.type === '수입' ? '지출' : '수입', amount: Math.abs(prev.amount) } : prev)
+                            } else {
+                              setDraftRow(prev => prev ? { ...prev, type: prev.type === '수입' ? '지출' : '수입', amount: -Math.abs(prev.amount), account: '', subAccount: '', accountCode: '' } : prev)
+                            }
+                          }} className={`px-1.5 py-1 text-xs font-medium border rounded ${dr.amount < 0 ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-600'}`}>{dr.amount < 0 ? '반납' : '전표'}</button>
                         </td>
-                        <td className="text-center px-1 py-1">
-                          <div className="flex items-center justify-center gap-0.5">
-                            <button onClick={e => {
-                              e.stopPropagation()
-                              const isRefund = row.amount < 0
-                              if (isRefund) {
-                                setRows(prev => prev.map(r => r.id === row.id ? { ...r, type: r.type === '수입' ? '지출' : '수입', amount: Math.abs(r.amount) } : r))
-                              } else {
-                                setRows(prev => prev.map(r => r.id === row.id ? { ...r, type: r.type === '수입' ? '지출' : '수입', amount: -Math.abs(r.amount), account: '', subAccount: '', accountCode: '' } : r))
-                              }
-                            }} className={`px-1.5 py-1 text-xs font-medium border rounded ${row.amount < 0 ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-600'}`}>{row.amount < 0 ? '반납' : '전표'}</button>
-                            <button onClick={e => { e.stopPropagation(); setRows(prev => prev.map(r => r.id === row.id ? { ...r, account: '', subAccount: '', accountCode: '' } : r)) }}
-                              className="px-1.5 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">계정</button>
+                      </React.Fragment>
+                      case 'fee': return null
+                      case 'counterpart': return <td key={key} className="px-1 py-1"><input type="text" value={dr.counterpart} onChange={e => updateDraft('counterpart',e.target.value)} className={inputCls}/></td>
+                      case 'payment': return <td key={key} className="px-1 py-1"><select value={dr.note} onChange={e => updateDraft('note',e.target.value)} className={inputCls}><option value="">::선택::</option><option value="카드결제">카드결제</option><option value="아이행복카드">아이행복카드</option><option value="계좌이체">계좌이체</option><option value="자동이체">자동이체</option><option value="지로">지로</option><option value="현금결제">현금결제</option><option value="기타">기타</option></select></td>
+                      case 'child': return <React.Fragment key={key}>
+                        <td className="px-1 py-1 text-center text-xs text-slate-400">-</td>
+                        <td className="px-1 py-1 text-center">
+                          <div className="flex items-center gap-1 justify-center">
+                            <button onClick={() => saveDraft()}
+                              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover">수정</button>
+                            <button onClick={() => { setRows(prev => prev.filter(r => r.id !== dr.id)); setDraftRow(null); setChecked(new Set()) }}
+                              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>
                           </div>
                         </td>
                       </React.Fragment>
-                      case 'fee': return inputMode === '건별등록' ? null : <td key={key} className="text-center px-1 py-1">
-                        <button onClick={e => e.stopPropagation()} className="px-2 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">수수료</button>
-                      </td>
-                      case 'counterpart': return <td key={key} className="px-1 py-1"><input type="text" value={row.counterpart} onChange={e => updateRow(row.id,'counterpart',e.target.value)} className={inputCls}/></td>
-                      case 'payment': return <td key={key} className="px-1 py-1"><select value={row.note} onChange={e => updateRow(row.id,'note',e.target.value)} className={inputCls}><option value="">::선택::</option><option value="카드결제">카드결제</option><option value="아이행복카드">아이행복카드</option><option value="계좌이체">계좌이체</option><option value="자동이체">자동이체</option><option value="지로">지로</option><option value="현금결제">현금결제</option><option value="기타">기타</option></select></td>
-                      case 'child': return <td key={key} className="px-1 py-1 text-center text-xs text-slate-400">-</td>
-                      case 'sort': return <td key={key} className="px-1 py-1 text-center text-xs text-slate-400">-</td>
+                      case 'sort': return null
                       default: return null
                     }
                   })}
@@ -1070,7 +1161,7 @@ export default function VoucherInputPage() {
       })()}
 
       {/* 전표 테이블 (일괄수정/건별등록) */}
-      {(inputMode === '일괄수정' || inputMode === '건별등록') && <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm relative single-input-mode">
+      {(inputMode === '일괄수정' || inputMode === '건별등록' || inputMode === '상세등록') && <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm relative single-input-mode">
         <style>{`
           .single-input-mode tbody tr { border-bottom: 1px solid #f8f8f8 !important; }
           .single-input-mode tbody td, .single-input-mode thead th { white-space: nowrap; }
@@ -1143,14 +1234,14 @@ export default function VoucherInputPage() {
                       <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[130px]">잔액</th>
                     </React.Fragment>
                     case 'accountGroup': return <React.Fragment key={key}>
-                      {inputMode !== '건별등록' && <th className="text-center px-1 py-2 font-normal text-slate-700 w-[40px]">복사</th>}
-                      <th className={`text-center px-1.5 py-2 font-normal text-slate-700 ${inputMode === '건별등록' ? 'w-[180px]' : 'w-[130px]'}`}>계정과목</th>
-                      <th className={`text-center px-0.5 py-2 font-normal text-slate-700 ${inputMode === '건별등록' ? 'w-[100px]' : 'w-[68px]'}`}>세목</th>
-                      <th className={`text-center px-1.5 py-2 font-normal text-slate-700 ${inputMode === '건별등록' ? 'w-[90px]' : 'w-[70px]'}`}>계정코드</th>
-                      {inputMode !== '건별등록' && <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[46px]">분리</th>}
-                      {inputMode !== '건별등록' && <th className="text-center px-1 py-2 font-normal text-slate-700 w-[80px]">반납</th>}
+                      {inputMode !== '건별등록' && inputMode !== '상세등록' && <th className="text-center px-1 py-2 font-normal text-slate-700 w-[40px]">복사</th>}
+                      <th className={`text-center px-1.5 py-2 font-normal text-slate-700 ${(inputMode === '건별등록' || inputMode === '상세등록') ? 'w-[180px]' : 'w-[130px]'}`}>계정과목</th>
+                      <th className={`text-center px-0.5 py-2 font-normal text-slate-700 ${(inputMode === '건별등록' || inputMode === '상세등록') ? 'w-[100px]' : 'w-[68px]'}`}>세목</th>
+                      <th className={`text-center px-1.5 py-2 font-normal text-slate-700 ${(inputMode === '건별등록' || inputMode === '상세등록') ? 'w-[90px]' : 'w-[70px]'}`}>계정코드</th>
+                      {inputMode !== '건별등록' && inputMode !== '상세등록' && <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[46px]">분리</th>}
+                      {inputMode !== '건별등록' && inputMode !== '상세등록' && <th className="text-center px-1 py-2 font-normal text-slate-700 w-[80px]">반납</th>}
                     </React.Fragment>
-                    case 'fee': return inputMode === '건별등록' ? null : <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[50px]">수수료</th>
+                    case 'fee': return (inputMode === '건별등록' || inputMode === '상세등록') ? null : <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[50px]">수수료</th>
                     case 'counterpart': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[78px]">거래처</th>
                     case 'payment': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[78px]">결제방식</th>
                     case 'child': return <th key={key} className="text-center px-1 py-2 font-normal text-slate-700 w-[36px]">원아</th>
@@ -1165,20 +1256,21 @@ export default function VoucherInputPage() {
                 const isCell = (field: string) => editingCell?.rowId === row.id && editingCell?.field === field
                 const cellClick = (field: string) => (e: React.MouseEvent) => {
                   e.stopPropagation()
+                  if (inputMode === '건별등록' || inputMode === '상세등록') { setChecked(new Set([row.id])); return }
                   setEditingCell(isCell(field) ? null : { rowId: row.id, field })
                 }
                 const isRefund = row.amount < 0
-                const cellBorder = inputMode === '건별등록' ? 'border border-[#f5b800]/30 rounded px-2 py-1.5' : ''
+                const cellBorder = (inputMode === '건별등록' || inputMode === '상세등록') ? 'border border-[#f5b800]/30 rounded px-2 py-1.5' : ''
                 return (
                   <tr
                     key={row.id}
-                    onClick={inputMode === '건별등록' ? () => setChecked(new Set([row.id])) : undefined}
-                    className={`transition-colors ${inputMode === '건별등록' ? 'cursor-pointer' : ''} ${
+                    onClick={(inputMode === '건별등록' || inputMode === '상세등록') ? () => setChecked(new Set([row.id])) : undefined}
+                    className={`transition-colors ${(inputMode === '건별등록' || inputMode === '상세등록') ? 'cursor-pointer' : ''} ${
                       isRefund ? 'bg-red-50/50 border-b border-red-100' : editingCell?.rowId === row.id ? 'bg-[#fffbeb]' : checked.has(row.id) ? 'bg-[#fffbeb]/60' : `${idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'} hover:bg-[#fffbeb] border-b border-slate-50`
                     }`}
                   >
                     <td className="text-center px-2 py-1">
-                      <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.has(row.id)} onChange={() => toggleCheck(row.id)} />
+                      <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.has(row.id)} onClick={e => e.stopPropagation()} onChange={() => { if (inputMode === '건별등록' || inputMode === '상세등록') { setChecked(new Set([row.id])) } else { toggleCheck(row.id) } }} />
                     </td>
                     {/* Dynamic columns rendered in columnOrder */}
                     {columnOrder.map(([key]) => {
@@ -1260,7 +1352,7 @@ export default function VoucherInputPage() {
 
                         case 'summary':
                           return <td key={key} data-cell="summary" className="px-2 py-1 cursor-pointer" onClick={cellClick('summary')} style={{display: 'flex', alignItems: 'center'}}>
-                            {inputMode !== '건별등록' && <button
+                            {inputMode !== '건별등록' && inputMode !== '상세등록' && <button
                               onClick={(e) => { e.stopPropagation(); startVoice(row.id) }}
                               className={`shrink-0 w-4 h-4 flex items-center justify-center rounded-full transition-all mr-1 ${
                                 listeningRowId === row.id
@@ -1456,7 +1548,7 @@ export default function VoucherInputPage() {
                         case 'accountGroup':
                           return <React.Fragment key={key}>
                             {/* 복사 */}
-                            {inputMode !== '건별등록' && <td className="text-center px-1 py-1">
+                            {inputMode !== '건별등록' && inputMode !== '상세등록' && <td className="text-center px-1 py-1">
                               {(() => {
                                 const copiedRow = rows.find(r => r.copySelected)
                                 if (row.copySelected) {
@@ -1589,11 +1681,11 @@ export default function VoucherInputPage() {
                               )}
                             </td>
                             {/* 분리 */}
-                            {inputMode !== '건별등록' && <td className="text-center px-1 py-1">
+                            {inputMode !== '건별등록' && inputMode !== '상세등록' && <td className="text-center px-1 py-1">
                               <button onClick={e => e.stopPropagation()} className="px-2 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600 whitespace-nowrap">분리</button>
                             </td>}
                             {/* 반납 */}
-                            {inputMode !== '건별등록' && <td className="text-center px-1 py-1">
+                            {inputMode !== '건별등록' && inputMode !== '상세등록' && <td className="text-center px-1 py-1">
                               <div className="flex items-center justify-center gap-0.5">
                                 <button onClick={e => {
                                   e.stopPropagation()
@@ -1612,7 +1704,7 @@ export default function VoucherInputPage() {
                           </React.Fragment>
 
                         case 'fee':
-                          return inputMode === '건별등록' ? null : <td key={key} className="text-center px-1 py-1"><button onClick={e => e.stopPropagation()} className="px-2 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">수수료</button></td>
+                          return (inputMode === '건별등록' || inputMode === '상세등록') ? null : <td key={key} className="text-center px-1 py-1"><button onClick={e => e.stopPropagation()} className="px-2 py-1 text-xs font-medium border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600">수수료</button></td>
 
                         case 'counterpart':
                           return <td key={key} data-cell="counterpart" className="text-center px-2 py-1 cursor-pointer" onClick={cellClick('counterpart')}>

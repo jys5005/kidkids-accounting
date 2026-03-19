@@ -137,6 +137,37 @@ npx next dev -p 3000
 ### 하단 합계
 - 블록 방식: 수입(파란박스), 지출(빨간박스), 잔액(초록박스)
 
+## 공통 계정과목 데이터 (`src/lib/accounts.ts`)
+- 모든 페이지에서 import하여 사용 (페이지별 하드코딩 금지)
+- `incomeAccounts`, `expenseAccounts` — 목+세목 배열 (isSub: true)
+- `accountCodeMap` — 계정과목명 → 4자리 코드
+- `subAccountCodeMap` — 세목명 → 5자리 코드
+- `codeToAccount` — 코드 → {account, subAccount} 역매핑
+- `isIncomeAccount()` — 수입 여부 판별
+- **계정과목 표시 규칙**: 항상 목 박스 + 세목 박스 별도 컬럼 분리
+- **색상**: 수입=파란(text-blue-700), 지출=빨간(text-red-600)
+- **드롭다운**: 커스텀 팝업, 목/세목 뱃지(배경색+흰글씨), 외부 클릭 닫기
+
+## 건별등록/상세등록 공통 프로세스
+- 하단 테이블: 읽기 전용, 클릭/체크로 전표 선택만
+- 상단 패널: draftRow 기반 편집 (원본 직접 수정 안 함)
+- 수정 버튼: draftRow → rows 반영, 삭제 버튼: 행 제거
+- draftRow 동기화: inputMode/checked 변경 시만 (editingCell 변경 시 덮어쓰기 방지)
+- 상세등록 드롭다운: `detailDropdown` state 사용 (editingCell과 분리)
+
+## 삭제전표 (`/voucher/deleted`)
+- **페이지**: `src/app/voucher/deleted/page.tsx`
+- **필터**: 발행기간(기본: 당월1일~오늘) / 계정과목(커스텀 드롭다운, 목/세목 뱃지) / 결제방식 / 적요 / 조회
+- **테이블**: 체크 / 발행일 / 계정과목 / 세목 / 적요 / 수입액 / 지출액 / 거래처 / 결제방식 / 삭제일
+- **복구하기**: 체크한 전표 복구
+
+## 잔액비교 (`/voucher/balance`)
+- **페이지**: `src/app/voucher/balance/page.tsx`
+- **회계년 선택** + **회계잔액 비교** 타이틀 + **참고** 말풍선(우측)
+- **서브탭**: 월별 통장잔고 비교 / 월별 통장잔고 검증 / 일별 통장잔고 검증
+- **테이블**: 입금일자 / 계좌잔액(은행별+합계) / 회계잔액(B) / 비교차액(A)-(B) / 확인(불일치)
+- 회계연도: 3월~다음해 2월 (12행)
+
 ## 인증
 - SSO: 통합e(localhost:4000)에서 토큰으로 세션 전달
 - `/api/auth/me` - 통합e API에서 displayName, centerName 가져옴
