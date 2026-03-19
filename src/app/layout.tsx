@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50 min-h-screen flex flex-col`}>
         <Header />
-        <main className="flex-1 p-2 overflow-auto text-sm font-medium">
+        <main className="flex-1 p-2 text-sm font-medium">
           <div className="w-full">
             {children}
           </div>
