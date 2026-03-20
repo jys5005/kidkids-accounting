@@ -562,7 +562,7 @@ export default function TransactionsPage() {
         const totalIn = rows.reduce((s, r) => s + r.income, 0)
         const totalOut = rows.reduce((s, r) => s + r.expense, 0)
         return (
-          <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
+          <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
@@ -732,7 +732,7 @@ export default function TransactionsPage() {
         const totalOut = months.reduce((s, m) => s + (monthlyExpense[m] || 0), 0)
 
         return (
-          <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
+          <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
@@ -807,7 +807,7 @@ export default function TransactionsPage() {
         const totalMonOut = rows.reduce((s, r) => s + r.monExpense, 0)
 
         return (
-          <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
+          <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
