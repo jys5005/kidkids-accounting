@@ -935,7 +935,7 @@ export default function VoucherInputPage() {
                 <div className="w-40 relative">
                   <label className={labelCls}>수입계정</label>
                   <button type="button" onClick={() => setDetailDropdown(detailDropdown === 'income' ? null : 'income')}
-                    className={`${inputCls} text-left cursor-pointer text-blue-600 font-bold ${detailDropdown === 'income' ? 'ring-2 ring-blue-400/30 border-blue-400' : ''}`}>
+                    className={`w-full px-3 py-2 rounded-lg text-sm text-left cursor-pointer font-bold text-white bg-blue-500 hover:bg-blue-600 ${detailDropdown === 'income' ? 'ring-2 ring-blue-300' : ''}`}>
                     계정선택
                   </button>
                   {detailDropdown === 'income' && (
@@ -963,7 +963,7 @@ export default function VoucherInputPage() {
                 <div className="w-40 relative">
                   <label className={labelCls}>지출계정</label>
                   <button type="button" onClick={() => setDetailDropdown(detailDropdown === 'expense' ? null : 'expense')}
-                    className={`${inputCls} text-left cursor-pointer text-red-600 font-bold ${detailDropdown === 'expense' ? 'ring-2 ring-red-400/30 border-red-400' : ''}`}>
+                    className={`w-full px-3 py-2 rounded-lg text-sm text-left cursor-pointer font-bold text-white bg-red-500 hover:bg-red-600 ${detailDropdown === 'expense' ? 'ring-2 ring-red-300' : ''}`}>
                     계정선택
                   </button>
                   {detailDropdown === 'expense' && (
