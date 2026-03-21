@@ -11,8 +11,8 @@ export const incomeAccounts: AccItem[] = [
   { value: '세목:현장학습비', label: '현장학습비', isSub: true },
   { value: '세목:차량운행비', label: '차량운행비', isSub: true },
   { value: '세목:부모부담행사비', label: '부모부담행사비', isSub: true },
-  { value: '세목:조석식비', label: '조석식비', isSub: true },
-  { value: '필:특성화비', label: '특성화비', isSub: true },
+  { value: '세목:조석식비', label: '아침,저녁급식비', isSub: true },
+  { value: '필:특성화비', label: '기타시도특성화비', isSub: true },
   { value: '인건비 보조금', label: '인건비 보조금' },
   { value: '기관보육료', label: '기관보육료' },
   { value: '연장보육료', label: '연장보육료' },
@@ -65,8 +65,8 @@ export const expenseAccounts: AccItem[] = [
   { value: '세목:현장학습비(지출)', label: '현장학습비', isSub: true },
   { value: '세목:차량운행비(지출)', label: '차량운행비', isSub: true },
   { value: '세목:부모부담행사비(지출)', label: '부모부담행사비', isSub: true },
-  { value: '세목:조석식비(지출)', label: '조석식비', isSub: true },
-  { value: '필:특성화비(지출)', label: '특성화비', isSub: true },
+  { value: '세목:조석식비(지출)', label: '아침,저녁급식비', isSub: true },
+  { value: '필:특성화비(지출)', label: '기타시도특성화비', isSub: true },
   { value: '적립금', label: '적립금' },
   { value: '단기 차입금 상환', label: '단기 차입금 상환' },
   { value: '장기 차입금 상환', label: '장기 차입금 상환' },
@@ -106,9 +106,14 @@ export const accountCodeMap: Record<string, string> = {
 // 세목 → 5자리 코드
 export const subAccountCodeMap: Record<string, string> = {
   '입학준비금': '12211', '현장학습비': '12212', '차량운행비': '12213',
-  '부모부담행사비': '12214', '조석식비': '12215', '특성화비': '12216',
+  '부모부담행사비': '12214', '아침,저녁급식비': '12215', '기타시도특성화비': '12216',
+  '조석식비': '12215', '특성화비': '12216',
   '퇴직금': '21423', '퇴직적립금': '21424',
-  '임대료': '22171', '건물융자금의이자': '22172', '차량할부금': '27211',
+  '임대료': '22171', '건물융자금의이자': '22172',
+  '입학준비금(지출)': '24211', '현장학습비(지출)': '24212', '차량운행비(지출)': '24213',
+  '부모부담행사비(지출)': '24214', '아침,저녁급식비(지출)': '24215', '기타시도특성화비(지출)': '24216',
+  '조석식비(지출)': '24215', '특성화비(지출)': '24216',
+  '차량할부금': '27211', '자산취득비': '27212',
 }
 
 // 코드 → 계정과목 역매핑

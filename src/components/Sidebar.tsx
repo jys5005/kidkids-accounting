@@ -45,20 +45,7 @@ const categories: MenuCategory[] = [
           { label: '잔액비교', href: '/voucher/balance' },
           { label: '거래내역', href: '/voucher/transactions' },
           { label: '계좌내역', href: '/voucher/bank' },
-          { label: '영수증연동', href: '/voucher/receipt' },
-        ],
-      },
-      {
-        label: '현금출납부',
-        children: [
-          { label: '현금출납부', href: '/cash-ledger' },
-          { label: '현금출납부 기간별', href: '/cash-ledger/period' },
-          { label: '총계정원장', href: '/cash-ledger/general-ledger' },
-          { label: '총계정원장 기간별', href: '/cash-ledger/general-ledger-period' },
-          { label: '계정과목별총괄표', href: '/cash-ledger/account-summary' },
-          { label: '월별수입지출합계', href: '/cash-ledger/monthly-total' },
-          { label: '합계잔액시산표', href: '/cash-ledger/trial-balance' },
-          { label: '월별비교', href: '/cash-ledger/monthly-compare' },
+          { label: '영수증(CIS)연동', href: '/voucher/receipt' },
         ],
       },
       {
