@@ -398,6 +398,7 @@ export default function BudgetCreatePage() {
   const [amendments, setAmendments] = useState<{ name: string; date: string }[]>([])
   const [showAmendPopup, setShowAmendPopup] = useState(false)
   const [amendDate, setAmendDate] = useState('')
+  const [amendBase, setAmendBase] = useState('본예산')
 
   const initBasis = () => {
     const init: Record<string, BasisItem[]> = {}
@@ -705,22 +706,29 @@ export default function BudgetCreatePage() {
             </div>
             <div className="px-5 py-5 space-y-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-600 w-20">추경차수</span>
+                <span className="text-xs font-bold text-slate-600 w-24">추경차수</span>
                 <span className="text-xs font-bold text-blue-700">{amendments.length + 1}차 추경</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-600 w-20">추경일자</span>
+                <span className="text-xs font-bold text-slate-600 w-24">이전예산호출</span>
+                <select value={amendBase} onChange={e => setAmendBase(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+                  <option value="본예산">본예산</option>
+                  {amendments.map((a, i) => <option key={i} value={a.name}>{a.name} ({a.date})</option>)}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-600 w-24">추경일자</span>
                 <input type="date" value={amendDate} onChange={e => setAmendDate(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
               </div>
-              <p className="text-[11px] text-slate-400">* 본예산 기준으로 {amendments.length + 1}차 추경예산이 생성됩니다.</p>
+              <p className="text-[11px] text-slate-400">* <span className="font-bold">{amendBase}</span> 기준으로 {amendments.length + 1}차 추경예산이 생성됩니다.</p>
             </div>
             <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-end gap-2">
               <button onClick={() => setShowAmendPopup(false)} className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">취소</button>
               <button onClick={() => {
                 if (!amendDate) return
                 const name = `${amendments.length + 1}차 추경`
-                // 현재 예산 데이터를 복사하여 새 추경 데이터 생성
-                const currentBasis = allBasisState[budgetType] || {}
+                // 선택한 이전예산 데이터를 복사하여 새 추경 데이터 생성
+                const currentBasis = allBasisState[amendBase] || {}
                 const copiedBasis: Record<string, BasisItem[]> = {}
                 Object.entries(currentBasis).forEach(([code, items]) => {
                   copiedBasis[code] = items.map(item => ({ ...item }))
