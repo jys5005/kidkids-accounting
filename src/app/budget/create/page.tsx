@@ -73,88 +73,78 @@ const budgetData: BudgetRow[] = [
 ]
 
 const expenseBudgetData: BudgetRow[] = [
-  { code: 'E01', name: '인건비', amount: 480000000, prevAmount: 0, change: 480000000, level: 0 },
-  { code: 'E11', name: '원장인건비', amount: 48000000, prevAmount: 0, change: 48000000, level: 1 },
-  { code: 'E111', name: '원장급여', amount: 42000000, prevAmount: 0, change: 42000000, level: 2 },
-  { code: 'E112', name: '원장수당', amount: 6000000, prevAmount: 0, change: 6000000, level: 2 },
-  { code: 'E12', name: '보육교직원인건비', amount: 300000000, prevAmount: 0, change: 300000000, level: 1 },
-  { code: 'E121', name: '보육교직원급여', amount: 264000000, prevAmount: 0, change: 264000000, level: 2 },
-  { code: 'E122', name: '보육교직원수당', amount: 36000000, prevAmount: 0, change: 36000000, level: 2 },
-  { code: 'E13', name: '기타인건비', amount: 12000000, prevAmount: 0, change: 12000000, level: 1 },
-  { code: 'E131', name: '기타 인건비', amount: 12000000, prevAmount: 0, change: 12000000, level: 2 },
-  { code: 'E14', name: '법정부담금·퇴직금', amount: 120000000, prevAmount: 0, change: 120000000, level: 1 },
-  { code: 'E141', name: '법정부담금', amount: 60000000, prevAmount: 0, change: 60000000, level: 2 },
-  { code: 'E142', name: '퇴직금 및 퇴직적립금', amount: 60000000, prevAmount: 0, change: 60000000, level: 2 },
-  { code: 'E142-111', name: '퇴직금', amount: 30000000, prevAmount: 0, change: 30000000, level: 3 },
-  { code: 'E142-121', name: '퇴직적립금', amount: 30000000, prevAmount: 0, change: 30000000, level: 3 },
+  { code: 'E100', name: '인건비', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E110', name: '원장인건비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E111', name: '원장급여', amount: 78000000, prevAmount: 76387190, change: 0, level: 2 },
+  { code: 'E112', name: '원장수당', amount: 600000, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E120', name: '보육교직원인건비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E121', name: '보육교직원급여', amount: 476237280, prevAmount: 392202020, change: 0, level: 2 },
+  { code: 'E122', name: '보육교직원수당', amount: 16800000, prevAmount: 4735000, change: 0, level: 2 },
+  { code: 'E130', name: '기타인건비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E131', name: '기타 인건비', amount: 5992800, prevAmount: 191000, change: 0, level: 2 },
+  { code: 'E140', name: '기관부담금', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E141', name: '법정부담금', amount: 57488377, prevAmount: 39771280, change: 0, level: 2 },
+  { code: 'E142', name: '퇴직금 및 퇴직적립금', amount: 39686440, prevAmount: 30803721, change: 0, level: 2 },
 
-  { code: 'E02', name: '관리운영비', amount: 120000000, prevAmount: 0, change: 120000000, level: 0 },
-  { code: 'E21', name: '기관운영비', amount: 108000000, prevAmount: 0, change: 108000000, level: 1 },
-  { code: 'E211', name: '수용비 및 수수료', amount: 24000000, prevAmount: 0, change: 24000000, level: 2 },
-  { code: 'E212', name: '공공요금 및 제세공과금', amount: 18000000, prevAmount: 0, change: 18000000, level: 2 },
-  { code: 'E213', name: '연료비', amount: 6000000, prevAmount: 0, change: 6000000, level: 2 },
-  { code: 'E214', name: '여비', amount: 1200000, prevAmount: 0, change: 1200000, level: 2 },
-  { code: 'E215', name: '차량비', amount: 8400000, prevAmount: 0, change: 8400000, level: 2 },
-  { code: 'E216', name: '복리후생비', amount: 3600000, prevAmount: 0, change: 3600000, level: 2 },
-  { code: 'E217', name: '기타 운영비', amount: 6000000, prevAmount: 0, change: 6000000, level: 2 },
-  { code: 'E217-111', name: '임대료', amount: 3000000, prevAmount: 0, change: 3000000, level: 3 },
-  { code: 'E217-121', name: '건물융자금의이자', amount: 3000000, prevAmount: 0, change: 3000000, level: 3 },
-  { code: 'E22', name: '업무추진비', amount: 12000000, prevAmount: 0, change: 12000000, level: 1 },
-  { code: 'E218', name: '업무추진비', amount: 6000000, prevAmount: 0, change: 6000000, level: 2 },
-  { code: 'E219', name: '직책급', amount: 3000000, prevAmount: 0, change: 3000000, level: 2 },
-  { code: 'E220', name: '회의비', amount: 3000000, prevAmount: 0, change: 3000000, level: 2 },
+  { code: 'E200', name: '운영비', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E210', name: '관리운영비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E211', name: '수용비 및 수수료', amount: 67260000, prevAmount: 14867129, change: 0, level: 2 },
+  { code: 'E212', name: '공공요금 및 제세공과금', amount: 22600000, prevAmount: 10098780, change: 0, level: 2 },
+  { code: 'E213', name: '연료비', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E214', name: '여비', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E215', name: '차량비', amount: 10200000, prevAmount: 3564000, change: 0, level: 2 },
+  { code: 'E216', name: '복리후생비', amount: 10110000, prevAmount: 7226680, change: 0, level: 2 },
+  { code: 'E217', name: '기타 운영비', amount: 21600000, prevAmount: 17058755, change: 0, level: 2 },
+  { code: 'E220', name: '업무추진비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E221', name: '업무추진비', amount: 4200000, prevAmount: 15000, change: 0, level: 2 },
+  { code: 'E222', name: '직책급', amount: 12000000, prevAmount: 7300000, change: 0, level: 2 },
+  { code: 'E223', name: '회의비', amount: 1000000, prevAmount: 54000, change: 0, level: 2 },
 
-  { code: 'E03', name: '보육활동비', amount: 100000000, prevAmount: 0, change: 100000000, level: 0 },
-  { code: 'E31', name: '보육활동운영비', amount: 100000000, prevAmount: 0, change: 100000000, level: 1 },
-  { code: 'E311', name: '교직원연수·연구비', amount: 2400000, prevAmount: 0, change: 2400000, level: 2 },
-  { code: 'E312', name: '교재·교구 구입비', amount: 4800000, prevAmount: 0, change: 4800000, level: 2 },
-  { code: 'E313', name: '행사비', amount: 3600000, prevAmount: 0, change: 3600000, level: 2 },
-  { code: 'E314', name: '영유아복리비', amount: 2400000, prevAmount: 0, change: 2400000, level: 2 },
-  { code: 'E315', name: '급식·간식재료비', amount: 48000000, prevAmount: 0, change: 48000000, level: 2 },
+  { code: 'E300', name: '보육활동비', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E310', name: '기본보육활동비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E311', name: '교직원연수·연구비', amount: 6000000, prevAmount: 1531770, change: 0, level: 2 },
+  { code: 'E312', name: '교재·교구 구입비', amount: 40120000, prevAmount: 3779370, change: 0, level: 2 },
+  { code: 'E313', name: '행사비', amount: 9840000, prevAmount: 1618900, change: 0, level: 2 },
+  { code: 'E314', name: '영유아복리비', amount: 1000000, prevAmount: 79700, change: 0, level: 2 },
+  { code: 'E315', name: '급식·간식재료비', amount: 103656000, prevAmount: 61932476, change: 0, level: 2 },
 
-  { code: 'E04', name: '수익자부담 지출', amount: 60000000, prevAmount: 0, change: 60000000, level: 0 },
-  { code: 'E41', name: '특별활동비', amount: 30000000, prevAmount: 0, change: 30000000, level: 1 },
-  { code: 'E411', name: '특별활동비지출', amount: 30000000, prevAmount: 0, change: 30000000, level: 2 },
-  { code: 'E42', name: '기타필요경비지출', amount: 30000000, prevAmount: 0, change: 30000000, level: 1 },
-  { code: 'E421', name: '기타 필요경비 지출', amount: 30000000, prevAmount: 0, change: 30000000, level: 2 },
-  { code: 'E421-111', name: '입학준비금', amount: 5000000, prevAmount: 0, change: 5000000, level: 3 },
-  { code: 'E421-112', name: '현장학습비', amount: 8000000, prevAmount: 0, change: 8000000, level: 3 },
-  { code: 'E421-113', name: '차량운행비', amount: 3000000, prevAmount: 0, change: 3000000, level: 3 },
-  { code: 'E421-121', name: '부모부담행사비', amount: 5000000, prevAmount: 0, change: 5000000, level: 3 },
-  { code: 'E421-131', name: '아침,저녁급식비', amount: 0, prevAmount: 0, change: 0, level: 3 },
-  { code: 'E421-141', name: '기타시도특성화비', amount: 9000000, prevAmount: 0, change: 9000000, level: 3 },
+  { code: 'E400', name: '수익자 부담경비', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E410', name: '선택적 보육활동비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E411', name: '특별활동비지출', amount: 53328000, prevAmount: 64190800, change: 0, level: 2 },
+  { code: 'E420', name: '기타 필요경비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E421', name: '기타 필요경비 지출', amount: 85160000, prevAmount: 120257698, change: 0, level: 2 },
 
-  { code: 'E05', name: '적립금', amount: 0, prevAmount: 0, change: 0, level: 0 },
-  { code: 'E51', name: '적립금', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E500', name: '적립금', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E510', name: '적립금', amount: 0, prevAmount: 0, change: 0, level: 1 },
   { code: 'E511', name: '적립금', amount: 0, prevAmount: 0, change: 0, level: 2 },
 
-  { code: 'E06', name: '상환금', amount: 0, prevAmount: 0, change: 0, level: 0 },
-  { code: 'E61', name: '차입금상환', amount: 0, prevAmount: 0, change: 0, level: 1 },
-  { code: 'E611', name: '단기 차입금 상환', amount: 0, prevAmount: 0, change: 0, level: 2 },
-  { code: 'E621', name: '장기 차입금 상환', amount: 0, prevAmount: 0, change: 0, level: 2 },
-  { code: 'E62', name: '반환금', amount: 0, prevAmount: 0, change: 0, level: 1 },
-  { code: 'E631', name: '보조금 반환금', amount: 0, prevAmount: 0, change: 0, level: 2 },
-  { code: 'E632', name: '보호자 반환금', amount: 0, prevAmount: 0, change: 0, level: 2 },
-  { code: 'E63', name: '전출금', amount: 0, prevAmount: 0, change: 0, level: 1 },
-  { code: 'E641', name: '법인회계 전출금', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E600', name: '상환·반환금', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E610', name: '차입금 상환', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E611', name: '단기 차입금 상환', amount: 10000000, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E612', name: '장기 차입금 상환', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E620', name: '반환금', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E621', name: '보조금 반환금', amount: 300000, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E622', name: '보호자 반환금', amount: 300000, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E623', name: '법인회계 전출금', amount: 0, prevAmount: 0, change: 0, level: 2 },
 
-  { code: 'E07', name: '시설비', amount: 0, prevAmount: 0, change: 0, level: 0 },
-  { code: 'E71', name: '시설비', amount: 0, prevAmount: 0, change: 0, level: 1 },
-  { code: 'E711', name: '시설비', amount: 0, prevAmount: 0, change: 0, level: 2 },
-  { code: 'E712', name: '시설장비 유지비', amount: 0, prevAmount: 0, change: 0, level: 2 },
-  { code: 'E72', name: '자산취득비', amount: 0, prevAmount: 0, change: 0, level: 1 },
-  { code: 'E721', name: '자산취득비', amount: 0, prevAmount: 0, change: 0, level: 2 },
-  { code: 'E721-111', name: '차량할부금', amount: 0, prevAmount: 0, change: 0, level: 3 },
-  { code: 'E721-121', name: '자산취득비', amount: 0, prevAmount: 0, change: 0, level: 3 },
+  { code: 'E700', name: '재산조성비', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E710', name: '시설비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E711', name: '시설비', amount: 3000000, prevAmount: 660000, change: 0, level: 2 },
+  { code: 'E712', name: '시설장비 유지비', amount: 6000000, prevAmount: 839000, change: 0, level: 2 },
+  { code: 'E720', name: '자산구입비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E721', name: '자산취득비', amount: 12000000, prevAmount: 1111450, change: 0, level: 2 },
 
-  { code: 'E08', name: '과년도 지출', amount: 0, prevAmount: 0, change: 0, level: 0 },
-  { code: 'E81', name: '과년도 지출', amount: 0, prevAmount: 0, change: 0, level: 1 },
-  { code: 'E811', name: '과년도 지출', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E800', name: '과년도 지출', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E810', name: '과년도 지출', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E811', name: '과년도 지출', amount: 122192144, prevAmount: 7160800, change: 0, level: 2 },
 
-  { code: 'E09', name: '잡지출·예비비', amount: 59079520, prevAmount: 0, change: 59079520, level: 0 },
-  { code: 'E91', name: '잡지출·예비비', amount: 59079520, prevAmount: 0, change: 59079520, level: 1 },
+  { code: 'E900', name: '잡지출', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E910', name: '잡지출', amount: 0, prevAmount: 0, change: 0, level: 1 },
   { code: 'E911', name: '잡지출', amount: 0, prevAmount: 0, change: 0, level: 2 },
-  { code: 'E991', name: '예비비', amount: 59079520, prevAmount: 0, change: 59079520, level: 2 },
+
+  { code: 'E1000', name: '예비비', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E1010', name: '예비비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E1011', name: '예비비', amount: 0, prevAmount: 0, change: 0, level: 2 },
 ]
 
 interface BasisItem {
@@ -254,6 +244,148 @@ const basisDetails: Record<string, BasisData> = {
       { name: '전년도 이월금', unitPrice: 20000000, qty: 1, months: 1, total: 20000000 },
     ],
   },
+  // 세출
+  'E111': { code: 'E111', label: '원장급여', prevAmount: 76387190, items: [
+    { name: '원장급여', unitPrice: 6500000, qty: 1, months: 12, total: 78000000 },
+  ]},
+  'E112': { code: 'E112', label: '원장수당', prevAmount: 0, items: [
+    { name: '원장수당', unitPrice: 300000, qty: 1, months: 2, total: 600000 },
+  ]},
+  'E121': { code: 'E121', label: '보육교직원급여', prevAmount: 392202020, items: [
+    { name: '보육교사', unitPrice: 2316100, qty: 11, months: 12, total: 305725200 },
+    { name: '누리장애반교사', unitPrice: 2316100, qty: 1, months: 12, total: 27793200 },
+    { name: '보조교사', unitPrice: 1139000, qty: 2, months: 12, total: 27336000 },
+    { name: '장애아보조교사', unitPrice: 1139000, qty: 1, months: 12, total: 13668000 },
+    { name: '연장교사', unitPrice: 1139000, qty: 2, months: 12, total: 27336000 },
+    { name: '조리사', unitPrice: 1620240, qty: 1, months: 12, total: 19442880 },
+    { name: '차량기사', unitPrice: 2300000, qty: 1, months: 12, total: 27600000 },
+    { name: '누리보조교사', unitPrice: 1139000, qty: 2, months: 12, total: 27336000 },
+  ]},
+  'E122': { code: 'E122', label: '보육교직원수당', prevAmount: 4735000, items: [
+    { name: '명절수당', unitPrice: 100000, qty: 21, months: 2, total: 4200000 },
+    { name: '보육교직원수당', unitPrice: 100000, qty: 21, months: 6, total: 12600000 },
+  ]},
+  'E131': { code: 'E131', label: '기타 인건비', prevAmount: 191000, items: [
+    { name: '기타 인건비', unitPrice: 99880, qty: 60, months: 1, total: 5992800 },
+  ]},
+  'E141': { code: 'E141', label: '법정부담금', prevAmount: 39771280, items: [
+    { name: '원장국민건강', unitPrice: 6500000, qty: 1, months: 12, total: 2804100 },
+    { name: '원장장기요양', unitPrice: 2804100, qty: 1, months: 1, total: 368459 },
+    { name: '보육교직원국민건강', unitPrice: 39686440, qty: 1, months: 12, total: 17120730 },
+    { name: '보육교직원장기요양', unitPrice: 17120730, qty: 1, months: 1, total: 2249664 },
+    { name: '원장국민연금', unitPrice: 7000000, qty: 1, months: 12, total: 3990000 },
+    { name: '보육교직원국민연금', unitPrice: 39686440, qty: 1, months: 12, total: 22621271 },
+    { name: '보육교직원고용보험', unitPrice: 39686440, qty: 1, months: 12, total: 5476729 },
+    { name: '보육교직원산재보험', unitPrice: 39686440, qty: 1, months: 12, total: 2857424 },
+  ]},
+  'E142': { code: 'E142', label: '퇴직금 및 퇴직적립금', prevAmount: 30803721, items: [
+    { name: '퇴직적립금', unitPrice: 39686440, qty: 1, months: 1, total: 39686440 },
+  ]},
+  'E211': { code: 'E211', label: '수용비 및 수수료', prevAmount: 14867129, items: [
+    { name: '소모품및집기구입비', unitPrice: 1000000, qty: 1, months: 12, total: 12000000 },
+    { name: '문구류', unitPrice: 250000, qty: 1, months: 12, total: 3000000 },
+    { name: '대관.비품대여', unitPrice: 100000, qty: 1, months: 12, total: 1200000 },
+    { name: '비품수선비', unitPrice: 50000, qty: 1, months: 12, total: 600000 },
+    { name: '의약품', unitPrice: 200000, qty: 1, months: 6, total: 1200000 },
+    { name: '우편료', unitPrice: 10000, qty: 1, months: 12, total: 120000 },
+    { name: '협회비', unitPrice: 900000, qty: 1, months: 1, total: 900000 },
+    { name: '만5세 필요경비', unitPrice: 201000, qty: 20, months: 12, total: 48240000 },
+  ]},
+  'E212': { code: 'E212', label: '공공요금 및 제세공과금', prevAmount: 10098780, items: [
+    { name: '세금및공과금', unitPrice: 200000, qty: 1, months: 12, total: 2400000 },
+    { name: '안전공제회비', unitPrice: 1000000, qty: 1, months: 1, total: 1000000 },
+    { name: '전기료', unitPrice: 300000, qty: 1, months: 12, total: 3600000 },
+    { name: '관리비', unitPrice: 300000, qty: 1, months: 12, total: 3600000 },
+    { name: '상하수도료', unitPrice: 200000, qty: 1, months: 12, total: 2400000 },
+    { name: '자동차세', unitPrice: 200000, qty: 1, months: 2, total: 400000 },
+    { name: '각종보험료', unitPrice: 1000000, qty: 1, months: 2, total: 2000000 },
+    { name: '전신전화료', unitPrice: 200000, qty: 1, months: 12, total: 2400000 },
+    { name: '가스비', unitPrice: 400000, qty: 1, months: 12, total: 4800000 },
+  ]},
+  'E215': { code: 'E215', label: '차량비', prevAmount: 3564000, items: [
+    { name: '차량유류비', unitPrice: 350000, qty: 1, months: 12, total: 4200000 },
+    { name: '차량수리비등', unitPrice: 1000000, qty: 1, months: 6, total: 6000000 },
+  ]},
+  'E216': { code: 'E216', label: '복리후생비', prevAmount: 7226680, items: [
+    { name: '급량비', unitPrice: 300000, qty: 1, months: 12, total: 3600000 },
+    { name: '명절선물', unitPrice: 100000, qty: 21, months: 2, total: 4200000 },
+    { name: '피복비', unitPrice: 55000, qty: 21, months: 2, total: 2310000 },
+  ]},
+  'E217': { code: 'E217', label: '기타 운영비', prevAmount: 17058755, items: [
+    { name: '건물융자 이자', unitPrice: 1800000, qty: 1, months: 12, total: 21600000 },
+  ]},
+  'E221': { code: 'E221', label: '업무추진비', prevAmount: 15000, items: [
+    { name: '업무추진비', unitPrice: 100000, qty: 1, months: 12, total: 1200000 },
+    { name: '교사회식', unitPrice: 500000, qty: 1, months: 6, total: 3000000 },
+  ]},
+  'E222': { code: 'E222', label: '직책급', prevAmount: 7300000, items: [
+    { name: '직책급', unitPrice: 1000000, qty: 1, months: 12, total: 12000000 },
+  ]},
+  'E223': { code: 'E223', label: '회의비', prevAmount: 54000, items: [
+    { name: '운영위원회 회의비', unitPrice: 100000, qty: 1, months: 4, total: 400000 },
+    { name: '교사회의비', unitPrice: 100000, qty: 1, months: 6, total: 600000 },
+  ]},
+  'E311': { code: 'E311', label: '교직원연수·연구비', prevAmount: 1531770, items: [
+    { name: '교직원연수연구비', unitPrice: 3000000, qty: 1, months: 1, total: 3000000 },
+    { name: '원장연수비', unitPrice: 3000000, qty: 1, months: 1, total: 3000000 },
+  ]},
+  'E312': { code: 'E312', label: '교재·교구 구입비', prevAmount: 3779370, items: [
+    { name: '영유아 교재비', unitPrice: 10000, qty: 96, months: 12, total: 11520000 },
+    { name: '교재교구구입비', unitPrice: 1000000, qty: 1, months: 1, total: 1000000 },
+    { name: '교구구입비', unitPrice: 500000, qty: 1, months: 12, total: 6000000 },
+    { name: '누리교재교구비', unitPrice: 50000, qty: 36, months: 12, total: 21600000 },
+  ]},
+  'E313': { code: 'E313', label: '행사비', prevAmount: 1618900, items: [
+    { name: '행사비', unitPrice: 20000, qty: 96, months: 2, total: 3840000 },
+    { name: '기타행사비', unitPrice: 1000000, qty: 1, months: 6, total: 6000000 },
+  ]},
+  'E314': { code: 'E314', label: '영유아복리비', prevAmount: 79700, items: [
+    { name: '영유아복리비', unitPrice: 50000, qty: 1, months: 20, total: 1000000 },
+  ]},
+  'E315': { code: 'E315', label: '급식·간식재료비', prevAmount: 61932476, items: [
+    { name: '영아 급간식비', unitPrice: 2300, qty: 37, months: 288, total: 24508800 },
+    { name: '유아 급간식비', unitPrice: 2800, qty: 59, months: 288, total: 47577600 },
+    { name: '교직원 급간식비', unitPrice: 2800, qty: 21, months: 288, total: 16934400 },
+    { name: '청정급간식비(영아)', unitPrice: 10000, qty: 37, months: 12, total: 4440000 },
+    { name: '청정급간식비(유아)', unitPrice: 14400, qty: 59, months: 12, total: 10195200 },
+  ]},
+  'E411': { code: 'E411', label: '특별활동비지출', prevAmount: 64190800, items: [
+    { name: '1세 특별활동비', unitPrice: 61000, qty: 10, months: 12, total: 7320000 },
+    { name: '2세 특별활동비', unitPrice: 71000, qty: 14, months: 12, total: 11928000 },
+    { name: '3세 특별활동비', unitPrice: 71000, qty: 20, months: 12, total: 17040000 },
+    { name: '4세 특별활동비', unitPrice: 71000, qty: 20, months: 12, total: 17040000 },
+  ]},
+  'E421': { code: 'E421', label: '기타 필요경비 지출', prevAmount: 120257698, items: [
+    { name: '입학준비금', unitPrice: 100000, qty: 50, months: 1, total: 5000000 },
+    { name: '만1세 행사비', unitPrice: 39000, qty: 10, months: 12, total: 4680000 },
+    { name: '만1세 현장학습비', unitPrice: 56000, qty: 10, months: 12, total: 6720000 },
+    { name: '만2-4세 행사비', unitPrice: 17000, qty: 54, months: 12, total: 11016000 },
+    { name: '만2-4세 현장학습비', unitPrice: 38000, qty: 54, months: 12, total: 24624000 },
+    { name: '만2-4세 특성화비', unitPrice: 40000, qty: 54, months: 12, total: 25920000 },
+    { name: '차량운행비', unitPrice: 20000, qty: 30, months: 12, total: 7200000 },
+  ]},
+  'E611': { code: 'E611', label: '단기 차입금 상환', prevAmount: 0, items: [
+    { name: '단기차입금', unitPrice: 10000000, qty: 1, months: 1, total: 10000000 },
+  ]},
+  'E621': { code: 'E621', label: '보조금 반환금', prevAmount: 0, items: [
+    { name: '보조금 반환금', unitPrice: 300000, qty: 1, months: 1, total: 300000 },
+  ]},
+  'E622': { code: 'E622', label: '보호자 반환금', prevAmount: 0, items: [
+    { name: '보호자 반환금', unitPrice: 300000, qty: 1, months: 1, total: 300000 },
+  ]},
+  'E711': { code: 'E711', label: '시설비', prevAmount: 660000, items: [
+    { name: '시설비', unitPrice: 3000000, qty: 1, months: 1, total: 3000000 },
+  ]},
+  'E712': { code: 'E712', label: '시설장비 유지비', prevAmount: 839000, items: [
+    { name: '시설장비 유지비', unitPrice: 1000000, qty: 1, months: 6, total: 6000000 },
+  ]},
+  'E721': { code: 'E721', label: '자산취득비', prevAmount: 1111450, items: [
+    { name: '자산취득비', unitPrice: 1000000, qty: 1, months: 6, total: 6000000 },
+    { name: '비품구입비', unitPrice: 1000000, qty: 1, months: 6, total: 6000000 },
+  ]},
+  'E811': { code: 'E811', label: '과년도 지출', prevAmount: 7160800, items: [
+    { name: '과년도 지출', unitPrice: 122192144, qty: 1, months: 1, total: 122192144 },
+  ]},
 }
 
 const fmt = (n: number) => n.toLocaleString('ko-KR')
@@ -262,6 +394,10 @@ export default function BudgetCreatePage() {
   const [tab, setTab] = useState<'income' | 'expense'>('income')
   const [modalCode, setModalCode] = useState<string | null>(null)
   const [budgetStatus, setBudgetStatus] = useState('신청')
+  const [budgetType, setBudgetType] = useState('본예산')
+  const [amendments, setAmendments] = useState<{ name: string; date: string }[]>([])
+  const [showAmendPopup, setShowAmendPopup] = useState(false)
+  const [amendDate, setAmendDate] = useState('')
   const [basisState, setBasisState] = useState<Record<string, BasisItem[]>>(() => {
     const init: Record<string, BasisItem[]> = {}
     Object.entries(basisDetails).forEach(([code, data]) => {
@@ -359,11 +495,11 @@ export default function BudgetCreatePage() {
           <option>2025년</option>
         </select>
         <span className="text-xs font-bold text-slate-700">예산구분</span>
-        <select className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+        <select value={budgetType} onChange={e => setBudgetType(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
           <option>본예산</option>
-          <option>추경예산</option>
+          {amendments.map((a, i) => <option key={i} value={a.name}>{a.name} ({a.date})</option>)}
         </select>
-        <button className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded hover:bg-amber-100 transition-colors">추경하기</button>
+        <button onClick={() => { setAmendDate(''); setShowAmendPopup(true) }} className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded hover:bg-amber-100 transition-colors">추경하기</button>
         <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
         <select value={budgetStatus} onChange={e => setBudgetStatus(e.target.value)} className={`border rounded px-2 py-1.5 text-xs font-bold ${budgetStatus === '작성완료' ? 'border-red-300 text-red-600 bg-red-50' : budgetStatus === '작성중' ? 'border-amber-300 text-amber-600 bg-amber-50' : 'border-slate-300 text-slate-600'}`}>
           <option>신청</option>
@@ -456,6 +592,9 @@ export default function BudgetCreatePage() {
                 </div>
               </div>
             </div>
+            <div className="w-px h-4 bg-slate-200" />
+            <button className="px-2.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">예산등록</button>
+            <button className="px-2.5 py-1 text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-100 border border-red-200 rounded transition-colors">삭제</button>
           </div>
         </div>
 
@@ -496,15 +635,15 @@ export default function BudgetCreatePage() {
                 <div key={row.code} className={`flex group/row hover:bg-blue-50/30 transition-colors ${isSub ? 'bg-slate-50/30' : ''}`}>
                   {/* 관 */}
                   <div className={`w-[80px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center ${showGwan ? 'border-t border-slate-200' : ''}`}>
-                    {showGwan && gwanRow && <span className="text-[11px] font-bold text-slate-700">{gwanRow.code}<br /><span className="text-[10px] font-medium">{gwanRow.name}</span></span>}
+                    {showGwan && gwanRow && <span className="text-[11px] font-bold text-slate-700">{gwanRow.code.replace('E', '')}<br /><span className="text-[10px] font-medium">{gwanRow.name}</span></span>}
                   </div>
                   {/* 항 */}
                   <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center ${showHang ? 'border-t border-slate-200' : ''}`}>
-                    {showHang && hangRow && <span className="text-[11px] font-semibold text-slate-600">{hangRow.code}<br /><span className="text-[10px] font-medium">{hangRow.name}</span></span>}
+                    {showHang && hangRow && <span className="text-[11px] font-semibold text-slate-600">{hangRow.code.replace('E', '')}<br /><span className="text-[10px] font-medium">{hangRow.name}</span></span>}
                   </div>
                   {/* 목 */}
                   <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex flex-col justify-center ${isSub ? 'pl-4' : ''}`}>
-                    <span className={`text-[11px] font-bold ${isSub ? 'text-slate-400' : 'text-slate-700'}`}>{row.code}</span>
+                    <span className={`text-[11px] font-bold ${isSub ? 'text-slate-400' : 'text-slate-700'}`}>{row.code.replace('E', '')}</span>
                     <span className={`text-[10px] ${isSub ? 'text-slate-400' : 'text-slate-600'}`}>{row.name}</span>
                   </div>
                   {/* 전년도결산액 */}
@@ -544,6 +683,37 @@ export default function BudgetCreatePage() {
 
         </div>
       </div>
+      {/* 추경 팝업 */}
+      {showAmendPopup && (
+        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-2xl w-[380px] overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200">
+              <p className="text-sm font-bold text-slate-800">추경예산 생성</p>
+            </div>
+            <div className="px-5 py-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-600 w-20">추경차수</span>
+                <span className="text-xs font-bold text-blue-700">{amendments.length + 1}차 추경</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-600 w-20">추경일자</span>
+                <input type="date" value={amendDate} onChange={e => setAmendDate(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+              </div>
+              <p className="text-[11px] text-slate-400">* 본예산 기준으로 {amendments.length + 1}차 추경예산이 생성됩니다.</p>
+            </div>
+            <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button onClick={() => setShowAmendPopup(false)} className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">취소</button>
+              <button onClick={() => {
+                if (!amendDate) return
+                const name = `${amendments.length + 1}차 추경`
+                setAmendments(prev => [...prev, { name, date: amendDate }])
+                setBudgetType(name)
+                setShowAmendPopup(false)
+              }} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">생성</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
