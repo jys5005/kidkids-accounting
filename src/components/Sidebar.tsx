@@ -59,10 +59,9 @@ const categories: MenuCategory[] = [
       {
         label: '결산관리',
         children: [
-          { label: '결산보고서', href: '/settlement/report' },
-          { label: '월별결산서', href: '/settlement/monthly' },
+{ label: '월별결산서', href: '/settlement/monthly' },
           { label: '연말결산서', href: '/settlement/annual' },
-          { label: '보육통합결산보고', href: '/settlement/cis' },
+          { label: 'CIS결산보고', href: '/settlement/cis' },
         ],
       },
       {
@@ -71,8 +70,10 @@ const categories: MenuCategory[] = [
           { label: '정부보조금명세서', href: '/reconciliation/subsidy' },
           { label: '보조금정산서', href: '/reconciliation/settlement' },
           { label: '누리과정정산서', href: '/reconciliation/nuri' },
-          { label: '필요경비정산서', href: '/reconciliation/expense' },
           { label: '급식비정산서', href: '/reconciliation/meal' },
+          { label: '필요경비정산서', href: '/reconciliation/required-expense' },
+          { label: '특별활동비보고서', href: '/reconciliation/activity' },
+          { label: '기타필요경비보고서', href: '/reconciliation/expense' },
         ],
       },
       {

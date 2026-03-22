@@ -22,84 +22,84 @@ type AccountRow = {
 
 // 관-항 매핑 (수입)
 const incomeGwanHang: Record<string, { gwanCode: string; gwanName: string; hangCode: string; hangName: string }> = {
-  '1111': { gwanCode: '01', gwanName: '보육료', hangCode: '11', hangName: '보육료' },
-  '1112': { gwanCode: '01', gwanName: '보육료', hangCode: '11', hangName: '보육료' },
-  '1211': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '21', hangName: '선택적 보육활동비' },
-  '1221': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '12211': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '12212': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '12213': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '12214': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '12215': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '12216': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '1311': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '31', hangName: '인건비 보조금' },
-  '1312': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '32', hangName: '운영보조금' },
-  '1321': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '32', hangName: '운영보조금' },
-  '1323': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '32', hangName: '운영보조금' },
-  '1324': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '32', hangName: '운영보조금' },
-  '1331': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '33', hangName: '자본 보조금' },
-  '1411': { gwanCode: '04', gwanName: '전입금', hangCode: '41', hangName: '전입금' },
-  '1511': { gwanCode: '04', gwanName: '전입금', hangCode: '42', hangName: '차입금' },
-  '1521': { gwanCode: '04', gwanName: '전입금', hangCode: '42', hangName: '차입금' },
-  '1611': { gwanCode: '05', gwanName: '기부금', hangCode: '51', hangName: '기부금' },
-  '1612': { gwanCode: '05', gwanName: '기부금', hangCode: '51', hangName: '기부금' },
-  '1711': { gwanCode: '06', gwanName: '적립금', hangCode: '61', hangName: '적립금' },
-  '1811': { gwanCode: '07', gwanName: '과년도 수입', hangCode: '71', hangName: '과년도 수입' },
-  '1911': { gwanCode: '08', gwanName: '잡수입', hangCode: '81', hangName: '잡수입' },
-  '1921': { gwanCode: '08', gwanName: '잡수입', hangCode: '81', hangName: '잡수입' },
-  '1991': { gwanCode: '09', gwanName: '전년도 이월액', hangCode: '91', hangName: '전년도 이월액' },
-  '1992': { gwanCode: '09', gwanName: '전년도 이월액', hangCode: '91', hangName: '전년도 이월액' },
+  '1111': { gwanCode: '01', gwanName: '보육료', hangCode: '110', hangName: '보육료' },
+  '1112': { gwanCode: '01', gwanName: '보육료', hangCode: '110', hangName: '보육료' },
+  '1211': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '210', hangName: '선택적 보육활동비' },
+  '1221': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '220', hangName: '기타 필요경비' },
+  '1221111': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '220', hangName: '기타 필요경비' },
+  '1221112': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '220', hangName: '기타 필요경비' },
+  '1221113': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '220', hangName: '기타 필요경비' },
+  '1221121': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '220', hangName: '기타 필요경비' },
+  '1221131': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '220', hangName: '기타 필요경비' },
+  '1221141': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '220', hangName: '기타 필요경비' },
+  '1311': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '310', hangName: '인건비 보조금' },
+  '1312': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '320', hangName: '운영보조금' },
+  '1321': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '320', hangName: '운영보조금' },
+  '1323': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '320', hangName: '운영보조금' },
+  '1324': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '320', hangName: '운영보조금' },
+  '1331': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '330', hangName: '자본 보조금' },
+  '1411': { gwanCode: '04', gwanName: '전입금', hangCode: '410', hangName: '전입금' },
+  '1511': { gwanCode: '04', gwanName: '전입금', hangCode: '420', hangName: '차입금' },
+  '1521': { gwanCode: '04', gwanName: '전입금', hangCode: '420', hangName: '차입금' },
+  '1611': { gwanCode: '05', gwanName: '기부금', hangCode: '510', hangName: '기부금' },
+  '1612': { gwanCode: '05', gwanName: '기부금', hangCode: '510', hangName: '기부금' },
+  '1711': { gwanCode: '06', gwanName: '적립금', hangCode: '610', hangName: '적립금' },
+  '1811': { gwanCode: '07', gwanName: '과년도 수입', hangCode: '710', hangName: '과년도 수입' },
+  '1911': { gwanCode: '08', gwanName: '잡수입', hangCode: '810', hangName: '잡수입' },
+  '1921': { gwanCode: '08', gwanName: '잡수입', hangCode: '810', hangName: '잡수입' },
+  '1991': { gwanCode: '09', gwanName: '전년도 이월액', hangCode: '910', hangName: '전년도 이월액' },
+  '1992': { gwanCode: '09', gwanName: '전년도 이월액', hangCode: '910', hangName: '전년도 이월액' },
 }
 
 // 관-항 매핑 (지출)
 const expenseGwanHang: Record<string, { gwanCode: string; gwanName: string; hangCode: string; hangName: string }> = {
-  '2111': { gwanCode: '01', gwanName: '인건비', hangCode: '11', hangName: '원장인건비' },
-  '2112': { gwanCode: '01', gwanName: '인건비', hangCode: '11', hangName: '원장인건비' },
-  '2121': { gwanCode: '01', gwanName: '인건비', hangCode: '12', hangName: '보육교직원인건비' },
-  '2122': { gwanCode: '01', gwanName: '인건비', hangCode: '12', hangName: '보육교직원인건비' },
-  '2131': { gwanCode: '01', gwanName: '인건비', hangCode: '13', hangName: '기타인건비' },
-  '2141': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
-  '2142': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
-  '21423': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
-  '21424': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
-  '2211': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2212': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2213': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2214': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2215': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2216': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2217': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '22171': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '22172': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2218': { gwanCode: '02', gwanName: '관리운영비', hangCode: '22', hangName: '업무추진비' },
-  '2219': { gwanCode: '02', gwanName: '관리운영비', hangCode: '22', hangName: '업무추진비' },
-  '2220': { gwanCode: '02', gwanName: '관리운영비', hangCode: '22', hangName: '업무추진비' },
-  '2311': { gwanCode: '03', gwanName: '보육활동비', hangCode: '31', hangName: '보육활동운영비' },
-  '2312': { gwanCode: '03', gwanName: '보육활동비', hangCode: '31', hangName: '보육활동운영비' },
-  '2313': { gwanCode: '03', gwanName: '보육활동비', hangCode: '31', hangName: '보육활동운영비' },
-  '2314': { gwanCode: '03', gwanName: '보육활동비', hangCode: '31', hangName: '보육활동운영비' },
-  '2315': { gwanCode: '03', gwanName: '보육활동비', hangCode: '31', hangName: '보육활동운영비' },
-  '2411': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '41', hangName: '특별활동비' },
-  '2421': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '24211': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '24212': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '24213': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '24214': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '24215': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '2511': { gwanCode: '05', gwanName: '적립금', hangCode: '51', hangName: '적립금' },
-  '2611': { gwanCode: '06', gwanName: '상환금', hangCode: '61', hangName: '차입금상환' },
-  '2621': { gwanCode: '06', gwanName: '상환금', hangCode: '61', hangName: '차입금상환' },
-  '2631': { gwanCode: '06', gwanName: '상환금', hangCode: '62', hangName: '반환금' },
-  '2632': { gwanCode: '06', gwanName: '상환금', hangCode: '62', hangName: '반환금' },
-  '2641': { gwanCode: '06', gwanName: '상환금', hangCode: '63', hangName: '전출금' },
-  '2711': { gwanCode: '07', gwanName: '시설비', hangCode: '71', hangName: '시설비' },
-  '2712': { gwanCode: '07', gwanName: '시설비', hangCode: '71', hangName: '시설비' },
-  '2721': { gwanCode: '07', gwanName: '시설비', hangCode: '72', hangName: '자산취득비' },
-  '27211': { gwanCode: '07', gwanName: '시설비', hangCode: '72', hangName: '자산취득비' },
-  '27212': { gwanCode: '07', gwanName: '시설비', hangCode: '72', hangName: '자산취득비' },
-  '2811': { gwanCode: '08', gwanName: '과년도 지출', hangCode: '81', hangName: '과년도 지출' },
-  '2911': { gwanCode: '09', gwanName: '잡지출·예비비', hangCode: '91', hangName: '잡지출·예비비' },
-  '2991': { gwanCode: '09', gwanName: '잡지출·예비비', hangCode: '91', hangName: '잡지출·예비비' },
+  '2111': { gwanCode: '01', gwanName: '인건비', hangCode: '110', hangName: '원장인건비' },
+  '2112': { gwanCode: '01', gwanName: '인건비', hangCode: '110', hangName: '원장인건비' },
+  '2121': { gwanCode: '01', gwanName: '인건비', hangCode: '120', hangName: '보육교직원인건비' },
+  '2122': { gwanCode: '01', gwanName: '인건비', hangCode: '120', hangName: '보육교직원인건비' },
+  '2131': { gwanCode: '01', gwanName: '인건비', hangCode: '130', hangName: '기타인건비' },
+  '2141': { gwanCode: '01', gwanName: '인건비', hangCode: '140', hangName: '법정부담금·퇴직금' },
+  '2142': { gwanCode: '01', gwanName: '인건비', hangCode: '140', hangName: '법정부담금·퇴직금' },
+  '2142311': { gwanCode: '01', gwanName: '인건비', hangCode: '140', hangName: '법정부담금·퇴직금' },
+  '2142411': { gwanCode: '01', gwanName: '인건비', hangCode: '140', hangName: '법정부담금·퇴직금' },
+  '2211': { gwanCode: '02', gwanName: '관리운영비', hangCode: '210', hangName: '기관운영비' },
+  '2212': { gwanCode: '02', gwanName: '관리운영비', hangCode: '210', hangName: '기관운영비' },
+  '2213': { gwanCode: '02', gwanName: '관리운영비', hangCode: '210', hangName: '기관운영비' },
+  '2214': { gwanCode: '02', gwanName: '관리운영비', hangCode: '210', hangName: '기관운영비' },
+  '2215': { gwanCode: '02', gwanName: '관리운영비', hangCode: '210', hangName: '기관운영비' },
+  '2216': { gwanCode: '02', gwanName: '관리운영비', hangCode: '210', hangName: '기관운영비' },
+  '2217': { gwanCode: '02', gwanName: '관리운영비', hangCode: '210', hangName: '기관운영비' },
+  '2217111': { gwanCode: '02', gwanName: '관리운영비', hangCode: '210', hangName: '기관운영비' },
+  '2217211': { gwanCode: '02', gwanName: '관리운영비', hangCode: '210', hangName: '기관운영비' },
+  '2218': { gwanCode: '02', gwanName: '관리운영비', hangCode: '220', hangName: '업무추진비' },
+  '2219': { gwanCode: '02', gwanName: '관리운영비', hangCode: '220', hangName: '업무추진비' },
+  '2220': { gwanCode: '02', gwanName: '관리운영비', hangCode: '220', hangName: '업무추진비' },
+  '2311': { gwanCode: '03', gwanName: '보육활동비', hangCode: '310', hangName: '보육활동운영비' },
+  '2312': { gwanCode: '03', gwanName: '보육활동비', hangCode: '310', hangName: '보육활동운영비' },
+  '2313': { gwanCode: '03', gwanName: '보육활동비', hangCode: '310', hangName: '보육활동운영비' },
+  '2314': { gwanCode: '03', gwanName: '보육활동비', hangCode: '310', hangName: '보육활동운영비' },
+  '2315': { gwanCode: '03', gwanName: '보육활동비', hangCode: '310', hangName: '보육활동운영비' },
+  '2411': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '410', hangName: '특별활동비' },
+  '2421': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '420', hangName: '기타필요경비지출' },
+  '2421111': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '420', hangName: '기타필요경비지출' },
+  '2421112': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '420', hangName: '기타필요경비지출' },
+  '2421113': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '420', hangName: '기타필요경비지출' },
+  '2421121': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '420', hangName: '기타필요경비지출' },
+  '2421131': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '420', hangName: '기타필요경비지출' },
+  '2511': { gwanCode: '05', gwanName: '적립금', hangCode: '510', hangName: '적립금' },
+  '2611': { gwanCode: '06', gwanName: '상환금', hangCode: '610', hangName: '차입금상환' },
+  '2621': { gwanCode: '06', gwanName: '상환금', hangCode: '610', hangName: '차입금상환' },
+  '2631': { gwanCode: '06', gwanName: '상환금', hangCode: '620', hangName: '반환금' },
+  '2632': { gwanCode: '06', gwanName: '상환금', hangCode: '620', hangName: '반환금' },
+  '2641': { gwanCode: '06', gwanName: '상환금', hangCode: '630', hangName: '전출금' },
+  '2711': { gwanCode: '07', gwanName: '시설비', hangCode: '710', hangName: '시설비' },
+  '2712': { gwanCode: '07', gwanName: '시설비', hangCode: '710', hangName: '시설비' },
+  '2721': { gwanCode: '07', gwanName: '시설비', hangCode: '720', hangName: '자산취득비' },
+  '2721111': { gwanCode: '07', gwanName: '시설비', hangCode: '720', hangName: '자산취득비' },
+  '2721211': { gwanCode: '07', gwanName: '시설비', hangCode: '720', hangName: '자산취득비' },
+  '2811': { gwanCode: '08', gwanName: '과년도 지출', hangCode: '810', hangName: '과년도 지출' },
+  '2911': { gwanCode: '09', gwanName: '잡지출·예비비', hangCode: '910', hangName: '잡지출·예비비' },
+  '2991': { gwanCode: '09', gwanName: '잡지출·예비비', hangCode: '910', hangName: '잡지출·예비비' },
 }
 
 // mock 금액
@@ -108,12 +108,12 @@ const mockAmounts: Record<string, Partial<AccountRow>> = {
   '1112': { budget: 0, prevAccum: 12047988, thisMonth: 1699936, balance: -13747924 },
   '1211': { budget: 33936000, prevAccum: 12499000, thisMonth: 2794000, balance: 18643000 },
   '1221': { budget: 123940318, prevAccum: 49461527, thisMonth: 0, balance: 74478791 },
-  '12211': { budget: 5000000, prevAccum: 245000, thisMonth: 0, balance: 4755000 },
-  '12212': { budget: 31344000, prevAccum: 7266000, thisMonth: 1612000, balance: 22466000 },
-  '12213': { budget: 7200000, prevAccum: 3020000, thisMonth: 660000, balance: 3520000 },
-  '12214': { budget: 14400000, prevAccum: 2384389, thisMonth: 621862, balance: 11393749 },
-  '12215': { budget: 0, prevAccum: 0, thisMonth: 0, balance: 0 },
-  '12216': { budget: 25920000, prevAccum: 7140000, thisMonth: 1610000, balance: 17170000 },
+  '1221111': { budget: 5000000, prevAccum: 245000, thisMonth: 0, balance: 4755000 },
+  '1221112': { budget: 31344000, prevAccum: 7266000, thisMonth: 1612000, balance: 22466000 },
+  '1221113': { budget: 7200000, prevAccum: 3020000, thisMonth: 660000, balance: 3520000 },
+  '1221121': { budget: 14400000, prevAccum: 2384389, thisMonth: 621862, balance: 11393749 },
+  '1221131': { budget: 0, prevAccum: 0, thisMonth: 0, balance: 0 },
+  '1221141': { budget: 25920000, prevAccum: 7140000, thisMonth: 1610000, balance: 17170000 },
   '1311': { budget: 112064400, prevAccum: 57386800, thisMonth: 12659840, balance: 42017760 },
   '1312': { budget: 144792000, prevAccum: 44725750, thisMonth: 8756000, balance: 91310250 },
   '1321': { budget: 10440000, prevAccum: 7629000, thisMonth: 1587500, balance: 1223500 },
@@ -135,8 +135,8 @@ const mockAmounts: Record<string, Partial<AccountRow>> = {
   '2122': { budget: 24000000, prevAccum: 22000000, thisMonth: 2000000, balance: 0 },
   '2141': { budget: 36000000, prevAccum: 33000000, thisMonth: 3000000, balance: 0 },
   '2142': { budget: 18000000, prevAccum: 16500000, thisMonth: 1500000, balance: 0 },
-  '21423': { budget: 9000000, prevAccum: 8250000, thisMonth: 750000, balance: 0 },
-  '21424': { budget: 9000000, prevAccum: 8250000, thisMonth: 750000, balance: 0 },
+  '2142311': { budget: 9000000, prevAccum: 8250000, thisMonth: 750000, balance: 0 },
+  '2142411': { budget: 9000000, prevAccum: 8250000, thisMonth: 750000, balance: 0 },
   '2211': { budget: 24000000, prevAccum: 21500000, thisMonth: 2100000, balance: 400000 },
   '2212': { budget: 18000000, prevAccum: 16800000, thisMonth: 1500000, balance: -300000 },
   '2315': { budget: 48000000, prevAccum: 44000000, thisMonth: 4000000, balance: 0 },
@@ -174,19 +174,19 @@ const accountData: AccountRow[] = (() => {
 const TH = 'px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px]'
 const TD = 'px-2 py-2 text-center border-b border-r border-slate-100 text-xs'
 
-function AccountTable({ type, data }: { type: 'income' | 'expense'; data: AccountRow[] }) {
+function AccountTable({ type, data, f: fmtFn }: { type: 'income' | 'expense'; data: AccountRow[]; f: (n: number) => string }) {
   const isIncome = type === 'income'
   const color = isIncome ? 'blue' : 'red'
-  let prevGwan = '', prevHang = ''
+  let prevGwan = '', prevHang = '', prevParentName = ''
 
   return (
     <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
       <table className="w-full text-xs border-collapse">
         <thead>
           <tr className={`bg-${color}-50 border-b border-${color}-200`}>
-            <th className={`${TH} w-8`}>관</th>
+            <th className={`${TH} w-12`}>관</th>
             <th className={`${TH} w-24`}></th>
-            <th className={`${TH} w-8`}>항</th>
+            <th className={`${TH} w-12`}>항</th>
             <th className={`${TH} w-24`}></th>
             <th className={`${TH} w-16`}>목</th>
             <th className={TH}>계정과목</th>
@@ -201,10 +201,11 @@ function AccountTable({ type, data }: { type: 'income' | 'expense'; data: Accoun
           {data.map((row, idx) => {
             const showGwan = row.gwanCode !== prevGwan && !row.isSub
             const showHang = (row.hangCode !== prevHang || showGwan) && !row.isSub
-            if (!row.isSub) { prevGwan = row.gwanCode || ''; prevHang = row.hangCode || '' }
+            if (!row.isSub) { prevGwan = row.gwanCode || ''; prevHang = row.hangCode || ''; prevParentName = row.name }
             const rawCode = row.code.substring(1)
             const mokCode = row.isSub ? rawCode.substring(0, 3) + '-' + rawCode.substring(3) : rawCode
             const neg = row.balance < 0
+            const displayName = row.isSub ? `[${prevParentName}] ${row.name}` : row.name
             return (
               <tr key={idx} className="hover:bg-slate-50 transition-colors">
                 <td className={`${TD} text-slate-500 font-medium`}>{showGwan ? row.gwanCode : ''}</td>
@@ -212,21 +213,21 @@ function AccountTable({ type, data }: { type: 'income' | 'expense'; data: Accoun
                 <td className={`${TD} text-slate-500 font-medium`}>{showHang ? row.hangCode : ''}</td>
                 <td className={`${TD} text-left text-slate-600 text-[11px]`}>{showHang ? row.hangName : ''}</td>
                 <td className={`${TD} font-medium ${row.isSub ? 'text-slate-400' : 'text-slate-600'}`}>{mokCode}</td>
-                <td className={`${TD} text-left px-2 ${row.isSub ? 'text-slate-500 pl-4' : 'text-slate-700 font-medium'}`}>{row.name}</td>
-                <td className={`${TD} text-right ${row.budget > 0 ? 'text-slate-800' : 'text-slate-300'}`}>{fmt(row.budget)}</td>
-                <td className={`${TD} text-right ${row.prevAccum > 0 ? 'text-slate-800' : 'text-slate-300'}`}>{fmt(row.prevAccum)}</td>
-                <td className={`${TD} text-right ${row.thisMonth > 0 ? (isIncome ? 'text-blue-700 font-medium' : 'text-red-600 font-medium') : 'text-slate-300'}`}>{row.thisMonth > 0 ? fmt(row.thisMonth) : ''}</td>
-                <td className={`${TD} text-right font-medium ${neg ? 'text-red-600' : row.balance > 0 ? 'text-slate-800' : 'text-slate-300'}`}>{neg ? `▲${fmt(Math.abs(row.balance))}` : fmt(row.balance)}</td>
+                <td className={`${TD} text-left px-2 ${row.isSub ? 'text-slate-500 pl-4' : 'text-slate-700 font-medium'}`}>{displayName}</td>
+                <td className={`${TD} text-right ${row.budget > 0 ? 'text-slate-800' : 'text-slate-300'}`}>{fmtFn(row.budget)}</td>
+                <td className={`${TD} text-right ${row.prevAccum > 0 ? 'text-slate-800' : 'text-slate-300'}`}>{fmtFn(row.prevAccum)}</td>
+                <td className={`${TD} text-right ${row.thisMonth > 0 ? (isIncome ? 'text-blue-700 font-medium' : 'text-red-600 font-medium') : 'text-slate-300'}`}>{row.thisMonth > 0 ? fmtFn(row.thisMonth) : ''}</td>
+                <td className={`${TD} text-right font-medium ${neg ? 'text-red-600' : row.balance > 0 ? 'text-slate-800' : 'text-slate-300'}`}>{neg ? `▲${fmtFn(Math.abs(row.balance))}` : fmtFn(row.balance)}</td>
                 <td className={`${TD} border-r-0`}></td>
               </tr>
             )
           })}
           <tr className="bg-slate-50 font-bold">
             <td colSpan={6} className={`${TD} text-center text-slate-700`}>합계</td>
-            <td className={`${TD} text-right text-slate-800`}>{fmt(data.reduce((s, r) => s + r.budget, 0))}</td>
-            <td className={`${TD} text-right text-slate-800`}>{fmt(data.reduce((s, r) => s + r.prevAccum, 0))}</td>
-            <td className={`${TD} text-right ${isIncome ? 'text-blue-700' : 'text-red-600'}`}>{fmt(data.reduce((s, r) => s + r.thisMonth, 0))}</td>
-            <td className={`${TD} text-right text-slate-800`}>{fmt(data.reduce((s, r) => s + r.balance, 0))}</td>
+            <td className={`${TD} text-right text-slate-800`}>{fmtFn(data.reduce((s, r) => s + r.budget, 0))}</td>
+            <td className={`${TD} text-right text-slate-800`}>{fmtFn(data.reduce((s, r) => s + r.prevAccum, 0))}</td>
+            <td className={`${TD} text-right ${isIncome ? 'text-blue-700' : 'text-red-600'}`}>{fmtFn(data.reduce((s, r) => s + r.thisMonth, 0))}</td>
+            <td className={`${TD} text-right text-slate-800`}>{fmtFn(data.reduce((s, r) => s + r.balance, 0))}</td>
             <td className={`${TD} border-r-0`}></td>
           </tr>
         </tbody>
@@ -238,12 +239,15 @@ function AccountTable({ type, data }: { type: 'income' | 'expense'; data: Accoun
 export default function SettlementMonthlyPage() {
   const ymOpts = useMemo(() => getYmOptions(), [])
   const [selectedYm, setSelectedYm] = useState(ymOpts[1])
+  const [unit, setUnit] = useState<'won' | 'thousand'>('won')
+  const [printArea, setPrintArea] = useState({ income: true, expense: true })
+  const f = (n: number) => unit === 'thousand' ? fmt(Math.round(n / 1000)) : fmt(n)
 
   const incomeData = accountData.filter(r => r.code.startsWith('1'))
   const expenseData = accountData.filter(r => r.code.startsWith('2'))
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-3 space-y-3">
       {/* 상단 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -271,24 +275,24 @@ export default function SettlementMonthlyPage() {
           <tbody>
             <tr className="border-b border-slate-100">
               <td className={`${TD} font-bold text-blue-700`}>세입 합계</td>
-              <td className={`${TD} text-right font-bold text-slate-800`}>{fmt(incomeData.reduce((s, r) => s + r.budget, 0))}</td>
-              <td className={`${TD} text-right font-bold text-slate-800`}>{fmt(incomeData.reduce((s, r) => s + r.prevAccum, 0))}</td>
-              <td className={`${TD} text-right font-bold text-blue-700`}>{fmt(incomeData.reduce((s, r) => s + r.thisMonth, 0))}</td>
-              <td className={`${TD} text-right font-bold text-slate-800 border-r-0`}>{fmt(incomeData.reduce((s, r) => s + r.balance, 0))}</td>
+              <td className={`${TD} text-right font-bold text-slate-800`}>{f(incomeData.reduce((s, r) => s + r.budget, 0))}</td>
+              <td className={`${TD} text-right font-bold text-slate-800`}>{f(incomeData.reduce((s, r) => s + r.prevAccum, 0))}</td>
+              <td className={`${TD} text-right font-bold text-blue-700`}>{f(incomeData.reduce((s, r) => s + r.thisMonth, 0))}</td>
+              <td className={`${TD} text-right font-bold text-slate-800 border-r-0`}>{f(incomeData.reduce((s, r) => s + r.balance, 0))}</td>
             </tr>
             <tr className="border-b border-slate-100">
               <td className={`${TD} font-bold text-red-600`}>세출 합계</td>
-              <td className={`${TD} text-right font-bold text-slate-800`}>{fmt(expenseData.reduce((s, r) => s + r.budget, 0))}</td>
-              <td className={`${TD} text-right font-bold text-slate-800`}>{fmt(expenseData.reduce((s, r) => s + r.prevAccum, 0))}</td>
-              <td className={`${TD} text-right font-bold text-red-600`}>{fmt(expenseData.reduce((s, r) => s + r.thisMonth, 0))}</td>
-              <td className={`${TD} text-right font-bold text-slate-800 border-r-0`}>{fmt(expenseData.reduce((s, r) => s + r.balance, 0))}</td>
+              <td className={`${TD} text-right font-bold text-slate-800`}>{f(expenseData.reduce((s, r) => s + r.budget, 0))}</td>
+              <td className={`${TD} text-right font-bold text-slate-800`}>{f(expenseData.reduce((s, r) => s + r.prevAccum, 0))}</td>
+              <td className={`${TD} text-right font-bold text-red-600`}>{f(expenseData.reduce((s, r) => s + r.thisMonth, 0))}</td>
+              <td className={`${TD} text-right font-bold text-slate-800 border-r-0`}>{f(expenseData.reduce((s, r) => s + r.balance, 0))}</td>
             </tr>
             <tr>
               <td className={`${TD} font-bold text-green-700`}>차액 (세입-세출)</td>
-              <td className={`${TD} text-right font-bold text-green-700`}>{fmt(incomeData.reduce((s, r) => s + r.budget, 0) - expenseData.reduce((s, r) => s + r.budget, 0))}</td>
-              <td className={`${TD} text-right font-bold text-green-700`}>{fmt(incomeData.reduce((s, r) => s + r.prevAccum, 0) - expenseData.reduce((s, r) => s + r.prevAccum, 0))}</td>
-              <td className={`${TD} text-right font-bold text-green-700`}>{fmt(incomeData.reduce((s, r) => s + r.thisMonth, 0) - expenseData.reduce((s, r) => s + r.thisMonth, 0))}</td>
-              <td className={`${TD} text-right font-bold text-green-700 border-r-0`}>{fmt(incomeData.reduce((s, r) => s + r.balance, 0) - expenseData.reduce((s, r) => s + r.balance, 0))}</td>
+              <td className={`${TD} text-right font-bold text-green-700`}>{f(incomeData.reduce((s, r) => s + r.budget, 0) - expenseData.reduce((s, r) => s + r.budget, 0))}</td>
+              <td className={`${TD} text-right font-bold text-green-700`}>{f(incomeData.reduce((s, r) => s + r.prevAccum, 0) - expenseData.reduce((s, r) => s + r.prevAccum, 0))}</td>
+              <td className={`${TD} text-right font-bold text-green-700`}>{f(incomeData.reduce((s, r) => s + r.thisMonth, 0) - expenseData.reduce((s, r) => s + r.thisMonth, 0))}</td>
+              <td className={`${TD} text-right font-bold text-green-700 border-r-0`}>{f(incomeData.reduce((s, r) => s + r.balance, 0) - expenseData.reduce((s, r) => s + r.balance, 0))}</td>
             </tr>
           </tbody>
         </table>
@@ -301,16 +305,38 @@ export default function SettlementMonthlyPage() {
             <span className="text-xs font-bold text-blue-700">수입</span>
             <button onClick={() => document.getElementById('expense-section')?.scrollIntoView({ behavior: 'smooth' })} className="text-xs font-bold text-red-500 hover:text-red-700 hover:underline transition-colors cursor-pointer">지출 ↓</button>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="w-8 h-8 flex items-center justify-center bg-white hover:bg-slate-50 border border-slate-300 rounded transition-colors" title="인쇄하기">
-              <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2z" /></svg>
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center bg-white hover:bg-green-50 border border-green-400 rounded transition-colors" title="엑셀다운로드">
-              <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            </button>
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 border border-slate-200 rounded-lg px-2 py-1">
+              <label className="flex items-center gap-0.5 text-[10px] text-slate-600 cursor-pointer">
+                <input type="checkbox" checked={printArea.income} onChange={e => setPrintArea(p => ({ ...p, income: e.target.checked }))} className="w-3 h-3 accent-blue-600 rounded" />
+                <span className="font-bold text-blue-600">세입</span>
+              </label>
+              <label className="flex items-center gap-0.5 text-[10px] text-slate-600 cursor-pointer">
+                <input type="checkbox" checked={printArea.expense} onChange={e => setPrintArea(p => ({ ...p, expense: e.target.checked }))} className="w-3 h-3 accent-red-600 rounded" />
+                <span className="font-bold text-red-600">세출</span>
+              </label>
+              <div className="w-px h-4 bg-slate-200 mx-1" />
+              <button className="h-6 px-2 flex items-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 rounded transition-colors" title="인쇄하기">
+                <svg className="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2z" /></svg>
+              </button>
+              <button className="h-6 px-2 flex items-center gap-1 bg-white hover:bg-green-50 border border-green-400 rounded transition-colors" title="엑셀다운로드">
+                <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </button>
+            </div>
+            <div className="flex items-center gap-2 ml-2">
+              <span className="text-[10px] text-slate-400">단위:</span>
+              <label className="flex items-center gap-0.5 text-[10px] text-slate-500 cursor-pointer">
+                <input type="radio" name="unit" checked={unit === 'won'} onChange={() => setUnit('won')} className="w-3 h-3 accent-blue-600" />
+                <span>원</span>
+              </label>
+              <label className="flex items-center gap-0.5 text-[10px] text-slate-500 cursor-pointer">
+                <input type="radio" name="unit" checked={unit === 'thousand'} onChange={() => setUnit('thousand')} className="w-3 h-3 accent-blue-600" />
+                <span>천원</span>
+              </label>
+            </div>
           </div>
         </div>
-        <AccountTable type="income" data={incomeData} />
+        <AccountTable type="income" data={incomeData} f={f} />
       </div>
 
       {/* 지출 */}
@@ -319,7 +345,7 @@ export default function SettlementMonthlyPage() {
           <span className="text-xs font-bold text-red-700">지출</span>
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-xs font-bold text-blue-500 hover:text-blue-700 hover:underline transition-colors cursor-pointer">수입 ↑</button>
         </div>
-        <AccountTable type="expense" data={expenseData} />
+        <AccountTable type="expense" data={expenseData} f={f} />
       </div>
     </div>
   )

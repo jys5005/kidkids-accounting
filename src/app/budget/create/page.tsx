@@ -163,52 +163,36 @@ export default function BudgetCreatePage() {
   const totalExpense = 819079520
 
   return (
-    <div className="space-y-4 max-w-6xl">
+    <div className="p-3 space-y-3 max-w-6xl">
       {/* 상단 조건 */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 hover:bg-slate-50/50 transition-colors">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <label className="text-[11px] text-slate-500 block mb-1 font-medium">회계구분</label>
-              <select className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-700">
-                <option>표준재무회계</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-[11px] text-slate-500 block mb-1 font-medium">회계연도</label>
-              <select className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-700">
-                <option>2026년</option>
-                <option>2025년</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-[11px] text-slate-500 block mb-1 font-medium">예산구분</label>
-              <div className="flex items-center gap-2">
-                <select className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-700">
-                  <option>본예산</option>
-                  <option>추경예산</option>
-                </select>
-                <button className="px-3 py-2 text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">추경하기</button>
-              </div>
-            </div>
-          </div>
-          <button className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">조회</button>
-        </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-bold text-slate-700">회계연도</span>
+        <select className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+          <option>2026년</option>
+          <option>2025년</option>
+        </select>
+        <span className="text-xs font-bold text-slate-700">예산구분</span>
+        <select className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+          <option>본예산</option>
+          <option>추경예산</option>
+        </select>
+        <button className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded hover:bg-amber-100 transition-colors">추경하기</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
       </div>
 
-      {/* 요약 카드 */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl border border-blue-200 p-4 hover:bg-blue-50/50 transition-colors cursor-pointer">
-          <p className="text-[11px] text-blue-500 mb-1">세입예산</p>
-          <p className="text-xl font-bold text-blue-700">{fmt(totalIncome)}원</p>
+      {/* 요약 */}
+      <div className="flex items-center gap-6 px-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-blue-600">세입예산</span>
+          <span className="text-sm font-bold text-blue-700">{fmt(totalIncome)}원</span>
         </div>
-        <div className="bg-white rounded-xl border border-red-200 p-4 hover:bg-red-50/50 transition-colors cursor-pointer">
-          <p className="text-[11px] text-red-500 mb-1">세출예산</p>
-          <p className="text-xl font-bold text-red-600">{fmt(totalExpense)}원</p>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-red-600">세출예산</span>
+          <span className="text-sm font-bold text-red-600">{fmt(totalExpense)}원</span>
         </div>
-        <div className="bg-white rounded-xl border border-emerald-200 p-4 hover:bg-emerald-50/50 transition-colors cursor-pointer">
-          <p className="text-[11px] text-emerald-500 mb-1">차액예산</p>
-          <p className="text-xl font-bold text-emerald-700">{fmt(totalIncome - totalExpense)}원</p>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-emerald-600">차액예산</span>
+          <span className="text-sm font-bold text-emerald-700">{fmt(totalIncome - totalExpense)}원</span>
         </div>
       </div>
 
@@ -244,101 +228,89 @@ export default function BudgetCreatePage() {
       </div>
 
       {/* 예산 테이블 */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        {/* 헤더 */}
+        <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6 text-[11px]">
+              <span className="font-bold text-slate-600">목</span>
+              <span className="font-bold text-slate-600">전년도결산액</span>
+              <span className="font-bold text-slate-600">예산액</span>
+            </div>
+            <div className="w-px h-4 bg-slate-300" />
+            <span className="text-[11px] font-bold text-slate-600">세부항목(항목/내용/합계)</span>
+            <span className="text-[11px] text-red-500 font-medium">(정원:96 명)</span>
+            <span className="text-[11px] text-slate-500">( [ 2026-02 ] 회계마감잔고117,139,911 원 )</span>
+          </div>
+        </div>
+
+        {/* 합계 */}
+        <div className="px-4 py-2 border-b border-slate-200 flex items-center gap-4">
+          <span className="text-xs font-bold text-slate-700 w-[300px]"></span>
+          <span className="text-xs font-bold text-slate-800">{fmt(tab === 'income' ? totalIncome : totalExpense)}</span>
+          <div className="w-px h-4 bg-slate-200" />
+          <button className="px-2.5 py-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors">체크삭제</button>
+          <span className="text-xs text-slate-500">{tab === 'income' ? '세입' : '세출'}합계금액: <span className="font-bold text-blue-700">{fmt(tab === 'income' ? totalIncome : totalExpense)}</span>원 , 차이액 <span className="font-bold">0</span> 원</span>
+        </div>
+
+        {/* 데이터 */}
         <div className="overflow-x-auto">
-          <table className="w-full text-xs table-fixed">
-            <colgroup>
-              <col className="w-[280px]" />
-              <col className="w-[140px]" />
-              <col className="w-[140px]" />
-              <col className="w-[140px]" />
-              <col />
-            </colgroup>
-            <thead>
-              <tr className="bg-slate-50">
-                <th className="text-left px-4 py-3 font-semibold text-slate-500">계정과목</th>
-                <th className="text-right px-4 py-3 font-semibold text-slate-500">예산액</th>
-                <th className="text-right px-4 py-3 font-semibold text-slate-500">이전예산액</th>
-                <th className="text-right px-4 py-3 font-semibold text-slate-500">증감</th>
-                <th className="text-left px-4 py-3 font-semibold text-slate-500">산출기초</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {(tab === 'income' ? budgetData : []).map((row) => {
-                const levelStyle = [
-                  'bg-sky-200 text-black font-bold',
-                  'bg-sky-100/70 font-semibold text-black',
-                  'bg-sky-50/40 text-black',
-                  'text-black',
-                ][row.level]
+          {(tab === 'income' ? budgetData : []).map((row) => {
+            if (row.level === 0) return (
+              <div key={row.code} className="flex items-center bg-sky-200 border-b border-sky-300 px-3 py-2">
+                <span className="text-[10px] font-bold text-white bg-sky-600 px-1.5 py-0.5 rounded mr-2">관</span>
+                <span className="text-xs font-bold text-slate-800">{row.code} {row.name}</span>
+                <span className="ml-auto text-xs font-bold text-slate-700">{fmt(row.amount)}</span>
+              </div>
+            )
+            if (row.level === 1) return (
+              <div key={row.code} className="flex items-center bg-sky-100/70 border-b border-sky-200 px-3 py-1.5">
+                <span className="text-[10px] font-bold text-white bg-sky-400 px-1.5 py-0.5 rounded mr-2 ml-4">항</span>
+                <span className="text-xs font-semibold text-slate-700">{row.code} {row.name}</span>
+                <span className="ml-auto text-xs font-medium text-slate-600">{fmt(row.amount)}</span>
+              </div>
+            )
+            if (row.level === 3) return null
+            const basis = basisDetails[row.code]
+            return (
+              <div key={row.code} className="flex border-b border-slate-100">
+                {/* 왼쪽: 목 코드/이름/전년도결산액/예산액 */}
+                <div className="w-[120px] flex-shrink-0 border-r border-slate-100 px-3 py-2 flex flex-col justify-center">
+                  <span className="text-xs font-bold text-slate-700">{row.code}</span>
+                  <span className="text-[11px] text-slate-600">{row.name}</span>
+                </div>
+                <div className="w-[100px] flex-shrink-0 border-r border-slate-100 px-2 py-2 flex items-center justify-end">
+                  <span className="text-xs text-slate-500">{fmt(row.prevAmount)}</span>
+                </div>
+                <div className="w-[110px] flex-shrink-0 border-r border-slate-100 px-2 py-2 flex items-center justify-end">
+                  <input type="text" defaultValue={fmt(row.amount)} className="w-full px-2 py-1 border border-amber-300 rounded text-xs text-right bg-amber-50 focus:outline-none focus:border-blue-400" />
+                </div>
 
-                const indent = row.level * 16
-                const isOpen = modalCode === row.code
+                {/* 오른쪽: 세부항목 */}
+                <div className="flex-1 divide-y divide-slate-50">
+                  {(basis ? basis.items : [{ name: '', unitPrice: 0, qty: 0, months: 0, total: 0 }]).map((item, i) => (
+                    <div key={i} className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-slate-50 transition-colors">
+                      <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1 py-0.5 rounded flex-shrink-0">삭제</span>
+                      <input type="checkbox" className="w-3 h-3 rounded border-slate-300 flex-shrink-0" />
+                      <input type="text" defaultValue={item.name} placeholder="항목명 입력" className="w-40 px-1.5 py-1 border border-slate-200 rounded text-[11px] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-blue-400 bg-white flex-shrink-0" />
+                      <input type="text" defaultValue={item.total > 0 ? `${fmt(item.unitPrice)}원*${item.qty}명*${item.months}개월` : ''} placeholder="단가원*수량명*개월" className="w-48 px-1.5 py-1 border border-amber-300 rounded text-[11px] text-right bg-amber-50 placeholder:text-slate-300 focus:outline-none focus:border-blue-400 flex-shrink-0" />
+                      <span className="text-xs text-slate-500 font-bold">=</span>
+                      <span className="text-xs font-bold text-slate-800 min-w-[80px] text-right">{item.total > 0 ? fmt(item.total) : ''}</span>
+                      <span className="text-[10px] text-slate-400">원</span>
+                      <button className="w-4 h-4 flex items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 text-[10px] font-bold flex-shrink-0">+</button>
+                      <button className="w-4 h-4 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 text-[10px] font-bold flex-shrink-0">-</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
 
-                return (
-                  <React.Fragment key={row.code}>
-                    <tr
-                      className={`hover:bg-blue-50/40 transition-colors ${row.level === 0 ? levelStyle : ''}`}
-                    >
-                      <td className={`px-4 py-2.5 whitespace-nowrap ${row.level === 0 ? '' : levelStyle}`}>
-                        <div className="flex items-center gap-2" style={{ paddingLeft: indent }}>
-                          <span className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold min-w-[18px] ${
-                            row.level === 0 ? 'bg-sky-600 text-white' :
-                            row.level === 1 ? 'bg-sky-400 text-white' :
-                            row.level === 2 ? 'bg-sky-200 text-sky-800' :
-                            'bg-slate-200 text-slate-600'
-                          }`}>
-                            {row.level === 0 ? '관' : row.level === 1 ? '항' : row.level === 2 ? '목' : '세'}
-                          </span>
-                          <span className={`${row.level <= 1 ? 'font-semibold' : ''}`}>
-                            {row.code} {row.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className={`px-4 py-2.5 text-right font-medium truncate ${row.amount > 0 ? 'text-slate-800' : 'text-slate-400'}`}>
-                        {fmt(row.amount)}
-                      </td>
-                      <td className={`px-4 py-2.5 text-right truncate text-slate-400`}>
-                        {fmt(row.prevAmount)}
-                      </td>
-                      <td className={`px-4 py-2.5 text-right font-medium truncate ${row.change > 0 ? 'text-blue-600' : row.change < 0 ? 'text-red-600' : 'text-slate-400'}`}>
-                        {fmt(row.change)}
-                      </td>
-                      <td className="px-4 py-2.5 text-slate-500 max-w-[300px]">
-                        {row.basis && (
-                          <button
-                            onClick={() => setModalCode(isOpen ? null : row.code)}
-                            className={`text-[10px] font-medium hover:underline transition-colors ${isOpen ? 'text-red-500 hover:text-red-700' : 'text-blue-500 hover:text-blue-700'}`}
-                          >
-                            {isOpen ? '접기' : '산출내역 보기'}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                    {/* 인라인 산출기초 패널 */}
-                    {isOpen && basisDetails[row.code] && (
-                      <tr>
-                        <td colSpan={5} className="p-0">
-                          <BasisPanel
-                            data={basisDetails[row.code]}
-                            onClose={() => setModalCode(null)}
-                          />
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                )
-              })}
-
-              {tab === 'expense' && (
-                <tr>
-                  <td colSpan={5} className="py-16 text-center text-slate-400 text-sm">
-                    세출 예산 데이터를 준비중입니다
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          {tab === 'expense' && (
+            <div className="py-16 text-center text-slate-400 text-sm">
+              세출 예산 데이터를 준비중입니다
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -405,139 +377,68 @@ function BasisPanel({ data, onClose }: { data: BasisData; onClose: () => void })
   }
 
   return (
-    <div className="bg-blue-50/30 border-t-2 border-b-2 border-blue-200">
+    <div className="bg-amber-50/30 border-t-2 border-b-2 border-amber-200">
       {/* 헤더 */}
-      <div className="px-5 py-3 bg-white/80 flex items-center justify-between border-b border-blue-100">
-        <div className="flex items-center gap-4">
-          <div>
-            <span className="text-[10px] text-slate-400 block">계정과목</span>
-            <span className="text-xs font-semibold text-blue-700">[{data.code}] {data.label}</span>
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-400 block">이전예산액</span>
-            <div className="flex items-center gap-1">
-              <input
-                type="text"
-                defaultValue={fmt(data.prevAmount)}
-                className="w-28 px-2 py-1 border border-slate-200 rounded text-xs text-right font-semibold text-slate-700 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-              />
-              <span className="text-[10px] text-slate-400">원</span>
-            </div>
-          </div>
+      <div className="px-4 py-2.5 bg-white/80 flex items-center justify-between border-b border-amber-100">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold text-slate-700">세부항목(항목/내용/합계)</span>
           <span className="text-[11px] text-slate-500">항목 {rows.length}개</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button onClick={addRow} className="px-2 py-0.5 text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition-colors">행추가</button>
-          <button onClick={deleteRows} className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors ${checked.size > 0 ? 'text-red-600 bg-red-50 border border-red-200 hover:bg-red-100' : 'text-slate-400 bg-slate-50 border border-slate-200 cursor-not-allowed'}`}>행삭제{checked.size > 0 && ` (${checked.size})`}</button>
-          <button onClick={copyRows} className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors ${checked.size > 0 ? 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-50' : 'text-slate-400 bg-slate-50 border border-slate-200 cursor-not-allowed'}`}>복사{checked.size > 0 && ` (${checked.size})`}</button>
-          <button onClick={pasteRows} className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors ${clipboard.length > 0 ? 'text-emerald-600 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100' : 'text-slate-400 bg-slate-50 border border-slate-200 cursor-not-allowed'}`}>붙여넣기{clipboard.length > 0 && ` (${clipboard.length})`}</button>
-          <button onClick={onClose} className="ml-2 w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <div className="flex items-center gap-2">
+          <button onClick={deleteRows} className={`px-2.5 py-1 text-[10px] font-bold rounded transition-colors ${checked.size > 0 ? 'text-red-600 bg-red-50 border border-red-200 hover:bg-red-100' : 'text-slate-400 bg-slate-50 border border-slate-200 cursor-not-allowed'}`}>체크삭제{checked.size > 0 && ` (${checked.size})`}</button>
+          <span className="text-xs text-slate-500">합계금액: <span className="font-bold text-blue-700">{fmt(grandTotal)}</span>원</span>
+          <button className="px-3 py-1 text-[11px] font-bold text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors">저장</button>
+          <button onClick={onClose} className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
       </div>
 
-      {/* 산출 테이블 */}
-      <table className="w-full text-xs table-fixed">
-        <colgroup>
-          <col className="w-[36px]" />
-          <col />
-          <col className="w-[120px]" />
-          <col className="w-[80px]" />
-          <col className="w-[80px]" />
-          <col className="w-[70px]" />
-          <col className="w-[70px]" />
-          <col className="w-[70px]" />
-          <col className="w-[120px]" />
-        </colgroup>
-        <thead>
-          <tr className="bg-slate-100/80">
-            <th className="text-center px-2 py-2 font-semibold text-slate-500">
-              <input type="checkbox" className="rounded border-slate-300" checked={checked.size === rows.length && rows.length > 0} onChange={toggleAll} />
-            </th>
-            <th className="text-center px-3 py-2 font-semibold text-slate-500">산출기초명</th>
-            <th className="text-right px-3 py-2 font-semibold text-slate-500">단가</th>
-            <th className="text-center px-3 py-2 font-semibold text-slate-500">수량(명)</th>
-            <th className="text-center px-3 py-2 font-semibold text-slate-500">개월(회)</th>
-            <th className="text-center px-3 py-2 font-semibold text-slate-500">항목1</th>
-            <th className="text-center px-3 py-2 font-semibold text-slate-500">항목2</th>
-            <th className="text-center px-3 py-2 font-semibold text-slate-500">항목3</th>
-            <th className="text-right px-3 py-2 font-semibold text-slate-500">합계</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-blue-100/50">
-          {rows.map((item, i) => (
-            <tr key={i} className={`hover:bg-white transition-colors ${checked.has(i) ? 'bg-blue-100/50' : 'bg-white/60'}`}>
-              <td className="text-center px-2 py-2">
-                <input type="checkbox" className="rounded border-slate-300" checked={checked.has(i)} onChange={() => toggleCheck(i)} />
-              </td>
-              <td className="px-3 py-2">
-                <input
-                  type="text"
-                  value={item.name}
-                  onChange={(e) => updateRow(i, 'name', e.target.value)}
-                  className="w-full px-2 py-1 border border-slate-200 rounded text-xs text-center font-medium text-slate-700 focus:ring-1 focus:ring-blue-500 outline-none bg-white"
-                />
-              </td>
-              <td className="px-3 py-2 text-right">
-                <input
-                  type="text"
-                  value={fmt(item.unitPrice)}
-                  onChange={(e) => updateRow(i, 'unitPrice', e.target.value)}
-                  className="w-full px-2 py-1 border border-slate-200 rounded text-right text-xs focus:ring-1 focus:ring-blue-500 outline-none bg-white"
-                />
-              </td>
-              <td className="px-3 py-2 text-center">
-                <div className="flex items-center gap-1 justify-center">
-                  <input type="number" value={item.qty} onChange={(e) => updateRow(i, 'qty', e.target.value)} className="w-10 px-1 py-1 border border-slate-200 rounded text-center text-xs focus:ring-1 focus:ring-blue-500 outline-none bg-white" />
-                  <span className="text-[10px] text-slate-400">명</span>
-                </div>
-              </td>
-              <td className="px-3 py-2 text-center">
-                <div className="flex items-center gap-1 justify-center">
-                  <input type="number" value={item.months} onChange={(e) => updateRow(i, 'months', e.target.value)} className="w-10 px-1 py-1 border border-slate-200 rounded text-center text-xs focus:ring-1 focus:ring-blue-500 outline-none bg-white" />
-                  <span className="text-[10px] text-slate-400">개월</span>
-                </div>
-              </td>
-              <td className="px-3 py-2 text-center">
-                <div className="flex items-center gap-1 justify-center">
-                  <input defaultValue="1" className="w-8 px-1 py-1 border border-slate-200 rounded text-center text-xs bg-white" />
-                  <span className="text-[10px] text-slate-400">식</span>
-                </div>
-              </td>
-              <td className="px-3 py-2 text-center">
-                <div className="flex items-center gap-1 justify-center">
-                  <input defaultValue="1" className="w-8 px-1 py-1 border border-slate-200 rounded text-center text-xs bg-white" />
-                  <span className="text-[10px] text-slate-400">식</span>
-                </div>
-              </td>
-              <td className="px-3 py-2 text-center">
-                <div className="flex items-center gap-1 justify-center">
-                  <input defaultValue="1" className="w-8 px-1 py-1 border border-slate-200 rounded text-center text-xs bg-white" />
-                  <span className="text-[10px] text-slate-400">식</span>
-                </div>
-              </td>
-              <td className="px-3 py-2 text-right font-semibold text-slate-800 truncate">{fmt(item.total)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* 합계 + 하단 */}
-      <div className="px-5 py-2.5 bg-white/80 border-t border-blue-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button className="px-2.5 py-1 text-[10px] font-medium text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50">[목/세목]예시 가져오기</button>
-          <button className="px-2.5 py-1 text-[10px] font-medium text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50">[보육료/인건비]단가표</button>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-slate-500">합계</span>
-            <span className="text-sm font-bold text-blue-700">{fmt(grandTotal)}</span>
+      {/* 산출 리스트 */}
+      <div className="divide-y divide-amber-100">
+        {rows.map((item, i) => (
+          <div key={i} className={`flex items-center gap-2 px-4 py-2 ${checked.has(i) ? 'bg-amber-100/50' : 'bg-white/60 hover:bg-white'} transition-colors`}>
+            <input type="checkbox" className="w-3.5 h-3.5 rounded border-slate-300 flex-shrink-0" checked={checked.has(i)} onChange={() => toggleCheck(i)} />
+            <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded flex-shrink-0">산출</span>
+            <input
+              type="text"
+              value={item.name}
+              onChange={(e) => updateRow(i, 'name', e.target.value)}
+              className="w-44 px-2 py-1.5 border border-slate-200 rounded text-xs font-medium text-slate-700 focus:outline-none focus:border-blue-400 bg-white flex-shrink-0"
+            />
+            <input
+              type="text"
+              value={fmt(item.unitPrice)}
+              onChange={(e) => updateRow(i, 'unitPrice', e.target.value)}
+              className="w-24 px-2 py-1.5 border border-amber-300 rounded text-xs text-right bg-amber-50 focus:outline-none focus:border-blue-400 flex-shrink-0"
+            />
+            <span className="text-xs text-slate-400">원*</span>
+            <input
+              type="text"
+              value={String(item.qty)}
+              onChange={(e) => updateRow(i, 'qty', e.target.value)}
+              className="w-10 px-1 py-1.5 border border-amber-300 rounded text-xs text-center bg-amber-50 focus:outline-none focus:border-blue-400 flex-shrink-0"
+            />
+            <span className="text-xs text-slate-400">명*</span>
+            <input
+              type="text"
+              value={String(item.months)}
+              onChange={(e) => updateRow(i, 'months', e.target.value)}
+              className="w-10 px-1 py-1.5 border border-amber-300 rounded text-xs text-center bg-amber-50 focus:outline-none focus:border-blue-400 flex-shrink-0"
+            />
+            <span className="text-xs text-slate-400">개월</span>
+            <span className="text-xs text-slate-500 font-bold">=</span>
+            <span className="text-sm font-bold text-slate-800 min-w-[90px] text-right">{fmt(item.total)}</span>
+            <span className="text-[10px] text-slate-400">원</span>
+            <button onClick={addRow} className="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors flex-shrink-0 text-sm font-bold">+</button>
+            <button onClick={() => { setRows(prev => prev.filter((_, idx) => idx !== i)) }} className="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-colors flex-shrink-0 text-sm font-bold">-</button>
           </div>
-          <button className="px-3 py-1 text-[11px] font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors">저장</button>
-        </div>
+        ))}
+        {rows.length === 0 && (
+          <div className="px-4 py-6 text-center text-xs text-slate-400">
+            <button onClick={addRow} className="px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition-colors">+ 항목 추가</button>
+          </div>
+        )}
       </div>
     </div>
   )
