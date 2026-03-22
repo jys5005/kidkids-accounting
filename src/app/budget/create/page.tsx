@@ -72,12 +72,98 @@ const budgetData: BudgetRow[] = [
   { code: '912', name: '전년도 이월사업비', amount: 0, prevAmount: 0, change: 0, level: 2 },
 ]
 
+const expenseBudgetData: BudgetRow[] = [
+  { code: 'E01', name: '인건비', amount: 480000000, prevAmount: 0, change: 480000000, level: 0 },
+  { code: 'E11', name: '원장인건비', amount: 48000000, prevAmount: 0, change: 48000000, level: 1 },
+  { code: 'E111', name: '원장급여', amount: 42000000, prevAmount: 0, change: 42000000, level: 2 },
+  { code: 'E112', name: '원장수당', amount: 6000000, prevAmount: 0, change: 6000000, level: 2 },
+  { code: 'E12', name: '보육교직원인건비', amount: 300000000, prevAmount: 0, change: 300000000, level: 1 },
+  { code: 'E121', name: '보육교직원급여', amount: 264000000, prevAmount: 0, change: 264000000, level: 2 },
+  { code: 'E122', name: '보육교직원수당', amount: 36000000, prevAmount: 0, change: 36000000, level: 2 },
+  { code: 'E13', name: '기타인건비', amount: 12000000, prevAmount: 0, change: 12000000, level: 1 },
+  { code: 'E131', name: '기타 인건비', amount: 12000000, prevAmount: 0, change: 12000000, level: 2 },
+  { code: 'E14', name: '법정부담금·퇴직금', amount: 120000000, prevAmount: 0, change: 120000000, level: 1 },
+  { code: 'E141', name: '법정부담금', amount: 60000000, prevAmount: 0, change: 60000000, level: 2 },
+  { code: 'E142', name: '퇴직금 및 퇴직적립금', amount: 60000000, prevAmount: 0, change: 60000000, level: 2 },
+  { code: 'E142-111', name: '퇴직금', amount: 30000000, prevAmount: 0, change: 30000000, level: 3 },
+  { code: 'E142-121', name: '퇴직적립금', amount: 30000000, prevAmount: 0, change: 30000000, level: 3 },
+
+  { code: 'E02', name: '관리운영비', amount: 120000000, prevAmount: 0, change: 120000000, level: 0 },
+  { code: 'E21', name: '기관운영비', amount: 108000000, prevAmount: 0, change: 108000000, level: 1 },
+  { code: 'E211', name: '수용비 및 수수료', amount: 24000000, prevAmount: 0, change: 24000000, level: 2 },
+  { code: 'E212', name: '공공요금 및 제세공과금', amount: 18000000, prevAmount: 0, change: 18000000, level: 2 },
+  { code: 'E213', name: '연료비', amount: 6000000, prevAmount: 0, change: 6000000, level: 2 },
+  { code: 'E214', name: '여비', amount: 1200000, prevAmount: 0, change: 1200000, level: 2 },
+  { code: 'E215', name: '차량비', amount: 8400000, prevAmount: 0, change: 8400000, level: 2 },
+  { code: 'E216', name: '복리후생비', amount: 3600000, prevAmount: 0, change: 3600000, level: 2 },
+  { code: 'E217', name: '기타 운영비', amount: 6000000, prevAmount: 0, change: 6000000, level: 2 },
+  { code: 'E217-111', name: '임대료', amount: 3000000, prevAmount: 0, change: 3000000, level: 3 },
+  { code: 'E217-121', name: '건물융자금의이자', amount: 3000000, prevAmount: 0, change: 3000000, level: 3 },
+  { code: 'E22', name: '업무추진비', amount: 12000000, prevAmount: 0, change: 12000000, level: 1 },
+  { code: 'E218', name: '업무추진비', amount: 6000000, prevAmount: 0, change: 6000000, level: 2 },
+  { code: 'E219', name: '직책급', amount: 3000000, prevAmount: 0, change: 3000000, level: 2 },
+  { code: 'E220', name: '회의비', amount: 3000000, prevAmount: 0, change: 3000000, level: 2 },
+
+  { code: 'E03', name: '보육활동비', amount: 100000000, prevAmount: 0, change: 100000000, level: 0 },
+  { code: 'E31', name: '보육활동운영비', amount: 100000000, prevAmount: 0, change: 100000000, level: 1 },
+  { code: 'E311', name: '교직원연수·연구비', amount: 2400000, prevAmount: 0, change: 2400000, level: 2 },
+  { code: 'E312', name: '교재·교구 구입비', amount: 4800000, prevAmount: 0, change: 4800000, level: 2 },
+  { code: 'E313', name: '행사비', amount: 3600000, prevAmount: 0, change: 3600000, level: 2 },
+  { code: 'E314', name: '영유아복리비', amount: 2400000, prevAmount: 0, change: 2400000, level: 2 },
+  { code: 'E315', name: '급식·간식재료비', amount: 48000000, prevAmount: 0, change: 48000000, level: 2 },
+
+  { code: 'E04', name: '수익자부담 지출', amount: 60000000, prevAmount: 0, change: 60000000, level: 0 },
+  { code: 'E41', name: '특별활동비', amount: 30000000, prevAmount: 0, change: 30000000, level: 1 },
+  { code: 'E411', name: '특별활동비지출', amount: 30000000, prevAmount: 0, change: 30000000, level: 2 },
+  { code: 'E42', name: '기타필요경비지출', amount: 30000000, prevAmount: 0, change: 30000000, level: 1 },
+  { code: 'E421', name: '기타 필요경비 지출', amount: 30000000, prevAmount: 0, change: 30000000, level: 2 },
+  { code: 'E421-111', name: '입학준비금', amount: 5000000, prevAmount: 0, change: 5000000, level: 3 },
+  { code: 'E421-112', name: '현장학습비', amount: 8000000, prevAmount: 0, change: 8000000, level: 3 },
+  { code: 'E421-113', name: '차량운행비', amount: 3000000, prevAmount: 0, change: 3000000, level: 3 },
+  { code: 'E421-121', name: '부모부담행사비', amount: 5000000, prevAmount: 0, change: 5000000, level: 3 },
+  { code: 'E421-131', name: '아침,저녁급식비', amount: 0, prevAmount: 0, change: 0, level: 3 },
+  { code: 'E421-141', name: '기타시도특성화비', amount: 9000000, prevAmount: 0, change: 9000000, level: 3 },
+
+  { code: 'E05', name: '적립금', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E51', name: '적립금', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E511', name: '적립금', amount: 0, prevAmount: 0, change: 0, level: 2 },
+
+  { code: 'E06', name: '상환금', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E61', name: '차입금상환', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E611', name: '단기 차입금 상환', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E621', name: '장기 차입금 상환', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E62', name: '반환금', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E631', name: '보조금 반환금', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E632', name: '보호자 반환금', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E63', name: '전출금', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E641', name: '법인회계 전출금', amount: 0, prevAmount: 0, change: 0, level: 2 },
+
+  { code: 'E07', name: '시설비', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E71', name: '시설비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E711', name: '시설비', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E712', name: '시설장비 유지비', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E72', name: '자산취득비', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E721', name: '자산취득비', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E721-111', name: '차량할부금', amount: 0, prevAmount: 0, change: 0, level: 3 },
+  { code: 'E721-121', name: '자산취득비', amount: 0, prevAmount: 0, change: 0, level: 3 },
+
+  { code: 'E08', name: '과년도 지출', amount: 0, prevAmount: 0, change: 0, level: 0 },
+  { code: 'E81', name: '과년도 지출', amount: 0, prevAmount: 0, change: 0, level: 1 },
+  { code: 'E811', name: '과년도 지출', amount: 0, prevAmount: 0, change: 0, level: 2 },
+
+  { code: 'E09', name: '잡지출·예비비', amount: 59079520, prevAmount: 0, change: 59079520, level: 0 },
+  { code: 'E91', name: '잡지출·예비비', amount: 59079520, prevAmount: 0, change: 59079520, level: 1 },
+  { code: 'E911', name: '잡지출', amount: 0, prevAmount: 0, change: 0, level: 2 },
+  { code: 'E991', name: '예비비', amount: 59079520, prevAmount: 0, change: 59079520, level: 2 },
+]
+
 interface BasisItem {
   name: string
   unitPrice: number
   qty: number
   months: number
   total: number
+  formula?: string
 }
 
 interface BasisData {
@@ -91,64 +177,81 @@ const basisDetails: Record<string, BasisData> = {
   '111': {
     code: '111', label: '정부지원 보육료', prevAmount: 0,
     items: [
-      { name: '0세 보육료 584,000원 *6명 * 12개월', unitPrice: 42048000, qty: 1, months: 1, total: 42048000 },
-      { name: '1세 보육료 515,000원 * 8명 * 12개월', unitPrice: 49440000, qty: 1, months: 1, total: 49440000 },
-      { name: '2세 보육료 426,000원 * 10명 * 12개월', unitPrice: 51120000, qty: 1, months: 1, total: 51120000 },
-      { name: '3세 보육료 280,000원 * 6명 * 12개월', unitPrice: 20160000, qty: 1, months: 1, total: 20160000 },
-      { name: '5세 보육료 280,000원 *7명 * 12개월', unitPrice: 23520000, qty: 1, months: 1, total: 23520000 },
+      { name: '정부지원보육료 만0세', unitPrice: 584000, qty: 9, months: 12, total: 63072000 },
+      { name: '정부지원보육료 만1세', unitPrice: 515000, qty: 10, months: 12, total: 61800000 },
+      { name: '정부지원보육료 만2세', unitPrice: 426000, qty: 14, months: 12, total: 71568000 },
+      { name: '정부지원보육료 만3세', unitPrice: 280000, qty: 20, months: 12, total: 67200000 },
+      { name: '정부지원보육료 만4세', unitPrice: 280000, qty: 20, months: 12, total: 67200000 },
+      { name: '정부지원보육료 만5세', unitPrice: 280000, qty: 20, months: 12, total: 67200000 },
+      { name: '장애통합보육료', unitPrice: 634000, qty: 3, months: 12, total: 22824000 },
+    ],
+  },
+  '112': {
+    code: '112', label: '부모부담 보육료', prevAmount: 0,
+    items: [
+      { name: '부모부담 보육료', unitPrice: 25000000, qty: 1, months: 1, total: 25000000 },
+    ],
+  },
+  '211': {
+    code: '211', label: '특별활동비', prevAmount: 0,
+    items: [
+      { name: '1세 특별활동비', unitPrice: 61000, qty: 10, months: 12, total: 7320000 },
+      { name: '2세 특별활동비', unitPrice: 71000, qty: 14, months: 12, total: 11928000 },
+      { name: '3세 특별활동비', unitPrice: 71000, qty: 20, months: 12, total: 17040000 },
+      { name: '4세 특별활동비', unitPrice: 71000, qty: 20, months: 12, total: 17040000 },
     ],
   },
   '311': {
     code: '311', label: '인건비 보조금', prevAmount: 0,
     items: [
-      { name: '보조교사인건비 1,139,000원 * 1명 * 12회', unitPrice: 13668000, qty: 1, months: 1, total: 13668000 },
-      { name: '연장교사인건비 1,139,000원 * 1명 * 12개월', unitPrice: 13668000, qty: 1, months: 1, total: 13668000 },
-      { name: '행복도우미 1,139,000원 * 1명 * 12개월', unitPrice: 13668000, qty: 1, months: 1, total: 13668000 },
-      { name: '사용자부담금 63,830원 * 2명 * 12개월', unitPrice: 1531920, qty: 1, months: 1, total: 1531920 },
-      { name: '0세교사인건비 2,479,600원 * 1명 * 12개월', unitPrice: 29755200, qty: 1, months: 1, total: 29755200 },
-      { name: '1세교사인건비 2,570,700 * 1명 * 12개월', unitPrice: 30848400, qty: 1, months: 1, total: 30848400 },
+      { name: '보조교사인건비', unitPrice: 1139000, qty: 1, months: 12, total: 13668000 },
+      { name: '연장교사인건비', unitPrice: 1139000, qty: 1, months: 12, total: 13668000 },
+      { name: '행복도우미', unitPrice: 1139000, qty: 1, months: 12, total: 13668000 },
+      { name: '사용자부담금', unitPrice: 63830, qty: 2, months: 12, total: 1531920 },
+      { name: '0세교사인건비', unitPrice: 2479600, qty: 1, months: 12, total: 29755200 },
+      { name: '1세교사인건비', unitPrice: 2570700, qty: 1, months: 12, total: 30848400 },
     ],
   },
   '322': {
     code: '322', label: '연장보육료', prevAmount: 0,
     items: [
-      { name: '0세 연장보육료 3,000원 * 3명 * 20회 * 12개월', unitPrice: 2160000, qty: 1, months: 1, total: 2160000 },
-      { name: '영아반 연장보육료 2,000원 * 2명 * 20회 * 12개월', unitPrice: 960000, qty: 1, months: 1, total: 960000 },
-      { name: '유아반 연장보육료 1,000원 * 6명 * 20회 * 12개월', unitPrice: 1440000, qty: 1, months: 1, total: 1440000 },
+      { name: '0세 연장보육료', unitPrice: 3000, qty: 3, months: 240, total: 2160000 },
+      { name: '영아반 연장보육료', unitPrice: 2000, qty: 2, months: 240, total: 960000 },
+      { name: '유아반 연장보육료', unitPrice: 1000, qty: 6, months: 240, total: 1440000 },
     ],
   },
   '324': {
     code: '324', label: '그 밖의 지원금', prevAmount: 0,
     items: [
-      { name: '방과후과정비 100,000원 *2반 * 12개월', unitPrice: 2400000, qty: 1, months: 1, total: 2400000 },
-      { name: '현장학습비 15,000원 * 37명 * 12개월', unitPrice: 6660000, qty: 1, months: 1, total: 6660000 },
-      { name: '행사비 100,000원 * 37명 * 1개월', unitPrice: 3700000, qty: 1, months: 1, total: 3700000 },
-      { name: '기타필요경비 20,000원 * 10명 * 12개월', unitPrice: 2400000, qty: 1, months: 1, total: 2400000 },
-      { name: '친환경농산물지원비 13,000원 * 37명 * 12개월', unitPrice: 5772000, qty: 1, months: 1, total: 5772000 },
-      { name: '급간식지원금 10,000원 * 37명 * 12개', unitPrice: 4440000, qty: 1, months: 1, total: 4440000 },
-      { name: '교재교구비 1,000,000원 * 1명 * 1회', unitPrice: 1000000, qty: 1, months: 1, total: 1000000 },
-      { name: '냉난방비 600,000원 * 1명 * 1회', unitPrice: 600000, qty: 1, months: 1, total: 600000 },
-      { name: '누리과정지원금 50,000원 * 13명 * 12개월', unitPrice: 7800000, qty: 1, months: 1, total: 7800000 },
-      { name: '누리과정추가지원금 70,000원 *13명 * 12개월', unitPrice: 10920000, qty: 1, months: 1, total: 10920000 },
-      { name: '영아반지원금 100,000원 *7반 * 12개월', unitPrice: 8400000, qty: 1, months: 1, total: 8400000 },
+      { name: '방과후과정비', unitPrice: 100000, qty: 2, months: 12, total: 2400000 },
+      { name: '현장학습비', unitPrice: 15000, qty: 37, months: 12, total: 6660000 },
+      { name: '행사비', unitPrice: 100000, qty: 37, months: 1, total: 3700000 },
+      { name: '기타필요경비', unitPrice: 20000, qty: 10, months: 12, total: 2400000 },
+      { name: '친환경농산물지원비', unitPrice: 13000, qty: 37, months: 12, total: 5772000 },
+      { name: '급간식지원금', unitPrice: 10000, qty: 37, months: 12, total: 4440000 },
+      { name: '교재교구비', unitPrice: 1000000, qty: 1, months: 1, total: 1000000 },
+      { name: '냉난방비', unitPrice: 600000, qty: 1, months: 1, total: 600000 },
+      { name: '누리과정지원금', unitPrice: 50000, qty: 13, months: 12, total: 7800000 },
+      { name: '누리과정추가지원금', unitPrice: 70000, qty: 13, months: 12, total: 10920000 },
+      { name: '영아반지원금', unitPrice: 100000, qty: 7, months: 12, total: 8400000 },
     ],
   },
   '411': {
     code: '411', label: '전입금', prevAmount: 0,
     items: [
-      { name: '전입금 450,000,000', unitPrice: 450000000, qty: 1, months: 1, total: 450000000 },
+      { name: '전입금', unitPrice: 450000000, qty: 1, months: 1, total: 450000000 },
     ],
   },
   '811': {
     code: '811', label: '이자수입', prevAmount: 0,
     items: [
-      { name: '이자수입 1,000,000원 * 1명 * 1회', unitPrice: 1000000, qty: 1, months: 1, total: 1000000 },
+      { name: '이자수입', unitPrice: 1000000, qty: 1, months: 1, total: 1000000 },
     ],
   },
   '911': {
     code: '911', label: '전년도 이월금', prevAmount: 0,
     items: [
-      { name: '전년도 이월금 20,000,000원 *1회', unitPrice: 20000000, qty: 1, months: 1, total: 20000000 },
+      { name: '전년도 이월금', unitPrice: 20000000, qty: 1, months: 1, total: 20000000 },
     ],
   },
 }
@@ -158,12 +261,96 @@ const fmt = (n: number) => n.toLocaleString('ko-KR')
 export default function BudgetCreatePage() {
   const [tab, setTab] = useState<'income' | 'expense'>('income')
   const [modalCode, setModalCode] = useState<string | null>(null)
+  const [budgetStatus, setBudgetStatus] = useState('신청')
+  const [basisState, setBasisState] = useState<Record<string, BasisItem[]>>(() => {
+    const init: Record<string, BasisItem[]> = {}
+    Object.entries(basisDetails).forEach(([code, data]) => {
+      init[code] = data.items.map(item => ({
+        ...item,
+        formula: item.unitPrice > 0 ? `${fmt(item.unitPrice)}원*${item.qty}명*${item.months}개월` : '',
+      }))
+    })
+    return init
+  })
 
-  const totalIncome = 819079520
-  const totalExpense = 819079520
+  const calcFormula = (expr: string): number => {
+    try {
+      let cleaned = expr.replace(/[원명개월회식]/g, '').replace(/,/g, '').trim()
+      if (!cleaned) return 0
+      // %를 /100으로 변환
+      cleaned = cleaned.replace(/(\d+(?:\.\d+)?)\s*%/g, '($1/100)')
+      // *와 /로 분리하여 계산
+      const tokens = cleaned.split(/([*/])/)
+      let result = Number(tokens[0].trim()) || 0
+      for (let j = 1; j < tokens.length; j += 2) {
+        const op = tokens[j]
+        const val = Number(tokens[j + 1]?.replace(/[()]/g, '').trim()) || 0
+        if (op === '*') result *= val
+        else if (op === '/') result = val !== 0 ? result / val : 0
+      }
+      return Math.round(result)
+    } catch { return 0 }
+  }
+
+  const updateBasisFormula = (code: string, idx: number, formula: string) => {
+    setBasisState(prev => {
+      const items = [...(prev[code] || [])]
+      items[idx] = { ...items[idx], formula, total: calcFormula(formula) }
+      return { ...prev, [code]: items }
+    })
+  }
+
+  const updateBasisName = (code: string, idx: number, name: string) => {
+    setBasisState(prev => {
+      const items = [...(prev[code] || [])]
+      items[idx] = { ...items[idx], name }
+      return { ...prev, [code]: items }
+    })
+  }
+
+  const addBasisRow = (code: string, afterIdx: number) => {
+    setBasisState(prev => {
+      const items = [...(prev[code] || [])]
+      items.splice(afterIdx + 1, 0, { name: '', unitPrice: 0, qty: 0, months: 0, total: 0 })
+      return { ...prev, [code]: items }
+    })
+  }
+
+  const removeBasisRow = (code: string, idx: number) => {
+    setBasisState(prev => ({
+      ...prev,
+      [code]: prev[code].filter((_, i) => i !== idx)
+    }))
+  }
+
+  // 목별 합계 계산 (세부항목 합산)
+  const getMokTotal = (code: string) => {
+    const items = basisState[code]
+    return items ? items.reduce((s, item) => s + item.total, 0) : 0
+  }
+
+  // 관/항/목 합산 계산
+  const calcGroupTotal = (data: BudgetRow[], parentLevel: number, parentCode: string) => {
+    let total = 0
+    let found = false
+    for (const row of data) {
+      if (row.code === parentCode) { found = true; continue }
+      if (found) {
+        if (row.level <= parentLevel) break
+        if (row.level === 2) {
+          const mokTotal = getMokTotal(row.code)
+          total += mokTotal > 0 ? mokTotal : row.amount
+        }
+      }
+    }
+    return total
+  }
+
+  const totalIncome = budgetData.filter(r => r.level === 0).reduce((s, r) => s + calcGroupTotal(budgetData, 0, r.code), 0)
+  const totalExpense = expenseBudgetData.filter(r => r.level === 0).reduce((s, r) => s + calcGroupTotal(expenseBudgetData, 0, r.code), 0)
 
   return (
-    <div className="p-3 space-y-3 max-w-6xl">
+    <div className="p-3 space-y-3">
       {/* 상단 조건 */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-bold text-slate-700">회계연도</span>
@@ -178,23 +365,14 @@ export default function BudgetCreatePage() {
         </select>
         <button className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded hover:bg-amber-100 transition-colors">추경하기</button>
         <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+        <select value={budgetStatus} onChange={e => setBudgetStatus(e.target.value)} className={`border rounded px-2 py-1.5 text-xs font-bold ${budgetStatus === '작성완료' ? 'border-red-300 text-red-600 bg-red-50' : budgetStatus === '작성중' ? 'border-amber-300 text-amber-600 bg-amber-50' : 'border-slate-300 text-slate-600'}`}>
+          <option>신청</option>
+          <option>작성중</option>
+          <option>작성완료</option>
+        </select>
+        {budgetStatus === '작성완료' && <span className="text-[10px] font-bold text-red-500">🔒 잠금</span>}
       </div>
 
-      {/* 요약 */}
-      <div className="flex items-center gap-6 px-2">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-blue-600">세입예산</span>
-          <span className="text-sm font-bold text-blue-700">{fmt(totalIncome)}원</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-red-600">세출예산</span>
-          <span className="text-sm font-bold text-red-600">{fmt(totalExpense)}원</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-emerald-600">차액예산</span>
-          <span className="text-sm font-bold text-emerald-700">{fmt(totalIncome - totalExpense)}원</span>
-        </div>
-      </div>
 
       {/* 탭 + 버튼 */}
       <div className="flex items-center justify-between">
@@ -216,101 +394,154 @@ export default function BudgetCreatePage() {
             세출
           </button>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-            예산서 출력
+        <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-slate-400">단위:</span>
+            <label className="flex items-center gap-0.5 text-[10px] text-slate-500 cursor-pointer">
+              <input type="radio" name="budgetUnit" defaultChecked className="w-3 h-3 accent-blue-600" />
+              <span>원</span>
+            </label>
+            <label className="flex items-center gap-0.5 text-[10px] text-slate-500 cursor-pointer">
+              <input type="radio" name="budgetUnit" className="w-3 h-3 accent-blue-600" />
+              <span>천원</span>
+            </label>
+          </div>
+          <button className="w-7 h-7 flex items-center justify-center bg-white hover:bg-slate-50 border border-slate-300 rounded transition-colors" title="인쇄하기">
+            <svg className="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2z" /></svg>
           </button>
-          <button className="px-3 py-1.5 text-[11px] font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-            계정과목
+          <button className="w-7 h-7 flex items-center justify-center bg-white hover:bg-green-50 border border-green-400 rounded transition-colors" title="엑셀다운로드">
+            <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
           </button>
-          <span className="text-[11px] text-slate-400 ml-1">원단위</span>
         </div>
       </div>
 
       {/* 예산 테이블 */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        {/* 헤더 */}
-        <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-6 text-[11px]">
-              <span className="font-bold text-slate-600">목</span>
-              <span className="font-bold text-slate-600">전년도결산액</span>
-              <span className="font-bold text-slate-600">예산액</span>
+      <div className="bg-white rounded-xl border border-slate-200">
+
+        {/* 합계 */}
+        <div className="px-4 py-2 border-b border-slate-200 flex items-center gap-4 sticky top-[33px] z-10 bg-white">
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-bold text-slate-600">정원:</span>
+            <input type="text" defaultValue="96" className="w-10 px-1 py-0.5 border border-slate-300 rounded text-xs text-center focus:outline-none focus:border-blue-400" />
+            <span className="text-xs text-slate-500">명</span>
+          </div>
+          <div className="w-px h-4 bg-slate-200" />
+          <span className="text-xs text-slate-500">세입금액: <span className="font-bold text-blue-700">{fmt(totalIncome)}</span>원</span>
+          <span className="text-xs text-slate-500">세출금액: <span className="font-bold text-red-600">{fmt(totalExpense)}</span>원</span>
+          <span className="text-xs text-slate-500">차이액: <span className="font-bold text-emerald-700">{fmt(totalIncome - totalExpense)}</span>원</span>
+          {tab === 'income' && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-slate-500">2026년2월말 잔액:</span>
+              <span className="text-xs font-bold text-slate-800">{fmt(117139911)}원</span>
             </div>
-            <div className="w-px h-4 bg-slate-300" />
-            <span className="text-[11px] font-bold text-slate-600">세부항목(항목/내용/합계)</span>
-            <span className="text-[11px] text-red-500 font-medium">(정원:96 명)</span>
-            <span className="text-[11px] text-slate-500">( [ 2026-02 ] 회계마감잔고117,139,911 원 )</span>
+          )}
+          <div className="ml-auto flex items-center gap-1.5">
+            <button className="px-2.5 py-1 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">전달사항</button>
+            <button className="px-2.5 py-1 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">이전예산호출</button>
+            <button className="px-2.5 py-1 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors">엑셀업로드</button>
+            <button className="px-2.5 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded transition-colors">일괄변경</button>
+            <div className="relative group">
+              <svg className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+              <div className="absolute right-0 top-full mt-2 z-[9999] hidden group-hover:block pointer-events-none">
+                <div className="bg-white text-slate-700 border border-slate-200 text-[11px] rounded-lg px-4 py-3 shadow-xl leading-relaxed whitespace-nowrap">
+                  <div className="absolute right-3 -top-1 w-2 h-2 bg-white border-l border-t border-slate-200 rotate-45" />
+                  {tab === 'income' ? (
+                    <p>정부지원보육료, 인건비보조금, 기관운영비, 전입금을 일괄변경처리합니다.</p>
+                  ) : (
+                    <>
+                      <p>원장급여, 보육교직원급여, 기타인건비, 법정부담금,</p>
+                      <p>특별활동비, 기타필요경비 일괄변경처리합니다.</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 합계 */}
-        <div className="px-4 py-2 border-b border-slate-200 flex items-center gap-4">
-          <span className="text-xs font-bold text-slate-700 w-[300px]"></span>
-          <span className="text-xs font-bold text-slate-800">{fmt(tab === 'income' ? totalIncome : totalExpense)}</span>
-          <div className="w-px h-4 bg-slate-200" />
-          <button className="px-2.5 py-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors">체크삭제</button>
-          <span className="text-xs text-slate-500">{tab === 'income' ? '세입' : '세출'}합계금액: <span className="font-bold text-blue-700">{fmt(tab === 'income' ? totalIncome : totalExpense)}</span>원 , 차이액 <span className="font-bold">0</span> 원</span>
+        {/* 헤더 */}
+        <div className="flex border-b border-slate-300 bg-orange-50 text-[11px] font-bold text-slate-600 sticky top-0 z-10">
+          <div className="w-[80px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">관</div>
+          <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">항</div>
+          <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">목</div>
+          <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">전년도결산액</div>
+          <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">예산액</div>
+          <div className="flex-1 px-2 py-2 text-center">세부항목(항목/내용/합계)</div>
         </div>
 
         {/* 데이터 */}
         <div className="overflow-x-auto">
-          {(tab === 'income' ? budgetData : []).map((row) => {
-            if (row.level === 0) return (
-              <div key={row.code} className="flex items-center bg-sky-200 border-b border-sky-300 px-3 py-2">
-                <span className="text-[10px] font-bold text-white bg-sky-600 px-1.5 py-0.5 rounded mr-2">관</span>
-                <span className="text-xs font-bold text-slate-800">{row.code} {row.name}</span>
-                <span className="ml-auto text-xs font-bold text-slate-700">{fmt(row.amount)}</span>
-              </div>
-            )
-            if (row.level === 1) return (
-              <div key={row.code} className="flex items-center bg-sky-100/70 border-b border-sky-200 px-3 py-1.5">
-                <span className="text-[10px] font-bold text-white bg-sky-400 px-1.5 py-0.5 rounded mr-2 ml-4">항</span>
-                <span className="text-xs font-semibold text-slate-700">{row.code} {row.name}</span>
-                <span className="ml-auto text-xs font-medium text-slate-600">{fmt(row.amount)}</span>
-              </div>
-            )
-            if (row.level === 3) return null
-            const basis = basisDetails[row.code]
-            return (
-              <div key={row.code} className="flex border-b border-slate-100">
-                {/* 왼쪽: 목 코드/이름/전년도결산액/예산액 */}
-                <div className="w-[120px] flex-shrink-0 border-r border-slate-100 px-3 py-2 flex flex-col justify-center">
-                  <span className="text-xs font-bold text-slate-700">{row.code}</span>
-                  <span className="text-[11px] text-slate-600">{row.name}</span>
-                </div>
-                <div className="w-[100px] flex-shrink-0 border-r border-slate-100 px-2 py-2 flex items-center justify-end">
-                  <span className="text-xs text-slate-500">{fmt(row.prevAmount)}</span>
-                </div>
-                <div className="w-[110px] flex-shrink-0 border-r border-slate-100 px-2 py-2 flex items-center justify-end">
-                  <input type="text" defaultValue={fmt(row.amount)} className="w-full px-2 py-1 border border-amber-300 rounded text-xs text-right bg-amber-50 focus:outline-none focus:border-blue-400" />
-                </div>
+          {(() => {
+            const currentData = tab === 'income' ? budgetData : expenseBudgetData
+            const locked = budgetStatus === '작성완료'
+            let prevGwan = '', prevHang = ''
+            return currentData.filter(r => r.level >= 2).map((row) => {
+              // 관/항 표시 여부
+              const rowIdx = currentData.indexOf(row)
+              let gwanRow: BudgetRow | undefined, hangRow: BudgetRow | undefined
+              for (let j = rowIdx - 1; j >= 0; j--) {
+                if (!gwanRow && currentData[j].level === 0) gwanRow = currentData[j]
+                if (!hangRow && currentData[j].level === 1) hangRow = currentData[j]
+                if (gwanRow && hangRow) break
+              }
+              let showGwan = false, showHang = false
+              if (gwanRow && gwanRow.code !== prevGwan) { showGwan = true; prevGwan = gwanRow.code }
+              if (hangRow && hangRow.code !== prevHang) { showHang = true; prevHang = hangRow.code }
 
-                {/* 오른쪽: 세부항목 */}
-                <div className="flex-1 divide-y divide-slate-50">
-                  {(basis ? basis.items : [{ name: '', unitPrice: 0, qty: 0, months: 0, total: 0 }]).map((item, i) => (
-                    <div key={i} className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-slate-50 transition-colors">
-                      <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1 py-0.5 rounded flex-shrink-0">삭제</span>
-                      <input type="checkbox" className="w-3 h-3 rounded border-slate-300 flex-shrink-0" />
-                      <input type="text" defaultValue={item.name} placeholder="항목명 입력" className="w-40 px-1.5 py-1 border border-slate-200 rounded text-[11px] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:border-blue-400 bg-white flex-shrink-0" />
-                      <input type="text" defaultValue={item.total > 0 ? `${fmt(item.unitPrice)}원*${item.qty}명*${item.months}개월` : ''} placeholder="단가원*수량명*개월" className="w-48 px-1.5 py-1 border border-amber-300 rounded text-[11px] text-right bg-amber-50 placeholder:text-slate-300 focus:outline-none focus:border-blue-400 flex-shrink-0" />
-                      <span className="text-xs text-slate-500 font-bold">=</span>
-                      <span className="text-xs font-bold text-slate-800 min-w-[80px] text-right">{item.total > 0 ? fmt(item.total) : ''}</span>
-                      <span className="text-[10px] text-slate-400">원</span>
-                      <button className="w-4 h-4 flex items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 text-[10px] font-bold flex-shrink-0">+</button>
-                      <button className="w-4 h-4 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 text-[10px] font-bold flex-shrink-0">-</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
+              const isSub = row.level === 3
+              const mokTotal = getMokTotal(row.code) || row.amount
+              const items = basisState[row.code] || [{ name: '', unitPrice: 0, qty: 0, months: 0, total: 0 }]
 
-          {tab === 'expense' && (
-            <div className="py-16 text-center text-slate-400 text-sm">
-              세출 예산 데이터를 준비중입니다
-            </div>
-          )}
+              return (
+                <div key={row.code} className={`flex group/row hover:bg-blue-50/30 transition-colors ${isSub ? 'bg-slate-50/30' : ''}`}>
+                  {/* 관 */}
+                  <div className={`w-[80px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center ${showGwan ? 'border-t border-slate-200' : ''}`}>
+                    {showGwan && gwanRow && <span className="text-[11px] font-bold text-slate-700">{gwanRow.code}<br /><span className="text-[10px] font-medium">{gwanRow.name}</span></span>}
+                  </div>
+                  {/* 항 */}
+                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center ${showHang ? 'border-t border-slate-200' : ''}`}>
+                    {showHang && hangRow && <span className="text-[11px] font-semibold text-slate-600">{hangRow.code}<br /><span className="text-[10px] font-medium">{hangRow.name}</span></span>}
+                  </div>
+                  {/* 목 */}
+                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex flex-col justify-center ${isSub ? 'pl-4' : ''}`}>
+                    <span className={`text-[11px] font-bold ${isSub ? 'text-slate-400' : 'text-slate-700'}`}>{row.code}</span>
+                    <span className={`text-[10px] ${isSub ? 'text-slate-400' : 'text-slate-600'}`}>{row.name}</span>
+                  </div>
+                  {/* 전년도결산액 */}
+                  <div className="w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex items-center justify-end">
+                    <span className="text-[11px] text-slate-500">{row.prevAmount > 0 ? fmt(row.prevAmount) : ''}</span>
+                  </div>
+                  {/* 예산액 */}
+                  <div className="w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex items-center justify-end">
+                    <input type="text" value={fmt(mokTotal)} readOnly className="w-full px-1 py-0.5 border border-amber-300 rounded text-[11px] text-right bg-amber-50 font-bold" />
+                  </div>
+                  {/* 세부항목 */}
+                  <div className="flex-1 divide-y divide-slate-50 border-t border-slate-200">
+                    {items.map((item, i) => {
+                      const isEmpty = !item.name && item.total === 0
+                      const isOnly = items.length === 1
+                      const rowKey = `${row.code}-${i}-${item.name}-${item.total}`
+                      return (
+                        <div key={rowKey} className={`flex items-center gap-1.5 px-2 py-1.5 transition-colors ${locked ? 'bg-slate-50/50' : 'hover:bg-slate-50'}`}>
+                          {!locked && !isEmpty && <button onClick={() => removeBasisRow(row.code, i)} className="text-[10px] font-bold text-amber-600 bg-amber-100 hover:bg-amber-200 px-1 py-0.5 rounded flex-shrink-0 transition-colors">삭제</button>}
+                          {!locked && isEmpty && <span className="w-[30px] flex-shrink-0" />}
+                          <input type="checkbox" className="w-3 h-3 rounded border-slate-300 flex-shrink-0" />
+                          <input type="text" value={item.name} onChange={e => updateBasisName(row.code, i, e.target.value)} disabled={locked} placeholder="항목명" className={`w-32 px-1.5 py-1 border rounded text-[11px] placeholder:text-slate-300 focus:outline-none flex-shrink-0 ${locked ? 'border-slate-100 bg-slate-50 text-slate-500' : 'border-slate-200 bg-white text-slate-700 focus:border-blue-400'}`} />
+                          <input type="text" value={item.formula || ''} onChange={e => setBasisState(prev => { const its = [...(prev[row.code] || [])]; its[i] = { ...its[i], formula: e.target.value }; return { ...prev, [row.code]: its } })} onBlur={e => updateBasisFormula(row.code, i, e.target.value)} disabled={locked} placeholder="단가*수량*개월" className={`w-44 px-1.5 py-1 border rounded text-[11px] text-right placeholder:text-slate-300 focus:outline-none flex-shrink-0 ${locked ? 'border-slate-100 bg-slate-50 text-slate-500' : 'border-amber-300 bg-amber-50 focus:border-blue-400'}`} />
+                          <span className="text-[11px] text-slate-400">=</span>
+                          <span className="text-[11px] font-bold text-slate-800 min-w-[70px] text-right">{item.total > 0 ? fmt(item.total) : ''}</span>
+                          <span className="text-[10px] text-slate-400">원</span>
+                          {!locked && <button onClick={() => addBasisRow(row.code, i)} className="w-4 h-4 flex items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 text-[10px] font-bold flex-shrink-0">+</button>}
+                          {!locked && !isOnly && isEmpty && <button onClick={() => removeBasisRow(row.code, i)} className="w-4 h-4 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 text-[10px] font-bold flex-shrink-0">-</button>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })
+          })()}
+
         </div>
       </div>
     </div>
