@@ -398,7 +398,8 @@ export default function BudgetCreatePage() {
   const [amendments, setAmendments] = useState<{ name: string; date: string }[]>([])
   const [showAmendPopup, setShowAmendPopup] = useState(false)
   const [amendDate, setAmendDate] = useState('')
-  const [basisState, setBasisState] = useState<Record<string, BasisItem[]>>(() => {
+
+  const initBasis = () => {
     const init: Record<string, BasisItem[]> = {}
     Object.entries(basisDetails).forEach(([code, data]) => {
       init[code] = data.items.map(item => ({
@@ -407,7 +408,19 @@ export default function BudgetCreatePage() {
       }))
     })
     return init
-  })
+  }
+
+  const [allBasisState, setAllBasisState] = useState<Record<string, Record<string, BasisItem[]>>>(() => ({
+    '본예산': initBasis(),
+  }))
+
+  const basisState = allBasisState[budgetType] || {}
+  const setBasisState = (updater: (prev: Record<string, BasisItem[]>) => Record<string, BasisItem[]>) => {
+    setAllBasisState(prev => ({
+      ...prev,
+      [budgetType]: updater(prev[budgetType] || {}),
+    }))
+  }
 
   const calcFormula = (expr: string): number => {
     try {
@@ -706,8 +719,16 @@ export default function BudgetCreatePage() {
               <button onClick={() => {
                 if (!amendDate) return
                 const name = `${amendments.length + 1}차 추경`
+                // 현재 예산 데이터를 복사하여 새 추경 데이터 생성
+                const currentBasis = allBasisState[budgetType] || {}
+                const copiedBasis: Record<string, BasisItem[]> = {}
+                Object.entries(currentBasis).forEach(([code, items]) => {
+                  copiedBasis[code] = items.map(item => ({ ...item }))
+                })
+                setAllBasisState(prev => ({ ...prev, [name]: copiedBasis }))
                 setAmendments(prev => [...prev, { name, date: amendDate }])
                 setBudgetType(name)
+                setBudgetStatus('작성중')
                 setShowAmendPopup(false)
               }} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">생성</button>
             </div>
