@@ -99,7 +99,6 @@ export default function InsuranceCalcPage() {
 
         {/* 전체 탭 */}
         {tab === 'all' && <>
-          <SizeSelector />
           <div className="px-4 mt-5 mb-4">
             <table className="w-full text-[13px] border-collapse border border-slate-200">
               <thead><tr className="bg-slate-50 border-b border-slate-200">
@@ -203,7 +202,6 @@ export default function InsuranceCalcPage() {
 
         {/* 고용보험 탭 */}
         {tab === 'employ' && <div className="px-4 mt-4 mb-4 space-y-4">
-          <SizeSelector />
           <table className="w-full text-[13px] border-collapse border border-slate-200 mt-3">
             <thead><tr className="bg-slate-50 border-b border-slate-200">
               <th className="px-3 py-2 border-r border-slate-200">총액</th>
