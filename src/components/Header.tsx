@@ -246,7 +246,7 @@ export default function Header() {
       </div>
 
       {/* 2단: GNB 틸 그라데이션 바 */}
-      <div className="bg-gradient-to-r from-teal-400 via-teal-500 to-cyan-600 border-b-2 border-teal-700">
+      <div className="bg-gradient-to-r from-teal-400 via-teal-500 to-cyan-600">
         <div className="max-w-6xl mx-auto px-5 flex items-center gap-2 py-1 overflow-x-auto scrollbar-hide">
           {currentCategory.menus.map((item) => {
             const href = item.href || item.children?.[0]?.href || '#'
@@ -257,10 +257,10 @@ export default function Header() {
               <Link
                 key={item.label}
                 href={href}
-                className={`px-5 py-1.5 text-[13px] font-bold whitespace-nowrap rounded-md border-b-2 ${
+                className={`px-5 py-2 text-[13px] font-bold whitespace-nowrap border-b-3 ${
                   isActive
-                    ? 'bg-white text-teal-800 shadow-sm border-b-teal-700'
-                    : 'text-white border-b-transparent sub-tab-hover hover:bg-white/15 hover:border-b-white/50'
+                    ? 'text-white border-b-white'
+                    : 'text-white/80 border-b-transparent hover:text-white hover:border-b-white/50'
                 }`}
               >
                 {item.label}
