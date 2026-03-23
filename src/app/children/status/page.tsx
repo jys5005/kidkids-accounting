@@ -53,7 +53,11 @@ export default function ChildrenStatusPage() {
           </div>
         </div>
       </div>
-      <div className="text-xs text-slate-500">총 <strong className="text-slate-700">{filtered.length}</strong>명</div>
+      <div className="flex items-center gap-4 text-xs text-slate-500">
+        <span>총 <strong className="text-slate-700">{filtered.length}</strong>명</span>
+        <span>현원 <strong className="text-blue-700">{filtered.filter(c => c.status === '재원').length}</strong>명</span>
+        <span>퇴소 <strong className="text-red-600">{filtered.filter(c => c.status === '퇴소').length}</strong>명</span>
+      </div>
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-[11px]">
           <thead><tr className="bg-teal-50 border-b border-slate-300">
