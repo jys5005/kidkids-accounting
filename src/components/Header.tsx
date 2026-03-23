@@ -246,7 +246,7 @@ export default function Header() {
       </div>
 
       {/* 2단: GNB 틸 그라데이션 바 */}
-      <div className="bg-gradient-to-r from-teal-400 via-teal-500 to-cyan-600">
+      <div className="bg-gradient-to-r from-teal-400 via-teal-500 to-cyan-600 border-b-2 border-teal-700">
         <div className="max-w-6xl mx-auto px-5 flex items-center gap-2 py-1 overflow-x-auto scrollbar-hide">
           {currentCategory.menus.map((item) => {
             const href = item.href || item.children?.[0]?.href || '#'
