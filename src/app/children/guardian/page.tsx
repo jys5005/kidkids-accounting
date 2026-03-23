@@ -25,7 +25,7 @@ export default function GuardianPage() {
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-[11px]">
-          <thead><tr className="bg-slate-200 border-b border-slate-300">
+          <thead><tr className="bg-teal-50 border-b border-slate-300">
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[50px]">번호</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">보호자명</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">주민번호</th>
