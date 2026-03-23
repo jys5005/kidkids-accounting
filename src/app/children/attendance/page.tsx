@@ -59,25 +59,25 @@ export default function AttendancePage() {
         <table className="text-[10px] border-collapse min-w-[900px]">
           <thead>
             <tr className="bg-teal-50 border-b border-slate-300">
-              <th className="px-1 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[30px]">번호</th>
-              <th className="px-1 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">성명</th>
-              <th className="px-1 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[70px]">전화번호</th>
+              <th className="px-1 py-1 text-center font-bold text-slate-600 border-r border-slate-200 w-[30px]">번호</th>
+              <th className="px-1 py-1 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">성명</th>
+              <th className="px-1 py-1 text-center font-bold text-slate-600 border-r border-slate-200 w-[70px]">전화번호</th>
               {days.map(d => (
-                <th key={d} className={`px-0.5 py-2 text-center font-bold border-r border-slate-200 w-[22px] ${new Date(year, mon-1, d).getDay() === 0 ? 'text-red-500' : new Date(year, mon-1, d).getDay() === 6 ? 'text-blue-500' : 'text-slate-600'}`}>{d}</th>
+                <th key={d} className={`px-0.5 py-1 text-center font-bold border-r border-slate-200 w-[22px] ${new Date(year, mon-1, d).getDay() === 0 ? 'text-red-500' : new Date(year, mon-1, d).getDay() === 6 ? 'text-blue-500' : 'text-slate-600'}`}>{d}</th>
               ))}
-              <th className="px-1 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[22px]">계</th>
-              <th className="px-1 py-2 text-center font-bold text-slate-600 w-[22px]">비고</th>
+              <th className="px-1 py-1 text-center font-bold text-slate-600 border-r border-slate-200 w-[22px]">계</th>
+              <th className="px-1 py-1 text-center font-bold text-slate-600 w-[22px]">비고</th>
             </tr>
           </thead>
           <tbody>
             {sampleChildren.map((child, i) => (
               <tr key={i} className="border-b border-slate-100">
-                <td className="px-1 py-2 text-center text-slate-500 border-r border-slate-100">{i + 1}</td>
-                <td className="px-1 py-2 text-center text-slate-700 font-medium border-r border-slate-100">{child.name}</td>
-                <td className="px-1 py-2 text-center text-slate-500 border-r border-slate-100 text-[9px]">{child.phone}</td>
-                {days.map(d => (<td key={d} className="px-0.5 py-2 text-center border-r border-slate-100"></td>))}
-                <td className="px-1 py-2 text-center border-r border-slate-100"></td>
-                <td className="px-1 py-2 text-center"></td>
+                <td className="px-1 py-1 text-center text-slate-500 border-r border-slate-100">{i + 1}</td>
+                <td className="px-1 py-1 text-center text-slate-700 font-medium border-r border-slate-100">{child.name}</td>
+                <td className="px-1 py-1 text-center text-slate-500 border-r border-slate-100 text-[8px]">{child.phone}</td>
+                {days.map(d => (<td key={d} className="px-0.5 py-1 text-center border-r border-slate-100"></td>))}
+                <td className="px-1 py-1 text-center border-r border-slate-100"></td>
+                <td className="px-1 py-1 text-center"></td>
               </tr>
             ))}
           </tbody>
