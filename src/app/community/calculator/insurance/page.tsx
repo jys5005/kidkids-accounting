@@ -65,7 +65,7 @@ export default function InsuranceCalcPage() {
   const salaryInputJsx = (
     <div className="px-4 mt-4 flex items-center gap-3">
       <span className="text-[13px] font-bold text-slate-700">월 급여</span>
-      <input type="text" value={salaryStr} onChange={e => setSalaryStr(e.target.value.replace(/[^0-9]/g, ''))} className={`${inputCls} w-80`} placeholder="0" />
+      <input type="text" value={salaryStr ? Number(salaryStr).toLocaleString('ko-KR') : ''} onChange={e => setSalaryStr(e.target.value.replace(/[^0-9]/g, ''))} className={`${inputCls} w-80`} placeholder="0" />
       <span className="text-[13px] text-slate-500">원</span>
       <button onClick={() => setCalcSalary(salary)} className="px-4 py-2 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">계산</button>
       <button onClick={reset} className="px-4 py-2 text-[13px] font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded">초기화</button>
