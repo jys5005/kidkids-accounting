@@ -38,12 +38,12 @@ export default function AttendancePage() {
         <table className="w-full text-[12px]">
           <tbody>
             <tr>
-              <td className="font-medium text-slate-700 bg-teal-50 px-3 py-2.5 border-r border-slate-200 text-center w-[100px]">출력년월</td>
+              <td className="font-medium text-slate-700 bg-teal-50 px-3 py-2.5 border-r border-slate-200 text-center whitespace-nowrap w-[100px]">출력년월</td>
               <td className="px-3 py-2.5 w-[150px]"><input type="month" value={month} onChange={e => setMonth(e.target.value)} className={inputCls} /></td>
-              <td className="font-medium text-slate-700 bg-teal-50 px-3 py-2.5 border-r border-slate-200 text-center w-[60px]">반선택</td>
+              <td className="font-medium text-slate-700 bg-teal-50 px-3 py-2.5 border-r border-slate-200 text-center whitespace-nowrap w-[60px]">반선택</td>
               <td className="px-3 py-2.5"><select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className={`${inputCls} w-52`}>{classNames.map(c => <option key={c}>{c}</option>)}</select></td>
               <td className="px-3 py-2.5 text-center"><button onClick={() => window.print()} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">출석부 출력</button></td>
-              <td className="font-medium text-slate-700 bg-teal-50 px-3 py-2.5 border-r border-slate-200 text-center w-[60px]">정렬순서</td>
+              <td className="font-medium text-slate-700 bg-teal-50 px-3 py-2.5 border-r border-slate-200 text-center whitespace-nowrap w-[60px]">정렬순서</td>
               <td className="px-3 py-2.5">
                 <label className="text-xs"><input type="radio" name="sort" checked={sortBy === 'name'} onChange={() => setSortBy('name')} className="mr-0.5" />원아명</label>
                 <label className="text-xs ml-2"><input type="radio" name="sort" checked={sortBy === 'date'} onChange={() => setSortBy('date')} className="mr-0.5" />입소일자</label>
@@ -56,7 +56,7 @@ export default function AttendancePage() {
       <div className="bg-teal-50 border border-slate-300 text-center py-2 text-sm font-bold text-slate-700">{month} 출석부</div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
-        <table className="text-[10px] border-collapse w-full">
+        <table className="text-[10px] border-collapse min-w-[1100px]">
           <thead>
             <tr className="bg-teal-50 border-b border-slate-300">
               <th className="px-1 py-1 text-center font-bold text-slate-600 border-r border-slate-200 w-[30px]">번호</th>
