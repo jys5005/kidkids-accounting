@@ -59,7 +59,7 @@ export default function InsuranceCalcPage() {
     </tr>
   )
 
-  const SalaryInput = () => (
+  const salaryInputJsx = (
     <div className="px-4 mt-4 flex items-center gap-3">
       <span className="text-[13px] font-bold text-slate-700">월 급여</span>
       <input type="text" value={salaryStr} onChange={e => setSalaryStr(e.target.value.replace(/[^0-9]/g, ''))} className={`${inputCls} w-80`} placeholder="0" />
@@ -98,7 +98,7 @@ export default function InsuranceCalcPage() {
           <span className="text-[12px] text-slate-600">2026년 기준(계산내용은 모의계산이기 때문에 실제와 다를 수 있습니다.)</span>
         </div>
 
-        <SalaryInput />
+        {salaryInputJsx}
 
         {/* 전체 탭 */}
         {tab === 'all' && <>
