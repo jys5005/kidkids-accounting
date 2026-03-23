@@ -11,8 +11,15 @@ export default function GuardianPage() {
   return (
     <div className="p-3 space-y-3">
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
-        <div className="px-4 py-3 border-b border-teal-400/20">
+        <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2 flex-wrap">
           <span className="text-sm font-bold text-slate-700">보호자관리</span>
+          <label className="text-xs text-slate-600 ml-4"><input type="checkbox" checked={includeDeleted} onChange={e => setIncludeDeleted(e.target.checked)} className="mr-1" />삭제보호자포함 :</label>
+          <select value={searchField} onChange={e => setSearchField(e.target.value)} className={`${inputCls} w-24`}>
+            <option>보호자명</option><option>원아명</option><option>전화번호</option>
+          </select>
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} w-36`} />
+          <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">조회</button>
+          <button onClick={() => setShowRegister(true)} className="ml-auto px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">보호자 등록</button>
         </div>
       </div>
 
@@ -33,18 +40,6 @@ export default function GuardianPage() {
           </tbody>
         </table>
 
-        <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-center gap-2">
-          <label className="text-xs text-slate-600"><input type="checkbox" checked={includeDeleted} onChange={e => setIncludeDeleted(e.target.checked)} className="mr-1" />삭제보호자포함 :</label>
-          <select value={searchField} onChange={e => setSearchField(e.target.value)} className={`${inputCls} w-24`}>
-            <option>보호자명</option><option>원아명</option><option>전화번호</option>
-          </select>
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} w-36`} />
-          <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">조회</button>
-        </div>
-
-        <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-end">
-          <button onClick={() => setShowRegister(true)} className="text-xs text-blue-600 hover:text-blue-800 font-bold">[보호자 등록]</button>
-        </div>
       </div>
 
       {/* 보호자 등록 팝업 */}
