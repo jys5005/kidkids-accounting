@@ -18,8 +18,9 @@ type Size = 'under150' | 'over150' | 'over150_1000' | 'over1000'
 
 export default function InsuranceCalcPage() {
   const [tab, setTab] = useState<Tab>('all')
-  const [salary, setSalary] = useState(0)
+  const [salaryStr, setSalaryStr] = useState('')
   const [calcSalary, setCalcSalary] = useState(0)
+  const salary = Number(salaryStr.replace(/[^0-9]/g, '')) || 0
   const [workerSize, setWorkerSize] = useState<Size>('over1000')
 
   const s = calcSalary
@@ -43,7 +44,7 @@ export default function InsuranceCalcPage() {
   const allWorker = pensionWorker + healthWorker + longtermWorker + employWorker
   const allEmployer = pensionEmployer + healthEmployer + longtermEmployer + (employTotal - employWorker)
 
-  const reset = () => { setSalary(0); setCalcSalary(0) }
+  const reset = () => { setSalaryStr(''); setCalcSalary(0) }
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'all', label: '전체' }, { key: 'pension', label: '국민연금' }, { key: 'health', label: '건강보험' }, { key: 'employ', label: '고용보험' }, { key: 'injury', label: '산재보험' },
@@ -61,7 +62,7 @@ export default function InsuranceCalcPage() {
   const SalaryInput = () => (
     <div className="px-4 mt-4 flex items-center gap-3">
       <span className="text-[13px] font-bold text-slate-700">월 급여</span>
-      <input type="text" value={salary || ''} onChange={e => setSalary(Number(e.target.value.replace(/[^0-9]/g, '')))} className={`${inputCls} w-80`} placeholder="0" />
+      <input type="text" value={salaryStr} onChange={e => setSalaryStr(e.target.value.replace(/[^0-9]/g, ''))} className={`${inputCls} w-80`} placeholder="0" />
       <span className="text-[13px] text-slate-500">원</span>
       <button onClick={() => setCalcSalary(salary)} className="px-4 py-2 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">계산</button>
       <button onClick={reset} className="px-4 py-2 text-[13px] font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded">초기화</button>
