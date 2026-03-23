@@ -124,7 +124,7 @@ export default function InsuranceCalcPage() {
           </div>
           <div className="px-4 mb-4">
             <p className="text-[11px] text-red-500 font-bold">※ 산재보험료는 별도로 확인하시기 바랍니다.</p>
-            <button className="mt-1 px-3 py-1.5 text-[11px] text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50">산재보험료율 및 산재보험료 알아보기</button>
+            <a href="https://www.comwel.or.kr/comwel/paym/insu/chek1.jsp" target="_blank" rel="noopener noreferrer" className="mt-1 px-3 py-1.5 text-[11px] text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 inline-block">산재보험료율 및 산재보험료 알아보기</a>
           </div>
         </>}
 
@@ -254,7 +254,7 @@ export default function InsuranceCalcPage() {
             <p className="ml-6">③상기 방법에 의하여 주된 사업을 결정할 수 없는 경우에는 매출액이 많은 제품을 제조하거나 서비스를 제공하는 사업</p>
           </div>
           <p className="font-bold text-[14px]">4. 산재보험료율 문의: 근로복지공단 1588-0075</p>
-          <button className="px-3 py-1.5 text-[11px] text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50">산재보험료율 및 산재보험료 알아보기</button>
+          <a href="https://www.comwel.or.kr/comwel/paym/insu/chek1.jsp" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-[11px] text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 inline-block">산재보험료율 및 산재보험료 알아보기</a>
         </div>}
 
         <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-center gap-3">
