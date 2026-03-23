@@ -24,10 +24,10 @@ export default function InsuranceCalcPage() {
   const [workerSize, setWorkerSize] = useState<Size>('over1000')
 
   const s = calcSalary
-  const pensionBase = Math.min(s, 6370000) // 국민연금 기준소득월액 상한 637만원
-  const pensionTotal = Math.round(pensionBase * RATES.pension.total)
-  const pensionWorker = Math.round(pensionBase * RATES.pension.worker)
-  const pensionEmployer = Math.round(pensionBase * RATES.pension.employer)
+  const pensionBase = Math.floor(Math.min(s, 6370000) / 1000) * 1000 // 국민연금 기준소득월액 상한 637만원, 천원미만 절사
+  const pensionTotal = Math.floor(pensionBase * RATES.pension.total)
+  const pensionWorker = Math.floor(pensionBase * RATES.pension.worker)
+  const pensionEmployer = pensionTotal - pensionWorker
 
   const healthTotal = Math.round(s * RATES.health.total)
   const healthWorker = Math.round(s * RATES.health.worker)
