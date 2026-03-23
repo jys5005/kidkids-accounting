@@ -26,7 +26,7 @@ export default function InsuranceCalcPage() {
   const s = calcSalary
   const pensionBase = Math.floor(Math.min(s, 6370000) / 1000) * 1000 // 국민연금 기준소득월액 상한 637만원, 천원미만 절사
   const pensionTotal = Math.floor(pensionBase * RATES.pension.total)
-  const pensionWorker = Math.floor(pensionBase * RATES.pension.worker)
+  const pensionWorker = Math.floor(pensionTotal / 2)
   const pensionEmployer = pensionTotal - pensionWorker
 
   const healthTotal = Math.round(s * RATES.health.total)
