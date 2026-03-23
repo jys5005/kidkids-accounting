@@ -19,29 +19,31 @@ type Size = 'under150' | 'over150' | 'over150_1000' | 'over1000'
 export default function InsuranceCalcPage() {
   const [tab, setTab] = useState<Tab>('all')
   const [salary, setSalary] = useState(0)
+  const [calcSalary, setCalcSalary] = useState(0)
   const [workerSize, setWorkerSize] = useState<Size>('over1000')
 
-  const pensionTotal = Math.round(salary * RATES.pension.total)
-  const pensionWorker = Math.round(salary * RATES.pension.worker)
-  const pensionEmployer = Math.round(salary * RATES.pension.employer)
+  const s = calcSalary
+  const pensionTotal = Math.round(s * RATES.pension.total)
+  const pensionWorker = Math.round(s * RATES.pension.worker)
+  const pensionEmployer = Math.round(s * RATES.pension.employer)
 
-  const healthTotal = Math.round(salary * RATES.health.total)
-  const healthWorker = Math.round(salary * RATES.health.worker)
-  const healthEmployer = Math.round(salary * RATES.health.employer)
+  const healthTotal = Math.round(s * RATES.health.total)
+  const healthWorker = Math.round(s * RATES.health.worker)
+  const healthEmployer = Math.round(s * RATES.health.employer)
 
   const longtermTotal = Math.round(healthTotal * RATES.longterm.rate / RATES.health.total)
   const longtermWorker = Math.round(longtermTotal / 2)
   const longtermEmployer = longtermTotal - longtermWorker
 
-  const employWorker = Math.round(salary * RATES.employ.worker)
-  const employEmployer = Math.round(salary * (RATES.employ.worker + RATES.employ.employer[workerSize]))
-  const employTotal = employWorker + Math.round(salary * RATES.employ.employer[workerSize])
+  const employWorker = Math.round(s * RATES.employ.worker)
+  const employEmployer = Math.round(s * (RATES.employ.worker + RATES.employ.employer[workerSize]))
+  const employTotal = employWorker + Math.round(s * RATES.employ.employer[workerSize])
 
   const allTotal = pensionTotal + healthTotal + longtermTotal + employTotal
   const allWorker = pensionWorker + healthWorker + longtermWorker + employWorker
   const allEmployer = pensionEmployer + healthEmployer + longtermEmployer + (employTotal - employWorker)
 
-  const reset = () => setSalary(0)
+  const reset = () => { setSalary(0); setCalcSalary(0) }
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'all', label: '전체' }, { key: 'pension', label: '국민연금' }, { key: 'health', label: '건강보험' }, { key: 'employ', label: '고용보험' }, { key: 'injury', label: '산재보험' },
@@ -61,7 +63,7 @@ export default function InsuranceCalcPage() {
       <span className="text-[13px] font-bold text-slate-700">월 급여</span>
       <input type="text" value={salary || ''} onChange={e => setSalary(Number(e.target.value.replace(/[^0-9]/g, '')))} className={`${inputCls} w-80`} placeholder="0" />
       <span className="text-[13px] text-slate-500">원</span>
-      <button onClick={() => {}} className="px-4 py-2 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">계산</button>
+      <button onClick={() => setCalcSalary(salary)} className="px-4 py-2 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">계산</button>
       <button onClick={reset} className="px-4 py-2 text-[13px] font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded">초기화</button>
     </div>
   )
@@ -190,9 +192,9 @@ export default function InsuranceCalcPage() {
             <p className="font-bold">▶ 직장가입자 본인 부담분 계산식(2026년 기준)</p>
             <p>- 건강보험료 = 보수월액 × 건강보험료율(7.19%) × 보험료 부담률(50%) (원 단위 절사)</p>
             <p>- 장기요양보험료 = 건강보험료 × (장기요양보험료율(0.9448%))/(건강보험료율(7.19%))(원 단위 절사)</p>
-            {salary > 0 && <>
-              <p className="font-bold mt-2">▶ 예) 보수월액이 {fmt(salary)}원인 경우</p>
-              <p>- 건강보험료: {fmt(salary)} × 7.19% × 50% = {fmt(healthWorker)}원</p>
+            {calcSalary > 0 && <>
+              <p className="font-bold mt-2">▶ 예) 보수월액이 {fmt(calcSalary)}원인 경우</p>
+              <p>- 건강보험료: {fmt(calcSalary)} × 7.19% × 50% = {fmt(healthWorker)}원</p>
               <p>- 장기요양보험료: {fmt(healthWorker)} × ((0.9448%)/(7.19%)) = {fmt(longtermWorker)}원</p>
               <p>⇒ 직장가입자 본인 부담분: {fmt(healthWorker)} + {fmt(longtermWorker)} = {fmt(healthWorker + longtermWorker)}원</p>
               <p>⇒ 사업장에서 납부할 보험료: 근로자 부담금({fmt(healthWorker + longtermWorker)}) + 사용자 부담금({fmt(healthEmployer + longtermEmployer)}) = {fmt(healthTotal + longtermTotal)}원</p>
