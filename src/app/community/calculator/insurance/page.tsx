@@ -159,7 +159,7 @@ export default function InsuranceCalcPage() {
             <p>기준소득월액 상한액과 하한액은 국민연금 사업장가입자와 지역가입자 전원(납부예외자 제외)의 평균소득월액의 3년간 변동하는 비율을 반영하여 매년 3월말까지 보건복지부 장관이 고시하며 해당연도 7월부터 1년간 적용합니다.</p>
             <p>○ 2025.7.1.~2026.6.30. (최저) 40만원 / (최고) 637만원</p>
           </div>
-          <button className="px-3 py-1.5 text-[11px] text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50">근로소득 각종 수당의 국민연금 소득 포함 여부</button>
+          <a href="https://www.4insure.or.kr/pbiz/ntcn/npsEarnInclsYnPopup.do" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-[11px] text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 inline-block">근로소득 각종 수당의 국민연금 소득 포함 여부</a>
         </div>}
 
         {/* 건강보험 탭 */}
