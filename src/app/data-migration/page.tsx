@@ -119,8 +119,8 @@ const MAPPING_TABLE = {
       { by24: '2711', by24Name: '시설비', sunote: '2711', sunoteNote: '누리→27111' },
       { by24: '2712', by24Name: '시설장비유지비', sunote: '2712', sunoteNote: '누리→27121' },
       { by24: '2721', by24Name: '자산취득비', sunote: '2721', sunoteNote: '4자리 기본', group: true },
-      { by24: '2721002', by24Name: '  차량할부금', sunote: '2721-002', sunoteNote: '차량/할부 키워드' },
-      { by24: '2721004', by24Name: '  기타자산취득', sunote: '2721-004', sunoteNote: '기본값' },
+      { by24: '2721001', by24Name: '  차량할부금', sunote: '2721-001', sunoteNote: '차량/할부 키워드' },
+      { by24: '2721002', by24Name: '  자산취득비', sunote: '2721-002', sunoteNote: '기본값' },
       { by24: '2811', by24Name: '과년도지출', sunote: '2811', sunoteNote: '누리→28111' },
       { by24: '2911', by24Name: '잡지출', sunote: '2911', sunoteNote: '' },
     ],
@@ -689,7 +689,7 @@ export default function DataMigrationPage() {
                       {programAuth.savedAt && ` · ${new Date(programAuth.savedAt).toLocaleDateString('ko-KR')}`}
                     </p>
                   </div>
-                  <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
+                  <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
                     target="_blank" rel="noopener noreferrer"
                     className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50">
                     수정
@@ -699,7 +699,7 @@ export default function DataMigrationPage() {
             ) : currentSource.authType === 'cert' ? (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-xs text-amber-700 font-medium">인증서가 등록되지 않았습니다.</p>
-                <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
+                <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
                   target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 mt-2 text-xs text-amber-700 font-medium underline">
                   통합e 인증설정에서 등록하기
@@ -727,7 +727,7 @@ export default function DataMigrationPage() {
                     placeholder="비밀번호"
                   />
                 </div>
-                <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
+                <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
                   target="_blank" rel="noopener noreferrer"
                   className="text-xs text-blue-500 hover:text-blue-700">
                   통합e에 인증정보 등록하면 자동 사용됩니다
