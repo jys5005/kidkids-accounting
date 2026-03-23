@@ -19,7 +19,7 @@ const mockData = {
   개별구매급식비: [4485710, 5037730, 4968040, 4447010, 769650, 8444630, 5200610, 546200, 5253850, 11037826, 807200, 10934020],
 }
 
-const TH = 'px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-orange-50'
+const TH = 'px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-2 py-2 text-center border-b border-r border-slate-100 text-xs'
 
 export default function MealPage() {
@@ -58,7 +58,7 @@ export default function MealPage() {
         <select value={ymTo} onChange={e => setYmTo(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
           {ymOpts.map(ym => <option key={ym} value={ym}>{ym}</option>)}
         </select>
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">검색</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">검색</button>
         <button onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; setYmFrom(ym); setYmTo(ym) }} className="px-2 py-1 text-[10px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">지난달</button>
         <button onClick={() => { const y = new Date().getFullYear() - 1; setYmFrom(`${y}-03`); setYmTo(`${y + 1}-02`) }} className="px-2 py-1 text-[10px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">과년도</button>
         <div className="relative group">

@@ -34,7 +34,7 @@ const nuriExpense: NuriRow[] = [
   { type: '세출', name: '누리과정 과년도지출', months: Array(12).fill(0), total: 0 },
 ]
 
-const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-orange-50'
+const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-2 py-2 text-center border-b border-r border-slate-100 text-xs'
 
 export default function NuriPage() {
@@ -91,7 +91,7 @@ export default function NuriPage() {
           <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
             {yearOpts.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-          <button className="px-3 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+          <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
         </div>
       </div>
 
@@ -101,9 +101,9 @@ export default function NuriPage() {
           {/* 검색 */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-bold text-slate-600">발행기간</span>
-            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
             <span className="text-xs text-slate-400">~</span>
-            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
             <span className="text-xs font-bold text-slate-600">계정과목</span>
             <select value={detailAccount} onChange={e => setDetailAccount(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs min-w-[180px]">
               {nuriAccounts.map(a => <option key={a} value={a}>{a}</option>)}

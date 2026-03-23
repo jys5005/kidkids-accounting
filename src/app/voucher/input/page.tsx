@@ -305,14 +305,18 @@ export default function VoucherInputPage() {
   return (
     <div className="space-y-4">
       {/* 상단 조건부 */}
-      <div className="bg-white rounded-xl border-2 border-slate-400 p-5 hover:bg-slate-50/50 transition-colors shadow-sm">
-        <div className="flex items-end gap-4 flex-wrap">
+      <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
+        <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-700">전표입력</span>
+          <span className="text-xs text-slate-400">회계전표의 적요수정, 전표분리, 계정지정을 할 수 있습니다.</span>
+        </div>
+        <div className="px-4 py-3 flex items-end gap-4 flex-wrap">
             <div className="flex items-center gap-1.5">
               <label className="text-xs text-slate-500 font-medium whitespace-nowrap">출납년월</label>
               <select
                 value={filterYearMonth}
                 onChange={e => { setFilterYearMonth(e.target.value); setFilterDayFrom(0); setFilterDayTo(0) }}
-                className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700"
+                className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700"
               >
                 {yearMonthOptions.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -324,12 +328,12 @@ export default function VoucherInputPage() {
               {inputMode === '간편등록' ? (
                 <div className="flex items-center gap-1">
                   <button onClick={() => setFilterInputMethod('수기')}
-                    className={`w-24 px-3 py-1.5 border-2 rounded-lg text-xs font-bold transition-colors ${filterInputMethod === '수기' ? 'border-[#f5b800] bg-[#f5b800] text-white' : 'border-slate-300 bg-white text-slate-400'}`}>수기</button>
+                    className={`w-24 px-3 py-1.5 border rounded-lg text-xs font-bold transition-colors ${filterInputMethod === '수기' ? 'border-teal-400 bg-teal-500 text-white' : 'border-slate-300 bg-white text-slate-400'}`}>수기</button>
                   <button onClick={() => setFilterInputMethod('엑셀')}
-                    className={`w-24 px-3 py-1.5 border-2 rounded-lg text-xs font-bold transition-colors ${filterInputMethod === '엑셀' ? 'border-[#f5b800] bg-[#f5b800] text-white' : 'border-slate-300 bg-white text-slate-400'}`}>엑셀</button>
+                    className={`w-24 px-3 py-1.5 border rounded-lg text-xs font-bold transition-colors ${filterInputMethod === '엑셀' ? 'border-teal-400 bg-teal-500 text-white' : 'border-slate-300 bg-white text-slate-400'}`}>엑셀</button>
                   {filterInputMethod === '엑셀' && <>
                     <div className="w-px h-6 bg-slate-300 mx-1" />
-                    <select className="px-3 py-1.5 border-2 border-[#f5b800] rounded-lg text-xs font-bold text-slate-700 bg-white">
+                    <select className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-bold text-slate-700 bg-white">
                       <option>기본 샘플파일</option>
                       <option>보육통합 엑셀자료</option>
                       <option>CMS 엑셀</option>
@@ -392,10 +396,10 @@ export default function VoucherInputPage() {
                       }}
                     />
                     <label htmlFor="excel-upload-top"
-                      className="px-4 py-1.5 border-2 border-[#f5b800] bg-white text-xs font-bold text-slate-700 rounded-lg cursor-pointer hover:bg-[#fffbeb] transition-colors whitespace-nowrap">
+                      className="px-4 py-1.5 border border-teal-300 bg-white text-xs font-bold text-slate-700 rounded-lg cursor-pointer hover:bg-teal-50 transition-colors whitespace-nowrap">
                       파일 선택
                     </label>
-                    <span className={`text-xs whitespace-nowrap ${excelFileName ? 'text-amber-700 font-medium' : 'text-slate-400'}`}>{excelFileName || '선택된 파일 없음'}</span>
+                    <span className={`text-xs whitespace-nowrap ${excelFileName ? 'text-teal-700 font-medium' : 'text-slate-400'}`}>{excelFileName || '선택된 파일 없음'}</span>
                     <button
                       disabled={excelParsed.length === 0}
                       onClick={() => {
@@ -405,7 +409,7 @@ export default function VoucherInputPage() {
                         setExcelParsed([])
                         setExcelFileName('')
                       }}
-                      className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-colors whitespace-nowrap ${excelParsed.length > 0 ? 'bg-[#f5b800] text-white hover:bg-[#e5ab00]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
+                      className={`px-5 py-1.5 text-xs font-bold rounded-lg transition-colors whitespace-nowrap ${excelParsed.length > 0 ? 'bg-teal-500 text-white hover:bg-teal-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
                       등록{excelParsed.length > 0 ? ` (${excelParsed.length}건)` : ''}
                     </button>
                     <div className="w-px h-6 bg-slate-300 mx-1" />
@@ -425,9 +429,9 @@ export default function VoucherInputPage() {
                       XLSX.writeFile(wb, `간편등록_기본샘플_${filterYearMonth}.xls`)
                     }} className="px-3 py-1.5 bg-slate-100 text-slate-500 text-xs font-medium rounded-lg hover:bg-slate-200 transition-colors whitespace-nowrap">기본 샘플</button>
                     <div className="relative group">
-                      <button className="px-3 py-1.5 bg-slate-100 text-slate-500 text-xs font-medium rounded-lg hover:bg-slate-200 transition-colors whitespace-nowrap">참고사항<span className="text-amber-500 ml-0.5">ⓘ</span></button>
-                      <div className="hidden group-hover:block absolute top-full right-0 mt-2 bg-[#fffbeb] text-amber-900 text-[11px] rounded-lg px-3 py-2 z-50 w-[320px] shadow-lg leading-relaxed border border-[#f5b800]/30">
-                        <div className="absolute -top-1 right-4 w-2 h-2 bg-[#fffbeb] border-l border-t border-[#f5b800]/30 rotate-45"></div>
+                      <button className="px-3 py-1.5 bg-slate-100 text-slate-500 text-xs font-medium rounded-lg hover:bg-slate-200 transition-colors whitespace-nowrap">참고사항<span className="text-teal-500 ml-0.5">ⓘ</span></button>
+                      <div className="hidden group-hover:block absolute top-full right-0 mt-2 bg-teal-50 text-teal-900 text-[11px] rounded-lg px-3 py-2 z-50 w-[320px] shadow-lg leading-relaxed border border-teal-400/30">
+                        <div className="absolute -top-1 right-4 w-2 h-2 bg-teal-50 border-l border-t border-teal-400/30 rotate-45"></div>
                         <p className="font-bold mb-1.5">참고사항</p>
                         <p className="mb-1">· 입력방법에서 엑셀 또는 은행계좌를 선택하신 후 저장하셨을 경우 한번 저장된 데이터는 장부에 기재되었기 때문에 다시 불러오지 않습니다.</p>
                         <p className="mb-1">· 엑셀의 경우 직접 재등록해서 사용하실 수 있고, 은행계좌의 경우 고객센터로 데이터 초기화를 요청하시기 바랍니다.</p>
@@ -435,9 +439,9 @@ export default function VoucherInputPage() {
                       </div>
                     </div>
                     <div className="relative group">
-                      <button className="px-3 py-1.5 bg-slate-100 text-slate-500 text-xs font-medium rounded-lg hover:bg-slate-200 transition-colors whitespace-nowrap">입력 안내<span className="text-amber-500 ml-0.5">ⓘ</span></button>
-                      <div className="hidden group-hover:block absolute top-full right-0 mt-2 bg-[#fffbeb] text-amber-900 text-[11px] rounded-lg px-3 py-2 z-50 w-[340px] shadow-lg leading-relaxed border border-[#f5b800]/30">
-                        <div className="absolute -top-1 right-4 w-2 h-2 bg-[#fffbeb] border-l border-t border-[#f5b800]/30 rotate-45"></div>
+                      <button className="px-3 py-1.5 bg-slate-100 text-slate-500 text-xs font-medium rounded-lg hover:bg-slate-200 transition-colors whitespace-nowrap">입력 안내<span className="text-teal-500 ml-0.5">ⓘ</span></button>
+                      <div className="hidden group-hover:block absolute top-full right-0 mt-2 bg-teal-50 text-teal-900 text-[11px] rounded-lg px-3 py-2 z-50 w-[340px] shadow-lg leading-relaxed border border-teal-400/30">
+                        <div className="absolute -top-1 right-4 w-2 h-2 bg-teal-50 border-l border-t border-teal-400/30 rotate-45"></div>
                         <p className="font-bold mb-1.5">입력 안내</p>
                         <p className="mb-1">· 기본 샘플파일로 등록하실 경우 은행계좌 내역을 다운받으신 파일에 옮기신 후 "파일 선택"을 클릭하셔서 선택하신 후 "등록"을 클릭하세요.</p>
                         <p>· 기타 은행 홈페이지에서 직접 다운로드하신 경우 엑셀로 파일을 여신 후 다른이름으로 저장 &gt; 저장 대화창에서 "파일형식(T)"에서 "Excel 97-2003 통합문서 (*.xls)"를 선택하신 후 저장하셔서 등록하세요.</p>
@@ -449,7 +453,7 @@ export default function VoucherInputPage() {
                 <select
                   value={filterInputMethod}
                   onChange={e => setFilterInputMethod(e.target.value)}
-                  className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700"
+                  className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700"
                 >
                   <option value="전체">전체</option>
                   <option value="은행">은행</option>
@@ -473,8 +477,8 @@ export default function VoucherInputPage() {
                         setFilterAccount(g === '전체' ? '전체' : g === '수입' ? '수입전체' : '지출전체')
                         setShowAccountDropdown(true)
                       }}
-                      className={`px-3 py-1.5 rounded-lg border-2 text-xs font-medium transition-colors flex items-center gap-1 ${
-                        filterAccountGroup === g ? 'bg-white text-blue-700 border-blue-500 shadow-sm' : 'text-slate-500 border-slate-400 hover:text-slate-700'
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1 ${
+                        filterAccountGroup === g ? 'bg-white text-blue-700 border-blue-500 shadow-sm' : 'text-slate-500 border-teal-300 hover:text-slate-700'
                       }`}
                     >
                       {g === '전체' && filterAccountGroup === '전체' && filterAccount !== '전체' ? filterAccount
@@ -541,7 +545,7 @@ export default function VoucherInputPage() {
                   value={filterAmountFrom}
                   onChange={e => setFilterAmountFrom(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="최소"
-                  className="w-24 px-2 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 text-center"
+                  className="w-24 px-2 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700 text-center"
                 />
                 <span className="text-slate-400 text-sm">~</span>
                 <input
@@ -549,7 +553,7 @@ export default function VoucherInputPage() {
                   value={filterAmountTo}
                   onChange={e => setFilterAmountTo(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="최대"
-                  className="w-24 px-2 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 text-center"
+                  className="w-24 px-2 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700 text-center"
                 />
               </div>
             </div>
@@ -558,7 +562,7 @@ export default function VoucherInputPage() {
               <select
                 value={searchKey}
                 onChange={e => setSearchKey(e.target.value as '적요' | '계정' | '결제방식' | '전표번호')}
-                className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 bg-slate-50"
+                className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700 bg-slate-50"
               >
                 <option value="적요">적요</option>
                 <option value="계정">계정</option>
@@ -570,9 +574,9 @@ export default function VoucherInputPage() {
                 value={searchText}
                 onChange={e => setSearchText(e.target.value)}
                 placeholder="검색어 입력"
-                className="w-32 px-2 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700"
+                className="w-32 px-2 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700"
               />
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-[#f5b800] rounded-lg hover:bg-[#e5ab00] transition-colors">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">조회</button>
               <button onClick={() => {
                 setFilterYearMonth('2026-03'); setFilterDayFrom(0); setFilterDayTo(0)
                 setFilterType('전체'); setFilterAccountGroup('전체'); setFilterAccount('전체')
@@ -592,7 +596,7 @@ export default function VoucherInputPage() {
           <span className="text-xs text-slate-600">합계 <strong className="text-blue-700">{fmt(totalIncome)}</strong></span>
           <span className="text-xs text-slate-600">전표 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입').length}</strong></span>
           <span className="text-xs text-slate-600">정상 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입' && r.amount >= 0).length}</strong></span>
-          <span className="text-xs text-slate-600">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</strong></span>
+          <span className="text-xs text-slate-600">반납 <strong className="text-teal-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</strong></span>
           <span className="text-xs text-slate-600">삭제 <strong className="text-slate-400">0</strong></span>
         </div>
         <div className="flex items-center gap-3 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
@@ -600,7 +604,7 @@ export default function VoucherInputPage() {
           <span className="text-xs text-slate-600">합계 <strong className="text-red-600">{fmt(totalExpense)}</strong></span>
           <span className="text-xs text-slate-600">전표 <strong className="text-red-600">{filtered.filter(r => r.type === '지출').length}</strong></span>
           <span className="text-xs text-slate-600">정상 <strong className="text-red-600">{filtered.filter(r => r.type === '지출' && r.amount >= 0).length}</strong></span>
-          <span className="text-xs text-slate-600">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</strong></span>
+          <span className="text-xs text-slate-600">반납 <strong className="text-teal-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</strong></span>
           <span className="text-xs text-slate-600">삭제 <strong className="text-slate-400">0</strong></span>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
@@ -616,7 +620,7 @@ export default function VoucherInputPage() {
       )}
 
       {/* 툴바 */}
-      <div className="border-b border-[#f5b800]/30 px-3 py-2 overflow-visible" ref={columnSettingsRef}>
+      <div className="border-b border-teal-400/30 px-3 py-2 overflow-visible" ref={columnSettingsRef}>
         <div className="flex items-center">
         {/* 컬럼설정/기능키 */}
         {inputMode === '일괄수정' && <>
@@ -653,7 +657,7 @@ export default function VoucherInputPage() {
                       className="rounded border-slate-300 text-blue-600 w-3.5 h-3.5 cursor-pointer" />
                   )}
                   <span className={`text-xs flex-1 ${isFixed ? 'text-slate-400' : 'text-slate-700'}`}>
-                    {(key === 'evidence' || key === 'amountGroup' || key === 'accountGroup') && <span className="text-[9px] text-amber-500 mr-1">묶음</span>}
+                    {(key === 'evidence' || key === 'amountGroup' || key === 'accountGroup') && <span className="text-[9px] text-teal-500 mr-1">묶음</span>}
                     {label}
                   </span>
                   {canMove && (
@@ -694,7 +698,7 @@ export default function VoucherInputPage() {
             <button key={mode}
               onClick={() => { setInputMode(mode); if (mode === '간편등록') setFilterInputMethod('수기'); else setFilterInputMethod('전체') }}
               className={`px-5 py-1.5 text-[13px] font-bold whitespace-nowrap rounded-md border border-b-2 transition-colors ${
-                inputMode === mode ? 'bg-white text-amber-900 shadow-sm border-amber-700 border-b-amber-700' : 'text-slate-400 border-slate-200 border-b-slate-200 hover:bg-white/70 hover:text-amber-600'
+                inputMode === mode ? 'bg-white text-teal-900 shadow-sm border-teal-700 border-b-teal-700' : 'text-slate-400 border-slate-200 border-b-slate-200 hover:bg-white/70 hover:text-teal-600'
               }`}
             >{mode}</button>
           ))}
@@ -714,7 +718,7 @@ export default function VoucherInputPage() {
             </svg>
             인쇄
           </button>
-          {inputMode !== '건별등록' && inputMode !== '상세등록' && <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover">저장</button>}
+          {inputMode !== '건별등록' && inputMode !== '상세등록' && <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-teal-400 rounded bg-teal-500 hover:bg-teal-600 text-white sub-tab-hover">저장</button>}
           {inputMode !== '건별등록' && inputMode !== '상세등록' && <button onClick={deleteRows} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>}
         </div>
         )}
@@ -724,7 +728,7 @@ export default function VoucherInputPage() {
           <div className="border-t border-slate-200 mt-2 pt-2 flex items-center flex-wrap gap-y-1">
             {/* 전표 그룹 */}
             <div className="flex items-center gap-1">
-              <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-amber-700 bg-amber-100 rounded cursor-default">전표</span>
+              <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-teal-700 bg-teal-100 rounded cursor-default">전표</span>
               <button onClick={() => { setInputMode('간편등록'); setFilterInputMethod('수기') }} data-tip="간편등록 화면으로 이동" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">등록</button>
               <button data-tip="동일날짜에 선택된 전표를 1개 전표로 합산" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">합산</button>
               <button data-tip="동일금액의 전표를 동일한 금액으로 분리" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">일괄분리</button>
@@ -733,7 +737,7 @@ export default function VoucherInputPage() {
             <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
             {/* 적요 그룹 */}
             <div className="flex items-center gap-1">
-              <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-amber-700 bg-amber-100 rounded cursor-default">적요</span>
+              <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-teal-700 bg-teal-100 rounded cursor-default">적요</span>
               <button data-tip="선택된 전표의 적요를 삭제" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">삭제</button>
               <button data-tip="선택된 전표의 적요를 치환처리" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">치환</button>
               <button data-tip="세목지정된 전표적요에 세목내용추가" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">세목추가</button>
@@ -806,7 +810,7 @@ export default function VoucherInputPage() {
                 <button onClick={() => { const next = filtered[selectedIdx + 1]; if (next) { if (isDirty) saveDraft(); setChecked(new Set([next.id])) } }}
                   className="px-2 py-0.5 text-[11px] text-slate-500 hover:text-slate-700 border border-slate-200 rounded bg-white">▶</button>
                 <button onClick={() => saveDraft()}
-                  className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover ml-2">수정</button>
+                  className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-teal-400 rounded bg-teal-500 hover:bg-teal-600 text-white sub-tab-hover ml-2">수정</button>
                 <button onClick={() => { setRows(prev => prev.filter(r => r.id !== dr.id)); setDraftRow(null); setChecked(new Set()) }}
                   className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>
               </div>
@@ -1032,18 +1036,18 @@ export default function VoucherInputPage() {
       {/* 건별등록 - 선택 전표 상세 (draftRow 기반 편집 + 저장하기) */}
       {inputMode === '건별등록' && (() => {
         const dr = draftRow
-        if (!dr) return <div className="p-4 bg-[#fffbeb]/50 border border-[#f5b800]/30 rounded-xl text-center text-xs text-slate-400">전표 데이터가 없습니다</div>
+        if (!dr) return <div className="p-4 bg-teal-50/50 border border-teal-400/30 rounded-xl text-center text-xs text-slate-400">전표 데이터가 없습니다</div>
         const checkedId = checked.size > 0 ? Array.from(checked).pop() : null
         const selectedIdx = checkedId ? filtered.findIndex(r => r.id === checkedId) : editingCell ? filtered.findIndex(r => r.id === editingCell.rowId) : 0
         const autoCode = dr.subAccount ? (subAccountCodeMap[dr.subAccount] || accountCodeMap[dr.account] || '') : (accountCodeMap[dr.account] || '')
-        const inputCls = "w-full px-1 py-0.5 border-2 border-[#f5b800] rounded text-sm focus:ring-1 focus:ring-[#f5b800]/50 outline-none"
+        const inputCls = "w-full px-1 py-0.5 border border-teal-300 rounded text-sm focus:ring-1 focus:ring-teal-300 outline-none"
         const accts = dr.type === '수입' ? incomeAccounts : expenseAccounts
         // 원본과 비교해서 변경 여부 확인
         const origRow = rows.find(r => r.id === dr.id)
         const isDirty = origRow && (origRow.date !== dr.date || origRow.summary !== dr.summary || origRow.amount !== dr.amount || origRow.account !== dr.account || origRow.subAccount !== dr.subAccount || origRow.accountCode !== dr.accountCode || origRow.counterpart !== dr.counterpart || origRow.note !== dr.note)
         return (
-          <div className="bg-white border border-[#f5b800]/30 rounded-xl overflow-x-auto single-input-mode">
-            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#f5b800]/20">
+          <div className="bg-white border border-teal-400/30 rounded-xl overflow-x-auto single-input-mode">
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-teal-400/20">
               <h3 className="text-sm font-bold text-slate-700">건별등록</h3>
               <span className="text-xs text-slate-400 flex items-center gap-1"><input type="checkbox" checked readOnly className="rounded border-slate-300 w-4 h-4" />전표 1건씩 선택하여 수정</span>
               <div className="flex items-center gap-1 ml-auto">
@@ -1056,7 +1060,7 @@ export default function VoucherInputPage() {
             <div className="overflow-x-auto">
             <table className="text-sm w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
               <thead>
-                <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
+                <tr className="bg-teal-50 border-b border-teal-400/30">
                   {columnOrder.map(([key]) => {
                     if (!visibleColumns[key as keyof typeof visibleColumns]) return null
                     const thCls = "px-1.5 py-2 font-normal text-slate-700 text-center"
@@ -1093,7 +1097,7 @@ export default function VoucherInputPage() {
                       case 'type': return <td key={key} className="px-1 py-1 text-center">{(() => {
                         const m = dr.inputMethod || '수기'
                         const st: Record<string, string> = { '은행':'bg-white text-slate-700 border-slate-700', '수기':'bg-white text-blue-600 border-blue-500', '일괄':'bg-white text-orange-600 border-orange-500', '엑셀':'bg-white text-yellow-700 border-yellow-600', '분리':'bg-white text-purple-600 border-purple-500', '합산':'bg-white text-green-700 border-green-600' }
-                        return <span className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded border text-[11px] font-bold ${st[m] || 'bg-white text-slate-600 border-slate-400'}`}>{m}</span>
+                        return <span className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded border text-[11px] font-bold ${st[m] || 'bg-white text-slate-600 border-teal-300'}`}>{m}</span>
                       })()}</td>
                       case 'summary': return <td key={key} className="px-1 py-1" style={{display: 'flex', alignItems: 'center'}}>
                         <button onClick={e => { e.stopPropagation(); startVoice(dr.id) }}
@@ -1131,7 +1135,7 @@ export default function VoucherInputPage() {
                             } else {
                               setDraftRow(prev => prev ? { ...prev, type: prev.type === '수입' ? '지출' : '수입', amount: -Math.abs(prev.amount), account: '', subAccount: '', accountCode: '' } : prev)
                             }
-                          }} className={`px-1.5 py-1 text-xs font-medium border rounded ${dr.amount < 0 ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-600'}`}>{dr.amount < 0 ? '반납' : '전표'}</button>
+                          }} className={`px-1.5 py-1 text-xs font-medium border rounded ${dr.amount < 0 ? 'border-teal-400 bg-teal-50 text-teal-700' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-600'}`}>{dr.amount < 0 ? '반납' : '전표'}</button>
                         </td>
                       </React.Fragment>
                       case 'fee': return null
@@ -1142,7 +1146,7 @@ export default function VoucherInputPage() {
                         <td className="px-1 py-1 text-center">
                           <div className="flex items-center gap-1 justify-center">
                             <button onClick={() => saveDraft()}
-                              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover">수정</button>
+                              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-teal-400 rounded bg-teal-500 hover:bg-teal-600 text-white sub-tab-hover">수정</button>
                             <button onClick={() => { setRows(prev => prev.filter(r => r.id !== dr.id)); setDraftRow(null); setChecked(new Set()) }}
                               className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>
                           </div>
@@ -1161,7 +1165,7 @@ export default function VoucherInputPage() {
       })()}
 
       {/* 전표 테이블 (일괄수정/건별등록) */}
-      {(inputMode === '일괄수정' || inputMode === '건별등록' || inputMode === '상세등록') && <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm relative single-input-mode">
+      {(inputMode === '일괄수정' || inputMode === '건별등록' || inputMode === '상세등록') && <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm relative single-input-mode">
         <style>{`
           .single-input-mode tbody tr { border-bottom: 1px solid #f8f8f8 !important; }
           .single-input-mode tbody td, .single-input-mode thead th { white-space: nowrap; }
@@ -1199,7 +1203,7 @@ export default function VoucherInputPage() {
         <div className="max-h-[calc(100vh-380px)] overflow-y-auto overflow-x-auto">
           <table className="text-sm w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
             <thead className="sticky top-0 z-10">
-              <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
+              <tr className="bg-teal-50 border-b border-teal-400/30">
                 <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[34px]">
                   <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.size === filtered.length && filtered.length > 0} onChange={toggleAll} />
                 </th>
@@ -1260,13 +1264,13 @@ export default function VoucherInputPage() {
                   setEditingCell(isCell(field) ? null : { rowId: row.id, field })
                 }
                 const isRefund = row.amount < 0
-                const cellBorder = (inputMode === '건별등록' || inputMode === '상세등록') ? 'border border-[#f5b800]/30 rounded px-2 py-1.5' : ''
+                const cellBorder = (inputMode === '건별등록' || inputMode === '상세등록') ? 'border border-teal-400/30 rounded px-2 py-1.5' : ''
                 return (
                   <tr
                     key={row.id}
                     onClick={(inputMode === '건별등록' || inputMode === '상세등록') ? () => setChecked(new Set([row.id])) : undefined}
                     className={`transition-colors ${(inputMode === '건별등록' || inputMode === '상세등록') ? 'cursor-pointer' : ''} ${
-                      isRefund ? 'bg-red-50/50 border-b border-red-100' : editingCell?.rowId === row.id ? 'bg-[#fffbeb]' : checked.has(row.id) ? 'bg-[#fffbeb]/60' : `${idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'} hover:bg-[#fffbeb] border-b border-slate-50`
+                      isRefund ? 'bg-red-50/50 border-b border-red-100' : editingCell?.rowId === row.id ? 'bg-blue-50' : checked.has(row.id) ? 'bg-blue-50/50' : `${idx % 2 === 1 ? 'bg-slate-50/40' : 'bg-white'} hover:bg-blue-50/40 border-b border-slate-50`
                     }`}
                   >
                     <td className="text-center px-2 py-1">
@@ -1380,7 +1384,7 @@ export default function VoucherInputPage() {
                                       }
                                     }
                                   }}
-                                  className="w-full px-2 py-1.5 border-2 border-[#f5b800] rounded text-xs text-slate-700 focus:ring-1 focus:ring-[#f5b800]/50 outline-none resize-none bg-white" />
+                                  className="w-full px-2 py-1.5 border border-teal-300 rounded text-xs text-slate-700 focus:ring-1 focus:ring-teal-300 outline-none resize-none bg-white" />
                                 <div className="flex items-center justify-end mt-1 gap-2">
                                   <span className="text-[10px] text-slate-400">{row.summary.length}자</span>
                                   <button onClick={() => setEditingCell(null)} className="text-[10px] text-slate-400 hover:text-slate-700 font-medium">닫기</button>
@@ -1427,7 +1431,7 @@ export default function VoucherInputPage() {
                                   {row.evidence.map(ev => {
                                     const iconEvidence = ['세금계산서', '계산서', '현금영수증']
                                     if (iconEvidence.includes(ev)) {
-                                      const bgColor = ev === '세금계산서' ? 'bg-blue-200 border-blue-400' : ev === '계산서' ? 'bg-amber-200 border-amber-400' : 'bg-emerald-200 border-emerald-400'
+                                      const bgColor = ev === '세금계산서' ? 'bg-blue-200 border-blue-400' : ev === '계산서' ? 'bg-teal-200 border-teal-400' : 'bg-emerald-200 border-emerald-400'
                                       return (
                                         <span key={ev} className={`inline-flex items-center justify-center rounded border p-0.5 ${bgColor}`} title={ev}>
                                           <img src="/hometax-favicon.ico" alt="홈택스" className="w-4 h-4 object-contain" />
@@ -1513,7 +1517,7 @@ export default function VoucherInputPage() {
                                     onChange={e => updateRow(row.id, 'amount', Number(e.target.value.replace(/,/g, '')) || 0)}
                                     onBlur={() => setEditingCell(null)}
                                     onClick={e => e.stopPropagation()}
-                                    className="w-full px-1 py-0.5 border-2 border-[#f5b800] rounded text-xs text-right focus:ring-1 focus:ring-[#f5b800]/50 outline-none" />
+                                    className="w-full px-1 py-0.5 border border-teal-300 rounded text-xs text-right focus:ring-1 focus:ring-teal-300 outline-none" />
                                 ) : (
                                   <span className="font-medium text-blue-700">{fmt(row.amount)}</span>
                                 )
@@ -1526,7 +1530,7 @@ export default function VoucherInputPage() {
                                     onChange={e => updateRow(row.id, 'amount', Number(e.target.value.replace(/,/g, '')) || 0)}
                                     onBlur={() => setEditingCell(null)}
                                     onClick={e => e.stopPropagation()}
-                                    className="w-full px-1 py-0.5 border-2 border-[#f5b800] rounded text-xs text-right focus:ring-1 focus:ring-[#f5b800]/50 outline-none" />
+                                    className="w-full px-1 py-0.5 border border-teal-300 rounded text-xs text-right focus:ring-1 focus:ring-teal-300 outline-none" />
                                 ) : (
                                   <span className="font-medium text-red-600">{fmt(row.amount)}</span>
                                 )
@@ -1560,7 +1564,7 @@ export default function VoucherInputPage() {
                                   if (copiedRow.type === row.type) {
                                     if (row.account === copiedRow.account && row.subAccount === copiedRow.subAccount) return null
                                     return <button onClick={e => { e.stopPropagation(); setRows(prev => prev.map(r => r.id === row.id ? { ...r, account: copiedRow.account, subAccount: copiedRow.subAccount } : r)) }}
-                                      className="px-1.5 py-1 text-xs font-medium border border-amber-400 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors">붙임</button>
+                                      className="px-1.5 py-1 text-xs font-medium border border-teal-400 rounded bg-teal-50 hover:bg-teal-100 text-teal-700 transition-colors">붙임</button>
                                   }
                                   return null
                                 }
@@ -1670,7 +1674,7 @@ export default function VoucherInputPage() {
                                     }
                                     setEditingCell(null)
                                   }}
-                                  className={`w-full px-1 py-0.5 border-2 border-[#f5b800] rounded text-xs text-center focus:ring-1 focus:ring-[#f5b800]/50 outline-none placeholder:text-slate-300 ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`} />
+                                  className={`w-full px-1 py-0.5 border border-teal-300 rounded text-xs text-center focus:ring-1 focus:ring-teal-300 outline-none placeholder:text-slate-300 ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`} />
                               ) : (
                                 <span className={`text-xs cursor-pointer ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`}>
                                   {(() => {
@@ -1694,7 +1698,7 @@ export default function VoucherInputPage() {
                                   } else {
                                     setRows(prev => prev.map(r => r.id === row.id ? { ...r, type: r.type === '수입' ? '지출' : '수입', amount: -Math.abs(r.amount), account: '', subAccount: '', accountCode: '' } : r))
                                   }
-                                }} className={`px-1.5 py-1 text-xs font-medium border rounded ${isRefund ? 'border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-700' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-600'}`}>{isRefund ? '반납' : '전표'}</button>
+                                }} className={`px-1.5 py-1 text-xs font-medium border rounded ${isRefund ? 'border-teal-400 bg-teal-50 hover:bg-teal-100 text-teal-700' : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-600'}`}>{isRefund ? '반납' : '전표'}</button>
                                 <button onClick={e => {
                                   e.stopPropagation()
                                   setRows(prev => prev.map(r => r.id === row.id ? { ...r, account: '', subAccount: '', accountCode: '' } : r))
@@ -1712,7 +1716,7 @@ export default function VoucherInputPage() {
                               <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                                 <input type="text" value={row.counterpart} autoFocus
                                   onChange={e => updateRow(row.id, 'counterpart', e.target.value)}
-                                  className="flex-1 min-w-0 px-1 py-0.5 border-2 border-[#f5b800] rounded text-xs text-center focus:ring-1 focus:ring-[#f5b800]/50 outline-none" />
+                                  className="flex-1 min-w-0 px-1 py-0.5 border border-teal-300 rounded text-xs text-center focus:ring-1 focus:ring-teal-300 outline-none" />
                                 <button
                                   onClick={() => {/* 거래처 검색 팝업 */}}
                                   className="shrink-0 px-1.5 py-0.5 border border-slate-300 rounded bg-slate-50 hover:bg-slate-100 text-[10px] font-medium text-slate-600"
@@ -1730,7 +1734,7 @@ export default function VoucherInputPage() {
                                 onChange={e => { updateRow(row.id, 'note', e.target.value); setEditingCell(null) }}
                                 onBlur={() => setEditingCell(null)}
                                 onClick={e => e.stopPropagation()}
-                                className="w-full px-1 py-0.5 border-2 border-[#f5b800] rounded text-xs text-center focus:ring-1 focus:ring-[#f5b800]/50 outline-none">
+                                className="w-full px-1 py-0.5 border border-teal-300 rounded text-xs text-center focus:ring-1 focus:ring-teal-300 outline-none">
                                 <option value="">::선택::</option>
                                 {row.type === '수입' ? <>
                                   <option value="카드결제">카드결제</option>
@@ -1831,14 +1835,14 @@ export default function VoucherInputPage() {
               <span className="text-xs text-slate-600">합계 <strong className="text-blue-700">{fmt(totalIncome)}</strong></span>
               <span className="text-xs text-slate-600">전표 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입').length}</strong></span>
               <span className="text-xs text-slate-600">정상 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입' && r.amount >= 0).length}</strong></span>
-              <span className="text-xs text-slate-600">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</strong></span>
+              <span className="text-xs text-slate-600">반납 <strong className="text-teal-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</strong></span>
             </div>
             <div className="flex items-center gap-3 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
               <span className="text-xs font-bold text-red-600">지출</span>
               <span className="text-xs text-slate-600">합계 <strong className="text-red-600">{fmt(totalExpense)}</strong></span>
               <span className="text-xs text-slate-600">전표 <strong className="text-red-600">{filtered.filter(r => r.type === '지출').length}</strong></span>
               <span className="text-xs text-slate-600">정상 <strong className="text-red-600">{filtered.filter(r => r.type === '지출' && r.amount >= 0).length}</strong></span>
-              <span className="text-xs text-slate-600">반납 <strong className="text-amber-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</strong></span>
+              <span className="text-xs text-slate-600">반납 <strong className="text-teal-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</strong></span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
               <span className="text-xs font-bold text-emerald-700">잔액</span>
@@ -2036,16 +2040,16 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
 
   return (
     <div className="space-y-4">
-    <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm">
+    <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
       {/* 헤더 - sticky */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#f5b800]/20 sticky top-0 z-30 bg-white rounded-t-xl">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-teal-400/20 sticky top-0 z-30 bg-white rounded-t-xl">
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-bold text-slate-700">간편등록</h3>
           <span className="text-xs text-slate-400">날짜·적요·금액·계정과목만 빠르게 입력</span>
         </div>
         <div className="flex items-center gap-2">
           {savedCount > 0 && <span className="text-xs text-green-600 font-medium">{savedCount}건 저장됨</span>}
-          {unsavedCount > 0 && <span className="text-xs text-amber-600 font-medium">{unsavedCount}건 입력대기</span>}
+          {unsavedCount > 0 && <span className="text-xs text-teal-600 font-medium">{unsavedCount}건 입력대기</span>}
           <button onClick={saveAll} disabled={unsavedCount === 0}
             className={`px-4 py-1.5 text-xs font-bold rounded transition-colors ${
               unsavedCount > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'
@@ -2072,7 +2076,7 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
       <div>
         <table className="w-full text-sm">
           <thead className="sticky top-[49px] z-20">
-            <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30" style={{boxShadow: '0 2px 4px rgba(245,184,0,0.15)'}}>
+            <tr className="bg-teal-50 border-b border-teal-400/30" style={{boxShadow: '0 2px 4px rgba(245,184,0,0.15)'}}>
 
               <th className="px-3 py-2.5 text-center text-xs font-semibold text-slate-500 w-[50px]">No</th>
               <th className="px-3 py-2.5 text-center text-xs font-semibold text-slate-500 w-[80px]">일자</th>
@@ -2113,17 +2117,17 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
                         const v = e.target.value.replace(/[^0-9]/g, '')
                         if (v === '' || (Number(v) >= 1 && Number(v) <= lastDay)) updateRow(idx, 'day', v)
                       }}
-                      className="w-full px-2 py-1.5 border border-[#f5b800]/30 rounded text-center text-xs focus:outline-none focus:ring-1 focus:ring-[#f5b800]/50 focus:border-[#f5b800] disabled:bg-slate-50 disabled:text-slate-400"
+                      className="w-full px-2 py-1.5 border border-teal-400/30 rounded text-center text-xs focus:outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-400 disabled:bg-slate-50 disabled:text-slate-400"
                     />
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    <span className={`text-xs font-bold ${r.rowInputMethod === '엑셀' ? 'text-yellow-700' : 'text-amber-900'}`}>{r.rowInputMethod}</span>
+                    <span className={`text-xs font-bold ${r.rowInputMethod === '엑셀' ? 'text-yellow-700' : 'text-teal-900'}`}>{r.rowInputMethod}</span>
                   </td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-1">
                       <input type="text" value={r.summary} placeholder="적요 입력" disabled={r.saved}
                         onChange={e => updateRow(idx, 'summary', e.target.value)}
-                        className="flex-1 px-2 py-1.5 border border-[#f5b800]/30 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#f5b800]/50 focus:border-[#f5b800] disabled:bg-slate-50 disabled:text-slate-400"
+                        className="flex-1 px-2 py-1.5 border border-teal-400/30 rounded text-xs focus:outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-400 disabled:bg-slate-50 disabled:text-slate-400"
                       />
                       {!r.saved && (
                         <button onClick={() => startVoice(idx)}
@@ -2138,13 +2142,13 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
                   <td className="px-2 py-1.5">
                     <input type="text" value={r.incomeAmount} placeholder="" disabled={r.saved || !!r.expenseAmount}
                       onChange={e => { updateRow(idx, 'incomeAmount', formatAmount(e.target.value)); if (e.target.value) updateRow(idx, 'expenseAmount', '') }}
-                      className={`w-full px-2 py-1.5 border border-[#f5b800]/30 rounded text-xs text-right font-medium focus:outline-none focus:ring-1 focus:ring-[#f5b800]/50 focus:border-[#f5b800] disabled:bg-slate-50 disabled:text-slate-400 ${r.incomeAmount ? 'text-blue-700' : ''}`}
+                      className={`w-full px-2 py-1.5 border border-teal-400/30 rounded text-xs text-right font-medium focus:outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-400 disabled:bg-slate-50 disabled:text-slate-400 ${r.incomeAmount ? 'text-blue-700' : ''}`}
                     />
                   </td>
                   <td className="px-2 py-1.5">
                     <input type="text" value={r.expenseAmount} placeholder="" disabled={r.saved || !!r.incomeAmount}
                       onChange={e => { updateRow(idx, 'expenseAmount', formatAmount(e.target.value)); if (e.target.value) updateRow(idx, 'incomeAmount', '') }}
-                      className={`w-full px-2 py-1.5 border border-[#f5b800]/30 rounded text-xs text-right font-medium focus:outline-none focus:ring-1 focus:ring-[#f5b800]/50 focus:border-[#f5b800] disabled:bg-slate-50 disabled:text-slate-400 ${r.expenseAmount ? 'text-red-600' : ''}`}
+                      className={`w-full px-2 py-1.5 border border-teal-400/30 rounded text-xs text-right font-medium focus:outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-400 disabled:bg-slate-50 disabled:text-slate-400 ${r.expenseAmount ? 'text-red-600' : ''}`}
                     />
                   </td>
                   <td className="px-2 py-1.5 text-right">
@@ -2166,7 +2170,7 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
                         <button
                           disabled={r.saved}
                           onClick={() => setOpenAccountIdx(openAccountIdx === idx ? null : idx)}
-                          className={`w-full px-2 py-1.5 border border-[#f5b800]/30 rounded text-xs text-left flex items-center justify-between disabled:bg-slate-50 disabled:text-slate-400 ${amountType === '수입' ? 'text-blue-600' : 'text-red-600'}`}>
+                          className={`w-full px-2 py-1.5 border border-teal-400/30 rounded text-xs text-left flex items-center justify-between disabled:bg-slate-50 disabled:text-slate-400 ${amountType === '수입' ? 'text-blue-600' : 'text-red-600'}`}>
                           <span className="truncate">{r.account || (amountType === '수입' ? '수입계정 선택' : '지출계정 선택')}</span>
                           <svg className="w-3 h-3 flex-shrink-0 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                         </button>
@@ -2194,7 +2198,7 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
                     {subAccounts.length > 0 ? (
                       <select value={r.subAccount} disabled={r.saved}
                         onChange={e => { updateRow(idx, 'subAccount', e.target.value); updateRow(idx, 'accountCode', subAccountCodeMap[e.target.value] || subAccountCodeMap[e.target.value.replace('(지출)', '')] || accountCodeMap[r.account] || '') }}
-                        className="w-full px-1 py-1.5 border border-[#f5b800]/30 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#f5b800]/50 focus:border-[#f5b800] disabled:bg-slate-50 disabled:text-slate-400">
+                        className="w-full px-1 py-1.5 border border-teal-400/30 rounded text-xs focus:outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-400 disabled:bg-slate-50 disabled:text-slate-400">
                         <option value="">-</option>
                         {subAccounts.map(a => <option key={a.value} value={a.label}>{a.label}</option>)}
                       </select>
@@ -2216,13 +2220,13 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
                         }
                       }}
                       placeholder="-"
-                      className={`w-full px-1 py-1.5 border border-[#f5b800]/30 rounded text-xs text-center font-mono focus:outline-none focus:ring-1 focus:ring-[#f5b800]/50 focus:border-[#f5b800] disabled:bg-slate-50 disabled:text-slate-400 ${r.accountCode ? (r.incomeAmount ? 'text-blue-600' : 'text-red-600') : ''}`}
+                      className={`w-full px-1 py-1.5 border border-teal-400/30 rounded text-xs text-center font-mono focus:outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-400 disabled:bg-slate-50 disabled:text-slate-400 ${r.accountCode ? (r.incomeAmount ? 'text-blue-600' : 'text-red-600') : ''}`}
                     />
                   </td>
                   <td className="px-2 py-1.5">
                     <select value={r.payment} disabled={r.saved}
                       onChange={e => updateRow(idx, 'payment', e.target.value)}
-                      className="w-full px-1 py-1.5 border border-[#f5b800]/30 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#f5b800]/50 focus:border-[#f5b800] disabled:bg-slate-50 disabled:text-slate-400">
+                      className="w-full px-1 py-1.5 border border-teal-400/30 rounded text-xs focus:outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-400 disabled:bg-slate-50 disabled:text-slate-400">
                       <option value="">::선택::</option>
                       {amountType === '수입' ? <>
                         <option value="카드결제">카드결제</option>

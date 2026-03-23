@@ -19,7 +19,7 @@ const mockData: Row[] = [
   { id: 7, docNo: 'B000037', date: '2026-03-16', summary: '특성화건성회', income: 0, expense: 855000, code: '421-141', account: '기타 필요경비 지출 (기타시도특성화비)', counterpart: '특성화건성회' },
 ]
 
-const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-orange-50'
+const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-2 py-2 text-center border-b border-r border-slate-100 text-xs'
 
 export default function RequiredExpensePage() {
@@ -112,11 +112,11 @@ export default function RequiredExpensePage() {
           <span>미매칭</span>
         </label>
         <span className="text-xs font-bold text-slate-600">기간</span>
-        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
         <span className="text-xs text-slate-400">~</span>
-        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
         <input type="text" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="적요" className="border border-slate-300 rounded px-2 py-1.5 text-xs w-28 placeholder:text-slate-300 focus:outline-none focus:border-blue-400" />
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">검색</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">검색</button>
         <span className="text-xs font-bold text-slate-600">원아별 매칭</span>
         <div className="w-px h-5 bg-slate-200" />
         <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">매칭하기</button>

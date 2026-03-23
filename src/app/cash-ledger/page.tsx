@@ -6,6 +6,7 @@ interface AccountRow {
   date: string
   summary: string
   accountName: string
+  subAccountName?: string
   income: string
   expense: string
   balance: string
@@ -179,6 +180,7 @@ export default function CashLedgerPage() {
                   <th className="text-left px-4 py-2.5 font-semibold">일자</th>
                   <th className="text-left px-4 py-2.5 font-semibold">적요</th>
                   <th className="text-left px-4 py-2.5 font-semibold">계정과목</th>
+                  <th className="text-left px-4 py-2.5 font-semibold">세목</th>
                   <th className="text-left px-4 py-2.5 font-semibold">채주</th>
                   <th className="text-right px-4 py-2.5 font-semibold">수입</th>
                   <th className="text-right px-4 py-2.5 font-semibold">지출</th>
@@ -191,6 +193,7 @@ export default function CashLedgerPage() {
                     <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap text-xs">{row.date}</td>
                     <td className="px-4 py-2.5 text-slate-700 font-medium text-xs">{row.summary}</td>
                     <td className="px-4 py-2.5 text-slate-500 text-[11px]">{row.accountName}</td>
+                    <td className="px-4 py-2.5 text-slate-400 text-[11px]">{row.subAccountName || ''}</td>
                     <td className="px-4 py-2.5 text-slate-400 text-[11px]">{row.memo}</td>
                     <td className="px-4 py-2.5 text-right text-blue-600 font-medium text-xs">{row.income && row.income !== '0' ? row.income : '-'}</td>
                     <td className="px-4 py-2.5 text-right text-red-500 font-medium text-xs">{row.expense && row.expense !== '0' ? row.expense : '-'}</td>

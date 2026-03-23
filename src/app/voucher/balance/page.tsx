@@ -161,17 +161,17 @@ export default function BalancePage() {
   })()
 
   const renderBalanceTable = (data: { label: string; bankAmounts: Record<string, number>; bankTotal: number; accountBalance: number; diff: number; matched: boolean }[], keyField: string) => (
-    <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-x-auto">
+    <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
-            <th rowSpan={2} className="text-center px-4 py-2.5 font-normal text-slate-700 w-32 border-r border-[#f5b800]/20">{keyField === 'month' ? '입금일자' : '일자'}</th>
-            <th colSpan={banks.length + 1} className="text-center px-4 py-2 font-normal text-slate-700 border-r border-[#f5b800]/20">계좌잔액</th>
-            <th rowSpan={2} className="text-center px-4 py-2.5 font-normal text-slate-700 w-36 border-r border-[#f5b800]/20">
+          <tr className="bg-teal-50 border-b border-teal-400/30">
+            <th rowSpan={2} className="text-center px-4 py-2.5 font-normal text-slate-700 w-32 border-r border-teal-400/20">{keyField === 'month' ? '입금일자' : '일자'}</th>
+            <th colSpan={banks.length + 1} className="text-center px-4 py-2 font-normal text-slate-700 border-r border-teal-400/20">계좌잔액</th>
+            <th rowSpan={2} className="text-center px-4 py-2.5 font-normal text-slate-700 w-36 border-r border-teal-400/20">
               <div>회계잔액(B)</div>
               <div className="text-[9px] text-slate-400">(회계내역합계)</div>
             </th>
-            <th rowSpan={2} className="text-center px-4 py-2.5 font-normal text-slate-700 w-36 border-r border-[#f5b800]/20">
+            <th rowSpan={2} className="text-center px-4 py-2.5 font-normal text-slate-700 w-36 border-r border-teal-400/20">
               <div>비교차액(A)-(B)</div>
               <div className="text-[9px] text-slate-400">(거래내역차액)</div>
             </th>
@@ -187,13 +187,13 @@ export default function BalancePage() {
                 </div>
               </div>
             </th>
-            {keyField === 'daily' && <th rowSpan={2} className="text-center px-4 py-2.5 font-normal text-slate-700 w-28 border-l border-[#f5b800]/20">전표/통장 비교</th>}
+            {keyField === 'daily' && <th rowSpan={2} className="text-center px-4 py-2.5 font-normal text-slate-700 w-28 border-l border-teal-400/20">전표/통장 비교</th>}
           </tr>
-          <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
+          <tr className="bg-teal-50 border-b border-teal-400/30">
             {banks.map(bank => (
-              <th key={bank} className="text-center px-4 py-2 font-normal text-slate-600 w-32 border-r border-[#f5b800]/10">{bank}</th>
+              <th key={bank} className="text-center px-4 py-2 font-normal text-slate-600 w-32 border-r border-teal-400/10">{bank}</th>
             ))}
-            <th className="text-center px-4 py-2 font-normal text-slate-700 w-32 border-r border-[#f5b800]/20">
+            <th className="text-center px-4 py-2 font-normal text-slate-700 w-32 border-r border-teal-400/20">
               <div>{keyField === 'daily' ? '계좌합계잔액(A)' : '합계'}</div>
               <div className="text-[9px] text-slate-400 font-normal">(계좌거래내역합계)</div>
             </th>
@@ -201,24 +201,24 @@ export default function BalancePage() {
         </thead>
         <tbody>
           {data.map((row, idx) => (
-            <tr key={row.label} className={`border-b border-[#f5b800]/20 hover:bg-[#fffbeb] ${idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'}`}>
-              <td className="text-center px-4 py-3 font-medium text-slate-700 border-r border-[#f5b800]/10">{row.label}</td>
+            <tr key={row.label} className={`border-b border-teal-400/20 hover:bg-teal-50 ${idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'}`}>
+              <td className="text-center px-4 py-3 font-medium text-slate-700 border-r border-teal-400/10">{row.label}</td>
               {banks.map(bank => (
-                <td key={bank} className="text-right px-4 py-3 text-slate-600 border-r border-[#f5b800]/10">{fmt(row.bankAmounts[bank])} 원</td>
+                <td key={bank} className="text-right px-4 py-3 text-slate-600 border-r border-teal-400/10">{fmt(row.bankAmounts[bank])} 원</td>
               ))}
               {(() => {
                 const txDiff = Math.abs((row as DailyBalance).bankTxTotal - (row as DailyBalance).accountTxTotal)
                 const hasTxData = 'bankTxTotal' in row
                 return (<>
-                  <td className="text-right px-4 py-3 text-slate-700 font-medium border-r border-[#f5b800]/10">
+                  <td className="text-right px-4 py-3 text-slate-700 font-medium border-r border-teal-400/10">
                     <div>{fmt(row.bankTotal)} 원</div>
                     {hasTxData && <div className="text-[9px] text-slate-400 font-normal">({fmt((row as DailyBalance).bankTxTotal)} 원)</div>}
                   </td>
-                  <td className={`text-right px-4 py-3 font-medium border-r border-[#f5b800]/10 ${row.accountBalance < 0 ? 'text-red-600' : 'text-slate-700'}`}>
+                  <td className={`text-right px-4 py-3 font-medium border-r border-teal-400/10 ${row.accountBalance < 0 ? 'text-red-600' : 'text-slate-700'}`}>
                     <div>{fmt(row.accountBalance)} 원</div>
                     {hasTxData && <div className="text-[9px] text-slate-400 font-normal">({fmt((row as DailyBalance).accountTxTotal)} 원)</div>}
                   </td>
-                  <td className="text-right px-4 py-3 text-slate-700 font-medium border-r border-[#f5b800]/10">
+                  <td className="text-right px-4 py-3 text-slate-700 font-medium border-r border-teal-400/10">
                     <div>{fmt(row.diff)} 원</div>
                     {hasTxData && <div className={`text-[9px] font-normal ${txDiff !== 0 ? 'text-red-500 font-bold' : 'text-slate-400'}`}>({fmt(txDiff)} 원)</div>}
                   </td>
@@ -229,9 +229,9 @@ export default function BalancePage() {
                   <span className="text-red-500 font-bold text-xs">불일치</span>
                 ) : <span className="text-blue-500 text-xs font-bold">정상</span>}
               </td>
-              {keyField === 'daily' && <td className="text-center px-3 py-3 border-l border-[#f5b800]/20">
+              {keyField === 'daily' && <td className="text-center px-3 py-3 border-l border-teal-400/20">
                 {!row.matched && row.diff !== 0 ? (
-                  <button onClick={() => setCompareDay(row.label.replace('일', ''))} className="px-3 py-1 text-[11px] font-bold text-white bg-[#f5b800] border border-[#f5b800] rounded hover:bg-[#e5ab00] shadow-sm">보기</button>
+                  <button onClick={() => setCompareDay(row.label.replace('일', ''))} className="px-3 py-1 text-[11px] font-bold text-white bg-teal-500 border border-teal-400 rounded hover:bg-teal-600 shadow-sm">보기</button>
                 ) : null}
               </td>}
             </tr>
@@ -244,18 +244,18 @@ export default function BalancePage() {
             const totalAccount = data.reduce((s, r) => s + r.accountBalance, 0)
             const totalDiff = Math.abs(totalBankSum - totalAccount)
             return (
-              <tr className="bg-[#fffbeb] border-t-2 border-[#f5b800]/40 font-medium">
-                <td className="text-center px-4 py-3 text-slate-700 border-r border-[#f5b800]/10">합계</td>
+              <tr className="bg-teal-50 border-t-2 border-teal-400/40 font-medium">
+                <td className="text-center px-4 py-3 text-slate-700 border-r border-teal-400/10">합계</td>
                 {banks.map(bank => (
-                  <td key={bank} className="text-right px-4 py-3 text-slate-700 border-r border-[#f5b800]/10">{fmt(totalBank[bank])} 원</td>
+                  <td key={bank} className="text-right px-4 py-3 text-slate-700 border-r border-teal-400/10">{fmt(totalBank[bank])} 원</td>
                 ))}
-                <td className="text-right px-4 py-3 text-slate-800 font-bold border-r border-[#f5b800]/10">{fmt(totalBankSum)} 원</td>
-                <td className={`text-right px-4 py-3 font-bold border-r border-[#f5b800]/10 ${totalAccount < 0 ? 'text-red-600' : 'text-slate-800'}`}>{fmt(totalAccount)} 원</td>
-                <td className="text-right px-4 py-3 text-slate-800 font-bold border-r border-[#f5b800]/10">{fmt(totalDiff)} 원</td>
+                <td className="text-right px-4 py-3 text-slate-800 font-bold border-r border-teal-400/10">{fmt(totalBankSum)} 원</td>
+                <td className={`text-right px-4 py-3 font-bold border-r border-teal-400/10 ${totalAccount < 0 ? 'text-red-600' : 'text-slate-800'}`}>{fmt(totalAccount)} 원</td>
+                <td className="text-right px-4 py-3 text-slate-800 font-bold border-r border-teal-400/10">{fmt(totalDiff)} 원</td>
                 <td className="text-center px-4 py-3">
                   {totalDiff !== 0 && <span className="text-red-500 font-bold text-xs">불일치</span>}
                 </td>
-                {keyField === 'daily' && <td className="border-l border-[#f5b800]/20"></td>}
+                {keyField === 'daily' && <td className="border-l border-teal-400/20"></td>}
               </tr>
             )
           })()}
@@ -267,8 +267,8 @@ export default function BalancePage() {
   return (
     <div className="space-y-3">
       {/* 상단 헤더 */}
-      <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm">
-        <div className="px-4 py-3 flex items-center gap-3 border-b border-[#f5b800]/20 flex-wrap">
+      <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
+        <div className="px-4 py-3 flex items-center gap-3 border-b border-teal-400/20 flex-wrap">
           <div>
             <span className="text-sm font-bold text-slate-700">회계잔액 비교</span>
             <p className="text-[11px] text-slate-400">회계잔액과 계좌잔액을 월별 일자별로 비교합니다.</p>
@@ -293,7 +293,7 @@ export default function BalancePage() {
           <button onClick={() => setActiveSubTab('월별 통장잔고 비교')}
             className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
               activeSubTab === '월별 통장잔고 비교'
-                ? 'bg-[#fffbeb] text-[#f5b800] border-b-2 border-[#f5b800] font-bold'
+                ? 'bg-teal-50 text-[teal-400] border-b-2 border-teal-400 font-bold'
                 : 'text-slate-500 hover:text-slate-700'
             }`}>
             월별 통장잔고 비교
@@ -308,7 +308,7 @@ export default function BalancePage() {
           <button onClick={() => setActiveSubTab('일별 통장잔고 비교')}
             className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
               activeSubTab === '일별 통장잔고 비교'
-                ? 'bg-[#fffbeb] text-[#f5b800] border-b-2 border-[#f5b800] font-bold'
+                ? 'bg-teal-50 text-[teal-400] border-b-2 border-teal-400 font-bold'
                 : 'text-slate-500 hover:text-slate-700'
             }`}>
             일별 통장잔고 비교
@@ -345,11 +345,11 @@ export default function BalancePage() {
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setCompareDay(null)}>
             <div className="bg-white rounded-xl shadow-2xl w-[1100px] max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
-              <div className="px-6 py-3 border-b border-[#f5b800]/20 rounded-t-xl flex items-center justify-between">
+              <div className="px-6 py-3 border-b border-teal-400/20 rounded-t-xl flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-700">{dateStr} 현금출납부 및 통장거래 현황</h3>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setCompareFilter('전체')}
-                    className={`px-2 py-0.5 text-[10px] font-bold rounded ${compareFilter === '전체' ? 'bg-[#f5b800] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>전체</button>
+                    className={`px-2 py-0.5 text-[10px] font-bold rounded ${compareFilter === '전체' ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>전체</button>
                   <button onClick={() => setCompareFilter('일치')}
                     className={`px-2 py-0.5 text-[10px] font-bold rounded ${compareFilter === '일치' ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>일치</button>
                   <button onClick={() => setCompareFilter('불일치')}
@@ -363,7 +363,7 @@ export default function BalancePage() {
                       <th colSpan={5} className="text-center px-3 py-2 font-normal text-slate-700 border-r border-slate-300">현금출납부</th>
                       <th colSpan={5} className="text-center px-3 py-2 font-normal text-slate-700">통장거래</th>
                     </tr>
-                    <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
+                    <tr className="bg-teal-50 border-b border-teal-400/30">
                       <th className="text-center px-3 py-2 font-normal text-slate-700 w-24">일자</th>
                       <th className="text-left px-3 py-2 font-normal text-slate-700 w-36">적요</th>
                       <th className="text-right px-3 py-2 font-normal text-slate-700 w-28">수입액</th>
@@ -403,7 +403,7 @@ export default function BalancePage() {
                         return r.lMiss || r.bMiss
                       })
                       return filteredRows.map((r, idx) => (
-                        <tr key={r.i} className={`border-b border-[#f5b800]/20 ${idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'}`}>
+                        <tr key={r.i} className={`border-b border-teal-400/20 ${idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'}`}>
                           <td className={`text-center px-3 py-2.5 text-slate-600 ${r.lMiss ? 'bg-red-100' : ''}`}>{r.l?.date.slice(5) || ''}</td>
                           <td className={`text-left px-3 py-2.5 text-slate-600 ${r.lMiss ? 'bg-red-100 font-bold' : ''}`}>{r.l?.summary || ''}{r.lMiss && <span className="ml-1 text-[9px] text-red-500 font-bold">불일치</span>}</td>
                           <td className={`text-right px-3 py-2.5 text-blue-600 font-medium ${r.lMiss ? 'bg-red-100' : ''}`}>{r.l?.income ? fmt(r.l.income) : ''}</td>
@@ -434,7 +434,7 @@ export default function BalancePage() {
                 </table>
               </div>
               <div className="px-6 py-3 border-t border-slate-100 flex justify-end">
-                <button onClick={() => setCompareDay(null)} className="px-5 py-1.5 text-xs font-bold text-white bg-[#f5b800] rounded-lg hover:bg-[#e5ab00]">닫기</button>
+                <button onClick={() => setCompareDay(null)} className="px-5 py-1.5 text-xs font-bold text-white bg-teal-500 rounded-lg hover:bg-teal-600">닫기</button>
               </div>
             </div>
           </div>

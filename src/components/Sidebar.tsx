@@ -34,7 +34,7 @@ const categories: MenuCategory[] = [
           { label: '과목전용', href: '/budget/transfer' },
           { label: '예산보고서', href: '/budget/report' },
           { label: '예산대비집행현황', href: '/budget/execution' },
-          { label: '보육통합예산보고', href: '/budget/cis-accounting-report' },
+          { label: 'CIS예산보고', href: '/budget/cis-accounting-report' },
         ],
       },
       {
@@ -98,9 +98,7 @@ const categories: MenuCategory[] = [
         label: '교직원현황',
         children: [
           { label: '교직원정보', href: '/staff/info' },
-          { label: 'CIS호출', href: '/staff/cis' },
           { label: '출근부', href: '/staff/attendance' },
-          { label: '휴지통', href: '/staff/trash' },
           { label: '증명서', href: '/staff/certificate' },
           { label: '공문서', href: '/staff/document' },
         ],

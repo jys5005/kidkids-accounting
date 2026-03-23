@@ -513,9 +513,9 @@ export default function BudgetCreatePage() {
           <option>본예산</option>
           {amendments.map((a, i) => <option key={i} value={a.name}>{a.name} ({a.date})</option>)}
         </select>
-        <button onClick={() => { setAmendDate(''); setShowAmendPopup(true) }} className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded hover:bg-amber-100 transition-colors">추경하기</button>
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
-        <select value={budgetStatus} onChange={e => setBudgetStatus(e.target.value)} className={`border rounded px-2 py-1.5 text-xs font-bold ${budgetStatus === '작성완료' ? 'border-red-300 text-red-600 bg-red-50' : budgetStatus === '작성중' ? 'border-amber-300 text-amber-600 bg-amber-50' : 'border-slate-300 text-slate-600'}`}>
+        <button onClick={() => { setAmendDate(''); setShowAmendPopup(true) }} className="px-3 py-1.5 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 rounded hover:bg-teal-100 transition-colors">추경하기</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+        <select value={budgetStatus} onChange={e => setBudgetStatus(e.target.value)} className={`border rounded px-2 py-1.5 text-xs font-bold ${budgetStatus === '작성완료' ? 'border-red-300 text-red-600 bg-red-50' : budgetStatus === '작성중' ? 'border-teal-300 text-teal-600 bg-teal-50' : 'border-slate-300 text-slate-600'}`}>
           <option>신청</option>
           <option>작성중</option>
           <option>작성완료</option>
@@ -556,11 +556,13 @@ export default function BudgetCreatePage() {
               <span>천원</span>
             </label>
           </div>
-          <button className="w-7 h-7 flex items-center justify-center bg-white hover:bg-slate-50 border border-slate-300 rounded transition-colors" title="인쇄하기">
-            <svg className="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2z" /></svg>
+          <button className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 rounded text-xs text-slate-600 transition-colors" title="인쇄하기">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2z" /></svg>
+            인쇄
           </button>
-          <button className="w-7 h-7 flex items-center justify-center bg-white hover:bg-green-50 border border-green-400 rounded transition-colors" title="엑셀다운로드">
-            <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          <button className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-green-50 border border-green-400 rounded text-xs text-green-600 transition-colors" title="엑셀다운로드">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            엑셀
           </button>
         </div>
       </div>
@@ -576,10 +578,11 @@ export default function BudgetCreatePage() {
             <span className="text-xs text-slate-500">명</span>
           </div>
           <div className="w-px h-4 bg-slate-200" />
+          <span className="text-xs font-bold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">{budgetType}</span>
           <span className="text-xs text-slate-500">세입금액: <span className="font-bold text-blue-700">{fmt(totalIncome)}</span>원</span>
           <span className="text-xs text-slate-500">세출금액: <span className="font-bold text-red-600">{fmt(totalExpense)}</span>원</span>
           <span className="text-xs text-slate-500">차이액: <span className="font-bold text-emerald-700">{fmt(totalIncome - totalExpense)}</span>원</span>
-          {tab === 'income' && (
+          {tab === 'income' && budgetType === '본예산' && (
             <div className="flex items-center gap-1">
               <span className="text-xs text-slate-500">2026년2월말 잔액:</span>
               <span className="text-xs font-bold text-slate-800">{fmt(117139911)}원</span>
@@ -589,7 +592,7 @@ export default function BudgetCreatePage() {
             <button className="px-2.5 py-1 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">전달사항</button>
             <button className="px-2.5 py-1 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">이전예산호출</button>
             <button className="px-2.5 py-1 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors">엑셀업로드</button>
-            <button className="px-2.5 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded transition-colors">일괄변경</button>
+            <button className="px-2.5 py-1 text-[10px] font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded transition-colors">일괄변경</button>
             <div className="relative group">
               <svg className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
               <div className="absolute right-0 top-full mt-2 z-[9999] hidden group-hover:block pointer-events-none">
@@ -613,11 +616,23 @@ export default function BudgetCreatePage() {
         </div>
 
         {/* 헤더 */}
-        <div className="flex border-b border-slate-300 bg-orange-50 text-[11px] font-bold text-slate-600 sticky top-0 z-10">
+        <div className="flex border-b border-slate-300 bg-teal-50 text-[11px] font-bold text-slate-600 sticky top-0 z-10">
           <div className="w-[80px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">관</div>
           <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">항</div>
           <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">목</div>
-          <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">전년도결산액</div>
+          <div className="w-[160px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">
+            {budgetType !== '본예산' && (() => {
+              const amend = amendments.find(a => a.name === budgetType)
+              if (amend) {
+                const d = new Date(amend.date)
+                const y = String(d.getFullYear()).slice(2)
+                const m = String(d.getMonth() + 1).padStart(2, '0')
+                return <>{y}-{m}월까지 결산액<br /><span className="text-[10px] text-slate-400">(예산대비차액)</span></>
+              }
+              return '전년도결산액'
+            })()}
+            {budgetType === '본예산' && '전년도결산액'}
+          </div>
           <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center">예산액</div>
           <div className="flex-1 px-2 py-2 text-center">세부항목(항목/내용/합계)</div>
         </div>
@@ -660,13 +675,19 @@ export default function BudgetCreatePage() {
                     <span className={`text-[11px] font-bold ${isSub ? 'text-slate-400' : 'text-slate-700'}`}>{row.code.replace('E', '')}</span>
                     <span className={`text-[10px] ${isSub ? 'text-slate-400' : 'text-slate-600'}`}>{row.name}</span>
                   </div>
-                  {/* 전년도결산액 */}
-                  <div className="w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex items-center justify-end">
-                    <span className="text-[11px] text-slate-500">{row.prevAmount > 0 ? fmt(row.prevAmount) : ''}</span>
+                  {/* 전년도결산액 / 결산액 + 예산대비차액 */}
+                  <div className="w-[160px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex flex-col items-end justify-center">
+                    <span className="text-[11px] text-slate-500">{budgetType !== '본예산' ? (row.amount > 0 ? fmt(Math.round(row.amount * 0.25)) : '') : (row.prevAmount > 0 ? fmt(row.prevAmount) : '')}</span>
+                    {budgetType !== '본예산' && (() => {
+                      const settlement = Math.round(row.amount * 0.25)
+                      const diff = mokTotal - settlement
+                      if (mokTotal === 0 && settlement === 0) return null
+                      return <span className={`text-[10px] ${diff >= 0 ? 'text-blue-500' : 'text-red-500'}`}>({diff >= 0 ? '+' : ''}{fmt(diff)})</span>
+                    })()}
                   </div>
                   {/* 예산액 */}
                   <div className="w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex items-center justify-end">
-                    <input type="text" value={fmt(mokTotal)} readOnly className="w-full px-1 py-0.5 border border-amber-300 rounded text-[11px] text-right bg-amber-50 font-bold" />
+                    <span className="text-[11px] font-bold text-slate-800">{mokTotal > 0 ? fmt(mokTotal) : ''}</span>
                   </div>
                   {/* 세부항목 */}
                   <div className="flex-1 divide-y divide-slate-50 border-t border-slate-200">
@@ -676,11 +697,11 @@ export default function BudgetCreatePage() {
                       const rowKey = `${row.code}-${i}-${item.name}-${item.total}`
                       return (
                         <div key={rowKey} className={`flex items-center gap-1.5 px-2 py-1.5 transition-colors ${locked ? 'bg-slate-50/50' : 'hover:bg-slate-50'}`}>
-                          {!locked && !isEmpty && <button onClick={() => removeBasisRow(row.code, i)} className="text-[10px] font-bold text-amber-600 bg-amber-100 hover:bg-amber-200 px-1 py-0.5 rounded flex-shrink-0 transition-colors">삭제</button>}
+                          {!locked && !isEmpty && <button onClick={() => removeBasisRow(row.code, i)} className="text-[10px] font-bold text-teal-600 bg-teal-100 hover:bg-teal-200 px-1 py-0.5 rounded flex-shrink-0 transition-colors">삭제</button>}
                           {!locked && isEmpty && <span className="w-[30px] flex-shrink-0" />}
                           <input type="checkbox" className="w-3 h-3 rounded border-slate-300 flex-shrink-0" />
-                          <input type="text" value={item.name} onChange={e => updateBasisName(row.code, i, e.target.value)} disabled={locked} placeholder="항목명" className={`w-32 px-1.5 py-1 border rounded text-[11px] placeholder:text-slate-300 focus:outline-none flex-shrink-0 ${locked ? 'border-slate-100 bg-slate-50 text-slate-500' : 'border-slate-200 bg-white text-slate-700 focus:border-blue-400'}`} />
-                          <input type="text" value={item.formula || ''} onChange={e => setBasisState(prev => { const its = [...(prev[row.code] || [])]; its[i] = { ...its[i], formula: e.target.value }; return { ...prev, [row.code]: its } })} onBlur={e => updateBasisFormula(row.code, i, e.target.value)} disabled={locked} placeholder="단가*수량*개월" className={`w-44 px-1.5 py-1 border rounded text-[11px] text-right placeholder:text-slate-300 focus:outline-none flex-shrink-0 ${locked ? 'border-slate-100 bg-slate-50 text-slate-500' : 'border-amber-300 bg-amber-50 focus:border-blue-400'}`} />
+                          <input type="text" value={item.name} onChange={e => updateBasisName(row.code, i, e.target.value)} disabled={locked} placeholder="항목명" className={`w-40 px-1.5 py-1 border rounded text-[11px] placeholder:text-slate-300 focus:outline-none flex-shrink-0 ${locked ? 'border-slate-100 bg-slate-50 text-slate-500' : 'border-slate-200 bg-white text-slate-700 focus:border-blue-400'}`} />
+                          <input type="text" value={item.formula || ''} onChange={e => setBasisState(prev => { const its = [...(prev[row.code] || [])]; its[i] = { ...its[i], formula: e.target.value }; return { ...prev, [row.code]: its } })} onBlur={e => updateBasisFormula(row.code, i, e.target.value)} disabled={locked} placeholder="단가*수량*개월" className={`w-52 px-1.5 py-1 border rounded text-[11px] text-right placeholder:text-slate-300 focus:outline-none flex-shrink-0 ${locked ? 'border-slate-100 bg-slate-50 text-slate-500' : 'border-teal-300 bg-teal-50 focus:border-blue-400'}`} />
                           <span className="text-[11px] text-slate-400">=</span>
                           <span className="text-[11px] font-bold text-slate-800 min-w-[70px] text-right">{item.total > 0 ? fmt(item.total) : ''}</span>
                           <span className="text-[10px] text-slate-400">원</span>
@@ -718,7 +739,7 @@ export default function BudgetCreatePage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-slate-600 w-24">추경일자</span>
-                <input type="date" value={amendDate} onChange={e => setAmendDate(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+                <input type="date" value={amendDate} onChange={e => setAmendDate(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
               </div>
               <p className="text-[11px] text-slate-400">* <span className="font-bold">{amendBase}</span> 기준으로 {amendments.length + 1}차 추경예산이 생성됩니다.</p>
             </div>
@@ -807,9 +828,9 @@ function BasisPanel({ data, onClose }: { data: BasisData; onClose: () => void })
   }
 
   return (
-    <div className="bg-amber-50/30 border-t-2 border-b-2 border-amber-200">
+    <div className="bg-teal-50/30 border-t-2 border-b-2 border-teal-200">
       {/* 헤더 */}
-      <div className="px-4 py-2.5 bg-white/80 flex items-center justify-between border-b border-amber-100">
+      <div className="px-4 py-2.5 bg-white/80 flex items-center justify-between border-b border-teal-100">
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold text-slate-700">세부항목(항목/내용/합계)</span>
           <span className="text-[11px] text-slate-500">항목 {rows.length}개</span>
@@ -825,11 +846,11 @@ function BasisPanel({ data, onClose }: { data: BasisData; onClose: () => void })
       </div>
 
       {/* 산출 리스트 */}
-      <div className="divide-y divide-amber-100">
+      <div className="divide-y divide-teal-100">
         {rows.map((item, i) => (
-          <div key={i} className={`flex items-center gap-2 px-4 py-2 ${checked.has(i) ? 'bg-amber-100/50' : 'bg-white/60 hover:bg-white'} transition-colors`}>
+          <div key={i} className={`flex items-center gap-2 px-4 py-2 ${checked.has(i) ? 'bg-teal-100/50' : 'bg-white/60 hover:bg-white'} transition-colors`}>
             <input type="checkbox" className="w-3.5 h-3.5 rounded border-slate-300 flex-shrink-0" checked={checked.has(i)} onChange={() => toggleCheck(i)} />
-            <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded flex-shrink-0">산출</span>
+            <span className="text-[10px] font-bold text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded flex-shrink-0">산출</span>
             <input
               type="text"
               value={item.name}
@@ -840,21 +861,21 @@ function BasisPanel({ data, onClose }: { data: BasisData; onClose: () => void })
               type="text"
               value={fmt(item.unitPrice)}
               onChange={(e) => updateRow(i, 'unitPrice', e.target.value)}
-              className="w-24 px-2 py-1.5 border border-amber-300 rounded text-xs text-right bg-amber-50 focus:outline-none focus:border-blue-400 flex-shrink-0"
+              className="w-24 px-2 py-1.5 border border-teal-300 rounded text-xs text-right bg-teal-50 focus:outline-none focus:border-blue-400 flex-shrink-0"
             />
             <span className="text-xs text-slate-400">원*</span>
             <input
               type="text"
               value={String(item.qty)}
               onChange={(e) => updateRow(i, 'qty', e.target.value)}
-              className="w-10 px-1 py-1.5 border border-amber-300 rounded text-xs text-center bg-amber-50 focus:outline-none focus:border-blue-400 flex-shrink-0"
+              className="w-10 px-1 py-1.5 border border-teal-300 rounded text-xs text-center bg-teal-50 focus:outline-none focus:border-blue-400 flex-shrink-0"
             />
             <span className="text-xs text-slate-400">명*</span>
             <input
               type="text"
               value={String(item.months)}
               onChange={(e) => updateRow(i, 'months', e.target.value)}
-              className="w-10 px-1 py-1.5 border border-amber-300 rounded text-xs text-center bg-amber-50 focus:outline-none focus:border-blue-400 flex-shrink-0"
+              className="w-10 px-1 py-1.5 border border-teal-300 rounded text-xs text-center bg-teal-50 focus:outline-none focus:border-blue-400 flex-shrink-0"
             />
             <span className="text-xs text-slate-400">개월</span>
             <span className="text-xs text-slate-500 font-bold">=</span>

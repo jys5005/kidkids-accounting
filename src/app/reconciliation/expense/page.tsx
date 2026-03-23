@@ -38,7 +38,7 @@ const mockExpense: Record<string, number[]> = {
   '그밖의지원금': [300000, 450000, 380000, 420000, 350000, 400000, 380000, 410000, 390000, 370000, 360000, 400000],
 }
 
-const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-orange-50'
+const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-2 py-1.5 text-center border-b border-r border-slate-100 text-[11px]'
 
 export default function ExpensePage() {
@@ -136,7 +136,7 @@ export default function ExpensePage() {
             </select>
           </>
         )}
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">검색</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">검색</button>
         <label className="flex items-center gap-0.5 text-xs text-slate-600 cursor-pointer">
           <input type="checkbox" checked={includeOther} onChange={e => setIncludeOther(e.target.checked)} className="w-3 h-3 accent-blue-600 rounded" />
           <span className="font-bold">그밖의지원금 포함</span>

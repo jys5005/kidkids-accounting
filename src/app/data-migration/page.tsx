@@ -697,11 +697,11 @@ export default function DataMigrationPage() {
                 </div>
               </div>
             ) : currentSource.authType === 'cert' ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-xs text-amber-700 font-medium">인증서가 등록되지 않았습니다.</p>
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                <p className="text-xs text-teal-700 font-medium">인증서가 등록되지 않았습니다.</p>
                 <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
                   target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-2 text-xs text-amber-700 font-medium underline">
+                  className="inline-flex items-center gap-1 mt-2 text-xs text-teal-700 font-medium underline">
                   통합e 인증설정에서 등록하기
                 </a>
               </div>
@@ -884,7 +884,7 @@ export default function DataMigrationPage() {
                   finally { setLoading(false) }
                 }}
                 disabled={loading}
-                className="w-full py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 disabled:opacity-50"
+                className="w-full py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 disabled:opacity-50"
               >
                 저장된 데이터 불러오기
               </button>
@@ -966,12 +966,12 @@ export default function DataMigrationPage() {
               <div>
                 <button
                   onClick={() => setShowMappings(!showMappings)}
-                  className="w-full flex items-center justify-between px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 hover:bg-amber-100"
+                  className="w-full flex items-center justify-between px-3 py-2 bg-teal-50 border border-teal-200 rounded-lg text-sm text-teal-800 hover:bg-teal-100"
                 >
                   <span className="font-medium">
                     계정코드 매핑 설정 ({uniqueAccounts.length}개)
                     {Object.keys(customMappings).length > 0 && (
-                      <span className="ml-1 text-xs text-amber-600">
+                      <span className="ml-1 text-xs text-teal-600">
                         (커스텀 {Object.keys(customMappings).length}건)
                       </span>
                     )}
@@ -981,10 +981,10 @@ export default function DataMigrationPage() {
                   </svg>
                 </button>
                 {showMappings && (
-                  <div className="mt-2 border border-amber-200 rounded-lg overflow-hidden">
+                  <div className="mt-2 border border-teal-200 rounded-lg overflow-hidden">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-amber-50 text-amber-700">
+                        <tr className="bg-teal-50 text-teal-700">
                           <th className="px-2 py-1.5 text-left">출발지 코드</th>
                           <th className="px-2 py-1.5 text-left">계정과목</th>
                           <th className="px-2 py-1.5 text-center">건수</th>
@@ -993,7 +993,7 @@ export default function DataMigrationPage() {
                       </thead>
                       <tbody>
                         {uniqueAccounts.map((acc) => (
-                          <tr key={acc.code} className="border-t border-amber-100">
+                          <tr key={acc.code} className="border-t border-teal-100">
                             <td className="px-2 py-1.5 font-mono text-slate-700">{acc.code}</td>
                             <td className="px-2 py-1.5 text-slate-600">{acc.name}</td>
                             <td className="px-2 py-1.5 text-center text-slate-500">{acc.count}</td>
@@ -1013,7 +1013,7 @@ export default function DataMigrationPage() {
                                     return next
                                   })
                                 }}
-                                className="w-20 px-1.5 py-0.5 border border-slate-200 rounded text-xs font-mono text-center focus:border-amber-400 focus:outline-none"
+                                className="w-20 px-1.5 py-0.5 border border-slate-200 rounded text-xs font-mono text-center focus:border-teal-400 focus:outline-none"
                                 placeholder="자동"
                               />
                             </td>
@@ -1137,13 +1137,13 @@ export default function DataMigrationPage() {
 
       {/* 매핑 실패 계정코드 */}
       {unmappedCodes.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <p className="text-sm font-semibold text-amber-800 mb-2">
+        <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+          <p className="text-sm font-semibold text-teal-800 mb-2">
             매핑 안 된 계정코드 ({unmappedCodes.length}건)
           </p>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-amber-700 border-b border-amber-200">
+              <tr className="text-xs text-teal-700 border-b border-teal-200">
                 <th className="py-1 text-left">월</th>
                 <th className="py-1 text-left">코드</th>
                 <th className="py-1 text-left">계정과목</th>
@@ -1152,7 +1152,7 @@ export default function DataMigrationPage() {
             </thead>
             <tbody>
               {unmappedCodes.map((c, i) => (
-                <tr key={i} className="border-b border-amber-100 text-amber-900">
+                <tr key={i} className="border-b border-teal-100 text-teal-900">
                   <td className="py-1">{c.yearMonth || '-'}</td>
                   <td className="py-1 font-mono">{c.code}</td>
                   <td className="py-1">{c.name}</td>
@@ -1232,7 +1232,7 @@ export default function DataMigrationPage() {
                             <span className={`font-medium px-1.5 py-0.5 rounded ${
                               row.accountCode.length >= 4
                                 ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-teal-50 text-teal-700 border border-teal-200'
                             }`}>{row.accountCode}</span>
                           ) : (
                             <input
@@ -1329,7 +1329,7 @@ export default function DataMigrationPage() {
                             <tr key={`${m.sunote}-${i}`} className={`border-t hover:bg-slate-50 ${isGroup ? 'border-slate-200 bg-blue-50/50' : 'border-slate-100'}`}>
                               <td className={`px-2 py-1.5 font-mono ${isSub ? 'text-slate-400 pl-4 text-[11px]' : 'text-slate-700 font-medium'}`}>{m.by24}</td>
                               <td className={`px-2 py-1.5 ${isSub ? 'text-slate-500 pl-4' : 'text-slate-600 font-medium'}`}>{m.by24Name}</td>
-                              <td className={`px-2 py-1.5 font-mono font-medium ${isSub ? 'text-orange-600' : is4to4 ? 'text-blue-600' : 'text-amber-600'}`}>{m.sunote}</td>
+                              <td className={`px-2 py-1.5 font-mono font-medium ${isSub ? 'text-orange-600' : is4to4 ? 'text-blue-600' : 'text-teal-600'}`}>{m.sunote}</td>
                               <td className="px-2 py-1.5 text-slate-400">{m.sunoteNote}</td>
                             </tr>
                             )
@@ -1359,7 +1359,7 @@ export default function DataMigrationPage() {
                             <tr key={`${m.sunote}-${i}`} className={`border-t hover:bg-slate-50 ${isGroup ? 'border-slate-200 bg-red-50/50' : 'border-slate-100'}`}>
                               <td className={`px-2 py-1.5 font-mono ${isSub ? 'text-slate-400 pl-4 text-[11px]' : 'text-slate-700 font-medium'}`}>{m.by24}</td>
                               <td className={`px-2 py-1.5 ${isSub ? 'text-slate-500 pl-4' : 'text-slate-600 font-medium'}`}>{m.by24Name}</td>
-                              <td className={`px-2 py-1.5 font-mono font-medium ${isSub ? 'text-orange-600' : is4to4 ? 'text-blue-600' : 'text-amber-600'}`}>{m.sunote}</td>
+                              <td className={`px-2 py-1.5 font-mono font-medium ${isSub ? 'text-orange-600' : is4to4 ? 'text-blue-600' : 'text-teal-600'}`}>{m.sunote}</td>
                               <td className="px-2 py-1.5 text-slate-400">{m.sunoteNote}</td>
                             </tr>
                             )

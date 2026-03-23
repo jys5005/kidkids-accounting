@@ -98,8 +98,8 @@ export default function DeletedVoucherPage() {
   return (
     <div className="space-y-3">
       {/* 필터 */}
-      <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm">
-        <div className="px-4 py-3 border-b border-[#f5b800]/20 flex items-center gap-2">
+      <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
+        <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2">
           <span className="text-sm font-bold text-slate-700">삭제 전표 목록</span>
           <span className="text-xs text-slate-400">삭제된 전표를 조회하고 복구할 수 있습니다</span>
         </div>
@@ -155,13 +155,13 @@ export default function DeletedVoucherPage() {
             <span className={labelCls}>적요</span>
             <input type="text" value={searchSummary} onChange={e => setSearchSummary(e.target.value)} placeholder="" className={`${inputCls} w-52`} />
           </div>
-          <button className="px-5 py-1.5 bg-[#f5b800] text-white text-xs font-bold rounded-lg hover:bg-[#e5ab00] ml-auto">조회</button>
+          <button className="px-5 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 ml-auto">조회</button>
         </div>
       </div>
 
       {/* 테이블 */}
-      <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm">
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#f5b800]/20">
+      <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-teal-400/20">
           <span className="text-xs text-slate-400">{filtered.length}건</span>
           <button
             disabled={checked.size === 0}
@@ -173,7 +173,7 @@ export default function DeletedVoucherPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
+              <tr className="bg-teal-50 border-b border-teal-400/30">
                 <th className="text-center px-3 py-2 w-10">
                   <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.size === filtered.length && filtered.length > 0} onChange={toggleAll} />
                 </th>
@@ -192,7 +192,7 @@ export default function DeletedVoucherPage() {
               {filtered.length === 0 ? (
                 <tr><td colSpan={10} className="text-center py-12 text-slate-400">삭제된 전표가 없습니다</td></tr>
               ) : filtered.map((row, idx) => (
-                <tr key={row.id} className={`transition-colors hover:bg-[#fffbeb] ${checked.has(row.id) ? 'bg-[#fffbeb]/60' : idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'} border-b border-slate-50`}>
+                <tr key={row.id} className={`transition-colors hover:bg-teal-50 ${checked.has(row.id) ? 'bg-teal-50/60' : idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'} border-b border-slate-50`}>
                   <td className="text-center px-3 py-2">
                     <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.has(row.id)} onChange={() => toggleCheck(row.id)} />
                   </td>

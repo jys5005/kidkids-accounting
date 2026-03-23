@@ -18,7 +18,7 @@ const mockGeneral: LedgerRow[] = [
   { id: 5, date: '2026-03-03', docNo: 'A000003', account: '계정미지정', summary: '김현승', income: 180000, expense: 0, counterpart: '김현승', note: '' },
 ]
 
-const TH = 'px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-slate-200 text-[11px] bg-orange-50'
+const TH = 'px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-2 py-2 text-center border-b border-slate-100 text-xs'
 
 export default function SettlementReconciliationPage() {
@@ -67,9 +67,9 @@ export default function SettlementReconciliationPage() {
           {yearOpts.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
         <span className="text-xs font-bold text-slate-600">발행기간</span>
-        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
         <span className="text-xs text-slate-400">~</span>
-        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
         <span className="text-xs font-bold text-slate-600">계정과목</span>
         <select value={filterAccount} onChange={e => setFilterAccount(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs min-w-[120px]">
           {allAccounts.map(a => <option key={a} value={a}>{a === '전체' ? '::전체::' : a}</option>)}
@@ -82,7 +82,7 @@ export default function SettlementReconciliationPage() {
           <option>이체</option>
         </select>
         <input type="text" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="적요" className="border border-slate-300 rounded px-2 py-1.5 text-xs w-36 focus:outline-none focus:border-blue-400 placeholder:text-slate-300" />
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
       </div>
 
       {/* 요약 */}

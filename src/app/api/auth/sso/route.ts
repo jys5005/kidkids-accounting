@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const TONGHAP_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'
+const TONGHAP_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'
 
 /** GET: SSO 콜백 — 통합e에서 토큰으로 이동 시 세션 쿠키 설정 */
 export async function GET(request: NextRequest) {

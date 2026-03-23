@@ -74,7 +74,7 @@ function StoreDepositTab() {
           <select value={storeYm} onChange={e => setStoreYm(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
             {ymOpts.map(ym => <option key={ym} value={ym}>{ym}</option>)}
           </select>
-          <button className="px-3 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">검색</button>
+          <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">검색</button>
 
           <div className="w-px h-5 bg-slate-200 mx-1" />
 
@@ -113,7 +113,7 @@ function StoreDepositTab() {
           </label>
           <button
             onClick={() => setSaved(!saved)}
-            className="px-3 py-1.5 text-xs font-bold rounded transition-colors bg-orange-500 hover:bg-orange-600 text-white"
+            className="px-3 py-1.5 text-xs font-bold rounded transition-colors bg-teal-500 hover:bg-orange-600 text-white"
           >전표저장</button>
           <div className="relative group">
             <svg className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
@@ -143,7 +143,7 @@ function StoreDepositTab() {
       <div className="overflow-x-auto border border-slate-200 rounded-lg">
         <table className="w-full text-xs border-collapse">
           <thead>
-            <tr className="bg-orange-50 border-b border-orange-200">
+            <tr className="bg-teal-50 border-b border-orange-200">
               <th className={`${TH} w-8`}>
                 <input type="checkbox" checked={allChecked} onChange={() => { if (allChecked) setStoreChecked(new Set()); else setStoreChecked(new Set(data.map((_,i) => i))) }} className="rounded" />
               </th>
@@ -167,7 +167,7 @@ function StoreDepositTab() {
               <th className={`${TH} min-w-[130px] border-r-0`}>
                 <div className="flex items-center justify-center gap-1.5">
                   <span>계좌매칭</span>
-                  <button className="px-3 py-1.5 text-[11px] font-bold text-white bg-orange-500 hover:bg-orange-600 rounded transition-colors">매칭저장</button>
+                  <button className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">매칭저장</button>
                 </div>
               </th>
             </tr>
@@ -239,7 +239,7 @@ export default function ReceiptPage() {
   return (
     <div className="p-6 space-y-5">
       {/* 상단 탭 메뉴 */}
-      <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm">
+      <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="flex border-b border-slate-200">
           {tabs.map(tab => (
             <button
@@ -253,7 +253,7 @@ export default function ReceiptPage() {
             >
               {tab.label}
               {activeTab === tab.key && (
-                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#f5b800] rounded-t-full" />
+                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-teal-500 rounded-t-full" />
               )}
             </button>
           ))}
@@ -275,9 +275,9 @@ export default function ReceiptPage() {
                     <option>2026-01</option>
                   </select>
                 </div>
-                <button className="px-3 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+                <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
                 <div className="ml-auto">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
+                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
                 </div>
               </div>
 
@@ -285,7 +285,7 @@ export default function ReceiptPage() {
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-orange-50 border-b border-orange-200">
+                    <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-2 py-2.5 text-center w-8"><input type="checkbox" className="rounded" /></th>
                       <th className="px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">등록여부</th>
                       <th className="px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">사용일</th>
@@ -334,7 +334,7 @@ export default function ReceiptPage() {
                     <option>003 . 기업은행 07010312345678</option>
                     <option>011 . 농협 30112005678901</option>
                   </select>
-                  <button className="px-3 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+                  <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-slate-600 whitespace-nowrap">조회연월</span>
@@ -349,19 +349,19 @@ export default function ReceiptPage() {
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회</button>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
+                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
                   <div className="relative group">
                     <button className="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 text-xs flex items-center justify-center transition-colors">?</button>
                     <div className="absolute right-0 top-full mt-2 w-[420px] bg-white text-slate-600 border border-slate-200 text-[12px] leading-[1.8] rounded-xl px-5 py-4 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-30" style={{ fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif" }}>
                       <div className="absolute -top-1.5 right-3 w-3 h-3 bg-white border-l border-t border-slate-200 rotate-45"></div>
                       <div className="space-y-1.5">
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span><span className="text-orange-600 font-semibold">&quot;이체 자동매칭하기&quot;</span> 클릭 시 <span className="text-orange-600 font-semibold">장부에 등록된 전표와 날짜, 금액을 비교하여 자동매칭</span>합니다.</span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span><span className="text-orange-600 font-semibold">&quot;매칭하기&quot;</span> 선택 시 이체내역과 장부를 매칭합니다. <span className="text-emerald-600 font-semibold">장부에 신규전표가 등록되지 않습니다.</span></span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span>등록 시 이체내역 건별로 등록됩니다.</span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span>등록 후 재 등록하려면 회계입력에서 삭제 후 재입력해야합니다.</span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span>분리된 전표가 하나라도 남아있을경우 등록 상태로 확인됩니다.</span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span>전표 분리 등 각종 작업 전에 미리 등록하신 후 이용하세요.</span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span><span className="text-emerald-600 font-semibold">&quot;전표&quot;버튼 클릭 시 등록된 전표를 확인 하실 수 있습니다.</span></span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span><span className="text-orange-600 font-semibold">&quot;이체 자동매칭하기&quot;</span> 클릭 시 <span className="text-orange-600 font-semibold">장부에 등록된 전표와 날짜, 금액을 비교하여 자동매칭</span>합니다.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span><span className="text-orange-600 font-semibold">&quot;매칭하기&quot;</span> 선택 시 이체내역과 장부를 매칭합니다. <span className="text-emerald-600 font-semibold">장부에 신규전표가 등록되지 않습니다.</span></span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span>등록 시 이체내역 건별로 등록됩니다.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span>등록 후 재 등록하려면 회계입력에서 삭제 후 재입력해야합니다.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span>분리된 전표가 하나라도 남아있을경우 등록 상태로 확인됩니다.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span>전표 분리 등 각종 작업 전에 미리 등록하신 후 이용하세요.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span><span className="text-emerald-600 font-semibold">&quot;전표&quot;버튼 클릭 시 등록된 전표를 확인 하실 수 있습니다.</span></span></p>
                       </div>
                     </div>
                   </div>
@@ -373,7 +373,7 @@ export default function ReceiptPage() {
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-orange-50 border-b border-orange-200">
+                    <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-2 py-2.5 text-center w-8"><input type="checkbox" className="rounded" /></th>
                       <th className="px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">등록여부</th>
                       <th className="px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">거래일자</th>
@@ -427,24 +427,24 @@ export default function ReceiptPage() {
                   <input type="checkbox" className="rounded" />
                   계산서 삭제시 체크
                 </label>
-                <button className="px-3 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+                <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
                 <div className="flex items-center gap-2">
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회 gnb</button>
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회</button>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
+                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
                   <div className="relative group">
                     <button className="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 text-xs flex items-center justify-center transition-colors">?</button>
                     <div className="absolute right-0 top-full mt-2 w-[420px] bg-white text-slate-600 border border-slate-200 text-[12px] leading-[1.8] rounded-xl px-5 py-4 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-30" style={{ fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif" }}>
                       <div className="absolute -top-1.5 right-3 w-3 h-3 bg-white border-l border-t border-slate-200 rotate-45"></div>
                       <div className="space-y-1.5">
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span><span className="text-orange-600 font-semibold">&quot;매칭하기&quot;</span> 선택 시 세금계산서 내역과 장부를 매칭합니다. <span className="text-emerald-600 font-semibold">장부에 신규전표가 등록되지 않습니다.</span></span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span>등록 시 계산서별로 등록됩니다.</span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span>등록 후 재 등록하려면 회계입력에서 삭제 후 재입력해야합니다.</span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span>분리된 전표가 하나라도 남아있을경우 등록 상태로 확인됩니다.</span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span>전표 분리 등 각종 작업 전에 미리 등록하신 후 이용하세요.</span></p>
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span><span className="text-emerald-600 font-semibold">&quot;전표&quot;버튼 클릭 시 등록된 전표를 확인 하실 수 있습니다.</span></span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span><span className="text-orange-600 font-semibold">&quot;매칭하기&quot;</span> 선택 시 세금계산서 내역과 장부를 매칭합니다. <span className="text-emerald-600 font-semibold">장부에 신규전표가 등록되지 않습니다.</span></span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span>등록 시 계산서별로 등록됩니다.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span>등록 후 재 등록하려면 회계입력에서 삭제 후 재입력해야합니다.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span>분리된 전표가 하나라도 남아있을경우 등록 상태로 확인됩니다.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span>전표 분리 등 각종 작업 전에 미리 등록하신 후 이용하세요.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span><span className="text-emerald-600 font-semibold">&quot;전표&quot;버튼 클릭 시 등록된 전표를 확인 하실 수 있습니다.</span></span></p>
                       </div>
                     </div>
                   </div>
@@ -456,7 +456,7 @@ export default function ReceiptPage() {
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-orange-50 border-b border-orange-200">
+                    <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-2 py-2.5 text-center w-8"><input type="checkbox" className="rounded" /></th>
                       <th className="px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">등록여부</th>
                       <th className="px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">구분</th>
@@ -496,19 +496,19 @@ export default function ReceiptPage() {
                     <option>2026-01</option>
                   </select>
                 </div>
-                <button className="px-3 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+                <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
                 <div className="flex items-center gap-2">
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회 gnb</button>
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회</button>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
+                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
                   <div className="relative group">
                     <button className="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 text-xs flex items-center justify-center transition-colors">?</button>
                     <div className="absolute right-0 top-full mt-2 w-[420px] bg-white text-slate-600 border border-slate-200 text-[12px] leading-[1.8] rounded-xl px-5 py-4 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-30" style={{ fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif" }}>
                       <div className="absolute -top-1.5 right-3 w-3 h-3 bg-white border-l border-t border-slate-200 rotate-45"></div>
                       <div className="space-y-1.5">
-                        <p className="flex gap-1.5"><span className="text-amber-500">•</span><span>수집완료된 현금영수증 내역입니다.</span></p>
+                        <p className="flex gap-1.5"><span className="text-teal-500">•</span><span>수집완료된 현금영수증 내역입니다.</span></p>
                       </div>
                     </div>
                   </div>
@@ -520,7 +520,7 @@ export default function ReceiptPage() {
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-orange-50 border-b border-orange-200">
+                    <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-2 py-2.5 text-center w-8"><input type="checkbox" className="rounded" /></th>
                       <th className="px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">매입일시</th>
                       <th className="px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">매입시간</th>
@@ -567,14 +567,14 @@ export default function ReceiptPage() {
                       <option>2026-02</option>
                       <option>2026-01</option>
                     </select>
-                    <button className="px-3 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+                    <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
                   </div>
                 </div>
                 {/* 쇼핑몰 계정 테이블 */}
                 <div className="overflow-x-auto border border-slate-200 rounded-lg">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-orange-50 border-b border-orange-200">
+                      <tr className="bg-teal-50 border-b border-orange-200">
                         <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">구분</th>
                         <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">아이디</th>
                         <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">비밀번호</th>
@@ -590,7 +590,7 @@ export default function ReceiptPage() {
                         <td className="px-3 py-2.5 text-center text-slate-700">min7709166</td>
                         <td className="px-3 py-2.5 text-center text-slate-700">min7128</td>
                         <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">영수증수집하기</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded transition-colors">수집자료보기</button></td>
+                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">수집자료보기</button></td>
                         <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">구매품목삭제</button></td>
                         <td className="px-3 py-2.5 text-center"><button className="px-2 py-1 text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded transition-colors">관리</button></td>
                       </tr>
@@ -599,7 +599,7 @@ export default function ReceiptPage() {
                         <td className="px-3 py-2.5 text-center text-slate-700">sofsteel22</td>
                         <td className="px-3 py-2.5 text-center text-slate-700">jin38461</td>
                         <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">영수증수집하기</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded transition-colors">수집자료보기</button></td>
+                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">수집자료보기</button></td>
                         <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">구매품목삭제</button></td>
                         <td className="px-3 py-2.5 text-center"><button className="px-2 py-1 text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded transition-colors">관리</button></td>
                       </tr>
@@ -611,7 +611,7 @@ export default function ReceiptPage() {
                           <button className="px-3 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">아이디등록</button>
                           <button className="px-3 py-1 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">영수증수집하기</button>
                         </td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded transition-colors">수집자료보기</button></td>
+                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">수집자료보기</button></td>
                         <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">구매품목삭제</button></td>
                         <td className="px-3 py-2.5 text-center"><button className="px-2 py-1 text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded transition-colors">관리</button></td>
                       </tr>
@@ -623,12 +623,12 @@ export default function ReceiptPage() {
               {/* 쇼핑몰 거래목록 섹션 */}
               <div>
                 <div className="flex items-center justify-end mb-3">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded transition-colors">쇼핑몰 영수증 자동매칭하기</button>
+                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">쇼핑몰 영수증 자동매칭하기</button>
                 </div>
                 <div className="overflow-x-auto border border-slate-200 rounded-lg">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-orange-50 border-b border-orange-200">
+                      <tr className="bg-teal-50 border-b border-orange-200">
                         <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">쇼핑몰</th>
                         <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">거래일자</th>
                         <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">실결제합계</th>
@@ -664,14 +664,14 @@ export default function ReceiptPage() {
                   </select>
                   <span className="text-xs text-slate-500">년 EDI 자료</span>
                 </div>
-                <button className="px-3 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+                <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
               </div>
 
               {/* 4대보험 고지서 매칭 테이블 */}
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-orange-50 border-b border-orange-200">
+                    <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap w-32"></th>
                       <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">건강보험EDI</th>
                       <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">국민연금EDI</th>

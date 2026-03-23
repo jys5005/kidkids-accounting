@@ -102,7 +102,7 @@ export default function PrintModal({ title, columns, data, onClose, summary }: P
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-2xl w-[900px] max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
         {/* 헤더 */}
-        <div className="px-6 py-3 border-b border-[#f5b800]/20 flex items-center justify-between">
+        <div className="px-6 py-3 border-b border-teal-400/20 flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-700">{title}</h3>
           <div className="flex items-center gap-2">
             <button onClick={handlePrint} className="px-3 py-1.5 text-[11px] font-bold border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600 flex items-center gap-1">
@@ -138,7 +138,7 @@ export default function PrintModal({ title, columns, data, onClose, summary }: P
               <thead>
                 <tr>
                   {columns.map(col => (
-                    <th key={col.key} className={`border border-slate-300 px-3 py-2 bg-[#fffbeb] font-normal text-slate-700 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
+                    <th key={col.key} className={`border border-slate-300 px-3 py-2 bg-teal-50 font-normal text-slate-700 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
                       style={col.width ? { width: col.width } : undefined}>
                       {col.label}
                     </th>
@@ -163,7 +163,7 @@ export default function PrintModal({ title, columns, data, onClose, summary }: P
         {/* 하단 */}
         <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between">
           <span className="text-xs text-slate-400">{data.length}건</span>
-          <button onClick={onClose} className="px-5 py-1.5 text-xs font-bold text-white bg-[#f5b800] rounded-lg hover:bg-[#e5ab00]">닫기</button>
+          <button onClick={onClose} className="px-5 py-1.5 text-xs font-bold text-white bg-teal-500 rounded-lg hover:bg-teal-600">닫기</button>
         </div>
       </div>
     </div>

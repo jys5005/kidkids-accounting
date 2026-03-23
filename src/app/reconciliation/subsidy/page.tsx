@@ -17,7 +17,7 @@ const mockData: SubsidyRow[] = [
   { date: '2026-03-18', name: '연장보육료', amount: 1141000, org: '연장보육료', basis: '연장보육료' },
 ]
 
-const TH = 'px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-slate-200 text-[11px] bg-orange-50'
+const TH = 'px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-3 py-2.5 text-center border-b border-slate-100 text-xs'
 
 export default function SubsidyPage() {
@@ -43,9 +43,9 @@ export default function SubsidyPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-slate-600">발행기간 :</span>
-          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
           <span className="text-xs text-slate-400">~</span>
-          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-amber-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
         </div>
         <button className="px-4 py-1.5 text-xs font-bold text-white bg-slate-700 hover:bg-slate-800 rounded transition-colors">검색</button>
       </div>

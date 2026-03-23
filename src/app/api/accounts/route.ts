@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { loginAndGetPage, scrapeAccounts, scrapeMenuStructure, closePage } from '@/lib/kidkids'
+import { resolveAccount } from '@/lib/accounts'
 
 export const maxDuration = 120
 
@@ -41,11 +42,21 @@ export async function POST(request: NextRequest) {
     console.log('[kidkids] 거래내역:', result.rows.length, '건')
     await closePage(page)
 
+    // 계정과목 치환: 외부 계정명 → 목/세목 분리
+    const resolvedRows = result.rows.map(row => {
+      const resolved = resolveAccount(row.accountName)
+      return {
+        ...row,
+        accountName: resolved.account,
+        subAccountName: resolved.subAccount,
+      }
+    })
+
     return NextResponse.json({
       success: true,
-      data: result.rows,
+      data: resolvedRows,
       summary: result.summary,
-      count: result.rows.length,
+      count: resolvedRows.length,
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)

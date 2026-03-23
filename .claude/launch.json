@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kidkids-accounting",
+      "runtimeExecutable": "npm.cmd",
+      "runtimeArgs": ["run", "dev"],
+      "port": 4000,
+      "cwd": "../kidkids-accounting",
+      "autoPort": false
+    }
+  ]
+}

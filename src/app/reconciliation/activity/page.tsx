@@ -19,7 +19,7 @@ const mockExpenseBase = [2070000, 6834000, 5012000, 6520000, 7198000, 5118000, 5
 const mockOtherIncome = [300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000]
 const mockOtherExpense = [200000, 250000, 220000, 230000, 210000, 240000, 220000, 230000, 210000, 240000, 220000, 230000]
 
-const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-orange-50'
+const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-2 py-2 text-center border-b border-r border-slate-100 text-xs'
 
 export default function ActivityPage() {
@@ -102,7 +102,7 @@ export default function ActivityPage() {
             </select>
           </>
         )}
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">검색</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">검색</button>
         <label className="flex items-center gap-0.5 text-xs text-slate-600 cursor-pointer">
           <input type="checkbox" checked={includeOther} onChange={e => setIncludeOther(e.target.checked)} className="w-3 h-3 accent-blue-600 rounded" />
           <span className="font-bold">그밖의지원금 포함</span>

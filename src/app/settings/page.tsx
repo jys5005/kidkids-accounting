@@ -67,7 +67,7 @@ export default function SettingsPage() {
             <h2 className="font-semibold text-slate-800">보육통합정보시스템 (CIS)</h2>
           </div>
           <a
-            href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
+            href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-blue-600 hover:text-blue-700 font-medium"
@@ -97,7 +97,7 @@ export default function SettingsPage() {
             <span className="text-xs text-slate-400">({programCount}개 등록)</span>
           </div>
           <a
-            href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:4000'}/dashboard/settings/cis-auth`}
+            href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-blue-600 hover:text-blue-700 font-medium"
@@ -129,9 +129,9 @@ export default function SettingsPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <p className="text-xs text-amber-700 font-medium">등록된 회계프로그램이 없습니다.</p>
-            <p className="text-xs text-amber-600 mt-1">통합e 인증설정 &gt; 회계프로그램 관리에서 등록하세요.</p>
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+            <p className="text-xs text-teal-700 font-medium">등록된 회계프로그램이 없습니다.</p>
+            <p className="text-xs text-teal-600 mt-1">통합e 인증설정 &gt; 회계프로그램 관리에서 등록하세요.</p>
           </div>
         )}
       </div>

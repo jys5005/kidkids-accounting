@@ -48,6 +48,32 @@ const sampleData: Transaction[] = [
   { id: 28, date: '2026-03-17', docNo: 'A000028', account: '원장급여', subAccount: '', summary: '3월 원장 급여', income: 0, expense: 3500000, counterpart: '원장', note: '자동이체' },
   { id: 29, date: '2026-03-18', docNo: 'A000029', account: '연료비', subAccount: '', summary: '난방유 구입', income: 0, expense: 450000, counterpart: '에너지업체', note: '계좌이체' },
   { id: 30, date: '2026-03-19', docNo: 'A000030', account: '비지정후원금', subAccount: '', summary: '후원금 입금', income: 100000, expense: 0, counterpart: '후원자', note: '' },
+  // 4월 허수 전표
+  { id: 101, date: '2026-04-01', docNo: 'B000001', account: '정부지원 보육료', subAccount: '', summary: '4월 정부지원 보육료 입금', income: 15524000, expense: 0, counterpart: '사회보장정보원', note: '' },
+  { id: 102, date: '2026-04-01', docNo: 'B000002', account: '인건비 보조금', subAccount: '', summary: '4월 인건비 보조금 입금', income: 8594960, expense: 0, counterpart: '구청', note: '' },
+  { id: 103, date: '2026-04-01', docNo: 'B000003', account: '기관보육료', subAccount: '', summary: '4월 기관보육료 입금', income: 3200000, expense: 0, counterpart: '사회보장정보원', note: '' },
+  { id: 104, date: '2026-04-01', docNo: 'B000004', account: '연장보육료', subAccount: '', summary: '4월 연장보육료', income: 1450000, expense: 0, counterpart: '사회보장정보원', note: '' },
+  { id: 105, date: '2026-04-02', docNo: 'B000005', account: '부모부담 보육료', subAccount: '', summary: '4월 부모부담 보육료(1차)', income: 2340000, expense: 0, counterpart: '학부모', note: '' },
+  { id: 106, date: '2026-04-02', docNo: 'B000006', account: '특별활동비', subAccount: '', summary: '특별활동비 국이안 10', income: 10, expense: 0, counterpart: '', note: '' },
+  { id: 107, date: '2026-04-03', docNo: 'B000007', account: '기타 필요경비', subAccount: '현장학습비', summary: '현장학습비 국이안 10', income: 10, expense: 0, counterpart: '', note: '' },
+  { id: 108, date: '2026-04-03', docNo: 'B000008', account: '기타 필요경비', subAccount: '부모부담행사비', summary: '행사비 국이안 10', income: 10, expense: 0, counterpart: '', note: '' },
+  { id: 109, date: '2026-04-03', docNo: 'B000009', account: '기타 필요경비', subAccount: '차량운행비', summary: '4월 차량운행비 수납', income: 780000, expense: 0, counterpart: '학부모', note: '' },
+  { id: 110, date: '2026-04-05', docNo: 'B000010', account: '보육교직원급여', subAccount: '', summary: '4월 교직원 기본급 지급', income: 0, expense: 4404593, counterpart: '교직원', note: '자동이체' },
+  { id: 111, date: '2026-04-05', docNo: 'B000011', account: '보육교직원급여', subAccount: '', summary: '4월 교직원 기본급(2)', income: 0, expense: 3850000, counterpart: '교직원', note: '자동이체' },
+  { id: 112, date: '2026-04-05', docNo: 'B000012', account: '보육교직원수당', subAccount: '', summary: '4월 직책수당 지급', income: 0, expense: 850000, counterpart: '교직원', note: '계좌이체' },
+  { id: 113, date: '2026-04-05', docNo: 'B000013', account: '법정부담금', subAccount: '', summary: '4월 국민연금 사업주부담금', income: 0, expense: 396450, counterpart: '국민연금공단', note: '현금결제' },
+  { id: 114, date: '2026-04-05', docNo: 'B000014', account: '법정부담금', subAccount: '', summary: '4월 건강보험 사업주부담금', income: 0, expense: 310270, counterpart: '건강보험공단', note: '지로' },
+  { id: 115, date: '2026-04-05', docNo: 'B000015', account: '퇴직금 및 퇴직적립금', subAccount: '퇴직적립금', summary: '4월 퇴직적립금', income: 0, expense: 650000, counterpart: '퇴직연금', note: '자동이체' },
+  { id: 116, date: '2026-04-06', docNo: 'B000016', account: '급식·간식재료비', subAccount: '', summary: '4월 급간식 식재료 구입', income: 0, expense: 1920000, counterpart: '쿠팡', note: '카드결제' },
+  { id: 117, date: '2026-04-07', docNo: 'B000017', account: '공공요금 및 제세공과금', subAccount: '', summary: '3월 전기요금 납부', income: 0, expense: 512000, counterpart: '한국전력', note: '자동이체' },
+  { id: 118, date: '2026-04-07', docNo: 'B000018', account: '공공요금 및 제세공과금', subAccount: '', summary: '3월 수도요금 납부', income: 0, expense: 163000, counterpart: '수도사업소', note: '자동이체' },
+  { id: 119, date: '2026-04-08', docNo: 'B000019', account: '이자수입', subAccount: '', summary: '보통예금 이자', income: 9150, expense: 0, counterpart: '국민은행', note: '' },
+  { id: 120, date: '2026-04-10', docNo: 'B000020', account: '원장급여', subAccount: '', summary: '4월 원장 급여', income: 0, expense: 3500000, counterpart: '원장', note: '자동이체' },
+  { id: 121, date: '2026-04-11', docNo: 'B000021', account: '교재·교구 구입비', subAccount: '', summary: '교재 구입', income: 0, expense: 310000, counterpart: '교보문고', note: '카드결제' },
+  { id: 122, date: '2026-04-12', docNo: 'B000022', account: '영유아복리비', subAccount: '', summary: '영유아 간식 지원', income: 0, expense: 195000, counterpart: '마트', note: '카드결제' },
+  { id: 123, date: '2026-04-13', docNo: 'B000023', account: '수용비 및 수수료', subAccount: '', summary: '사무용품 구입', income: 0, expense: 98000, counterpart: '네이버', note: '카드결제' },
+  { id: 124, date: '2026-04-14', docNo: 'B000024', account: '그 밖의 지원금', subAccount: '', summary: '특별지원금 입금', income: 500000, expense: 0, counterpart: '구청', note: '' },
+  { id: 125, date: '2026-04-15', docNo: 'B000025', account: '연료비', subAccount: '', summary: '난방유 구입', income: 0, expense: 380000, counterpart: '에너지업체', note: '계좌이체' },
 ]
 
 const fmt = (n: number) => n ? n.toLocaleString('ko-KR') : ''
@@ -132,13 +158,13 @@ export default function TransactionsPage() {
   return (
     <div className="space-y-1">
       {/* 라디오 뷰 선택 */}
-      <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm">
+      <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 flex items-center gap-1.5 flex-wrap">
           {views.map(v => (
             <button key={v} onClick={() => setActiveView(v)}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
                 activeView === v
-                  ? 'bg-[#f5b800] text-white border-[#f5b800]'
+                  ? 'bg-teal-500 text-white border-teal-400'
                   : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
               }`}>
               {v}
@@ -147,70 +173,70 @@ export default function TransactionsPage() {
         </div>
 
         {/* 출납년월 + 필터 */}
-        <div className="px-4 py-3 border-t border-[#f5b800]/20 flex items-center gap-3 flex-wrap">
+        <div className="px-4 py-3 border-t border-teal-400/20 flex items-center gap-3 flex-wrap">
           {(activeView === '합계잔액시산표' || activeView === '월별비교') ? (
             <div className="flex items-center gap-3">
               <span className={labelCls}>출납년월</span>
               <select value={filterYearMonth} onChange={e => setFilterYearMonth(e.target.value)}
-                className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700">
+                className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700">
                 {yearMonthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-[#f5b800] rounded-lg hover:bg-[#e5ab00]">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700">조회</button>
             </div>
           ) : (activeView === '계정과목별총괄표' || activeView === '월별수입지출합계') ? (
             <div className="flex items-center gap-3">
               <span className={labelCls}>출납년도</span>
               <label className="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" checked={showRange} onChange={e => setShowRange(e.target.checked)} className="rounded border-slate-300 w-3.5 h-3.5 accent-[#f5b800]" />
+                <input type="checkbox" checked={showRange} onChange={e => setShowRange(e.target.checked)} className="rounded border-slate-300 w-3.5 h-3.5 accent-[teal-400]" />
                 <span className="text-xs text-slate-600 font-medium">구간별</span>
               </label>
               <select value={filterYearMonth.split('-')[0]} onChange={e => setFilterYearMonth(`${e.target.value}-03`)}
-                className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700">
+                className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700">
                 {Array.from({ length: 5 }, (_, i) => 2024 + i).map(y => <option key={y} value={y}>{y}</option>)}
               </select>
               {showRange && <>
                 <div className="w-px h-5 bg-slate-300"></div>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-                  className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 w-36" />
+                  className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700 w-36" />
                 <span className="text-slate-400 text-xs">~</span>
                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
-                  className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 w-36" />
+                  className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700 w-36" />
               </>}
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-[#f5b800] rounded-lg hover:bg-[#e5ab00]">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700">조회</button>
             </div>
           ) : (activeView === '현금출납부' || activeView === '총계정원장') ? (
             <div className="flex items-center gap-1.5">
               <span className={labelCls}>출납연월</span>
               <label className="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" checked={showRange} onChange={e => setShowRange(e.target.checked)} className="rounded border-slate-300 w-3.5 h-3.5 accent-[#f5b800]" />
+                <input type="checkbox" checked={showRange} onChange={e => setShowRange(e.target.checked)} className="rounded border-slate-300 w-3.5 h-3.5 accent-[teal-400]" />
                 <span className="text-xs text-slate-600 font-medium">구간별</span>
               </label>
               {!showRange && <select value={filterYearMonth} onChange={e => setFilterYearMonth(e.target.value)}
-                className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700">
+                className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700">
                 {yearMonthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>}
               {activeView === '총계정원장' && <label className="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" checked={showAllLedger} onChange={e => setShowAllLedger(e.target.checked)} className="rounded border-slate-300 w-3.5 h-3.5 accent-[#f5b800]" />
+                <input type="checkbox" checked={showAllLedger} onChange={e => setShowAllLedger(e.target.checked)} className="rounded border-slate-300 w-3.5 h-3.5 accent-[teal-400]" />
                 <span className="text-xs text-slate-600 font-medium">원장전체보기</span>
               </label>}
               {showRange && <>
                 <select value={rangeStartYm} onChange={e => setRangeStartYm(e.target.value)}
-                  className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700 ml-2">
+                  className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700 ml-2">
                   {yearMonthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
                 <span className="text-slate-400 text-xs">~</span>
                 <select value={rangeEndYm} onChange={e => setRangeEndYm(e.target.value)}
-                  className="px-3 py-1.5 border-2 border-slate-400 rounded-lg text-xs font-medium text-slate-700">
+                  className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700">
                   {yearMonthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
                 <button onClick={() => { const d = new Date(); const s = new Date(d.getFullYear(), d.getMonth() - 2, 1); setRangeStartYm(`${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, '0')}`); setRangeEndYm(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`) }}
-                  className="px-2 py-1 text-[10px] font-bold bg-[#f5b800] text-white rounded hover:bg-[#e5ab00]">3개월</button>
+                  className="px-2 py-1 text-[10px] font-bold bg-teal-500 text-white rounded hover:bg-teal-600">3개월</button>
                 <button onClick={() => { const d = new Date(); const s = new Date(d.getFullYear(), d.getMonth() - 5, 1); setRangeStartYm(`${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, '0')}`); setRangeEndYm(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`) }}
-                  className="px-2 py-1 text-[10px] font-bold bg-[#f5b800] text-white rounded hover:bg-[#e5ab00]">6개월</button>
+                  className="px-2 py-1 text-[10px] font-bold bg-teal-500 text-white rounded hover:bg-teal-600">6개월</button>
                 <button onClick={() => { const y = new Date().getFullYear() - 1; setRangeStartYm(`${y}-03`); setRangeEndYm(`${y + 1}-02`) }}
-                  className="px-2 py-1 text-[10px] font-bold bg-[#f5b800] text-white rounded hover:bg-[#e5ab00]">과년도</button>
+                  className="px-2 py-1 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700">과년도</button>
               </>}
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-[#f5b800] rounded-lg hover:bg-[#e5ab00] ml-2">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 ml-2">조회</button>
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
@@ -219,11 +245,11 @@ export default function TransactionsPage() {
               <span className="text-slate-400 text-xs">~</span>
               <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputCls} w-36`} />
               <button onClick={() => { const d = new Date(); setStartDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`); setEndDate(d.toISOString().slice(0, 10)) }}
-                className="px-2 py-1 text-[10px] font-bold bg-[#f5b800] text-white rounded hover:bg-[#e5ab00]">이번달</button>
+                className="px-2 py-1 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700">이번달</button>
               <button onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); setStartDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`); setEndDate(new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10)) }}
-                className="px-2 py-1 text-[10px] font-bold bg-[#f5b800] text-white rounded hover:bg-[#e5ab00]">이전달</button>
+                className="px-2 py-1 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700">이전달</button>
               <button onClick={() => { const y = new Date().getFullYear() - 1; setStartDate(`${y}-03-01`); setEndDate(`${y + 1}-02-28`) }}
-                className="px-2 py-1 text-[10px] font-bold bg-[#f5b800] text-white rounded hover:bg-[#e5ab00]">과년도</button>
+                className="px-2 py-1 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700">과년도</button>
             </div>
           )}
           {activeView !== '현금출납부' && activeView !== '총계정원장' && activeView !== '계정과목별총괄표' && activeView !== '월별수입지출합계' && activeView !== '합계잔액시산표' && activeView !== '월별비교' && <div className="flex items-center gap-1.5 relative" ref={accountFilterRef}>
@@ -278,18 +304,20 @@ export default function TransactionsPage() {
             <div className="flex items-center gap-1.5">
               <span className={labelCls}>품목(적요)</span>
               <input type="text" value={searchSummary} onChange={e => setSearchSummary(e.target.value)} className={`${inputCls} w-40`} />
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-[#f5b800] rounded-lg hover:bg-[#e5ab00]">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700">조회</button>
             </div>
           </>}
         </div>
 
         {/* 요약 */}
-        <div className="px-4 py-2 border-t border-[#f5b800]/20 flex items-center justify-between">
+        <div className="px-4 py-2 border-t border-teal-400/20 flex items-center justify-between">
+          {activeView !== '합계잔액시산표' && activeView !== '월별비교' ? (
           <div className="flex items-center gap-6 text-xs">
             <span className="text-slate-500">수입합계: <span className="font-bold text-blue-700">{totalIncome.toLocaleString('ko-KR')}</span></span>
             <span className="text-slate-500">지출합계: <span className="font-bold text-red-600">{totalExpense.toLocaleString('ko-KR')}</span></span>
             <span className="text-slate-500">전표개수: <span className="font-bold text-slate-700">{filtered.length}</span> (<span className="text-blue-600">수입 {filtered.filter(r => r.income > 0).length}</span> / <span className="text-red-600">지출 {filtered.filter(r => r.expense > 0).length}</span>)</span>
           </div>
+          ) : <div />}
           <div className="flex items-center gap-2">
             {activeView === '총계정원장' ? (<>
               <button className="px-3 py-1.5 text-[11px] font-bold border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-600 flex items-center gap-1">
@@ -329,10 +357,10 @@ export default function TransactionsPage() {
 
       {/* 거래조회 / 현금출납부 테이블 */}
       {(activeView === '거래조회' || activeView === '현금출납부') && (
-        <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
+        <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10">
-              <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
+              <tr className="bg-teal-50 border-b border-teal-400/30">
                 <th className="text-center px-3 py-2.5 w-10">
                   <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.size === filtered.length && filtered.length > 0} onChange={toggleAll} />
                 </th>
@@ -351,7 +379,7 @@ export default function TransactionsPage() {
               {filtered.length === 0 ? (
                 <tr><td colSpan={10} className="text-center py-12 text-slate-400">거래내역이 없습니다</td></tr>
               ) : filtered.map((row, idx) => (
-                <tr key={row.id} className={`transition-colors hover:bg-[#fffbeb] ${checked.has(row.id) ? 'bg-[#fffbeb]/60' : idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'} border-b border-[#f5b800]/20`}>
+                <tr key={row.id} className={`transition-colors hover:bg-teal-50 ${checked.has(row.id) ? 'bg-teal-50/60' : idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'} border-b border-teal-400/20`}>
                   <td className="text-center px-3 py-2.5">
                     <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.has(row.id)} onChange={() => toggleCheck(row.id)} />
                   </td>
@@ -370,7 +398,7 @@ export default function TransactionsPage() {
                   <td className="text-left px-4 py-2.5 text-slate-400 text-xs">{row.note || '-'}</td>
                 </tr>
               ))}
-              <tr className="bg-[#fffbeb] border-t-2 border-[#f5b800]/40 font-medium">
+              <tr className="bg-teal-50 border-t-2 border-teal-400/40 font-medium">
                 <td></td>
                 <td className="text-center px-4 py-3 text-slate-700">합계</td>
                 <td></td><td></td><td></td><td></td>
@@ -398,7 +426,7 @@ export default function TransactionsPage() {
           return codeA.localeCompare(codeB)
         })
         return (
-          <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
+          <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
             {accountKeys.length === 0 ? (
               <div className="text-center py-12 text-slate-400">거래내역이 없습니다</div>
             ) : accountKeys.map(acctName => {
@@ -418,7 +446,7 @@ export default function TransactionsPage() {
               return (
                 <div key={acctName} className="mb-4">
                   {/* 계정과목 헤더: 목/항/관 */}
-                  <div className="px-4 py-2 border-b border-[#f5b800]/20 flex items-center justify-between">
+                  <div className="px-4 py-2 border-b border-teal-400/20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <span className="flex items-center gap-1.5">
                         <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400'}`}>목</span>
@@ -432,7 +460,7 @@ export default function TransactionsPage() {
                   {/* 테이블 */}
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
+                      <tr className="bg-teal-50 border-b border-teal-400/30">
                         <th className="text-center px-4 py-2 font-normal text-slate-700 w-16">월일</th>
                         <th className="text-center px-4 py-2 font-normal text-slate-700 w-28">세목</th>
                         <th className="text-left px-4 py-2 font-normal text-slate-700 w-48">적요</th>
@@ -446,7 +474,7 @@ export default function TransactionsPage() {
                     </thead>
                     <tbody>
                       {/* 전월이월 */}
-                      <tr className="bg-white border-b border-[#f5b800]/20">
+                      <tr className="bg-white border-b border-teal-400/20">
                         <td className="text-center px-4 py-2.5 text-slate-600"></td>
                         <td className="text-center px-4 py-2.5 text-slate-600"></td>
                         <td className="text-left px-4 py-2.5 text-slate-600 font-medium">전월이월</td>
@@ -469,7 +497,7 @@ export default function TransactionsPage() {
                             <React.Fragment key={subName}>
                               {/* 세목 헤더 */}
                               {hasSubAccount && (
-                                <tr className="bg-slate-50/50 border-b border-[#f5b800]/20">
+                                <tr className="bg-slate-50/50 border-b border-teal-400/20">
                                   <td colSpan={9} className="px-4 py-1.5">
                                     <span className="flex items-center gap-1.5">
                                       <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500'}`}>세목</span>
@@ -483,7 +511,7 @@ export default function TransactionsPage() {
                               {subRows.map((row, idx) => {
                                 balance += row.income - row.expense
                                 return (
-                                  <tr key={row.id} className={`transition-colors hover:bg-[#fffbeb] ${idx % 2 === 0 ? 'bg-[#fffbeb]/30' : 'bg-white'} border-b border-[#f5b800]/20`}>
+                                  <tr key={row.id} className={`transition-colors hover:bg-teal-50 ${idx % 2 === 0 ? 'bg-teal-50/30' : 'bg-white'} border-b border-teal-400/20`}>
                                     <td className="text-center px-4 py-2.5 text-slate-600">{row.date.slice(5)}</td>
                                     <td className="text-center px-4 py-2.5 text-slate-600 text-xs">{row.subAccount || '-'}</td>
                                     <td className="text-left px-4 py-2.5 text-slate-600">
@@ -503,7 +531,7 @@ export default function TransactionsPage() {
                               })}
                               {/* 세목 소계 */}
                               {hasSubAccount && (
-                                <tr className="bg-slate-50/30 border-b border-[#f5b800]/20">
+                                <tr className="bg-slate-50/30 border-b border-teal-400/20">
                                   <td></td><td></td>
                                   <td className="text-left px-4 py-1.5 text-[10px] font-bold text-slate-400">세목 소계</td>
                                   <td></td><td></td><td></td>
@@ -517,7 +545,7 @@ export default function TransactionsPage() {
                         })
                       })()}
                       {/* 목 소계 */}
-                      <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30 font-medium">
+                      <tr className="bg-teal-50 border-b border-teal-400/30 font-medium">
                         <td></td><td></td>
                         <td className="text-left px-4 py-2 text-xs font-bold text-slate-500">목 소계</td>
                         <td></td><td></td><td></td>
@@ -531,7 +559,7 @@ export default function TransactionsPage() {
               )
             })}
             {/* 총합계 */}
-            <div className="px-4 py-3 bg-[#fffbeb] border-t-2 border-[#f5b800]/40 flex items-center justify-end gap-8 text-sm font-bold">
+            <div className="px-4 py-3 bg-teal-50 border-t-2 border-teal-400/40 flex items-center justify-end gap-8 text-sm font-bold">
               <span className="text-slate-700">총합계</span>
               <span className="text-blue-700">수입 {totalIncome.toLocaleString('ko-KR')}</span>
               <span className="text-red-700">지출 {totalExpense.toLocaleString('ko-KR')}</span>
@@ -543,49 +571,85 @@ export default function TransactionsPage() {
 
       {/* 계정과목별총괄표 */}
       {activeView === '계정과목별총괄표' && showRange && (() => {
-        // 구간별: 계정과목 / 입금액 / 출금액 / 잔액
+        // 구간별: 계정과목(목+세목) / 입금액 / 출금액 / 잔액
         const rangeFiltered = data.filter(r => {
           if (startDate && r.date < startDate) return false
           if (endDate && r.date > endDate) return false
           return true
         })
-        const acctMap = new Map<string, { income: number; expense: number }>()
+        // 목 집계
+        const acctMap = new Map<string, { income: number; expense: number; isIncome: boolean; isSub: boolean; code: string }>()
         rangeFiltered.forEach(r => {
           const key = r.account
-          const prev = acctMap.get(key) || { income: 0, expense: 0 }
-          acctMap.set(key, { income: prev.income + r.income, expense: prev.expense + r.expense })
+          const prev = acctMap.get(key) || { income: 0, expense: 0, isIncome: isIncomeAccount(r.account), isSub: false, code: accountCodeMap[r.account] || '9999' }
+          acctMap.set(key, { ...prev, income: prev.income + r.income, expense: prev.expense + r.expense })
+          // 세목 집계
+          if (r.subAccount) {
+            const sKey = r.subAccount
+            const sPrev = acctMap.get(sKey) || { income: 0, expense: 0, isIncome: isIncomeAccount(r.account), isSub: true, code: subAccountCodeMap[r.subAccount] || '9999' }
+            acctMap.set(sKey, { ...sPrev, income: sPrev.income + r.income, expense: sPrev.expense + r.expense })
+          }
         })
         const rows = Array.from(acctMap.entries())
-          .map(([name, val]) => ({ name, code: accountCodeMap[name] || '', isIncome: isIncomeAccount(name), ...val }))
+          .map(([name, val]) => ({ name, ...val }))
           .sort((a, b) => a.code.localeCompare(b.code))
+        const incomeRows = rows.filter(r => r.isIncome)
+        const expenseRows = rows.filter(r => !r.isIncome)
         let runBalance = 0
-        const totalIn = rows.reduce((s, r) => s + r.income, 0)
-        const totalOut = rows.reduce((s, r) => s + r.expense, 0)
+        const totalIn = rows.filter(r => !r.isSub).reduce((s, r) => s + r.income, 0)
+        const totalOut = rows.filter(r => !r.isSub).reduce((s, r) => s + r.expense, 0)
+        const renderSection = (sectionRows: typeof rows) => sectionRows.map((r, idx) => {
+          if (!r.isSub) runBalance += r.income - r.expense
+          return (
+            <tr key={r.name} className={`border-b border-teal-400/20 hover:bg-teal-50 ${idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'}`}>
+              <td className="text-center px-4 py-2 text-slate-600 font-mono text-xs">{r.code}</td>
+              <td className="text-left px-4 py-2">
+                <span className="flex items-center gap-1">
+                  <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${r.isSub ? (r.isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500') : (r.isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400')}`}>{r.isSub ? '세목' : '목'}</span>
+                  <span className={`${r.isSub ? 'text-xs' : 'font-medium text-sm'} ${r.isIncome ? 'text-blue-700' : 'text-red-600'}`}>{r.name}</span>
+                </span>
+              </td>
+              <td className="text-right px-6 py-2 text-slate-700 text-sm">{r.income ? fmt(r.income) : ''}</td>
+              <td className="text-right px-6 py-2 text-slate-700 text-sm">{r.expense ? fmt(r.expense) : ''}</td>
+              <td className="text-right px-6 py-2 text-slate-700 text-sm">{!r.isSub ? runBalance.toLocaleString('ko-KR') : ''}</td>
+            </tr>
+          )
+        })
         return (
-          <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
+          <div className="max-w-5xl mx-auto bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
-                  <th className="text-left px-6 py-2.5 font-normal text-slate-700">계정과목</th>
+                <tr className="bg-teal-50 border-b border-teal-400/30">
+                  <th className="text-center px-4 py-2.5 font-normal text-slate-700 w-20">계정</th>
+                  <th className="text-left px-4 py-2.5 font-normal text-slate-700">계정과목</th>
                   <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-36">입금액</th>
                   <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-36">출금액</th>
                   <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-36">잔액</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r, idx) => {
-                  runBalance += r.income - r.expense
-                  return (
-                    <tr key={r.name} className={`border-b border-[#f5b800]/20 hover:bg-[#fffbeb] ${idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'}`}>
-                      <td className="text-left px-6 py-2.5 text-slate-700">{r.name}</td>
-                      <td className="text-right px-6 py-2.5 text-slate-700">{r.income ? fmt(r.income) : ''}</td>
-                      <td className="text-right px-6 py-2.5 text-slate-700">{r.expense ? fmt(r.expense) : ''}</td>
-                      <td className="text-right px-6 py-2.5 text-slate-700">{runBalance.toLocaleString('ko-KR')}</td>
-                    </tr>
-                  )
-                })}
-                <tr className="bg-[#fffbeb] border-t-2 border-[#f5b800]/40 font-medium">
-                  <td className="text-center px-6 py-2.5 text-slate-700 font-bold">합계</td>
+                <tr className="bg-blue-50/50 border-b border-teal-400/30">
+                  <td colSpan={5} className="px-3 py-1.5 text-xs font-bold text-blue-700">수입</td>
+                </tr>
+                {renderSection(incomeRows)}
+                <tr className="bg-teal-50 border-b border-teal-400/30 font-medium">
+                  <td colSpan={2} className="text-left px-4 py-2 text-xs font-bold text-blue-700">수입 소계</td>
+                  <td className="text-right px-6 py-2 font-bold text-blue-700">{fmt(totalIn)}</td>
+                  <td className="text-right px-6 py-2 font-bold text-blue-700"></td>
+                  <td className="text-right px-6 py-2 font-bold text-blue-700"></td>
+                </tr>
+                <tr className="bg-red-50/50 border-b border-teal-400/30 border-t-2 border-t-[teal-400]/40">
+                  <td colSpan={5} className="px-3 py-1.5 text-xs font-bold text-red-600">지출</td>
+                </tr>
+                {renderSection(expenseRows)}
+                <tr className="bg-teal-50 border-b border-teal-400/30 font-medium">
+                  <td colSpan={2} className="text-left px-4 py-2 text-xs font-bold text-red-600">지출 소계</td>
+                  <td className="text-right px-6 py-2 font-bold text-red-600"></td>
+                  <td className="text-right px-6 py-2 font-bold text-red-600">{fmt(totalOut)}</td>
+                  <td className="text-right px-6 py-2 font-bold text-red-600"></td>
+                </tr>
+                <tr className="bg-teal-50 border-t-2 border-teal-400/40 font-medium">
+                  <td colSpan={2} className="text-center px-6 py-2.5 text-slate-700 font-bold">합계</td>
                   <td className="text-right px-6 py-2.5 text-slate-700 font-bold">{fmt(totalIn)}</td>
                   <td className="text-right px-6 py-2.5 text-slate-700 font-bold">{fmt(totalOut)}</td>
                   <td className="text-right px-6 py-2.5 text-slate-700 font-bold">{(totalIn - totalOut).toLocaleString('ko-KR')}</td>
@@ -633,12 +697,12 @@ export default function TransactionsPage() {
         })
 
         return (
-          <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
+          <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
             <table className="text-xs" style={{ minWidth: '1400px' }}>
               <thead className="sticky top-0 z-10">
-                <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
-                  <th className="text-center px-4 py-2.5 font-normal text-slate-700 w-16 sticky left-0 bg-[#fffbeb] z-20">계정</th>
-                  <th className="text-left px-4 py-2.5 font-normal text-slate-700 w-44 sticky left-16 bg-[#fffbeb] z-20 whitespace-nowrap">계정과목</th>
+                <tr className="bg-teal-50 border-b border-teal-400/30">
+                  <th className="text-center px-4 py-2.5 font-normal text-slate-700 w-16 sticky left-0 bg-teal-50 z-20">계정</th>
+                  <th className="text-left px-4 py-2.5 font-normal text-slate-700 w-44 sticky left-16 bg-teal-50 z-20 whitespace-nowrap">계정과목</th>
                   <th className="text-right px-4 py-2.5 font-normal text-slate-700 w-28">예산액</th>
                   <th className="text-right px-4 py-2.5 font-normal text-slate-700 w-28">총합계</th>
                   <th className="text-center px-3 py-2.5 font-normal text-slate-700 w-14">비율</th>
@@ -658,7 +722,7 @@ export default function TransactionsPage() {
                     const budget = 0
                     const ratio = budget > 0 ? Math.round((total / budget) * 100) : 0
                     return (
-                      <tr key={acct.code + acct.name} className={`border-b border-[#f5b800]/20 hover:bg-[#fffbeb] ${idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'}`}>
+                      <tr key={acct.code + acct.name} className={`border-b border-teal-400/20 hover:bg-teal-50 ${idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'}`}>
                         <td className="text-center px-4 py-2.5 text-slate-600 font-mono sticky left-0 bg-inherit z-10">{acct.code}</td>
                         <td className="text-left px-4 py-2.5 sticky left-16 bg-inherit z-10 whitespace-nowrap">
                           <span className="flex items-center gap-1">
@@ -680,9 +744,9 @@ export default function TransactionsPage() {
                     const totals = months.map(m => rows.filter(a => !a.isSub).reduce((s, a) => s + ((monthlyData[a.name] || {})[m] || 0), 0))
                     const grandTotal = totals.reduce((s, v) => s + v, 0)
                     return (
-                      <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30 font-medium">
-                        <td className="sticky left-0 bg-[#fffbeb] z-10"></td>
-                        <td className={`text-left px-3 py-2 text-xs font-bold sticky left-16 bg-[#fffbeb] z-10 ${color}`}>{label} 소계</td>
+                      <tr className="bg-teal-50 border-b border-teal-400/30 font-medium">
+                        <td className="sticky left-0 bg-teal-50 z-10"></td>
+                        <td className={`text-left px-3 py-2 text-xs font-bold sticky left-16 bg-teal-50 z-10 ${color}`}>{label} 소계</td>
                         <td className="text-right px-3 py-2 text-slate-400">0</td>
                         <td className={`text-right px-3 py-2 font-bold ${color}`}>{fmt(grandTotal)}</td>
                         <td className="text-center px-2 py-2 text-slate-400"></td>
@@ -693,13 +757,13 @@ export default function TransactionsPage() {
                   }
                   return (<>
                     {/* 수입 헤더 */}
-                    <tr className="bg-blue-50/50 border-b border-[#f5b800]/30">
+                    <tr className="bg-blue-50/50 border-b border-teal-400/30">
                       <td colSpan={5 + months.length + 1} className="px-3 py-1.5 text-xs font-bold text-blue-700 sticky left-0 bg-blue-50/50 z-10">수입</td>
                     </tr>
                     {renderRows(incomeAccts)}
                     {sectionTotal(incomeAccts, '수입', 'text-blue-700')}
                     {/* 지출 헤더 */}
-                    <tr className="bg-red-50/50 border-b border-[#f5b800]/30 border-t-2 border-t-[#f5b800]/40">
+                    <tr className="bg-red-50/50 border-b border-teal-400/30 border-t-2 border-t-[teal-400]/40">
                       <td colSpan={5 + months.length + 1} className="px-3 py-1.5 text-xs font-bold text-red-600 sticky left-0 bg-red-50/50 z-10">지출</td>
                     </tr>
                     {renderRows(expenseAccts)}
@@ -732,10 +796,10 @@ export default function TransactionsPage() {
         const totalOut = months.reduce((s, m) => s + (monthlyExpense[m] || 0), 0)
 
         return (
-          <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
+          <div className="max-w-4xl mx-auto bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
+                <tr className="bg-teal-50 border-b border-teal-400/30">
                   <th className="text-center px-6 py-2.5 font-normal text-slate-700 w-32">월구분</th>
                   <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-40">수입액</th>
                   <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-40">지출액</th>
@@ -750,7 +814,7 @@ export default function TransactionsPage() {
                   const diff = inc - exp
                   runBalance += diff
                   return (
-                    <tr key={m} className={`border-b border-[#f5b800]/20 hover:bg-[#fffbeb] ${idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'}`}>
+                    <tr key={m} className={`border-b border-teal-400/20 hover:bg-teal-50 ${idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'}`}>
                       <td className="text-center px-6 py-2.5 text-slate-700 font-medium">{m}</td>
                       <td className="text-right px-6 py-2.5 text-slate-700">{fmt(inc)}</td>
                       <td className="text-right px-6 py-2.5 text-slate-700">{fmt(exp)}</td>
@@ -759,7 +823,7 @@ export default function TransactionsPage() {
                     </tr>
                   )
                 })}
-                <tr className="bg-[#fffbeb] border-t-2 border-[#f5b800]/40 font-medium">
+                <tr className="bg-teal-50 border-t-2 border-teal-400/40 font-medium">
                   <td className="text-center px-6 py-2.5 text-slate-700 font-bold">누계</td>
                   <td className="text-right px-6 py-2.5 text-slate-700 font-bold">{fmt(totalIn)}</td>
                   <td className="text-right px-6 py-2.5 text-slate-700 font-bold">{fmt(totalOut)}</td>
@@ -774,9 +838,8 @@ export default function TransactionsPage() {
 
       {/* 합계잔액시산표 */}
       {activeView === '합계잔액시산표' && (() => {
-        // 계정별 수입/지출 누적 집계
+        // 계정별 수입/지출 누적 집계 (목+세목)
         const acctMap = new Map<string, { income: number; expense: number }>()
-        // 해당 월까지 누적
         const ymFilter = filterYearMonth
         data.forEach(r => {
           const ym = r.date.substring(0, 7)
@@ -784,58 +847,87 @@ export default function TransactionsPage() {
           const key = r.account
           const prev = acctMap.get(key) || { income: 0, expense: 0 }
           acctMap.set(key, { income: prev.income + r.income, expense: prev.expense + r.expense })
+          if (r.subAccount) {
+            const sKey = r.subAccount
+            const sPrev = acctMap.get(sKey) || { income: 0, expense: 0 }
+            acctMap.set(sKey, { income: sPrev.income + r.income, expense: sPrev.expense + r.expense })
+          }
         })
-        // 당월 합계
+        // 당월 합계 (목+세목)
         const monthMap = new Map<string, { income: number; expense: number }>()
         data.forEach(r => {
           if (!r.date.startsWith(ymFilter)) return
           const key = r.account
           const prev = monthMap.get(key) || { income: 0, expense: 0 }
           monthMap.set(key, { income: prev.income + r.income, expense: prev.expense + r.expense })
+          if (r.subAccount) {
+            const sKey = r.subAccount
+            const sPrev = monthMap.get(sKey) || { income: 0, expense: 0 }
+            monthMap.set(sKey, { income: sPrev.income + r.income, expense: sPrev.expense + r.expense })
+          }
         })
 
-        const allAcctNames = [...incomeAccounts.filter(a => !a.isSub), ...expenseAccounts.filter(a => !a.isSub)]
-        const rows = allAcctNames.map(a => {
-          const cum = acctMap.get(a.value) || { income: 0, expense: 0 }
-          const mon = monthMap.get(a.value) || { income: 0, expense: 0 }
-          return { name: a.value, code: accountCodeMap[a.value] || '', isIncome: isIncomeAccount(a.value), cumIncome: cum.income, cumExpense: cum.expense, monIncome: mon.income, monExpense: mon.expense }
-        }).sort((a, b) => a.code.localeCompare(b.code))
+        // accounts.ts 배열 순서 유지 (목 → 세목 순서가 이미 올바름)
+        const allAcctItems: { name: string; code: string; isIncome: boolean; isSub: boolean }[] = []
+        const addItems = (list: typeof incomeAccounts, isInc: boolean) => {
+          list.forEach(a => {
+            allAcctItems.push({ name: a.isSub ? a.label : a.value, code: a.isSub ? (subAccountCodeMap[a.label] || '') : (accountCodeMap[a.value] || ''), isIncome: isInc, isSub: !!a.isSub })
+          })
+        }
+        addItems(incomeAccounts, true)
+        addItems(expenseAccounts, false)
 
-        const totalCumIn = rows.reduce((s, r) => s + r.cumIncome, 0)
-        const totalMonIn = rows.reduce((s, r) => s + r.monIncome, 0)
-        const totalCumOut = rows.reduce((s, r) => s + r.cumExpense, 0)
-        const totalMonOut = rows.reduce((s, r) => s + r.monExpense, 0)
+        const rows = allAcctItems.map(a => {
+          const cum = acctMap.get(a.name) || { income: 0, expense: 0 }
+          const mon = monthMap.get(a.name) || { income: 0, expense: 0 }
+          return { ...a, cumIncome: cum.income, cumExpense: cum.expense, monIncome: mon.income, monExpense: mon.expense }
+        })
+
+        const totalCumIn = rows.filter(r => !r.isSub).reduce((s, r) => s + r.cumIncome, 0)
+        const totalMonIn = rows.filter(r => !r.isSub).reduce((s, r) => s + r.monIncome, 0)
+        const totalCumOut = rows.filter(r => !r.isSub).reduce((s, r) => s + r.cumExpense, 0)
+        const totalMonOut = rows.filter(r => !r.isSub).reduce((s, r) => s + r.monExpense, 0)
 
         return (
-          <div className="max-w-4xl mx-auto bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
-            <table className="w-full text-sm">
+          <div className="max-w-5xl mx-auto bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
+            <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '20%' }} />
+              </colgroup>
               <thead className="sticky top-0 z-10">
-                <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
-                  <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-36">수입 누계</th>
-                  <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-36">수입 합계</th>
-                  <th className="text-center px-6 py-2.5 font-normal text-slate-700">계정과목</th>
-                  <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-36">지출 합계</th>
-                  <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-36">지출 누계</th>
+                <tr className="bg-teal-50 border-b border-teal-400/30">
+                  <th className="text-right px-4 py-2.5 font-normal text-slate-700">수입 누계</th>
+                  <th className="text-right px-4 py-2.5 font-normal text-slate-700 border-r border-teal-400/30">수입 합계</th>
+                  <th className="text-center px-2 py-2.5 font-normal text-slate-700 border-r border-teal-400/30">계정과목</th>
+                  <th className="text-left px-4 py-2.5 font-normal text-slate-700">지출 합계</th>
+                  <th className="text-left px-4 py-2.5 font-normal text-slate-700">지출 누계</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r, idx) => (
-                  <tr key={r.name} className={`border-b border-[#f5b800]/20 hover:bg-[#fffbeb] ${idx % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'}`}>
-                    <td className="text-right px-6 py-2.5 text-slate-700">{fmt(r.cumIncome)}</td>
-                    <td className="text-right px-6 py-2.5 text-slate-700">{fmt(r.monIncome)}</td>
-                    <td className="text-center px-6 py-2.5">
-                      <span className={`font-medium ${r.isIncome ? 'text-blue-700' : 'text-red-600'}`}>{r.name}</span>
+                  <tr key={r.code + r.name} className={`border-b border-teal-400/20 hover:bg-teal-50 ${r.isSub ? 'bg-slate-50/30' : idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'}`}>
+                    <td className={`text-right px-4 py-2 text-slate-700 ${r.isSub ? 'text-xs text-slate-500' : ''}`}>{fmt(r.cumIncome)}</td>
+                    <td className={`text-right px-4 py-2 text-slate-700 border-r border-teal-400/30 ${r.isSub ? 'text-xs text-slate-500' : ''}`}>{fmt(r.monIncome)}</td>
+                    <td className="text-center px-2 py-2 border-r border-teal-400/30">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className={`inline-block w-7 text-center py-0 rounded border text-[9px] font-bold ${r.isSub ? (r.isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500') : (r.isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400')}`}>{r.isSub ? '세목' : '목'}</span>
+                        <span className={`${r.isSub ? 'text-xs' : 'font-medium'} ${r.isIncome ? 'text-blue-700' : 'text-red-600'}`}>{r.name}</span>
+                      </span>
                     </td>
-                    <td className="text-right px-6 py-2.5 text-slate-700">{fmt(r.monExpense)}</td>
-                    <td className="text-right px-6 py-2.5 text-slate-700">{fmt(r.cumExpense)}</td>
+                    <td className={`text-left px-4 py-2 text-slate-700 ${r.isSub ? 'text-xs text-slate-500' : ''}`}>{fmt(r.monExpense)}</td>
+                    <td className={`text-left px-4 py-2 text-slate-700 ${r.isSub ? 'text-xs text-slate-500' : ''}`}>{fmt(r.cumExpense)}</td>
                   </tr>
                 ))}
-                <tr className="bg-[#fffbeb] border-t-2 border-[#f5b800]/40 font-medium">
-                  <td className="text-right px-6 py-2.5 text-slate-700 font-bold">{fmt(totalCumIn)}</td>
-                  <td className="text-right px-6 py-2.5 text-slate-700 font-bold">{fmt(totalMonIn)}</td>
-                  <td className="text-center px-6 py-2.5 text-slate-700 font-bold">합계</td>
-                  <td className="text-right px-6 py-2.5 text-slate-700 font-bold">{fmt(totalMonOut)}</td>
-                  <td className="text-right px-6 py-2.5 text-slate-700 font-bold">{fmt(totalCumOut)}</td>
+                <tr className="bg-teal-50 border-t-2 border-teal-400/40">
+                  <td className="text-right px-4 py-2.5 text-slate-700">{fmt(totalCumIn)}</td>
+                  <td className="text-right px-4 py-2.5 text-slate-700 border-r border-teal-400/30">{fmt(totalMonIn)}</td>
+                  <td className="text-center px-2 py-2.5 text-slate-700 font-medium border-r border-teal-400/30">합계</td>
+                  <td className="text-left px-4 py-2.5 text-slate-700">{fmt(totalMonOut)}</td>
+                  <td className="text-left px-4 py-2.5 text-slate-700">{fmt(totalCumOut)}</td>
                 </tr>
               </tbody>
             </table>
@@ -857,23 +949,67 @@ export default function TransactionsPage() {
         nextData.forEach(r => allAcctNames.add(r.account))
         const acctKeys = [...allAcctNames].sort((a, b) => (accountCodeMap[a] || '9999').localeCompare(accountCodeMap[b] || '9999'))
 
+        const baseIncomeTotal = baseData.reduce((s, r) => s + (r.income || 0), 0)
+        const baseExpenseTotal = baseData.reduce((s, r) => s + (r.expense || 0), 0)
+        const baseCount = baseData.length
+        const baseIncomeCount = baseData.filter(r => r.income > 0).length
+        const baseExpenseCount = baseData.filter(r => r.expense > 0).length
+        const nextIncomeTotal = nextData.reduce((s, r) => s + (r.income || 0), 0)
+        const nextExpenseTotal = nextData.reduce((s, r) => s + (r.expense || 0), 0)
+        const nextCount = nextData.length
+        const nextIncomeCount = nextData.filter(r => r.income > 0).length
+        const nextExpenseCount = nextData.filter(r => r.expense > 0).length
+
         return (
-          <div className="bg-white rounded-xl border border-[#f5b800]/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
-            <table className="w-full text-sm" style={{ minWidth: '1200px' }}>
+          <div>
+            <div className="flex gap-4 mb-3">
+              <div className="flex-1 bg-white rounded-lg border border-teal-400/30 px-4 py-2.5 flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700">{filterYearMonth}</span>
+                <div className="flex gap-4 text-xs">
+                  <span>수입합계: <b className="text-blue-600">{fmt(baseIncomeTotal)}</b></span>
+                  <span>지출합계: <b className="text-red-600">{fmt(baseExpenseTotal)}</b></span>
+                  <span>전표개수: <b>{baseCount}</b> <span className="text-slate-400">(수입 {baseIncomeCount} / 지출 {baseExpenseCount})</span></span>
+                </div>
+              </div>
+              <div className="flex-1 bg-white rounded-lg border border-teal-400/30 px-4 py-2.5 flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700">{nextYm}</span>
+                <div className="flex gap-4 text-xs">
+                  <span>수입합계: <b className="text-blue-600">{fmt(nextIncomeTotal)}</b></span>
+                  <span>지출합계: <b className="text-red-600">{fmt(nextExpenseTotal)}</b></span>
+                  <span>전표개수: <b>{nextCount}</b> <span className="text-slate-400">(수입 {nextIncomeCount} / 지출 {nextExpenseCount})</span></span>
+                </div>
+              </div>
+            </div>
+          <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-270px)]">
+            <table className="w-full text-xs" style={{ minWidth: '1100px', tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: '5%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '21%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '5%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '21%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '8%' }} />
+              </colgroup>
               <thead className="sticky top-0 z-10">
-                <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
-                  <th colSpan={4} className="text-center px-4 py-2.5 font-normal text-slate-700 border-r border-[#f5b800]/20">{filterYearMonth} 거래내역</th>
-                  <th colSpan={4} className="text-center px-4 py-2.5 font-normal text-slate-700">{nextYm} 거래내역</th>
+                <tr className="bg-teal-50 border-b border-teal-400/30">
+                  <th colSpan={5} className="text-center px-2 py-2.5 font-semibold text-slate-700 border-r-4 border-teal-400/40">{filterYearMonth} 거래내역</th>
+                  <th colSpan={5} className="text-center px-2 py-2.5 font-semibold text-slate-700">{nextYm} 거래내역</th>
                 </tr>
-                <tr className="bg-[#fffbeb] border-b border-[#f5b800]/30">
-                  <th className="text-center px-2 py-2 font-normal text-slate-700 w-12">일자</th>
-                  <th className="text-left px-3 py-2 font-normal text-slate-700">적요</th>
-                  <th className="text-right px-4 py-2 font-normal text-slate-700 w-28">수입액</th>
-                  <th className="text-right px-4 py-2 font-normal text-slate-700 w-28 border-r border-[#f5b800]/20">지출액</th>
-                  <th className="text-center px-2 py-2 font-normal text-slate-700 w-12">일자</th>
-                  <th className="text-left px-3 py-2 font-normal text-slate-700">적요</th>
-                  <th className="text-right px-4 py-2 font-normal text-slate-700 w-28">수입액</th>
-                  <th className="text-right px-4 py-2 font-normal text-slate-700 w-28">지출액</th>
+                <tr className="bg-teal-50 border-b border-teal-400/30">
+                  <th className="text-center px-1 py-1.5 font-normal text-slate-600 text-xs w-10">일자</th>
+                  <th className="text-left px-1 py-1.5 font-normal text-slate-600 text-xs w-20">세목</th>
+                  <th className="text-left px-1 py-1.5 font-normal text-slate-600 text-xs">적요</th>
+                  <th className="text-right px-2 py-1.5 font-normal text-slate-600 text-xs w-24">수입액</th>
+                  <th className="text-right px-2 py-1.5 font-normal text-slate-600 text-xs w-24 border-r-4 border-teal-400/40">지출액</th>
+                  <th className="text-center px-1 py-1.5 font-normal text-slate-600 text-xs w-10">일자</th>
+                  <th className="text-left px-1 py-1.5 font-normal text-slate-600 text-xs w-20">세목</th>
+                  <th className="text-left px-1 py-1.5 font-normal text-slate-600 text-xs">적요</th>
+                  <th className="text-right px-2 py-1.5 font-normal text-slate-600 text-xs w-24">수입액</th>
+                  <th className="text-right px-2 py-1.5 font-normal text-slate-600 text-xs w-24">지출액</th>
                 </tr>
               </thead>
               <tbody>
@@ -881,31 +1017,80 @@ export default function TransactionsPage() {
                   const isIncome = isIncomeAccount(acctName)
                   const left = baseData.filter(r => r.account === acctName)
                   const right = nextData.filter(r => r.account === acctName)
-                  const maxRows = Math.max(left.length, right.length, 1)
+
+                  // 세목 목록 추출
+                  const subAcctSet = new Set<string>()
+                  left.forEach(r => { if (r.subAccount) subAcctSet.add(r.subAccount) })
+                  right.forEach(r => { if (r.subAccount) subAcctSet.add(r.subAccount) })
+                  const subAccts = [...subAcctSet].sort((a, b) => (subAccountCodeMap[a] || '').localeCompare(subAccountCodeMap[b] || ''))
+
+                  // 세목 없는 전표
+                  const leftNoSub = left.filter(r => !r.subAccount)
+                  const rightNoSub = right.filter(r => !r.subAccount)
+
+                  const renderRows = (lRows: typeof left, rRows: typeof right) => {
+                    const maxRows = Math.max(lRows.length, rRows.length, 1)
+                    return Array.from({ length: maxRows }, (_, i) => {
+                      const l = lRows[i]
+                      const r = rRows[i]
+                      return (
+                        <tr key={i} className={`border-b border-teal-400/10 hover:bg-teal-50 ${i % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'}`}>
+                          <td className="text-center px-1 py-1.5 text-slate-600 text-xs">{l?.date.slice(8) || ''}</td>
+                          <td className="text-left px-1 py-1.5 text-slate-500 text-[11px]">{l?.subAccount || ''}</td>
+                          <td className="text-left px-1 py-1.5 text-slate-600 text-[11px]">{l?.summary || ''}</td>
+                          <td className="text-right px-2 py-1.5 text-blue-600 text-xs">{l?.income ? fmt(l.income) : ''}</td>
+                          <td className="text-right px-2 py-1.5 text-red-600 text-xs border-r-4 border-teal-400/40">{l?.expense ? fmt(l.expense) : ''}</td>
+                          <td className="text-center px-1 py-1.5 text-slate-600 text-xs">{r?.date.slice(8) || ''}</td>
+                          <td className="text-left px-1 py-1.5 text-slate-500 text-[11px]">{r?.subAccount || ''}</td>
+                          <td className="text-left px-1 py-1.5 text-slate-600 text-[11px]">{r?.summary || ''}</td>
+                          <td className="text-right px-2 py-1.5 text-blue-600 text-xs">{r?.income ? fmt(r.income) : ''}</td>
+                          <td className="text-right px-2 py-1.5 text-red-600 text-xs">{r?.expense ? fmt(r.expense) : ''}</td>
+                        </tr>
+                      )
+                    })
+                  }
+
                   return (
                     <React.Fragment key={acctName}>
-                      <tr className="bg-slate-50/50 border-b border-[#f5b800]/20">
-                        <td colSpan={8} className="px-4 py-1.5">
+                      {/* 목 헤더 */}
+                      <tr className="bg-slate-50/50 border-b border-teal-400/20">
+                        <td colSpan={5} className="px-2 py-1 border-r-4 border-teal-400/40">
                           <span className="flex items-center gap-1.5">
                             <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400'}`}>목</span>
-                            <span className={`font-medium ${isIncome ? 'text-blue-700' : 'text-red-600'}`}>{acctName}</span>
+                            <span className={`font-medium text-xs ${isIncome ? 'text-blue-700' : 'text-red-600'}`}>{acctName}</span>
+                          </span>
+                        </td>
+                        <td colSpan={5} className="px-2 py-1">
+                          <span className="flex items-center gap-1.5">
+                            <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400'}`}>목</span>
+                            <span className={`font-medium text-xs ${isIncome ? 'text-blue-700' : 'text-red-600'}`}>{acctName}</span>
                           </span>
                         </td>
                       </tr>
-                      {Array.from({ length: maxRows }, (_, i) => {
-                        const l = left[i]
-                        const r = right[i]
+                      {/* 세목 없는 전표 */}
+                      {leftNoSub.length + rightNoSub.length > 0 && renderRows(leftNoSub, rightNoSub)}
+                      {/* 세목별 그룹 */}
+                      {subAccts.map(sub => {
+                        const lSub = left.filter(r => r.subAccount === sub)
+                        const rSub = right.filter(r => r.subAccount === sub)
                         return (
-                          <tr key={i} className={`border-b border-[#f5b800]/20 hover:bg-[#fffbeb] ${i % 2 === 1 ? 'bg-[#fffbeb]/30' : 'bg-white'}`}>
-                            <td className="text-center px-2 py-2 text-slate-600">{l?.date.slice(8) || ''}</td>
-                            <td className="text-left px-3 py-2 text-slate-600 text-xs">{l?.summary || ''}</td>
-                            <td className="text-right px-4 py-2 text-blue-600">{l?.income ? fmt(l.income) : ''}</td>
-                            <td className="text-right px-4 py-2 text-red-600 border-r border-[#f5b800]/20">{l?.expense ? fmt(l.expense) : ''}</td>
-                            <td className="text-center px-2 py-2 text-slate-600">{r?.date.slice(8) || ''}</td>
-                            <td className="text-left px-3 py-2 text-slate-600 text-xs">{r?.summary || ''}</td>
-                            <td className="text-right px-4 py-2 text-blue-600">{r?.income ? fmt(r.income) : ''}</td>
-                            <td className="text-right px-4 py-2 text-red-600">{r?.expense ? fmt(r.expense) : ''}</td>
-                          </tr>
+                          <React.Fragment key={sub}>
+                            <tr className="bg-slate-50/30 border-b border-teal-400/10">
+                              <td colSpan={5} className="px-4 py-0.5 border-r-4 border-teal-400/40">
+                                <span className="flex items-center gap-1.5">
+                                  <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500'}`}>세목</span>
+                                  <span className={`text-[11px] ${isIncome ? 'text-blue-600' : 'text-red-500'}`}>{sub}</span>
+                                </span>
+                              </td>
+                              <td colSpan={5} className="px-4 py-0.5">
+                                <span className="flex items-center gap-1.5">
+                                  <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500'}`}>세목</span>
+                                  <span className={`text-[11px] ${isIncome ? 'text-blue-600' : 'text-red-500'}`}>{sub}</span>
+                                </span>
+                              </td>
+                            </tr>
+                            {renderRows(lSub, rSub)}
+                          </React.Fragment>
                         )
                       })}
                     </React.Fragment>
@@ -914,13 +1099,14 @@ export default function TransactionsPage() {
               </tbody>
             </table>
           </div>
+          </div>
         )
       })()}
       {/* 수정 팝업 */}
       {editRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setEditRow(null)}>
           <div className="bg-white rounded-xl shadow-2xl w-[800px] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-3 border-b border-[#f5b800]/20 flex items-center justify-between">
+            <div className="px-6 py-3 border-b border-teal-400/20 flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-700">전표 수정</h3>
               <span className="text-xs text-slate-400">증빙번호: {editRow.docNo}</span>
             </div>
@@ -1057,7 +1243,7 @@ export default function TransactionsPage() {
               <button onClick={() => setEditRow(null)}
                 className="px-4 py-1.5 text-xs font-bold border border-slate-300 rounded-lg bg-white hover:bg-slate-50 text-slate-600">취소</button>
               <button onClick={() => { /* TODO: save */ setEditRow(null) }}
-                className="px-4 py-1.5 text-xs font-bold border border-amber-400 rounded-lg bg-amber-500 hover:bg-amber-600 text-white">수정</button>
+                className="px-4 py-1.5 text-xs font-bold border border-teal-400 rounded-lg bg-teal-500 hover:bg-teal-600 text-white">수정</button>
             </div>
           </div>
         </div>

@@ -245,7 +245,7 @@ export default function SettlementAnnualPage() {
           <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
             {yearOpts.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-          <button className="px-3 py-1.5 text-xs font-bold text-white bg-[#f5b800] hover:bg-[#d4a000] rounded transition-colors">조회</button>
+          <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
         </div>
       </div>
 
@@ -285,17 +285,17 @@ export default function SettlementAnnualPage() {
                   <td className="px-3 py-2 border border-slate-200 bg-slate-50 font-bold text-slate-600 text-center w-20">예금주</td>
                   <td className="px-2 py-1.5 border border-slate-200" colSpan={5}>
                     <div className="flex items-center gap-4">
-                      <input type="text" value={overview.depositor} onChange={e => setOverview(p => ({ ...p, depositor: e.target.value }))} className="w-48 px-2 py-1 border border-amber-300 rounded text-xs focus:outline-none focus:border-blue-400" />
+                      <input type="text" value={overview.depositor} onChange={e => setOverview(p => ({ ...p, depositor: e.target.value }))} className="w-48 px-2 py-1 border border-teal-300 rounded text-xs focus:outline-none focus:border-blue-400" />
                       <span className="text-xs font-bold text-slate-600">적립기관</span>
-                      <input type="text" value={overview.institution} onChange={e => setOverview(p => ({ ...p, institution: e.target.value }))} className="w-48 px-2 py-1 border border-amber-300 rounded text-xs focus:outline-none focus:border-blue-400" />
+                      <input type="text" value={overview.institution} onChange={e => setOverview(p => ({ ...p, institution: e.target.value }))} className="w-48 px-2 py-1 border border-teal-300 rounded text-xs focus:outline-none focus:border-blue-400" />
                       <span className="text-xs font-bold text-slate-600">적립기간</span>
                       <div className="flex items-center gap-0.5 text-xs">
-                        <input type="text" value={overview.periodFromY} onChange={e => setOverview(p => ({ ...p, periodFromY: e.target.value }))} className="w-10 px-1 py-1 border border-amber-300 rounded text-center focus:outline-none focus:border-blue-400" />년
-                        <input type="text" value={overview.periodFromM} onChange={e => setOverview(p => ({ ...p, periodFromM: e.target.value }))} className="w-7 px-1 py-1 border border-amber-300 rounded text-center focus:outline-none focus:border-blue-400" />월
-                        <input type="text" value={overview.periodFromD} onChange={e => setOverview(p => ({ ...p, periodFromD: e.target.value }))} className="w-7 px-1 py-1 border border-amber-300 rounded text-center focus:outline-none focus:border-blue-400" />일~
-                        <input type="text" value={overview.periodToY} onChange={e => setOverview(p => ({ ...p, periodToY: e.target.value }))} className="w-10 px-1 py-1 border border-amber-300 rounded text-center focus:outline-none focus:border-blue-400" />년
-                        <input type="text" value={overview.periodToM} onChange={e => setOverview(p => ({ ...p, periodToM: e.target.value }))} className="w-7 px-1 py-1 border border-amber-300 rounded text-center focus:outline-none focus:border-blue-400" />월
-                        <input type="text" value={overview.periodToD} onChange={e => setOverview(p => ({ ...p, periodToD: e.target.value }))} className="w-7 px-1 py-1 border border-amber-300 rounded text-center focus:outline-none focus:border-blue-400" />일
+                        <input type="text" value={overview.periodFromY} onChange={e => setOverview(p => ({ ...p, periodFromY: e.target.value }))} className="w-10 px-1 py-1 border border-teal-300 rounded text-center focus:outline-none focus:border-blue-400" />년
+                        <input type="text" value={overview.periodFromM} onChange={e => setOverview(p => ({ ...p, periodFromM: e.target.value }))} className="w-7 px-1 py-1 border border-teal-300 rounded text-center focus:outline-none focus:border-blue-400" />월
+                        <input type="text" value={overview.periodFromD} onChange={e => setOverview(p => ({ ...p, periodFromD: e.target.value }))} className="w-7 px-1 py-1 border border-teal-300 rounded text-center focus:outline-none focus:border-blue-400" />일~
+                        <input type="text" value={overview.periodToY} onChange={e => setOverview(p => ({ ...p, periodToY: e.target.value }))} className="w-10 px-1 py-1 border border-teal-300 rounded text-center focus:outline-none focus:border-blue-400" />년
+                        <input type="text" value={overview.periodToM} onChange={e => setOverview(p => ({ ...p, periodToM: e.target.value }))} className="w-7 px-1 py-1 border border-teal-300 rounded text-center focus:outline-none focus:border-blue-400" />월
+                        <input type="text" value={overview.periodToD} onChange={e => setOverview(p => ({ ...p, periodToD: e.target.value }))} className="w-7 px-1 py-1 border border-teal-300 rounded text-center focus:outline-none focus:border-blue-400" />일
                       </div>
                     </div>
                   </td>
@@ -304,31 +304,31 @@ export default function SettlementAnnualPage() {
                   <td rowSpan={2} className="px-3 py-2 border border-slate-200 bg-slate-50 font-bold text-slate-600 text-center">적립금</td>
                   <td className="px-3 py-2 border border-slate-200 bg-slate-50 font-bold text-slate-600 text-center">일반적립금</td>
                   <td className="px-2 py-1.5 border border-slate-200">
-                    <input type="text" value={overview.generalA} onChange={e => setOverview(p => ({ ...p, generalA: e.target.value }))} className="w-full px-2 py-1 border border-amber-300 rounded text-right focus:outline-none focus:border-blue-400" />
+                    <input type="text" value={overview.generalA} onChange={e => setOverview(p => ({ ...p, generalA: e.target.value }))} className="w-full px-2 py-1 border border-teal-300 rounded text-right focus:outline-none focus:border-blue-400" />
                   </td>
                   <td className="px-2 py-1.5 border border-slate-200">
-                    <input type="text" value={overview.generalB} onChange={e => setOverview(p => ({ ...p, generalB: e.target.value }))} className="w-full px-2 py-1 border border-amber-300 rounded text-right focus:outline-none focus:border-blue-400" />
+                    <input type="text" value={overview.generalB} onChange={e => setOverview(p => ({ ...p, generalB: e.target.value }))} className="w-full px-2 py-1 border border-teal-300 rounded text-right focus:outline-none focus:border-blue-400" />
                   </td>
                   <td className="px-2 py-1.5 border border-slate-200">
-                    <input type="text" value={overview.generalC} onChange={e => setOverview(p => ({ ...p, generalC: e.target.value }))} className="w-full px-2 py-1 border border-amber-300 rounded text-right focus:outline-none focus:border-blue-400" />
+                    <input type="text" value={overview.generalC} onChange={e => setOverview(p => ({ ...p, generalC: e.target.value }))} className="w-full px-2 py-1 border border-teal-300 rounded text-right focus:outline-none focus:border-blue-400" />
                   </td>
                   <td className="px-2 py-1.5 border border-slate-200">
-                    <input type="text" value={overview.generalTotal} onChange={e => setOverview(p => ({ ...p, generalTotal: e.target.value }))} className="w-full px-2 py-1 border border-amber-300 rounded text-right focus:outline-none focus:border-blue-400" />
+                    <input type="text" value={overview.generalTotal} onChange={e => setOverview(p => ({ ...p, generalTotal: e.target.value }))} className="w-full px-2 py-1 border border-teal-300 rounded text-right focus:outline-none focus:border-blue-400" />
                   </td>
                 </tr>
                 <tr>
                   <td className="px-3 py-2 border border-slate-200 bg-slate-50 font-bold text-slate-600 text-center">퇴직적립금</td>
                   <td className="px-2 py-1.5 border border-slate-200">
-                    <input type="text" value={overview.retireA} onChange={e => setOverview(p => ({ ...p, retireA: e.target.value }))} className="w-full px-2 py-1 border border-amber-300 rounded text-right focus:outline-none focus:border-blue-400" />
+                    <input type="text" value={overview.retireA} onChange={e => setOverview(p => ({ ...p, retireA: e.target.value }))} className="w-full px-2 py-1 border border-teal-300 rounded text-right focus:outline-none focus:border-blue-400" />
                   </td>
                   <td className="px-2 py-1.5 border border-slate-200">
-                    <input type="text" value={overview.retireB} onChange={e => setOverview(p => ({ ...p, retireB: e.target.value }))} className="w-full px-2 py-1 border border-amber-300 rounded text-right focus:outline-none focus:border-blue-400" />
+                    <input type="text" value={overview.retireB} onChange={e => setOverview(p => ({ ...p, retireB: e.target.value }))} className="w-full px-2 py-1 border border-teal-300 rounded text-right focus:outline-none focus:border-blue-400" />
                   </td>
                   <td className="px-2 py-1.5 border border-slate-200">
-                    <input type="text" value={overview.retireC} onChange={e => setOverview(p => ({ ...p, retireC: e.target.value }))} className="w-full px-2 py-1 border border-amber-300 rounded text-right focus:outline-none focus:border-blue-400" />
+                    <input type="text" value={overview.retireC} onChange={e => setOverview(p => ({ ...p, retireC: e.target.value }))} className="w-full px-2 py-1 border border-teal-300 rounded text-right focus:outline-none focus:border-blue-400" />
                   </td>
                   <td className="px-2 py-1.5 border border-slate-200">
-                    <input type="text" value={overview.retireTotal} onChange={e => setOverview(p => ({ ...p, retireTotal: e.target.value }))} className="w-full px-2 py-1 border border-amber-300 rounded text-right focus:outline-none focus:border-blue-400" />
+                    <input type="text" value={overview.retireTotal} onChange={e => setOverview(p => ({ ...p, retireTotal: e.target.value }))} className="w-full px-2 py-1 border border-teal-300 rounded text-right focus:outline-none focus:border-blue-400" />
                   </td>
                 </tr>
               </tbody>

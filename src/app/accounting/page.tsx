@@ -61,8 +61,8 @@ export default function AccountingPage() {
               </div>
             </div>
           </div>
-          <div className="border border-amber-100 bg-amber-50/50 rounded-lg p-3 hover:bg-amber-100/70 transition-colors cursor-pointer">
-            <p className="text-[11px] text-amber-600 mb-2">공과금/경비</p>
+          <div className="border border-teal-100 bg-teal-50/50 rounded-lg p-3 hover:bg-teal-100/70 transition-colors cursor-pointer">
+            <p className="text-[11px] text-teal-600 mb-2">공과금/경비</p>
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-600">4대보험</span>
@@ -129,8 +129,8 @@ export default function AccountingPage() {
       </div>
 
       {/* 분석 기준 안내 */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5">
-        <p className="text-[11px] text-amber-700">※ 분석기준 표시: (-)금액: 미달, (+)금액: 초과</p>
+      <div className="bg-teal-50 border border-teal-200 rounded-lg px-4 py-2.5">
+        <p className="text-[11px] text-teal-700">※ 분석기준 표시: (-)금액: 미달, (+)금액: 초과</p>
       </div>
 
       {/* 급간식비 평가 */}
