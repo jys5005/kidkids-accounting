@@ -37,9 +37,11 @@ export default function InsuranceCalcPage() {
   const longtermWorker = Math.round(longtermTotal / 2)
   const longtermEmployer = longtermTotal - longtermWorker
 
-  const employWorker = Math.round(s * RATES.employ.worker)
-  const employEmployer = Math.round(s * (RATES.employ.worker + RATES.employ.employer[workerSize]))
-  const employTotal = employWorker + Math.round(s * RATES.employ.employer[workerSize])
+  const employWorker = Math.floor(s * RATES.employ.worker)
+  const employEmployerBase = Math.floor(s * RATES.employ.worker) // 사업주 실업급여 0.9%
+  const employEmployerStab = Math.floor(s * RATES.employ.employer[workerSize]) // 고용안정 각 요율
+  const employEmployer = employEmployerBase + employEmployerStab
+  const employTotal = employWorker + employEmployer
 
   const allTotal = pensionTotal + healthTotal + longtermTotal + employTotal
   const allWorker = pensionWorker + healthWorker + longtermWorker + employWorker
