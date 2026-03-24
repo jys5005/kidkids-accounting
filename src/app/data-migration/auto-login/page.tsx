@@ -1,6 +1,53 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+
+// ─── ExWeb 통신 ──────────────────────────────────────────────────────────────
+const EXWEB_URL = 'https://127.0.0.1:16566'
+
+interface ExWebCert {
+  drive: string
+  certName: string
+  fromDt: string
+  toDt: string
+  pub: string
+  sn: string
+  oid: string
+  path: string
+}
+
+async function callExWeb(op: string, body?: string | null) {
+  const res = await fetch(`${EXWEB_URL}/?op=${op}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+    body: body ?? null,
+    mode: 'cors',
+  })
+  if (!res.ok) throw new Error(`ExWeb 응답 오류: ${res.status}`)
+  return res.json()
+}
+
+async function checkExWeb(): Promise<{ available: boolean; version?: string }> {
+  try {
+    const json = await callExWeb('setup')
+    return json.errYn === 'N' ? { available: true, version: json.nxVer } : { available: false }
+  } catch {
+    return { available: false }
+  }
+}
+
+async function getCertList(drive?: string): Promise<ExWebCert[]> {
+  const body = drive ? JSON.stringify({ certDrive: drive }) : null
+  const json = await callExWeb('certList', body)
+  if (json.errYn === 'Y') throw new Error(json.errMsg || '인증서 목록 조회 실패')
+  return (json.list as ExWebCert[]) ?? []
+}
+
+async function selectCertPopup(): Promise<{ cert_nm: string; file1: string; file2: string; end_dt: string; cert_pw: string }> {
+  const json = await callExWeb('certSelect', '{"certImageUrl": "", "nxKeypad": ""}')
+  if (json.errYn === 'Y') throw new Error(json.errMsg || '인증서 선택 실패')
+  return json as { cert_nm: string; file1: string; file2: string; end_dt: string; cert_pw: string }
+}
 
 const allCompanies = [
   '보육나라', '장부나라', '키즈홈', '인천시어린이집관리시스템',
@@ -19,6 +66,7 @@ type Row = {
   certFile: string
   certPw: string
   lastLogin: string
+  verifyStatus?: 'success' | 'fail' | ''
 }
 
 const TH = 'px-2 py-2 text-center font-bold text-slate-700 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-yellow-300'
@@ -74,6 +122,75 @@ export default function AutoLoginPage() {
   const [certModalIdx, setCertModalIdx] = useState<number | null>(null)
   const [testingIdx, setTestingIdx] = useState<number | null>(null)
 
+  // ExWeb 상태
+  const [exwebOk, setExwebOk] = useState(false)
+  const [exwebVer, setExwebVer] = useState('')
+  const [certList, setCertList] = useState<ExWebCert[]>([])
+  const [certLoading, setCertLoading] = useState(false)
+  const [certError, setCertError] = useState('')
+  const [certDrive, setCertDrive] = useState('hard')
+
+  // ExWeb 설치 확인 (모달 열릴 때)
+  useEffect(() => {
+    if (certModalIdx === null) return
+    setCertError('')
+    setCertList([])
+    checkExWeb().then(r => {
+      setExwebOk(r.available)
+      if (r.version) setExwebVer(r.version)
+      if (r.available) {
+        // 자동으로 인증서 목록 조회
+        setCertLoading(true)
+        getCertList()
+          .then(list => setCertList(list))
+          .catch(e => setCertError(e.message))
+          .finally(() => setCertLoading(false))
+      }
+    })
+  }, [certModalIdx])
+
+  // 인증서 목록 새로고침
+  const handleRefreshCerts = useCallback(async () => {
+    setCertLoading(true)
+    setCertError('')
+    try {
+      const driveParam = certDrive === 'hard' ? undefined : certDrive
+      const list = await getCertList(driveParam)
+      setCertList(list)
+      if (list.length === 0) setCertError('저장된 인증서가 없습니다.')
+    } catch (e) {
+      setCertError(e instanceof Error ? e.message : '인증서 목록 조회 실패')
+    } finally {
+      setCertLoading(false)
+    }
+  }, [certDrive])
+
+  // ExWeb 인증서 선택 팝업 (Windows)
+  const handleExWebSelect = useCallback(async () => {
+    if (certModalIdx === null) return
+    setCertLoading(true)
+    setCertError('')
+    try {
+      const cert = await selectCertPopup()
+      const next = [...rows]
+      next[certModalIdx] = { ...next[certModalIdx], certFile: cert.cert_nm, certPw: cert.cert_pw }
+      save(next)
+      setCertError('')
+    } catch (e) {
+      setCertError(e instanceof Error ? e.message : '인증서 선택 실패')
+    } finally {
+      setCertLoading(false)
+    }
+  }, [certModalIdx, rows])
+
+  // 목록에서 인증서 클릭 선택
+  const handleCertClick = useCallback((cert: ExWebCert) => {
+    if (certModalIdx === null) return
+    const next = [...rows]
+    next[certModalIdx] = { ...next[certModalIdx], certFile: cert.certName }
+    save(next)
+  }, [certModalIdx, rows])
+
   const handleCertFileSelect = (idx: number, file: File) => {
     const reader = new FileReader()
     reader.onload = () => {
@@ -108,13 +225,18 @@ export default function AutoLoginPage() {
         const now = new Date()
         const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`
         const next = [...rows]
-        next[idx] = { ...next[idx], lastLogin: dateStr }
+        next[idx] = { ...next[idx], lastLogin: dateStr, verifyStatus: 'success' }
         save(next)
-        alert(`${row.label} 로그인 성공!`)
       } else {
+        const next = [...rows]
+        next[idx] = { ...next[idx], verifyStatus: 'fail' }
+        save(next)
         alert(data.error || data.message || '로그인 실패')
       }
     } catch {
+      const next = [...rows]
+      next[idx] = { ...next[idx], verifyStatus: 'fail' }
+      save(next)
       alert('통합e 서버에 연결할 수 없습니다.')
     } finally {
       setTestingIdx(null)
@@ -145,6 +267,53 @@ export default function AutoLoginPage() {
       }
     } catch {
       alert('통합e 서버에 연결할 수 없습니다.')
+    }
+  }
+
+  // 로그인 버튼: ExWeb execute로 인포텍 인증 후 해당 사이트 자동 로그인
+  const [loginIdx, setLoginIdx] = useState<number | null>(null)
+
+  const handleLogin = async (idx: number) => {
+    const row = rows[idx]
+    if (row.authType === 'cert' && (!row.certFile || !row.certPw)) { alert('인증서를 등록해주세요.'); return }
+    if (row.authType === 'id+pw' && (!row.id || !row.pw)) { alert('아이디와 비밀번호를 입력해주세요.'); return }
+
+    setLoginIdx(idx)
+    try {
+      // Puppeteer로 해당 사이트에 자동 로그인 (서버에서 브라우저를 직접 열어줌)
+      const res = await fetch('/api/auto-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company: row.label,
+          authType: row.authType === 'id+pw' ? 'idpw' : 'cert',
+          id: row.id,
+          pw: row.pw,
+          certName: row.certFile,
+          certPw: row.certPw,
+          action: 'login',
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        const now = new Date()
+        const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`
+        const next = [...rows]
+        next[idx] = { ...next[idx], lastLogin: dateStr, verifyStatus: 'success' }
+        save(next)
+      } else {
+        const next = [...rows]
+        next[idx] = { ...next[idx], verifyStatus: 'fail' }
+        save(next)
+        alert(data.error || data.message || '로그인 실패')
+      }
+    } catch (e) {
+      const next = [...rows]
+      next[idx] = { ...next[idx], verifyStatus: 'fail' }
+      save(next)
+      alert(`로그인 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`)
+    } finally {
+      setLoginIdx(null)
     }
   }
 
@@ -257,16 +426,30 @@ export default function AutoLoginPage() {
                   </div>
                 </td>
                 <td className="px-2 py-2.5 text-center border-r border-slate-100">
-                  {row.id ? (
-                    <button onClick={() => handleTest(idx)} disabled={testingIdx === idx} className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${testingIdx === idx ? 'text-slate-400 border border-slate-200 bg-slate-50' : 'text-blue-600 border border-blue-300 bg-blue-50'}`}>
-                      {testingIdx === idx ? '검증중...' : '실행'}
-                    </button>
-                  ) : <span className="text-slate-300">-</span>}
+                  <div className="flex flex-col items-center gap-0.5">
+                    {(row.id || row.certFile) ? (
+                      <button onClick={() => handleTest(idx)} disabled={testingIdx === idx} className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${testingIdx === idx ? 'text-slate-400 border border-slate-200 bg-slate-50' : 'text-blue-600 border border-blue-300 bg-blue-50'}`}>
+                        {testingIdx === idx ? '검증중...' : '실행'}
+                      </button>
+                    ) : <span className="text-slate-300">-</span>}
+                    {row.verifyStatus === 'success' && (
+                      <span className="text-[9px] font-bold text-green-600 bg-green-50 border border-green-200 rounded px-1">성공</span>
+                    )}
+                    {row.verifyStatus === 'fail' && (
+                      <span className="text-[9px] font-bold text-red-500 bg-red-50 border border-red-200 rounded px-1">실패</span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-2 py-2.5 text-center border-r border-slate-100 text-[10px] text-slate-500">{row.lastLogin || '-'}</td>
                 <td className="px-2 py-2.5 text-center border-r border-slate-100">
-                  {row.id ? (
-                    <button className="px-1.5 py-0.5 text-[10px] font-bold text-teal-600 border border-teal-300 bg-teal-50 rounded">로그인</button>
+                  {(row.id || row.certFile) ? (
+                    <button
+                      onClick={() => handleLogin(idx)}
+                      disabled={loginIdx === idx}
+                      className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${loginIdx === idx ? 'text-slate-400 border border-slate-200 bg-slate-50' : 'text-teal-600 border border-teal-300 bg-teal-50 hover:bg-teal-100'}`}
+                    >
+                      {loginIdx === idx ? '로그인중...' : '로그인'}
+                    </button>
                   ) : <span className="text-slate-300">-</span>}
                 </td>
                 <td className="px-2 py-2.5 text-center border-r border-slate-100"><span className="text-slate-300">-</span></td>
@@ -292,41 +475,99 @@ export default function AutoLoginPage() {
 
             {/* 인증서 선택 영역 */}
             <div className="border border-slate-200 rounded p-3 bg-slate-50 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center text-blue-600 text-[14px]">🔐</div>
-                <div>
-                  <p className="text-[11px] font-bold text-slate-700">공동인증서 (구 공인인증서)</p>
-                  <p className="text-[10px] text-slate-400">인포텍 인증프로그램을 통해 인증서를 등록합니다</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center text-blue-600 text-[14px]">🔐</div>
+                  <div>
+                    <p className="text-[11px] font-bold text-slate-700">공동인증서 (구 공인인증서)</p>
+                    <p className="text-[10px] text-slate-400">인포텍 인증프로그램을 통해 인증서를 등록합니다</p>
+                  </div>
+                </div>
+                {/* ExWeb 상태 표시 */}
+                <div className="flex items-center gap-1">
+                  <span className={`w-1.5 h-1.5 rounded-full ${exwebOk ? 'bg-green-500' : 'bg-red-400'}`} />
+                  <span className={`text-[9px] ${exwebOk ? 'text-green-600' : 'text-red-500'}`}>
+                    {exwebOk ? `ExWeb v${exwebVer}` : 'ExWeb 미연결'}
+                  </span>
                 </div>
               </div>
 
-              {/* 인증서 저장위치 */}
+              {/* 인증서 저장위치 + 새로고침 */}
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-600">인증서 저장위치</label>
-                <select
-                  className="w-full border border-slate-300 rounded px-2 py-1.5 text-[11px] bg-white focus:outline-none focus:border-blue-400"
-                  defaultValue="hard"
-                >
-                  <option value="hard">하드디스크</option>
-                  <option value="usb">이동식디스크(USB)</option>
-                  <option value="phone">휴대폰</option>
-                  <option value="cloud">클라우드</option>
-                </select>
+                <div className="flex gap-1.5">
+                  <select
+                    className="flex-1 border border-slate-300 rounded px-2 py-1.5 text-[11px] bg-white focus:outline-none focus:border-blue-400"
+                    value={certDrive}
+                    onChange={e => setCertDrive(e.target.value)}
+                  >
+                    <option value="hard">하드디스크</option>
+                    <option value="usb">이동식디스크(USB)</option>
+                    <option value="phone">휴대폰</option>
+                    <option value="cloud">클라우드</option>
+                  </select>
+                  <button
+                    onClick={handleRefreshCerts}
+                    disabled={!exwebOk || certLoading}
+                    className="px-2 py-1.5 text-[10px] font-bold border border-slate-300 rounded bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="인증서 목록 새로고침"
+                  >
+                    {certLoading ? '⏳' : '🔄'} 조회
+                  </button>
+                </div>
               </div>
 
               {/* 인증서 목록 */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-600">인증서 선택</label>
-                <div className="border border-slate-300 rounded bg-white max-h-[120px] overflow-y-auto">
-                  {rows[certModalIdx].certFile ? (
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-600">인증서 선택</label>
+                  {exwebOk && (
+                    <button
+                      onClick={handleExWebSelect}
+                      disabled={certLoading}
+                      className="text-[9px] text-blue-600 hover:text-blue-800 font-bold disabled:opacity-40"
+                    >
+                      Windows 인증서 선택창 열기
+                    </button>
+                  )}
+                </div>
+                <div className="border border-slate-300 rounded bg-white max-h-[150px] overflow-y-auto">
+                  {certLoading ? (
+                    <div className="px-2 py-3 text-[10px] text-center text-slate-400">인증서 목록 조회 중...</div>
+                  ) : certList.length > 0 ? (
+                    certList.map((cert, i) => {
+                      const selected = rows[certModalIdx]?.certFile === cert.certName
+                      return (
+                        <div
+                          key={i}
+                          onClick={() => handleCertClick(cert)}
+                          className={`px-2 py-1.5 text-[11px] border-b border-slate-100 cursor-pointer transition-colors
+                            ${selected ? 'bg-blue-50 border-blue-200' : 'hover:bg-slate-50'}`}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span className={selected ? 'text-blue-500' : 'text-slate-300'}>{selected ? '✔' : '○'}</span>
+                            <span className={`font-medium ${selected ? 'text-blue-700' : 'text-slate-700'}`}>{cert.certName}</span>
+                          </div>
+                          <div className="ml-5 text-[9px] text-slate-400">
+                            {cert.pub} · {cert.fromDt} ~ {cert.toDt}
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : rows[certModalIdx]?.certFile ? (
                     <div className="px-2 py-1.5 text-[11px] bg-blue-50 border-b border-blue-100 flex items-center gap-1.5">
                       <span className="text-blue-500">✔</span>
                       <span className="text-slate-700 font-medium">{rows[certModalIdx].certFile}</span>
                     </div>
                   ) : (
-                    <div className="px-2 py-3 text-[10px] text-center text-slate-400">등록된 인증서가 없습니다</div>
+                    <div className="px-2 py-3 text-[10px] text-center text-slate-400">
+                      {exwebOk ? '인증서 목록이 비어 있습니다. 조회 버튼을 눌러주세요.' : 'ExWeb 미연결 — 파일 가져오기를 이용해주세요.'}
+                    </div>
                   )}
                 </div>
+                {certError && (
+                  <p className="text-[10px] text-red-500 mt-0.5">{certError}</p>
+                )}
               </div>
 
               {/* 인증서 파일 가져오기 */}

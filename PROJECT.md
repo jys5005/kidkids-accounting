@@ -164,3 +164,22 @@
   - JS 2개 파일: common.js (헤더/사이드바/네비게이션/타이머), accounts.js (계정과목 데이터)
   - HTML 27개 페이지: accounting, budget(4), voucher(5), monthly-report, settlement(2), reconciliation(7), cash-ledger, data-migration(2), settings, staff, children, calculator/meal
   - 각 CSS 클래스 개별 정의 → 수정 용이
+
+### 2026-03-24 (자동로그인 ExWeb 연동 + 인증프로그램 개선)
+- **인포텍 인증프로그램 모달 ExWeb 연동** (`/data-migration/auto-login`)
+  - ExWeb(`https://127.0.0.1:16566`) 자동 연결 확인 + 상태 표시 (초록/빨강 + 버전)
+  - 모달 열릴 때 ExWeb `certList` API로 PC 인증서 목록 자동 조회
+  - 인증서 클릭 선택 + Windows 인증서 선택창(`certSelect`) 열기
+  - 저장위치 변경(하드디스크/USB/휴대폰/클라우드) + 새로고침
+  - ExWeb 미연결 시 파일 업로드 폴백 유지
+- **검증 결과 표시**: 성공(초록 뱃지)/실패(빨강 뱃지) 검증 컬럼에 표시
+- **자동로그인 기능** (인천시어린이집관리시스템)
+  - Puppeteer headful 모드로 aincheon.co.kr 브라우저 직접 열기
+  - ExWeb certSelect 요청을 네트워크 레벨에서 가로채기 → 저장된 인증서 자동 반환
+  - "공동인증서 로그인" 버튼 자동 클릭
+  - 로그인 완료 후 브라우저를 사용자에게 넘김 (`browser.disconnect()`)
+- **프록시 설정**: `/api/cert-config`, `/api/cis-config`, `/api/auto-login` PUBLIC_PATHS 추가
+- **API 엔드포인트 추가**
+  - `/api/cert-config`: 통합e(3000)에서 인증서 파일 경로 프록시
+  - `/api/cis-config`: 통합e(3000)에서 CIS 설정(appCd/userId/userPw) 프록시
+  - `/api/auto-login` action:'login': Puppeteer headful 자동 로그인
