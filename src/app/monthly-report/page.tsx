@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import DraggableModal from '@/components/DraggableModal'
 import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap } from '@/lib/accounts'
 
 function fmt(n: number) { return n.toLocaleString('ko-KR') }
@@ -430,11 +431,7 @@ export default function MonthlyReportPage() {
       </div>
       {/* 영수증전송설정 확인 팝업 */}
       {showReceiptConfirm && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl w-[380px] overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200">
-              <p className="text-sm font-bold text-slate-800">영수증전송설정 변경</p>
-            </div>
+        <DraggableModal onClose={() => setShowReceiptConfirm(false)} title="영수증전송설정 변경" className="w-[380px]">
             <div className="px-5 py-5">
               <p className="text-xs text-slate-700">미신청으로 설정 시 영수증은 미전송 됩니다.</p>
             </div>
@@ -442,17 +439,12 @@ export default function MonthlyReportPage() {
               <button onClick={() => setShowReceiptConfirm(false)} className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">취소</button>
               <button onClick={() => { setReceiptSetting('미신청'); setShowReceiptConfirm(false) }} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">확인</button>
             </div>
-          </div>
-        </div>
+        </DraggableModal>
       )}
 
       {/* 영수증전송설정 신청완료 팝업 */}
       {showReceiptApply && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl w-[380px] overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200">
-              <p className="text-sm font-bold text-slate-800">영수증전송설정 변경</p>
-            </div>
+        <DraggableModal onClose={() => setShowReceiptApply(false)} title="영수증전송설정 변경" className="w-[380px]">
             <div className="px-5 py-5">
               <p className="text-xs text-slate-700">신청완료로 설정 시 영수증이 함께 전송됩니다.</p>
             </div>
@@ -460,25 +452,14 @@ export default function MonthlyReportPage() {
               <button onClick={() => setShowReceiptApply(false)} className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">취소</button>
               <button onClick={() => { setReceiptSetting('신청완료'); setShowReceiptApply(false) }} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">확인</button>
             </div>
-          </div>
-        </div>
+        </DraggableModal>
       )}
 
       {/* 세부내역 팝업 */}
       {detailAccount && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center" onClick={() => setDetailAccount(null)}>
-          <div className="bg-white rounded-xl shadow-2xl w-[800px] max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${detailAccount.code.startsWith('1') ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>{detailAccount.isSub ? '세목' : '목'}</span>
-                <span className="text-sm font-bold text-slate-800">{detailAccount.code} {detailAccount.name}</span>
-                <span className="text-xs text-slate-400">현금출납부</span>
-              </div>
-              <button onClick={() => setDetailAccount(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
+        <DraggableModal onClose={() => setDetailAccount(null)} title={`${detailAccount.code} ${detailAccount.name} 현금출납부`} className="w-[800px] max-h-[80vh] overflow-hidden">
             <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-4 text-xs">
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${detailAccount.code.startsWith('1') ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>{detailAccount.isSub ? '세목' : '목'}</span>
               <span className="text-slate-500">예산액 <span className="font-bold text-slate-700">{fmt(detailAccount.budget)}</span></span>
               {detailAccount.code.startsWith('1') ? (
                 <>
@@ -523,8 +504,7 @@ export default function MonthlyReportPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
+        </DraggableModal>
       )}
     </div>
   )

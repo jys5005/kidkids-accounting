@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import DraggableModal from '@/components/DraggableModal'
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 
 const classData = [
@@ -80,11 +81,7 @@ export default function ClassPage() {
 
       </div>
       {showDetail && selectedClass && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[700px] border border-slate-300" onClick={e => e.stopPropagation()}>
-            <div className="px-4 py-3 border-b border-slate-200">
-              <span className="text-sm font-bold text-slate-700">반 등록</span>
-            </div>
+        <DraggableModal onClose={() => setShowDetail(false)} title="반 등록" className="w-full max-w-[700px]">
             <div className="p-4">
               <table className="w-full text-[12px] border-collapse">
                 <colgroup><col style={{width:'15%'}}/><col style={{width:'50%'}}/><col style={{width:'10%'}}/><col style={{width:'25%'}}/></colgroup>
@@ -118,8 +115,7 @@ export default function ClassPage() {
               <button className="px-6 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded">삭제</button>
               <button onClick={() => setShowDetail(false)} className="px-6 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">취소</button>
             </div>
-          </div>
-        </div>
+        </DraggableModal>
       )}
     </div>
   )

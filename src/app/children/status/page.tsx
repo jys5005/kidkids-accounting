@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import DraggableModal from '@/components/DraggableModal'
 
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const inputCls = "border border-teal-300 rounded px-2 py-1.5 text-[12px] focus:outline-none focus:border-teal-500 w-full"
@@ -24,12 +25,7 @@ function ChildDetailModal({ child, onClose }: { child: any; onClose: () => void 
   const u = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }))
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-[720px] max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-          <span className="text-[15px] font-bold text-slate-800">원아 상세정보</span>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
-        </div>
+    <DraggableModal onClose={onClose} title="원아 상세정보" className="w-[720px] max-h-[90vh] overflow-y-auto">
         {/* 기본정보 */}
         <div className="px-5 py-3">
           <div className="bg-slate-100 px-3 py-2 rounded font-bold text-[13px] text-slate-700 mb-2">기본정보</div>
@@ -159,8 +155,7 @@ function ChildDetailModal({ child, onClose }: { child: any; onClose: () => void 
           <button onClick={onClose} className="px-6 py-1.5 text-[12px] font-bold text-slate-600 bg-slate-100 border border-slate-300 rounded hover:bg-slate-200">취소</button>
           <button className="px-6 py-1.5 text-[12px] font-bold text-slate-500 bg-slate-200 border border-slate-300 rounded hover:bg-slate-300">완전삭제</button>
         </div>
-      </div>
-    </div>
+    </DraggableModal>
   )
 }
 

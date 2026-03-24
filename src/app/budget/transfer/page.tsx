@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import DraggableModal from '@/components/DraggableModal'
 
 interface TransferRecord {
   id: number
@@ -216,12 +217,7 @@ export default function BudgetTransferPage() {
 
       {/* 신규 작성 팝업 */}
       {showPopup && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl w-[680px] overflow-hidden">
-            <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-              <p className="text-sm font-bold text-slate-800">과목전용 조서 {editId ? '수정' : '신규등록'}</p>
-              <button onClick={() => { setShowPopup(false); resetForm() }} className="text-slate-400 hover:text-slate-600 text-lg">×</button>
-            </div>
+        <DraggableModal onClose={() => { setShowPopup(false); resetForm() }} title={`과목전용 조서 ${editId ? '수정' : '신규등록'}`} className="w-[680px]">
             <div className="px-5 py-5 space-y-3">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-bold text-slate-600 w-20 text-right">회계년도</span>
@@ -280,8 +276,7 @@ export default function BudgetTransferPage() {
             <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-center">
               <button onClick={handleSave} className="px-8 py-2 text-xs font-bold text-white bg-slate-700 hover:bg-slate-800 rounded transition-colors">저 장</button>
             </div>
-          </div>
-        </div>
+        </DraggableModal>
       )}
     </div>
   )

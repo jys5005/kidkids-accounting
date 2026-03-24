@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import DraggableModal from '@/components/DraggableModal'
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 
 export default function GuardianPage() {
@@ -44,11 +45,7 @@ export default function GuardianPage() {
 
       {/* 보호자 등록 팝업 */}
       {showRegister && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[750px] border border-slate-300" onClick={e => e.stopPropagation()}>
-            <div className="px-4 py-3 border-b border-slate-200">
-              <span className="text-sm font-bold text-slate-700">보호자 등록</span>
-            </div>
+        <DraggableModal onClose={() => setShowRegister(false)} title="보호자 등록" className="w-full max-w-[750px]">
             <div className="p-4">
               <div className="bg-slate-100 text-center py-1.5 text-xs font-bold text-slate-700 border border-slate-200 mb-0">기본정보</div>
               <table className="w-full text-[12px] border-collapse border border-slate-200">
@@ -96,8 +93,7 @@ export default function GuardianPage() {
               <button className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">등록</button>
               <button onClick={() => setShowRegister(false)} className="px-6 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">취소</button>
             </div>
-          </div>
-        </div>
+        </DraggableModal>
       )}
     </div>
   )

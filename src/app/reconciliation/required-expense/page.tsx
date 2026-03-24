@@ -44,6 +44,7 @@ export default function RequiredExpensePage() {
   const [showRateSection, setShowRateSection] = useState(false)
   const [viewLevel, setViewLevel] = useState<'mok' | 'semok'>('semok')
   const [showLawChild, setShowLawChild] = useState(false)
+  const [selectedLawChild, setSelectedLawChild] = useState('')
 
   const childList = [
     { name: '곽이안', className: '예쁜반21세아반' },
@@ -601,6 +602,7 @@ export default function RequiredExpensePage() {
             <input className="border border-slate-300 rounded px-2 py-1.5 text-[12px] w-32" />
             <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-blue-600 rounded">조회</button>
             <span className="font-bold text-slate-600">원아별 매칭</span>
+            {selectedLawChild && <span className="text-[11px] text-teal-700 font-bold">{selectedLawChild}</span>}
             <div className="relative">
               <button onClick={() => setShowLawChild(v => !v)} className="px-2 py-1.5 text-[11px] border border-slate-300 rounded hover:bg-slate-50">
                 <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -625,7 +627,6 @@ export default function RequiredExpensePage() {
                       <thead className="sticky top-0"><tr className="bg-slate-100 border-b border-slate-200">
                         <th className="px-2 py-1.5 font-bold text-slate-700 border-r border-slate-200">이름</th>
                         <th className="px-2 py-1.5 font-bold text-slate-700 border-r border-slate-200">반</th>
-                        <th className="px-2 py-1.5 font-bold text-slate-700 border-r border-slate-200">주민번호</th>
                         <th className="px-2 py-1.5 font-bold text-slate-700 border-r border-slate-200">생년월일</th>
                         <th className="px-2 py-1.5 font-bold text-slate-700 border-r border-slate-200">입소일</th>
                         <th className="px-2 py-1.5 font-bold text-slate-700 border-r border-slate-200">퇴소일</th>
@@ -638,11 +639,10 @@ export default function RequiredExpensePage() {
                             <tr key={c.name} className="border-b border-slate-100 hover:bg-blue-50/30">
                               <td className="px-2 py-1.5 border-r border-slate-100">{c.name}</td>
                               <td className="px-2 py-1.5 border-r border-slate-100 text-[10px]">{c.className}</td>
-                              <td className="px-2 py-1.5 text-center border-r border-slate-100">-</td>
                               <td className="px-2 py-1.5 text-center border-r border-slate-100">{birth}</td>
                               <td className="px-2 py-1.5 text-center border-r border-slate-100">-</td>
                               <td className="px-2 py-1.5 text-center border-r border-slate-100">-</td>
-                              <td className="px-2 py-1.5 text-center"><button className="text-[10px] font-bold text-white bg-blue-500 px-2 py-0.5 rounded">선택</button></td>
+                              <td className="px-2 py-1.5 text-center"><button onClick={() => { setSelectedLawChild(c.name); setShowLawChild(false) }} className="text-[10px] font-bold text-white bg-blue-500 px-2 py-0.5 rounded">선택</button></td>
                             </tr>
                           )
                         })}
@@ -669,8 +669,7 @@ export default function RequiredExpensePage() {
               <th className="px-2 py-2 font-bold text-slate-700 border-r border-slate-200">코드</th>
               <th className="px-2 py-2 font-bold text-slate-700 border-r border-slate-200">계정과목</th>
               <th className="px-2 py-2 font-bold text-slate-700 border-r border-slate-200">거래처</th>
-              <th className="px-2 py-2 font-bold text-slate-700 border-r border-slate-200">분리</th>
-              <th className="px-2 py-2 font-bold text-slate-700">관리</th>
+              <th className="px-2 py-2 font-bold text-slate-700">매칭</th>
             </tr></thead>
             <tbody>
               {mockData.map(row => (
@@ -684,8 +683,16 @@ export default function RequiredExpensePage() {
                   <td className="px-2 py-1.5 text-center border-r border-slate-100">{row.code}</td>
                   <td className="px-2 py-1.5 border-r border-slate-100 text-blue-600">{row.account}</td>
                   <td className="px-2 py-1.5 border-r border-slate-100">{row.counterpart}</td>
-                  <td className="px-2 py-1.5 text-center border-r border-slate-100"><button className="text-[10px] font-bold text-slate-500 px-1.5 py-0.5 border border-slate-300 bg-slate-50 rounded">분리</button></td>
-                  <td className="px-2 py-1.5 text-center"><button className="text-[10px] font-bold text-white px-1.5 py-0.5 bg-orange-500 rounded">관리</button></td>
+                  <td className="px-2 py-1.5 text-center">
+                    {matchResult[row.id] ? (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-teal-700 font-bold">{matchResult[row.id].length === 1 ? matchResult[row.id][0] : `${matchResult[row.id][0]} 외 ${matchResult[row.id].length - 1}명`}</span>
+                        <button onClick={() => { setMatchRow(row); setMatchChecked(new Set(matchResult[row.id])); setMatchMode('simple'); setSplitOverride(null) }} className="text-[10px] text-slate-400 hover:text-slate-600">✎</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => { setMatchRow(row); setMatchChecked(new Set()); setMatchMode('simple'); setSplitOverride(null) }} className="text-[10px] font-bold text-slate-500 px-1.5 py-0.5 border border-slate-300 bg-slate-50 rounded">매칭</button>
+                    )}
+                  </td>
                 </tr>
               ))}
               <tr className="bg-slate-50 font-bold border-t border-slate-300">

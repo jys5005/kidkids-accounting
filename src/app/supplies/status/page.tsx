@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import DraggableModal from '@/components/DraggableModal'
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 
@@ -84,12 +85,7 @@ export default function SuppliesStatusPage() {
       </div>
 
       {showRegister && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[750px] border border-slate-300" onClick={e => e.stopPropagation()}>
-            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-700">비품등록</span>
-              <button onClick={() => setShowRegister(false)} className="text-slate-400 hover:text-slate-600 text-lg">×</button>
-            </div>
+        <DraggableModal onClose={() => setShowRegister(false)} title="비품등록" className="w-full max-w-[750px]">
             <div className="p-4">
               <table className="w-full text-[12px] border-collapse">
                 <colgroup><col style={{width:'15%'}}/><col style={{width:'35%'}}/><col style={{width:'15%'}}/><col style={{width:'35%'}}/></colgroup>
@@ -134,8 +130,7 @@ export default function SuppliesStatusPage() {
               <button className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">등록</button>
               <button onClick={() => setShowRegister(false)} className="px-6 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">취소</button>
             </div>
-          </div>
-        </div>
+        </DraggableModal>
       )}
     </div>
   )

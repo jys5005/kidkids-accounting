@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import DraggableModal from '@/components/DraggableModal'
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const inputCls = "border border-amber-300 rounded px-2 py-1 text-[11px] text-right focus:outline-none focus:border-amber-500 w-[70px]"
 
@@ -184,8 +185,8 @@ export default function ExpensePage() {
 
         {/* 확인 팝업 */}
         {showConfirm && (
-          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-            <div className="bg-white rounded-xl shadow-2xl p-6 w-[400px]">
+          <DraggableModal onClose={() => setShowConfirm(false)} title="확인" className="w-[400px]">
+            <div className="p-6">
               <p className="text-[14px] text-slate-700 mb-2">선택된 원아를 기준으로 분할 관리됩니다.</p>
               <p className="text-[13px] text-slate-600 mb-6">계속하시려면 확인을 클릭하세요</p>
               <div className="flex items-center justify-center gap-3">
@@ -193,7 +194,7 @@ export default function ExpensePage() {
                 <button onClick={() => setShowConfirm(false)} className="px-8 py-2 text-[13px] font-bold text-slate-600 bg-slate-200 rounded hover:bg-slate-300">취소</button>
               </div>
             </div>
-          </div>
+          </DraggableModal>
         )}
       </div>
     )

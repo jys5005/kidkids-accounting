@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import DraggableModal from '@/components/DraggableModal'
 
 const staffList = [
   { id: 1, name: '홍길동', ssn: '700101-1******', staffNo: 'B20150001', hireDate: '2015-03-01', leaveDate: '', phone: '010-1111-1111', type: '원장', status: '재직', contract: 'O', login: 'O', note: '' },
@@ -99,8 +100,7 @@ export default function StaffInfoPage() {
 
       {/* 신규등록/수정 폼 팝업 */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-start justify-center pt-8 overflow-y-auto px-10">
-          <div className="bg-white rounded-xl shadow-2xl w-[76vw] max-w-[1120px] mb-10 border border-slate-300" onClick={e => e.stopPropagation()}>
+        <DraggableModal onClose={() => setShowForm(false)} title="교직원 등록/수정" className="w-[76vw] max-w-[1120px]">
             {/* 3개 박스 */}
             <div className="grid grid-cols-3 gap-3 mx-4 mt-4">
               {/* 박스1: 인적사항 */}
@@ -207,8 +207,7 @@ export default function StaffInfoPage() {
               <button onClick={() => setShowForm(false)} className="px-6 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">취소</button>
               <button className="px-6 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">완전 삭제</button>
             </div>
-          </div>
-        </div>
+        </DraggableModal>
       )}
     </div>
   )

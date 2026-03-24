@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import DraggableModal from '@/components/DraggableModal'
 
 interface BudgetRow {
   code: string
@@ -720,11 +721,7 @@ export default function BudgetCreatePage() {
       </div>
       {/* 추경 팝업 */}
       {showAmendPopup && (
-        <div className="fixed inset-0 bg-black/40 z-[9999] flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl w-[380px] overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200">
-              <p className="text-sm font-bold text-slate-800">추경예산 생성</p>
-            </div>
+        <DraggableModal onClose={() => setShowAmendPopup(false)} title="추경예산 생성" className="w-[380px]">
             <div className="px-5 py-5 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-slate-600 w-24">추경차수</span>
@@ -761,8 +758,7 @@ export default function BudgetCreatePage() {
                 setShowAmendPopup(false)
               }} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">생성</button>
             </div>
-          </div>
-        </div>
+        </DraggableModal>
       )}
     </div>
   )
