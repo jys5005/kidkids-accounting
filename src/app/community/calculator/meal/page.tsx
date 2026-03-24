@@ -13,9 +13,9 @@ const ranges = [
 
 export default function MealCalculatorPage() {
   const [rows, setRows] = useState([
-    { label: '영유아', count: 0, unitPrice: 1745, days: 0 },
-    { label: '누리과정', count: 0, unitPrice: 2000, days: 0 },
-    { label: '교사', count: 0, unitPrice: 2000, days: 0 },
+    { label: '영아', count: 0, unitPrice: 1900, days: 0 },
+    { label: '유아', count: 0, unitPrice: 2400, days: 0 },
+    { label: '교직원', count: 0, unitPrice: 2400, days: 0 },
   ])
 
   const update = (i: number, field: string, val: number) => {

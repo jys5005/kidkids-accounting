@@ -11,6 +11,7 @@ const RATES = {
     worker: 0.009,
     employer: { under150: 0.0025, over150: 0.0045, over150_1000: 0.0065, over1000: 0.0085 },
   },
+  injury: 0.0066, // 산재보험 기본요율 0.66% (어린이집)
 }
 
 type Tab = 'all' | 'pension' | 'health' | 'employ' | 'injury'
@@ -21,33 +22,40 @@ export default function InsuranceCalcPage() {
   const [salaryStr, setSalaryStr] = useState('')
   const [calcSalary, setCalcSalary] = useState(0)
   const salary = Number(salaryStr.replace(/[^0-9]/g, '')) || 0
-  const [workerSize, setWorkerSize] = useState<Size>('over1000')
+  const [workerSize, setWorkerSize] = useState<Size>('under150')
+  const [injuryRateStr, setInjuryRateStr] = useState('0.66')
+  const [calcInjuryRate, setCalcInjuryRate] = useState(0.66)
 
   const s = calcSalary
   const pensionBase = Math.floor(Math.min(s, 6370000) / 1000) * 1000 // 국민연금 기준소득월액 상한 637만원, 천원미만 절사
-  const pensionWorker = Math.floor(pensionBase * RATES.pension.worker)  // 급여 × 4.75% 원단위 절삭
-  const pensionEmployer = Math.floor(pensionBase * RATES.pension.employer) // 급여 × 4.75% 원단위 절삭
+  const pensionWorker = Math.floor(pensionBase * RATES.pension.worker / 10) * 10  // 급여 × 4.75% 10원미만 절삭
+  const pensionEmployer = Math.floor(pensionBase * RATES.pension.employer / 10) * 10 // 급여 × 4.75% 10원미만 절삭
   const pensionTotal = pensionWorker + pensionEmployer
 
-  const healthTotal = Math.round(s * RATES.health.total)
-  const healthWorker = Math.round(s * RATES.health.worker)
-  const healthEmployer = Math.round(s * RATES.health.employer)
+  const healthWorker = Math.floor(s * RATES.health.worker / 10) * 10       // 3.595% 10원미만 절삭
+  const healthEmployer = Math.floor(s * RATES.health.employer / 10) * 10   // 3.595% 10원미만 절삭
+  const healthTotal = healthWorker + healthEmployer               // 근로자 + 사업주 = 총액
 
-  const longtermTotal = Math.round(healthTotal * RATES.longterm.rate / RATES.health.total)
-  const longtermWorker = Math.round(longtermTotal / 2)
-  const longtermEmployer = longtermTotal - longtermWorker
+  const longtermWorker = Math.floor(healthWorker * RATES.longterm.rate / RATES.health.total / 10) * 10   // 10원미만 절삭
+  const longtermEmployer = Math.floor(healthEmployer * RATES.longterm.rate / RATES.health.total / 10) * 10 // 10원미만 절삭
+  const longtermTotal = longtermWorker + longtermEmployer          // 근로자 + 사업주 = 총액
 
-  const employWorker = Math.floor(s * RATES.employ.worker)
-  const employEmployerBase = Math.floor(s * RATES.employ.worker) // 사업주 실업급여 0.9%
-  const employEmployerStab = Math.floor(s * RATES.employ.employer[workerSize]) // 고용안정 각 요율
+  const employWorker = Math.floor(s * RATES.employ.worker / 10) * 10  // 10원미만 절삭
+  const employEmployerBase = Math.floor(s * RATES.employ.worker / 10) * 10 // 사업주 실업급여 0.9% 10원미만 절삭
+  const employEmployerStab = Math.floor(s * RATES.employ.employer[workerSize] / 10) * 10 // 고용안정 각 요율 10원미만 절삭
   const employEmployer = employEmployerBase + employEmployerStab
   const employTotal = employWorker + employEmployer
 
-  const allTotal = pensionTotal + healthTotal + longtermTotal + employTotal
-  const allWorker = pensionWorker + healthWorker + longtermWorker + employWorker
-  const allEmployer = pensionEmployer + healthEmployer + longtermEmployer + (employTotal - employWorker)
+  const injuryRate = calcInjuryRate / 100
+  const injuryEmployer = Math.floor(s * injuryRate / 10) * 10  // 산재보험 사업주 전액 부담 10원미만 절삭
+  const injuryTotal = injuryEmployer
 
-  const reset = () => { setSalaryStr(''); setCalcSalary(0) }
+  const allTotal = pensionTotal + healthTotal + longtermTotal + employTotal + injuryTotal
+  const allWorker = pensionWorker + healthWorker + longtermWorker + employWorker
+  const allEmployer = pensionEmployer + healthEmployer + longtermEmployer + (employTotal - employWorker) + injuryEmployer
+
+  const doCalc = () => { setCalcSalary(salary); setCalcInjuryRate(parseFloat(injuryRateStr) || 0.66) }
+  const reset = () => { setSalaryStr(''); setCalcSalary(0); setInjuryRateStr('0.66'); setCalcInjuryRate(0.66) }
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'all', label: '전체' }, { key: 'pension', label: '국민연금' }, { key: 'health', label: '건강보험' }, { key: 'employ', label: '고용보험' }, { key: 'injury', label: '산재보험' },
@@ -65,14 +73,14 @@ export default function InsuranceCalcPage() {
   const salaryInputJsx = (
     <div className="px-4 mt-4 flex items-center gap-3">
       <span className="text-[13px] font-bold text-slate-700">월 급여</span>
-      <input type="text" value={salaryStr ? Number(salaryStr).toLocaleString('ko-KR') : ''} onChange={e => setSalaryStr(e.target.value.replace(/[^0-9]/g, ''))} className={`${inputCls} w-80`} placeholder="0" />
+      <input type="text" value={salaryStr ? Number(salaryStr).toLocaleString('ko-KR') : ''} onChange={e => setSalaryStr(e.target.value.replace(/[^0-9]/g, ''))} onKeyDown={e => e.key === 'Enter' && doCalc()} className={`${inputCls} w-80`} placeholder="0" />
       <span className="text-[13px] text-slate-500">원</span>
-      <button onClick={() => setCalcSalary(salary)} className="px-4 py-2 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">계산</button>
+      <button onClick={doCalc} className="px-4 py-2 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">계산</button>
       <button onClick={reset} className="px-4 py-2 text-[13px] font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded">초기화</button>
     </div>
   )
 
-  const SizeSelector = () => (
+  const sizeSelectorJsx = (
     <div className="px-4 mt-3 flex items-start gap-3">
       <span className="text-[13px] font-bold text-slate-700 pt-0.5">근로자수</span>
       <div className="grid grid-cols-2 gap-x-8 gap-y-1">
@@ -80,6 +88,14 @@ export default function InsuranceCalcPage() {
           <label key={val} className="text-[12px] text-slate-600"><input type="radio" name="size" checked={workerSize === val} onChange={() => setWorkerSize(val)} className="mr-1" />{label}</label>
         ))}
       </div>
+    </div>
+  )
+
+  const injuryRateJsx = (
+    <div className="px-4 mt-2 flex items-center gap-3">
+      <span className="text-[13px] font-bold text-slate-700">산재보험요율</span>
+      <input value={injuryRateStr} onChange={e => setInjuryRateStr(e.target.value)} onKeyDown={e => e.key === 'Enter' && doCalc()} className={`${inputCls} w-[80px]`} placeholder="0.66" />
+      <span className="text-[12px] text-slate-500">% (업종별 상이, 보건 및 사회복지사업 0.66%)</span>
     </div>
   )
 
@@ -105,6 +121,8 @@ export default function InsuranceCalcPage() {
 
         {/* 전체 탭 */}
         {tab === 'all' && <>
+          {sizeSelectorJsx}
+          {injuryRateJsx}
           <div className="px-4 mt-5 mb-4">
             <table className="w-full text-[13px] border-collapse border border-slate-200">
               <thead><tr className="bg-slate-50 border-b border-slate-200">
@@ -118,6 +136,12 @@ export default function InsuranceCalcPage() {
                 <ResultRow label="건강보험" total={healthTotal} worker={healthWorker} employer={healthEmployer} />
                 <ResultRow label={'건강보험\n(장기요양)'} total={longtermTotal} worker={longtermWorker} employer={longtermEmployer} />
                 <ResultRow label="고용보험" total={employTotal} worker={employWorker} employer={employTotal - employWorker} />
+                <tr>
+                  <td className="px-4 py-3 text-center text-slate-700 border-r border-slate-200 whitespace-pre-line text-[13px]">산재보험</td>
+                  <td className="px-3 py-2 border-r border-slate-200"><div className="flex items-center gap-1"><input readOnly value={fmt(injuryTotal)} className={`${inputCls} flex-1 bg-slate-50`} /><span className="text-slate-500 text-xs">원</span></div></td>
+                  <td className="px-3 py-2 border-r border-slate-200"><span className="text-[11px] text-slate-400">사업주 전액 부담</span></td>
+                  <td className="px-3 py-2"><div className="flex items-center gap-1"><input readOnly value={fmt(injuryEmployer)} className={`${inputCls} flex-1 bg-slate-50`} /><span className="text-slate-500 text-xs">원</span></div></td>
+                </tr>
                 <tr className="bg-slate-50 font-bold">
                   <td className="px-4 py-3 text-center text-slate-800 border-r border-slate-200">합 계</td>
                   <td className="px-3 py-2 border-r border-slate-200"><div className="flex items-center gap-1"><input readOnly value={fmt(allTotal)} className={`${inputCls} flex-1 bg-slate-100 font-bold`} /><span className="text-slate-500 text-xs">원</span></div></td>
@@ -242,9 +266,27 @@ export default function InsuranceCalcPage() {
 
         {/* 산재보험 탭 */}
         {tab === 'injury' && <div className="px-4 mt-4 mb-4 space-y-4 text-[12px] text-slate-700">
+          {injuryRateJsx}
+          <table className="w-full text-[13px] border-collapse border border-slate-200">
+            <thead><tr className="bg-slate-50 border-b border-slate-200">
+              <th className="px-4 py-3 text-center font-bold text-slate-700 border-r border-slate-200">산재보험료(전체)</th>
+              <th className="px-4 py-3 text-center font-bold text-slate-700 border-r border-slate-200">근로자 부담금</th>
+              <th className="px-4 py-3 text-center font-bold text-slate-700">사업주 부담금</th>
+            </tr></thead>
+            <tbody><tr>
+              <td className="px-3 py-2 border-r border-slate-200"><div className="flex items-center gap-1"><input readOnly value={fmt(injuryTotal)} className={`${inputCls} flex-1 bg-slate-50`} /><span className="text-xs text-slate-500">원</span></div></td>
+              <td className="px-3 py-2 border-r border-slate-200"><span className="text-[11px] text-slate-400">사업주 전액 부담</span></td>
+              <td className="px-3 py-2"><div className="flex items-center gap-1"><input readOnly value={fmt(injuryEmployer)} className={`${inputCls} flex-1 bg-slate-50`} /><span className="text-xs text-slate-500">원</span></div></td>
+            </tr></tbody>
+          </table>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-[12px] text-blue-800">
+            <p className="font-bold">2026년 보건 및 사회복지사업 산재보험료율: 0.66%</p>
+            <p className="mt-1">산재보험료 = 보수총액(월 평균보수) × 산재보험료율(0.66%)</p>
+            <p className="mt-1 text-blue-600">※ 산재보험료는 전액 사업주 부담이며, 근로자 부담금은 없습니다.</p>
+          </div>
           <div>
             <p className="font-bold text-[14px]">1. 산재보험료</p>
-            <p className="ml-3">= 보수총액(월 평균보수) X 보험료율 ÷ 1000</p>
+            <p className="ml-3">= 보수총액(월 평균보수) X 보험료율</p>
             <p className="ml-3 mt-1">*산재보험료율</p>
             <p className="ml-3">&apos;사업종류별 산재보험료율 및 사업종류 예시&apos;를 기준으로 적용하고 있으며 이는 매년 6월 30일 현재, 과거 3년간의 보수총액에 대한 보험급여 총액의 비율을 기초로 재해 발생의 위험성에 따라 분류된 사업종류별 보험료율을 세분화하여 동년 12월 31일 경에 고시하여 다음 년도에 적용하고 있습니다.</p>
           </div>

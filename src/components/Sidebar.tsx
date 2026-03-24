@@ -139,6 +139,7 @@ const categories: MenuCategory[] = [
         ],
       },
       { label: '보육료납부', href: '/children/fee' },
+      { label: '기타필요경비', href: '/children/expense' },
       { label: '출석부', href: '/children/attendance' },
     ],
   },

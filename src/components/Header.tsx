@@ -122,6 +122,17 @@ export default function Header() {
             <span className="text-xs text-slate-400 ml-0.5">수전자장부</span>
           </Link>
           <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
+            <a
+              href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full hover:from-teal-500 hover:to-cyan-600 transition-all shadow-sm mr-1"
+            >
+              통합<span className="italic">e</span>
+              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
             {categories.map((cat) => {
               const isActive = activeKey === cat.key
               return (
@@ -144,14 +155,14 @@ export default function Header() {
               )
             })}
             <a
-              href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard`}
+              href="https://070remotehelp.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full hover:from-teal-500 hover:to-cyan-600 transition-all shadow-sm ml-1"
+              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-orange-400 to-red-400 rounded-full hover:from-orange-500 hover:to-red-500 transition-all shadow-sm ml-1"
             >
-              통합<span className="italic">e</span>
+              원격지원
               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25h-13.5A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25h-13.5A2.25 2.25 0 013 12V5.25" />
               </svg>
             </a>
           </nav>
