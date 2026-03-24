@@ -652,7 +652,22 @@ export default function RequiredExpensePage() {
                 </div>
               </>)}
             </div>
-            <button className="px-3 py-1.5 text-[11px] font-bold text-white bg-amber-500 rounded">매칭하기</button>
+            <button onClick={() => {
+              if (!selectedLawChild) { alert('원아를 먼저 선택해주세요.'); return }
+              const checkedRows = mockData.filter(r => checked.has(r.id))
+              if (checkedRows.length === 0) { alert('매칭할 전표를 체크해주세요.'); return }
+              const next = { ...matchResult }
+              checkedRows.forEach(r => {
+                if (next[r.id]) {
+                  if (!next[r.id].includes(selectedLawChild)) next[r.id] = [...next[r.id], selectedLawChild]
+                } else {
+                  next[r.id] = [selectedLawChild]
+                }
+              })
+              setMatchResult(next)
+              setChecked(new Set())
+              alert(`${checkedRows.length}건의 전표에 "${selectedLawChild}" 매칭 완료`)
+            }} className="px-3 py-1.5 text-[11px] font-bold text-white bg-amber-500 rounded">일괄매칭</button>
             <button className="px-3 py-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 border border-slate-300 rounded">원아지우기</button>
             <button className="px-3 py-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 border border-slate-300 rounded">매칭초기화</button>
           </div>
@@ -660,7 +675,7 @@ export default function RequiredExpensePage() {
         <div className="bg-white rounded border border-slate-200 overflow-x-auto">
           <table className="w-full text-[11px] border-collapse min-w-[1200px]">
             <thead><tr className="bg-slate-100 border-b border-slate-200">
-              <th className="px-1 py-2 border-r border-slate-200 w-[25px]"><input type="checkbox" /></th>
+              <th className="px-1 py-2 border-r border-slate-200 w-[25px]"><input type="checkbox" checked={allChecked} onChange={() => { if (allChecked) { setChecked(new Set()) } else { setChecked(new Set(mockData.map(r => r.id))) } }} /></th>
               <th className="px-2 py-2 font-bold text-slate-700 border-r border-slate-200">번호</th>
               <th className="px-2 py-2 font-bold text-slate-700 border-r border-slate-200">일자</th>
               <th className="px-2 py-2 font-bold text-slate-700 border-r border-slate-200">적요</th>
@@ -674,7 +689,7 @@ export default function RequiredExpensePage() {
             <tbody>
               {mockData.map(row => (
                 <tr key={row.id} className="border-b border-slate-100 hover:bg-blue-50/20">
-                  <td className="px-1 py-1.5 text-center border-r border-slate-100"><input type="checkbox" /></td>
+                  <td className="px-1 py-1.5 text-center border-r border-slate-100"><input type="checkbox" checked={checked.has(row.id)} onChange={() => { const next = new Set(checked); next.has(row.id) ? next.delete(row.id) : next.add(row.id); setChecked(next) }} /></td>
                   <td className="px-2 py-1.5 text-center border-r border-slate-100">{row.docNo}</td>
                   <td className="px-2 py-1.5 text-center border-r border-slate-100">{row.date}</td>
                   <td className="px-2 py-1.5 border-r border-slate-100">{row.summary}</td>
