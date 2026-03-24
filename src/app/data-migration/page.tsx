@@ -614,6 +614,11 @@ export default function DataMigrationPage() {
 
   return (
     <div className="space-y-6">
+      {/* 언더바 탭 */}
+      <div className="flex items-center gap-0 border-b border-slate-200">
+        <a href="/data-migration" className="px-4 py-2 text-[12px] font-bold whitespace-nowrap border-b-2 text-teal-700 border-teal-500">데이터이관</a>
+        <a href="/data-migration/auto-login" className="px-4 py-2 text-[12px] font-bold whitespace-nowrap border-b-2 text-slate-400 border-transparent hover:text-slate-600 hover:border-slate-300">자동로그인</a>
+      </div>
       {/* 제목 */}
       <div>
         <h1 className="text-2xl font-bold text-slate-800">데이터 이관</h1>

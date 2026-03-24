@@ -1,0 +1,145 @@
+/* ==========================================================================
+   table.css - Data Tables
+   ========================================================================== */
+
+/* --- Table container: white bg, rounded, bordered --- */
+.table-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0; /* slate-200 */
+  overflow-x: auto;
+}
+
+/* --- Data table base --- */
+.data-table {
+  width: 100%;
+  font-size: 11px;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+/* --- Table header cell --- */
+.th {
+  background-color: #fde047; /* yellow-300 */
+  font-weight: 700;
+  text-align: center;
+  font-size: 11px;
+  padding: 8px 8px;
+  border-bottom: 1px solid #e2e8f0; /* slate-200 */
+  border-right: 1px solid #e2e8f0; /* slate-200 */
+  white-space: nowrap;
+  color: #0f172a; /* slate-900 */
+}
+
+/* --- Last table header cell (no right border) --- */
+.th--last {
+  border-right: none;
+}
+
+/* --- Table row --- */
+.tr {
+  border-bottom: 1px solid #f1f5f9; /* slate-100 */
+  transition: background-color 0.1s ease;
+}
+
+.tr:hover {
+  background-color: #f8fafc; /* slate-50 */
+}
+
+/* --- Table data cell --- */
+.td {
+  text-align: center;
+  border-right: 1px solid #f1f5f9; /* slate-100 */
+  padding: 10px 8px;
+  font-size: 11px;
+  color: #334155; /* slate-700 */
+  vertical-align: middle;
+}
+
+/* --- Last td in row (no right border) --- */
+.td:last-child {
+  border-right: none;
+}
+
+/* --- Left-aligned cell --- */
+.td--left {
+  text-align: left;
+}
+
+/* --- Right-aligned cell --- */
+.td--right {
+  text-align: right;
+}
+
+/* --- Numeric text in cell --- */
+.td-text-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-weight: 500;
+  color: #1e293b; /* slate-800 */
+}
+
+/* --- Label text in cell --- */
+.td-text-label {
+  text-align: left;
+  font-weight: 500;
+  color: #334155; /* slate-700 */
+}
+
+/* --- Muted/secondary text in cell --- */
+.td-text-muted {
+  color: #94a3b8; /* slate-400 */
+  font-size: 10px;
+}
+
+/* --- Date text in cell --- */
+.td-text-date {
+  font-variant-numeric: tabular-nums;
+  color: #64748b; /* slate-500 */
+  white-space: nowrap;
+}
+
+/* --- Input inside cell --- */
+.td-input {
+  padding: 2px 4px;
+}
+
+.td-input input {
+  width: 100%;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 11px;
+  text-align: right;
+  background-color: #ffffff;
+  transition: border-color 0.15s ease;
+}
+
+.td-input input:focus {
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* --- Disabled cell --- */
+.td--disabled {
+  background-color: #f8fafc; /* slate-50 */
+  color: #94a3b8; /* slate-400 */
+  cursor: not-allowed;
+}
+
+.td--disabled input {
+  background-color: #f1f5f9; /* slate-100 */
+  color: #94a3b8; /* slate-400 */
+  cursor: not-allowed;
+}
+
+/* --- Summary/total row --- */
+.summary-row {
+  font-weight: 700;
+  background-color: #f8fafc; /* slate-50 */
+}
+
+.summary-row .td {
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>급식비계산기 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/layout.css">
+  <link rel="stylesheet" href="../../css/header.css">
+  <link rel="stylesheet" href="../../css/sidebar.css">
+  <link rel="stylesheet" href="../../css/tabs.css">
+  <link rel="stylesheet" href="../../css/table.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/buttons.css">
+  <link rel="stylesheet" href="../../css/modal.css">
+  <link rel="stylesheet" href="../../css/cards.css">
+  <link rel="stylesheet" href="../../css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">급식비계산기</h2>
+            <div class="header-right">
+              <button class="btn btn--md btn--primary" onclick="calcMeal()">계산</button>
+              <button class="btn btn--md btn--secondary" onclick="resetMeal()">초기화</button>
+            </div>
+          </div>
+
+          <div class="card mb-16">
+            <div class="card-header"><span class="card-title">급식비 산출</span></div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:600px;">
+                <thead><tr>
+                  <th class="th" style="width:100px;">구분</th>
+                  <th class="th" style="width:100px;">인원수</th>
+                  <th class="th" style="width:120px;">1식단가(원)</th>
+                  <th class="th" style="width:80px;">급식일수</th>
+                  <th class="th th--last" style="width:140px;">소계(원)</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="tr">
+                    <td class="td font-bold">영아</td>
+                    <td class="td td-input"><input type="number" id="cnt0" value="15" style="width:70px;"></td>
+                    <td class="td td-input"><input type="number" id="price0" value="3500" style="width:90px;"></td>
+                    <td class="td td-input"><input type="number" id="days0" value="22" style="width:60px;"></td>
+                    <td class="td td-text-num font-bold" id="sub0">1,155,000</td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td font-bold">유아</td>
+                    <td class="td td-input"><input type="number" id="cnt1" value="20" style="width:70px;"></td>
+                    <td class="td td-input"><input type="number" id="price1" value="4000" style="width:90px;"></td>
+                    <td class="td td-input"><input type="number" id="days1" value="22" style="width:60px;"></td>
+                    <td class="td td-text-num font-bold" id="sub1">1,760,000</td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td font-bold">교직원</td>
+                    <td class="td td-input"><input type="number" id="cnt2" value="8" style="width:70px;"></td>
+                    <td class="td td-input"><input type="number" id="price2" value="5000" style="width:90px;"></td>
+                    <td class="td td-input"><input type="number" id="days2" value="22" style="width:60px;"></td>
+                    <td class="td td-text-num font-bold" id="sub2">880,000</td>
+                  </tr>
+                  <tr class="tr summary-row">
+                    <td class="td" colspan="4">월 급식비 합계</td>
+                    <td class="td td-text-num font-bold text-blue-600" id="totalMeal">3,795,000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">급식 단가 참고표 (2026년 기준)</span></div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:500px;">
+                <thead><tr>
+                  <th class="th" style="width:120px;">구분</th>
+                  <th class="th" style="width:140px;">최저단가(원)</th>
+                  <th class="th" style="width:140px;">권장단가(원)</th>
+                  <th class="th th--last" style="width:140px;">상한단가(원)</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="tr"><td class="td font-bold">영아 (0~2세)</td><td class="td td-text-num">3,000</td><td class="td td-text-num">3,500</td><td class="td td-text-num">4,500</td></tr>
+                  <tr class="tr"><td class="td font-bold">유아 (3~5세)</td><td class="td td-text-num">3,500</td><td class="td td-text-num">4,000</td><td class="td td-text-num">5,000</td></tr>
+                  <tr class="tr"><td class="td font-bold">교직원</td><td class="td td-text-num">4,000</td><td class="td td-text-num">5,000</td><td class="td td-text-num">7,000</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="info-card mt-12">
+              위 단가는 참고용이며, 지자체별로 상이할 수 있습니다. 정확한 단가는 관할 시/군/구청에 확인하세요.
+            </div>
+          </div>
+
+          <script>
+            function fmt(n) { return n.toLocaleString(); }
+            function calcMeal() {
+              var total = 0;
+              for (var i = 0; i < 3; i++) {
+                var cnt = parseInt(document.getElementById('cnt'+i).value) || 0;
+                var price = parseInt(document.getElementById('price'+i).value) || 0;
+                var days = parseInt(document.getElementById('days'+i).value) || 0;
+                var sub = cnt * price * days;
+                document.getElementById('sub'+i).textContent = fmt(sub);
+                total += sub;
+              }
+              document.getElementById('totalMeal').textContent = fmt(total);
+            }
+            function resetMeal() {
+              var defaults = [[15,3500,22],[20,4000,22],[8,5000,22]];
+              for (var i = 0; i < 3; i++) {
+                document.getElementById('cnt'+i).value = defaults[i][0];
+                document.getElementById('price'+i).value = defaults[i][1];
+                document.getElementById('days'+i).value = defaults[i][2];
+              }
+              calcMeal();
+            }
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '../../';</script>
+  <script src="../../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'community', menuLabel: '계산기', subMenuHref: 'community/calculator/meal.html' });
+    });
+  </script>
+</body>
+</html>

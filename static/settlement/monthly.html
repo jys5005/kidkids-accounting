@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>월별결산서 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/tabs.css">
+  <link rel="stylesheet" href="../css/table.css">
+  <link rel="stylesheet" href="../css/forms.css">
+  <link rel="stylesheet" href="../css/buttons.css">
+  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="../css/cards.css">
+  <link rel="stylesheet" href="../css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">월별결산서</h2>
+            <div class="header-right">
+              <select class="select-box select-box--small"><option>2026년</option><option>2025년</option></select>
+              <select class="select-box select-box--small"><option>3월</option><option>2월</option><option>1월</option></select>
+              <button class="btn btn--md btn--secondary">인쇄</button>
+              <button class="btn btn--md btn--success">엑셀 다운로드</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">세입결산</span></div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:900px;">
+                <thead><tr>
+                  <th class="th" style="width:160px;">과목</th><th class="th" style="width:100px;">예산액</th>
+                  <th class="th">1월</th><th class="th">2월</th><th class="th">3월</th><th class="th">4월</th><th class="th">5월</th><th class="th">6월</th>
+                  <th class="th">7월</th><th class="th">8월</th><th class="th">9월</th><th class="th">10월</th><th class="th">11월</th><th class="th th--last">12월</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="tr"><td class="td td--left">보육료수입</td><td class="td td-text-num">60,000</td><td class="td td-text-num">5,000</td><td class="td td-text-num">5,000</td><td class="td td-text-num">5,000</td><td class="td text-slate-400" colspan="9" style="text-align:center;">미입력</td></tr>
+                  <tr class="tr"><td class="td td--left">정부보조금수입</td><td class="td td-text-num">36,000</td><td class="td td-text-num">3,000</td><td class="td td-text-num">3,000</td><td class="td td-text-num">3,000</td><td class="td text-slate-400" colspan="9" style="text-align:center;">미입력</td></tr>
+                  <tr class="tr"><td class="td td--left">기타수입</td><td class="td td-text-num">14,400</td><td class="td td-text-num">1,200</td><td class="td td-text-num">1,200</td><td class="td td-text-num">1,200</td><td class="td text-slate-400" colspan="9" style="text-align:center;">미입력</td></tr>
+                  <tr class="tr summary-row"><td class="td">세입합계</td><td class="td td-text-num">110,400</td><td class="td td-text-num">9,200</td><td class="td td-text-num">9,200</td><td class="td td-text-num">9,200</td><td class="td" colspan="9"></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">세출결산</span></div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:900px;">
+                <thead><tr>
+                  <th class="th" style="width:160px;">과목</th><th class="th" style="width:100px;">예산액</th>
+                  <th class="th">1월</th><th class="th">2월</th><th class="th">3월</th><th class="th">4월</th><th class="th">5월</th><th class="th">6월</th>
+                  <th class="th">7월</th><th class="th">8월</th><th class="th">9월</th><th class="th">10월</th><th class="th">11월</th><th class="th th--last">12월</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="tr"><td class="td td--left">인건비</td><td class="td td-text-num">48,000</td><td class="td td-text-num">4,000</td><td class="td td-text-num">4,000</td><td class="td td-text-num">4,000</td><td class="td text-slate-400" colspan="9" style="text-align:center;">미입력</td></tr>
+                  <tr class="tr"><td class="td td--left">관리운영비</td><td class="td td-text-num">18,000</td><td class="td td-text-num">1,500</td><td class="td td-text-num">1,500</td><td class="td td-text-num">1,500</td><td class="td text-slate-400" colspan="9" style="text-align:center;">미입력</td></tr>
+                  <tr class="tr"><td class="td td--left">급식비</td><td class="td td-text-num">14,400</td><td class="td td-text-num">1,200</td><td class="td td-text-num">1,200</td><td class="td td-text-num">1,200</td><td class="td text-slate-400" colspan="9" style="text-align:center;">미입력</td></tr>
+                  <tr class="tr summary-row"><td class="td">세출합계</td><td class="td td-text-num">98,400</td><td class="td td-text-num">8,200</td><td class="td td-text-num">8,200</td><td class="td td-text-num">8,200</td><td class="td" colspan="9"></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '../';</script>
+  <script src="../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'accounting', menuLabel: '결산', subMenuHref: 'settlement/monthly.html' });
+    });
+  </script>
+</body>
+</html>

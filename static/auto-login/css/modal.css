@@ -1,0 +1,151 @@
+/* ============================================
+   modal.css - 모달 스타일
+   ============================================ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-overlay--hidden {
+  display: none;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+  padding: 20px;
+  width: 420px;
+}
+
+.modal-box > * + * {
+  margin-top: 16px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.modal-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.modal-subtitle {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.modal-body {
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.modal-body > * + * {
+  margin-top: 12px;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* 인증서 아이콘 영역 */
+.cert-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cert-icon {
+  width: 32px;
+  height: 32px;
+  background-color: #dbeafe; /* blue-100 */
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  font-size: 14px;
+}
+
+.cert-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.cert-desc {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+/* 인증서 목록 */
+.cert-list {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #fff;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.cert-list-item {
+  padding: 6px 8px;
+  font-size: 11px;
+  background: #eff6ff;
+  border-bottom: 1px solid #bfdbfe;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cert-list-item-check {
+  color: #3b82f6;
+}
+
+.cert-list-item-name {
+  color: #334155;
+  font-weight: 500;
+}
+
+.cert-list-empty {
+  padding: 12px 8px;
+  font-size: 10px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+/* 라벨 */
+.field-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.field-label--md {
+  font-size: 11px;
+}
+
+/* 필드 그룹 */
+.field-group {
+  margin-top: 4px;
+}

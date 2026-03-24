@@ -1,0 +1,92 @@
+/* ============================================
+   forms.css - 입력 필드 스타일
+   ============================================ */
+
+.input-text {
+  width: 100%;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 11px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.input-text:focus {
+  border-color: #60a5fa; /* blue-400 */
+}
+
+.input-text::placeholder {
+  color: #cbd5e1;
+}
+
+.input-text--disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.input-password {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 11px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.input-password:focus {
+  border-color: #60a5fa;
+}
+
+.input-password::placeholder {
+  color: #cbd5e1;
+}
+
+.input-password--disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.select-box {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 11px;
+  min-width: 200px;
+  outline: none;
+  background: #fff;
+}
+
+.select-box:focus {
+  border-color: #60a5fa;
+}
+
+.select-box--small {
+  min-width: auto;
+  padding: 2px 4px;
+  font-size: 10px;
+}
+
+.input-file {
+  font-size: 10px;
+  width: 100%;
+}
+
+.input-file::file-selector-button {
+  margin-right: 8px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  font-size: 10px;
+  font-weight: 700;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.input-file::file-selector-button:hover {
+  background: #f8fafc;
+}

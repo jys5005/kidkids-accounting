@@ -1,0 +1,160 @@
+/* ============================================
+   buttons.css - 버튼 스타일
+   ============================================ */
+
+/* 공통 버튼 베이스 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+/* 크기 */
+.btn--sm {
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.btn--md {
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+.btn--lg {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+/* 추가 버튼 (파란색) */
+.btn-add {
+  color: #fff;
+  background-color: #3b82f6; /* blue-500 */
+}
+
+.btn-add:hover {
+  background-color: #2563eb; /* blue-600 */
+}
+
+/* 저장 버튼 (청록) */
+.btn-save {
+  color: #fff;
+  background-color: #14b8a6; /* teal-500 */
+}
+
+.btn-save:hover {
+  background-color: #0d9488; /* teal-600 */
+}
+
+/* 초기화 버튼 (회색) */
+.btn-reset {
+  color: #fff;
+  background-color: #94a3b8; /* slate-400 */
+}
+
+.btn-reset:hover {
+  background-color: #64748b; /* slate-500 */
+}
+
+/* 삭제 버튼 (빨강) */
+.btn-delete {
+  color: #fff;
+  background-color: #f87171; /* red-400 */
+}
+
+.btn-delete:hover {
+  background-color: #ef4444; /* red-500 */
+}
+
+/* 검증 실행 버튼 (파란 아웃라인) */
+.btn-verify {
+  color: #2563eb; /* blue-600 */
+  border: 1px solid #93c5fd; /* blue-300 */
+  background-color: #eff6ff; /* blue-50 */
+}
+
+.btn-verify:hover {
+  background-color: #dbeafe; /* blue-100 */
+}
+
+.btn-verify--loading {
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  cursor: wait;
+}
+
+/* 로그인 버튼 (청록 아웃라인) */
+.btn-login {
+  color: #0d9488; /* teal-600 */
+  border: 1px solid #5eead4; /* teal-300 */
+  background-color: #f0fdfa; /* teal-50 */
+}
+
+.btn-login:hover {
+  background-color: #ccfbf1; /* teal-100 */
+}
+
+/* 인증서 선택 버튼 */
+.btn-cert {
+  color: #475569;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-cert:hover {
+  background-color: #f8fafc;
+}
+
+/* 인증서 등록 버튼 */
+.btn-cert-register {
+  color: #fff;
+  background-color: #3b82f6;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.btn-cert-register:hover {
+  background-color: #2563eb;
+}
+
+/* 모달 닫기 버튼 */
+.btn-close {
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  background: transparent;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.btn-close:hover {
+  background-color: #f8fafc;
+}
+
+/* 모달 초기화 버튼 */
+.btn-modal-reset {
+  color: #475569;
+  background-color: #f1f5f9;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.btn-modal-reset:hover {
+  background-color: #e2e8f0;
+}
+
+/* 버튼 그룹 */
+.btn-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}

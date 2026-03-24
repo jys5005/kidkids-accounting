@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>누리과정정산서 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/tabs.css">
+  <link rel="stylesheet" href="../css/table.css">
+  <link rel="stylesheet" href="../css/forms.css">
+  <link rel="stylesheet" href="../css/buttons.css">
+  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="../css/cards.css">
+  <link rel="stylesheet" href="../css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">누리과정정산서</h2>
+            <div class="header-right">
+              <select class="select-box select-box--small"><option>2026년</option><option>2025년</option></select>
+              <button class="btn btn--md btn--secondary">인쇄</button>
+              <button class="btn btn--md btn--success">엑셀 다운로드</button>
+            </div>
+          </div>
+
+          <!-- 3 mode tabs -->
+          <div class="tab-bar">
+            <a class="tab-item tab-item--active" onclick="showNuriTab(0)">회계연도</a>
+            <a class="tab-item tab-item--inactive" onclick="showNuriTab(1)">해당연도</a>
+            <a class="tab-item tab-item--inactive" onclick="showNuriTab(2)">상세정산서</a>
+          </div>
+
+          <!-- Tab 0: 회계연도 -->
+          <div id="nuriTab0" class="tab-panel tab-panel--active">
+            <div class="card">
+              <div class="card-header"><span class="card-title">누리과정 수입/지출 현황 (회계연도 기준)</span></div>
+              <div class="table-container" style="border:none;">
+                <table class="data-table" style="min-width:900px;">
+                  <thead><tr>
+                    <th class="th" style="width:100px;">구분</th>
+                    <th class="th">1월</th><th class="th">2월</th><th class="th">3월</th><th class="th">4월</th><th class="th">5월</th><th class="th">6월</th>
+                    <th class="th">7월</th><th class="th">8월</th><th class="th">9월</th><th class="th">10월</th><th class="th">11월</th><th class="th">12월</th>
+                    <th class="th th--last">누계</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr class="tr"><td class="td font-bold">수입</td><td class="td td-text-num">2,000</td><td class="td td-text-num">2,000</td><td class="td td-text-num">2,000</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td td-text-num font-bold">6,000</td></tr>
+                    <tr class="tr"><td class="td font-bold">지출</td><td class="td td-text-num">1,800</td><td class="td td-text-num">1,900</td><td class="td td-text-num">1,850</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td td-text-num font-bold">5,550</td></tr>
+                    <tr class="tr summary-row"><td class="td">잔액</td><td class="td td-text-num">200</td><td class="td td-text-num">100</td><td class="td td-text-num">150</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td td-text-num font-bold text-green-600">450</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 1: 해당연도 -->
+          <div id="nuriTab1" class="tab-panel">
+            <div class="info-card">해당연도 기준으로 누리과정 정산 데이터를 조회합니다. (3월~익년 2월)</div>
+            <div class="card mt-12">
+              <div class="card-header"><span class="card-title">누리과정 수입/지출 현황 (해당연도 기준)</span></div>
+              <div class="table-container" style="border:none;">
+                <table class="data-table" style="min-width:600px;">
+                  <thead><tr><th class="th">구분</th><th class="th">3월</th><th class="th">4월</th><th class="th">5월</th><th class="th">...</th><th class="th th--last">누계</th></tr></thead>
+                  <tbody>
+                    <tr class="tr"><td class="td font-bold">수입</td><td class="td td-text-num">2,000</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">...</td><td class="td td-text-num font-bold">2,000</td></tr>
+                    <tr class="tr"><td class="td font-bold">지출</td><td class="td td-text-num">1,850</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">...</td><td class="td td-text-num font-bold">1,850</td></tr>
+                    <tr class="tr summary-row"><td class="td">잔액</td><td class="td td-text-num">150</td><td class="td">-</td><td class="td">-</td><td class="td">...</td><td class="td td-text-num font-bold text-green-600">150</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: 상세정산서 -->
+          <div id="nuriTab2" class="tab-panel">
+            <div class="info-card">상세 누리과정 정산서입니다. 개별 전표 내역을 확인할 수 있습니다.</div>
+            <div class="table-container mt-12">
+              <table class="data-table" style="min-width:700px;">
+                <thead><tr>
+                  <th class="th" style="width:50px;">No</th><th class="th" style="width:100px;">일자</th><th class="th" style="width:80px;">구분</th>
+                  <th class="th" style="width:200px;">적요</th><th class="th" style="width:120px;">수입</th><th class="th" style="width:120px;">지출</th><th class="th th--last" style="width:120px;">잔액</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="tr"><td class="td">1</td><td class="td td-text-date">2026-01-10</td><td class="td"><span class="badge badge--blue">수입</span></td><td class="td td--left">누리과정보조금</td><td class="td td-text-num">2,000,000</td><td class="td">-</td><td class="td td-text-num">2,000,000</td></tr>
+                  <tr class="tr"><td class="td">2</td><td class="td td-text-date">2026-01-15</td><td class="td"><span class="badge badge--red">지출</span></td><td class="td td--left">교재교구비</td><td class="td">-</td><td class="td td-text-num">500,000</td><td class="td td-text-num">1,500,000</td></tr>
+                  <tr class="tr"><td class="td">3</td><td class="td td-text-date">2026-01-20</td><td class="td"><span class="badge badge--red">지출</span></td><td class="td td--left">현장학습비</td><td class="td">-</td><td class="td td-text-num">300,000</td><td class="td td-text-num">1,200,000</td></tr>
+                  <tr class="tr"><td class="td">4</td><td class="td td-text-date">2026-01-25</td><td class="td"><span class="badge badge--red">지출</span></td><td class="td td--left">보육활동비</td><td class="td">-</td><td class="td td-text-num">1,000,000</td><td class="td td-text-num">200,000</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <script>
+            function showNuriTab(idx) {
+              document.querySelectorAll('.tab-bar .tab-item').forEach((t,i) => {
+                t.className = 'tab-item ' + (i===idx ? 'tab-item--active' : 'tab-item--inactive');
+              });
+              for (var i=0; i<3; i++) {
+                var el = document.getElementById('nuriTab'+i);
+                if (el) el.className = 'tab-panel' + (i===idx ? ' tab-panel--active' : '');
+              }
+            }
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '../';</script>
+  <script src="../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'accounting', menuLabel: '정산', subMenuHref: 'reconciliation/nuri.html' });
+    });
+  </script>
+</body>
+</html>

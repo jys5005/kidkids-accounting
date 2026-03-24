@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>특별활동비보고서 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/tabs.css">
+  <link rel="stylesheet" href="../css/table.css">
+  <link rel="stylesheet" href="../css/forms.css">
+  <link rel="stylesheet" href="../css/buttons.css">
+  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="../css/cards.css">
+  <link rel="stylesheet" href="../css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">특별활동비보고서</h2>
+            <div class="header-right">
+              <button class="btn btn--md btn--secondary">인쇄</button>
+              <button class="btn btn--md btn--success">엑셀 다운로드</button>
+            </div>
+          </div>
+
+          <div class="search-bar">
+            <span class="search-bar__label">연도</span>
+            <select class="select-box select-box--small"><option>2026년</option><option>2025년</option></select>
+            <span class="search-bar__label">범위</span>
+            <select class="select-box select-box--small"><option>1월~6월 (상반기)</option><option>7월~12월 (하반기)</option><option>전체</option></select>
+            <button class="btn btn--md btn--primary">조회</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">특별활동비 수입/지출 현황</span></div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:800px;">
+                <thead><tr>
+                  <th class="th" style="width:100px;">구분</th>
+                  <th class="th">1월</th><th class="th">2월</th><th class="th">3월</th><th class="th">4월</th><th class="th">5월</th><th class="th">6월</th>
+                  <th class="th th--last">합계</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="tr"><td class="td font-bold">수입</td><td class="td td-text-num">1,000</td><td class="td td-text-num">1,000</td><td class="td td-text-num">1,000</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td td-text-num font-bold">3,000</td></tr>
+                  <tr class="tr"><td class="td font-bold">지출</td><td class="td td-text-num">950</td><td class="td td-text-num">980</td><td class="td td-text-num">920</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td text-slate-400">-</td><td class="td td-text-num font-bold">2,850</td></tr>
+                  <tr class="tr summary-row"><td class="td">잔액</td><td class="td td-text-num">50</td><td class="td td-text-num">20</td><td class="td td-text-num">80</td><td class="td">-</td><td class="td">-</td><td class="td">-</td><td class="td td-text-num font-bold text-green-600">150</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '../';</script>
+  <script src="../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'accounting', menuLabel: '정산', subMenuHref: 'reconciliation/activity.html' });
+    });
+  </script>
+</body>
+</html>

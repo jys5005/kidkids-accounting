@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>정부보조금명세서 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/tabs.css">
+  <link rel="stylesheet" href="../css/table.css">
+  <link rel="stylesheet" href="../css/forms.css">
+  <link rel="stylesheet" href="../css/buttons.css">
+  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="../css/cards.css">
+  <link rel="stylesheet" href="../css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">정부보조금명세서</h2>
+            <div class="header-right">
+              <button class="btn btn--md btn--secondary">엑셀 다운로드</button>
+            </div>
+          </div>
+
+          <div class="search-bar">
+            <span class="search-bar__label">조회기간</span>
+            <input type="date" class="date-input" value="2026-01-01">
+            <span class="text-slate-400">~</span>
+            <input type="date" class="date-input" value="2026-03-24">
+            <button class="btn btn--md btn--primary">조회</button>
+          </div>
+
+          <div class="summary-bar">
+            <div class="summary-bar__item">
+              <span class="summary-bar__label">총 건수</span>
+              <span class="summary-bar__value">24건</span>
+            </div>
+            <div class="summary-bar__item">
+              <div class="tooltip-wrapper">
+                <span class="summary-bar__label">총 금액</span>
+                <span class="tooltip">정부보조금 총 수령액</span>
+              </div>
+              <span class="summary-bar__value text-blue-600">36,000,000</span>
+            </div>
+            <div class="summary-bar__item">
+              <span class="summary-bar__label">집행액</span>
+              <span class="summary-bar__value text-red-600">28,500,000</span>
+            </div>
+            <div class="summary-bar__item">
+              <span class="summary-bar__label">잔액</span>
+              <span class="summary-bar__value text-green-600">7,500,000</span>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="th" style="width:50px;">No</th>
+                  <th class="th" style="width:110px;">일자</th>
+                  <th class="th" style="width:220px;">내역</th>
+                  <th class="th" style="width:130px;">금액</th>
+                  <th class="th" style="width:140px;">기관</th>
+                  <th class="th th--last" style="width:160px;">근거</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="tr"><td class="td">1</td><td class="td td-text-date">2026-01-05</td><td class="td td--left">기본보육료 (1월)</td><td class="td td-text-num">3,000,000</td><td class="td">시청 보육과</td><td class="td td--left">보육료지원</td></tr>
+                <tr class="tr"><td class="td">2</td><td class="td td-text-date">2026-01-10</td><td class="td td--left">누리과정보조금 (1월)</td><td class="td td-text-num">2,000,000</td><td class="td">교육청</td><td class="td td--left">누리과정</td></tr>
+                <tr class="tr"><td class="td">3</td><td class="td td-text-date">2026-02-05</td><td class="td td--left">기본보육료 (2월)</td><td class="td td-text-num">3,000,000</td><td class="td">시청 보육과</td><td class="td td--left">보육료지원</td></tr>
+                <tr class="tr"><td class="td">4</td><td class="td td-text-date">2026-02-10</td><td class="td td--left">누리과정보조금 (2월)</td><td class="td td-text-num">2,000,000</td><td class="td">교육청</td><td class="td td--left">누리과정</td></tr>
+                <tr class="tr"><td class="td">5</td><td class="td td-text-date">2026-03-05</td><td class="td td--left">기본보육료 (3월)</td><td class="td td-text-num">3,000,000</td><td class="td">시청 보육과</td><td class="td td--left">보육료지원</td></tr>
+                <tr class="tr"><td class="td">6</td><td class="td td-text-date">2026-03-10</td><td class="td td--left">누리과정보조금 (3월)</td><td class="td td-text-num">2,000,000</td><td class="td">교육청</td><td class="td td--left">누리과정</td></tr>
+                <tr class="tr"><td class="td">7</td><td class="td td-text-date">2026-01-15</td><td class="td td--left">영아반 특별지원금</td><td class="td td-text-num">1,500,000</td><td class="td">시청 보육과</td><td class="td td--left">특별지원</td></tr>
+                <tr class="tr"><td class="td">8</td><td class="td td-text-date">2026-02-20</td><td class="td td--left">시설보수 보조금</td><td class="td td-text-num">5,000,000</td><td class="td">구청</td><td class="td td--left">시설개선</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination">
+            <button class="pagination__btn">&laquo;</button>
+            <button class="pagination__btn pagination__btn--active">1</button>
+            <button class="pagination__btn">2</button>
+            <button class="pagination__btn">3</button>
+            <button class="pagination__btn">&raquo;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '../';</script>
+  <script src="../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'accounting', menuLabel: '정산', subMenuHref: 'reconciliation/subsidy.html' });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+/* ==========================================================================
+   modal.css - Modal / Popup Styles
+   ========================================================================== */
+
+/* --- Modal overlay: fixed fullscreen backdrop --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: opacity 0.2s ease;
+}
+
+/* --- Hidden modal overlay --- */
+.modal-overlay--hidden {
+  display: none;
+}
+
+/* --- Modal box: white card --- */
+.modal-box {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 0;
+  position: relative;
+}
+
+/* --- Small modal (360px) --- */
+.modal-box--sm {
+  width: 360px;
+}
+
+/* --- Medium modal (480px) --- */
+.modal-box--md {
+  width: 480px;
+}
+
+/* --- Large modal (640px) --- */
+.modal-box--lg {
+  width: 640px;
+}
+
+/* --- Modal header --- */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0; /* slate-200 */
+}
+
+/* --- Modal title --- */
+.modal-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+}
+
+/* --- Modal subtitle --- */
+.modal-subtitle {
+  font-size: 11px;
+  color: #64748b; /* slate-500 */
+  margin-top: 2px;
+}
+
+/* --- Modal close button --- */
+.modal-close {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: #94a3b8; /* slate-400 */
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  background: none;
+  border: none;
+}
+
+.modal-close:hover {
+  background-color: #f1f5f9; /* slate-100 */
+  color: #475569; /* slate-600 */
+}
+
+/* --- Modal body --- */
+.modal-body {
+  padding: 16px 20px;
+  font-size: 12px;
+  color: #475569; /* slate-600 */
+  line-height: 1.6;
+}
+
+/* --- Modal footer --- */
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 12px 20px;
+  border-top: 1px solid #e2e8f0; /* slate-200 */
+}
+
+/* ---------------------------------------------------------------------------
+   Certificate Modal Specific
+   --------------------------------------------------------------------------- */
+
+/* --- Cert icon row --- */
+.cert-icon-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+/* --- Cert icon --- */
+.cert-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background-color: #eff6ff; /* blue-50 */
+  color: #3b82f6; /* blue-500 */
+}
+
+/* --- Cert list container --- */
+.cert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+/* --- Cert list item --- */
+.cert-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cert-list-item:hover {
+  background-color: #f8fafc; /* slate-50 */
+  border-color: #3b82f6; /* blue-500 */
+}
+
+/* --- Selected cert item --- */
+.cert-list-item--selected {
+  background-color: #eff6ff; /* blue-50 */
+  border-color: #3b82f6; /* blue-500 */
+}
+
+/* --- Cert item name text --- */
+.cert-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b; /* slate-800 */
+}
+
+/* --- Cert item detail text --- */
+.cert-detail {
+  font-size: 10px;
+  color: #64748b; /* slate-500 */
+}
+
+/* ---------------------------------------------------------------------------
+   Draggable Modal
+   --------------------------------------------------------------------------- */
+
+/* --- Draggable modal: positioned absolutely, cursor move on title --- */
+.draggable-modal {
+  position: absolute;
+  cursor: default;
+}
+
+.draggable-modal .modal-header,
+.draggable-modal .modal-title {
+  cursor: move;
+}

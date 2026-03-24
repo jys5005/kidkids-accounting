@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>연말결산서 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/tabs.css">
+  <link rel="stylesheet" href="../css/table.css">
+  <link rel="stylesheet" href="../css/forms.css">
+  <link rel="stylesheet" href="../css/buttons.css">
+  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="../css/cards.css">
+  <link rel="stylesheet" href="../css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">연말결산서</h2>
+            <div class="header-right">
+              <select class="select-box select-box--small"><option>2026년</option><option>2025년</option></select>
+              <button class="btn btn--md btn--secondary">인쇄</button>
+            </div>
+          </div>
+
+          <div class="summary-row">
+            <div class="summary-card" style="border-left:3px solid #14b8a6;"><span class="summary-card__label">전기이월금</span><span class="summary-card__value">12,500,000</span></div>
+            <div class="summary-card" style="border-left:3px solid #3b82f6;"><span class="summary-card__label">당기수입총액</span><span class="summary-card__value text-blue-600">110,400,000</span></div>
+            <div class="summary-card" style="border-left:3px solid #ef4444;"><span class="summary-card__label">당기지출총액</span><span class="summary-card__value text-red-600">98,400,000</span></div>
+            <div class="summary-card" style="border-left:3px solid #22c55e;"><span class="summary-card__label">차기이월금</span><span class="summary-card__value text-green-600">24,500,000</span></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">세입 결산 비교</span></div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:700px;">
+                <thead><tr>
+                  <th class="th" style="width:50px;">No</th><th class="th" style="width:200px;">과목</th>
+                  <th class="th" style="width:140px;">예산액</th><th class="th" style="width:140px;">결산액</th>
+                  <th class="th" style="width:140px;">차이</th><th class="th th--last" style="width:80px;">비율</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="tr"><td class="td">1</td><td class="td td--left">보육료수입</td><td class="td td-text-num">60,000,000</td><td class="td td-text-num">58,500,000</td><td class="td td-text-num text-red-600">-1,500,000</td><td class="td">97.5%</td></tr>
+                  <tr class="tr"><td class="td">2</td><td class="td td--left">정부보조금수입</td><td class="td td-text-num">36,000,000</td><td class="td td-text-num">36,000,000</td><td class="td td-text-num">0</td><td class="td">100.0%</td></tr>
+                  <tr class="tr"><td class="td">3</td><td class="td td--left">특별활동수입</td><td class="td td-text-num">12,000,000</td><td class="td td-text-num">11,400,000</td><td class="td td-text-num text-red-600">-600,000</td><td class="td">95.0%</td></tr>
+                  <tr class="tr"><td class="td">4</td><td class="td td--left">기타수입</td><td class="td td-text-num">2,400,000</td><td class="td td-text-num">2,500,000</td><td class="td td-text-num text-green-600">+100,000</td><td class="td">104.2%</td></tr>
+                  <tr class="tr summary-row"><td class="td" colspan="2">세입합계</td><td class="td td-text-num">110,400,000</td><td class="td td-text-num">108,400,000</td><td class="td td-text-num text-red-600">-2,000,000</td><td class="td">98.2%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">세출 결산 비교</span></div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:700px;">
+                <thead><tr>
+                  <th class="th" style="width:50px;">No</th><th class="th" style="width:200px;">과목</th>
+                  <th class="th" style="width:140px;">예산액</th><th class="th" style="width:140px;">결산액</th>
+                  <th class="th" style="width:140px;">차이</th><th class="th th--last" style="width:80px;">비율</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="tr"><td class="td">1</td><td class="td td--left">인건비</td><td class="td td-text-num">48,000,000</td><td class="td td-text-num">47,200,000</td><td class="td td-text-num text-green-600">+800,000</td><td class="td">98.3%</td></tr>
+                  <tr class="tr"><td class="td">2</td><td class="td td--left">관리운영비</td><td class="td td-text-num">18,000,000</td><td class="td td-text-num">17,500,000</td><td class="td td-text-num text-green-600">+500,000</td><td class="td">97.2%</td></tr>
+                  <tr class="tr"><td class="td">3</td><td class="td td--left">급식비</td><td class="td td-text-num">14,400,000</td><td class="td td-text-num">14,200,000</td><td class="td td-text-num text-green-600">+200,000</td><td class="td">98.6%</td></tr>
+                  <tr class="tr"><td class="td">4</td><td class="td td--left">보육활동비</td><td class="td td-text-num">12,000,000</td><td class="td td-text-num">11,800,000</td><td class="td td-text-num text-green-600">+200,000</td><td class="td">98.3%</td></tr>
+                  <tr class="tr summary-row"><td class="td" colspan="2">세출합계</td><td class="td td-text-num">98,400,000</td><td class="td td-text-num">95,900,000</td><td class="td td-text-num text-green-600">+2,500,000</td><td class="td">97.5%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '../';</script>
+  <script src="../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'accounting', menuLabel: '결산', subMenuHref: 'settlement/annual.html' });
+    });
+  </script>
+</body>
+</html>

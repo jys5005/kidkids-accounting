@@ -1,0 +1,88 @@
+/* ============================================
+   table.css - 테이블 스타일
+   ============================================ */
+
+.table-container {
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  font-size: 11px;
+  border-collapse: collapse;
+  min-width: 1100px;
+}
+
+/* 테이블 헤더 */
+.th {
+  padding: 8px;
+  text-align: center;
+  font-weight: 700;
+  color: #334155; /* slate-700 */
+  white-space: nowrap;
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  font-size: 11px;
+  background-color: #fde047; /* yellow-300 */
+}
+
+.th--last {
+  border-right: none;
+}
+
+/* 테이블 행 */
+.tr {
+  border-bottom: 1px solid #f1f5f9; /* slate-100 */
+  transition: background 0.1s;
+}
+
+.tr:hover {
+  background-color: rgba(248, 250, 252, 0.5); /* slate-50/50 */
+}
+
+/* 테이블 셀 */
+.td {
+  padding: 10px 8px;
+  text-align: center;
+  border-right: 1px solid #f1f5f9;
+}
+
+.td--last {
+  border-right: none;
+}
+
+.td--left {
+  text-align: left;
+}
+
+.td-text-num {
+  color: #64748b; /* slate-500 */
+}
+
+.td-text-label {
+  font-weight: 500;
+  color: #1e293b; /* slate-800 */
+}
+
+.td-text-muted {
+  color: #cbd5e1; /* slate-300 */
+}
+
+.td-text-date {
+  font-size: 10px;
+  color: #64748b;
+}
+
+/* 입력 셀 */
+.td-input {
+  padding: 6px;
+  border-right: 1px solid #f1f5f9;
+}
+
+/* 비활성 셀 */
+.td--disabled {
+  background-color: #f1f5f9; /* slate-100 */
+}

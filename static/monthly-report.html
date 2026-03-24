@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>월회계보고 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/tabs.css">
+  <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/buttons.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">월회계보고</h2>
+            <div class="header-right">
+              <select class="select-box select-box--small">
+                <option>2026년</option>
+                <option>2025년</option>
+              </select>
+              <select class="select-box select-box--small">
+                <option>3월</option>
+                <option>2월</option>
+                <option>1월</option>
+              </select>
+              <span class="badge badge--amber">미마감</span>
+              <button class="btn btn--md btn--teal">마감처리</button>
+              <button class="btn btn--md btn--secondary">인쇄</button>
+            </div>
+          </div>
+
+          <div class="info-card">
+            2026년 3월 회계보고입니다. 마감 처리 후 CIS에 제출할 수 있습니다. 현재 상태: <strong>미마감</strong>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">세입 (수입) 내역</span>
+              <span class="badge badge--green">4건</span>
+            </div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:600px;">
+                <thead>
+                  <tr>
+                    <th class="th" style="width:50px;">No</th>
+                    <th class="th" style="width:200px;">과목</th>
+                    <th class="th" style="width:140px;">예산액</th>
+                    <th class="th" style="width:140px;">당월수입</th>
+                    <th class="th th--last" style="width:140px;">누계수입</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="tr"><td class="td">1</td><td class="td td--left">보육료수입</td><td class="td td-text-num">60,000,000</td><td class="td td-text-num">5,000,000</td><td class="td td-text-num">15,000,000</td></tr>
+                  <tr class="tr"><td class="td">2</td><td class="td td--left">정부보조금수입</td><td class="td td-text-num">36,000,000</td><td class="td td-text-num">3,000,000</td><td class="td td-text-num">9,000,000</td></tr>
+                  <tr class="tr"><td class="td">3</td><td class="td td--left">특별활동수입</td><td class="td td-text-num">12,000,000</td><td class="td td-text-num">1,000,000</td><td class="td td-text-num">3,000,000</td></tr>
+                  <tr class="tr"><td class="td">4</td><td class="td td--left">기타수입</td><td class="td td-text-num">2,400,000</td><td class="td td-text-num">200,000</td><td class="td td-text-num">600,000</td></tr>
+                  <tr class="tr summary-row"><td class="td" colspan="2">수입합계</td><td class="td td-text-num">110,400,000</td><td class="td td-text-num text-blue-600">9,200,000</td><td class="td td-text-num text-blue-600">27,600,000</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">세출 (지출) 내역</span>
+              <span class="badge badge--red">6건</span>
+            </div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:600px;">
+                <thead>
+                  <tr>
+                    <th class="th" style="width:50px;">No</th>
+                    <th class="th" style="width:200px;">과목</th>
+                    <th class="th" style="width:140px;">예산액</th>
+                    <th class="th" style="width:140px;">당월지출</th>
+                    <th class="th th--last" style="width:140px;">누계지출</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="tr"><td class="td">1</td><td class="td td--left">인건비</td><td class="td td-text-num">48,000,000</td><td class="td td-text-num">4,000,000</td><td class="td td-text-num">12,000,000</td></tr>
+                  <tr class="tr"><td class="td">2</td><td class="td td--left">업무추진비</td><td class="td td-text-num">3,600,000</td><td class="td td-text-num">300,000</td><td class="td td-text-num">900,000</td></tr>
+                  <tr class="tr"><td class="td">3</td><td class="td td--left">관리운영비</td><td class="td td-text-num">18,000,000</td><td class="td td-text-num">1,500,000</td><td class="td td-text-num">4,500,000</td></tr>
+                  <tr class="tr"><td class="td">4</td><td class="td td--left">보육활동비</td><td class="td td-text-num">12,000,000</td><td class="td td-text-num">1,000,000</td><td class="td td-text-num">3,000,000</td></tr>
+                  <tr class="tr"><td class="td">5</td><td class="td td--left">급식비</td><td class="td td-text-num">14,400,000</td><td class="td td-text-num">1,200,000</td><td class="td td-text-num">3,600,000</td></tr>
+                  <tr class="tr"><td class="td">6</td><td class="td td--left">기타지출</td><td class="td td-text-num">2,400,000</td><td class="td td-text-num">200,000</td><td class="td td-text-num">600,000</td></tr>
+                  <tr class="tr summary-row"><td class="td" colspan="2">지출합계</td><td class="td td-text-num">98,400,000</td><td class="td td-text-num text-red-600">8,200,000</td><td class="td td-text-num text-red-600">24,600,000</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="summary-bar">
+            <div class="summary-bar__item"><span class="summary-bar__label">수입합계</span><span class="summary-bar__value text-blue-600">9,200,000</span></div>
+            <div class="summary-bar__item"><span class="summary-bar__label">지출합계</span><span class="summary-bar__value text-red-600">8,200,000</span></div>
+            <div class="summary-bar__item"><span class="summary-bar__label">잔액</span><span class="summary-bar__value">1,000,000</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '';</script>
+  <script src="js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'accounting', menuLabel: '장부', subMenuHref: 'monthly-report.html' });
+    });
+  </script>
+</body>
+</html>

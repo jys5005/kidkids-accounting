@@ -1,0 +1,393 @@
+/* ==========================================================================
+   cards.css - Card, Panel, Tooltip, Badge, Info Box, and Stat Styles
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Card
+   --------------------------------------------------------------------------- */
+
+/* --- Card base --- */
+.card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 8px;
+  padding: 16px;
+}
+
+/* --- Card header --- */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9; /* slate-100 */
+}
+
+/* --- Card title --- */
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+}
+
+/* --- Card body --- */
+.card-body {
+  font-size: 12px;
+  color: #475569; /* slate-600 */
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------------------------
+   Stat Card (Dashboard Statistics)
+   --------------------------------------------------------------------------- */
+
+/* --- Stat card --- */
+.stat-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* --- Stat value (large number) --- */
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Stat label --- */
+.stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b; /* slate-500 */
+}
+
+/* --- Stat change indicator --- */
+.stat-change {
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-change.positive {
+  color: #10b981; /* emerald-500 */
+}
+
+.stat-change.negative {
+  color: #ef4444; /* red-500 */
+}
+
+/* ---------------------------------------------------------------------------
+   Summary Card (existing style)
+   --------------------------------------------------------------------------- */
+
+/* --- Summary card --- */
+.summary-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* --- Summary card label --- */
+.summary-card__label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b; /* slate-500 */
+}
+
+/* --- Summary card value --- */
+.summary-card__value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Summary card sub text --- */
+.summary-card__sub {
+  font-size: 10px;
+  color: #94a3b8; /* slate-400 */
+}
+
+/* --- Summary row (flex container for summary cards) --- */
+.summary-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-row > * {
+  flex: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Info Box (Colored status boxes)
+   --------------------------------------------------------------------------- */
+
+/* --- Info box base --- */
+.info-box {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+/* --- Blue info box --- */
+.info-box--blue {
+  background-color: #eff6ff; /* blue-50 */
+  color: #1e40af; /* blue-800 */
+  border: 1px solid #bfdbfe; /* blue-200 */
+}
+
+/* --- Teal info box --- */
+.info-box--teal {
+  background-color: #f0fdfa; /* teal-50 */
+  color: #115e59; /* teal-800 */
+  border: 1px solid #99f6e4; /* teal-200 */
+}
+
+/* --- Orange info box --- */
+.info-box--orange {
+  background-color: #fff7ed; /* orange-50 */
+  color: #9a3412; /* orange-800 */
+  border: 1px solid #fed7aa; /* orange-200 */
+}
+
+/* --- Red info box --- */
+.info-box--red {
+  background-color: #fef2f2; /* red-50 */
+  color: #991b1b; /* red-800 */
+  border: 1px solid #fecaca; /* red-200 */
+}
+
+/* --- Gray info box --- */
+.info-box--gray {
+  background-color: #f8fafc; /* slate-50 */
+  color: #475569; /* slate-600 */
+  border: 1px solid #e2e8f0; /* slate-200 */
+}
+
+/* --- Info card (sky blue, existing style) --- */
+.info-card {
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 11px;
+  color: #0369a1;
+}
+
+/* --- Warning card (amber, existing style) --- */
+.warning-card {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 11px;
+  color: #92400e;
+}
+
+/* ---------------------------------------------------------------------------
+   Status Card
+   --------------------------------------------------------------------------- */
+
+/* --- Status card container --- */
+.status-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* --- Status card icon --- */
+.status-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* --- Status card icon colors --- */
+.status-card__icon--green {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-card__icon--red {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.status-card__icon--blue {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.status-card__icon--amber {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+/* --- Status card body --- */
+.status-card__body {
+  flex: 1;
+}
+
+/* --- Status card title --- */
+.status-card__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a; /* slate-900 */
+}
+
+/* --- Status card description --- */
+.status-card__desc {
+  font-size: 10px;
+  color: #64748b; /* slate-500 */
+  margin-top: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Tooltip
+   --------------------------------------------------------------------------- */
+
+/* --- Tooltip container (relative parent) --- */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+/* --- Tooltip popup --- */
+.tooltip .tooltip-content {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e293b; /* slate-800 */
+  color: #ffffff;
+  font-size: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 60;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Tooltip arrow --- */
+.tooltip .tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1e293b; /* slate-800 */
+}
+
+/* --- Show tooltip on hover --- */
+.tooltip:hover .tooltip-content {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Badge (Small rounded pill labels)
+   --------------------------------------------------------------------------- */
+
+/* --- Badge base --- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* --- Blue badge --- */
+.badge--blue {
+  background-color: #eff6ff; /* blue-50 */
+  color: #1d4ed8; /* blue-700 */
+}
+
+/* --- Teal badge --- */
+.badge--teal {
+  background-color: #f0fdfa; /* teal-50 */
+  color: #0f766e; /* teal-700 */
+}
+
+/* --- Red badge --- */
+.badge--red {
+  background-color: #fef2f2; /* red-50 */
+  color: #dc2626; /* red-600 */
+}
+
+/* --- Gray badge --- */
+.badge--gray {
+  background-color: #f1f5f9; /* slate-100 */
+  color: #64748b; /* slate-500 */
+}
+
+/* ---------------------------------------------------------------------------
+   Coming Soon Placeholder
+   --------------------------------------------------------------------------- */
+
+/* --- Coming soon centered card --- */
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  min-height: 300px;
+  background-color: #ffffff;
+  border: 1px dashed #cbd5e1; /* slate-300 */
+  border-radius: 12px;
+}
+
+/* --- Coming soon icon --- */
+.coming-soon__icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+/* --- Coming soon title --- */
+.coming-soon__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+  margin-bottom: 8px;
+}
+
+/* --- Coming soon description --- */
+.coming-soon__desc {
+  font-size: 12px;
+  color: #64748b; /* slate-500 */
+  max-width: 360px;
+}

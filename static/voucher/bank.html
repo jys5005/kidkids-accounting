@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>계좌내역 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/tabs.css">
+  <link rel="stylesheet" href="../css/table.css">
+  <link rel="stylesheet" href="../css/forms.css">
+  <link rel="stylesheet" href="../css/buttons.css">
+  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="../css/cards.css">
+  <link rel="stylesheet" href="../css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <!-- Section header -->
+          <div class="section-header">
+            <h2 class="section-title">계좌내역</h2>
+            <div class="header-right">
+              <button class="btn btn--md btn--secondary">엑셀 다운로드</button>
+            </div>
+          </div>
+
+          <!-- Account summary cards -->
+          <div class="summary-row">
+            <div class="summary-card">
+              <span class="summary-card__label">계좌번호</span>
+              <span class="summary-card__value" style="font-size:13px;">110-XXX-XXXXXX</span>
+              <span class="summary-card__sub">국민은행 보통예금</span>
+            </div>
+            <div class="summary-card">
+              <span class="summary-card__label">현재잔액</span>
+              <span class="summary-card__value text-blue-600">15,234,500</span>
+              <span class="summary-card__sub">2026-03-24 기준</span>
+            </div>
+            <div class="summary-card">
+              <span class="summary-card__label">당월 입금합계</span>
+              <span class="summary-card__value text-green-600">8,500,000</span>
+              <span class="summary-card__sub">3건</span>
+            </div>
+            <div class="summary-card">
+              <span class="summary-card__label">당월 출금합계</span>
+              <span class="summary-card__value text-red-600">3,265,500</span>
+              <span class="summary-card__sub">12건</span>
+            </div>
+          </div>
+
+          <!-- Search bar -->
+          <div class="search-bar">
+            <span class="search-bar__label">계좌선택</span>
+            <select class="select-box" style="min-width:240px;">
+              <option>국민은행 110-XXX-XXXXXX (보통예금)</option>
+              <option>농협 301-XXXX-XXXX-XX (정기예금)</option>
+              <option>우리은행 1002-XXX-XXXXXX (보통예금)</option>
+            </select>
+            <span class="search-bar__label">조회기간</span>
+            <input type="date" class="date-input" value="2026-03-01">
+            <span class="text-slate-400">~</span>
+            <input type="date" class="date-input" value="2026-03-24">
+            <button class="btn btn--md btn--primary">조회</button>
+          </div>
+
+          <!-- Data table -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="th" style="width:50px;">No</th>
+                  <th class="th" style="width:110px;">거래일</th>
+                  <th class="th" style="width:220px;">적요</th>
+                  <th class="th" style="width:120px;">입금</th>
+                  <th class="th" style="width:120px;">출금</th>
+                  <th class="th" style="width:130px;">잔액</th>
+                  <th class="th th--last" style="width:180px;">메모</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="tr">
+                  <td class="td">1</td>
+                  <td class="td td-text-date">2026-03-02</td>
+                  <td class="td td--left">보육료 입금 (3월)</td>
+                  <td class="td td-text-num text-green-600">5,000,000</td>
+                  <td class="td td-text-num">-</td>
+                  <td class="td td-text-num font-bold">15,000,000</td>
+                  <td class="td td--left">정부보조금</td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">2</td>
+                  <td class="td td-text-date">2026-03-05</td>
+                  <td class="td td--left">식재료비 결제</td>
+                  <td class="td td-text-num">-</td>
+                  <td class="td td-text-num text-red-600">850,000</td>
+                  <td class="td td-text-num font-bold">14,150,000</td>
+                  <td class="td td--left">3월 급식재료</td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">3</td>
+                  <td class="td td-text-date">2026-03-08</td>
+                  <td class="td td--left">수도요금</td>
+                  <td class="td td-text-num">-</td>
+                  <td class="td td-text-num text-red-600">125,000</td>
+                  <td class="td td-text-num font-bold">14,025,000</td>
+                  <td class="td td--left">2월분</td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">4</td>
+                  <td class="td td-text-date">2026-03-10</td>
+                  <td class="td td--left">학부모 수납금</td>
+                  <td class="td td-text-num text-green-600">2,500,000</td>
+                  <td class="td td-text-num">-</td>
+                  <td class="td td-text-num font-bold">16,525,000</td>
+                  <td class="td td--left">특별활동비 외</td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">5</td>
+                  <td class="td td-text-date">2026-03-12</td>
+                  <td class="td td--left">교직원 급여</td>
+                  <td class="td td-text-num">-</td>
+                  <td class="td td-text-num text-red-600">1,290,500</td>
+                  <td class="td td-text-num font-bold">15,234,500</td>
+                  <td class="td td--left">3월분 급여</td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">6</td>
+                  <td class="td td-text-date">2026-03-15</td>
+                  <td class="td td--left">교육자재 구입</td>
+                  <td class="td td-text-num">-</td>
+                  <td class="td td-text-num text-red-600">350,000</td>
+                  <td class="td td-text-num font-bold">14,884,500</td>
+                  <td class="td td--left">미술재료</td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">7</td>
+                  <td class="td td-text-date">2026-03-18</td>
+                  <td class="td td--left">누리과정보조금</td>
+                  <td class="td td-text-num text-green-600">1,000,000</td>
+                  <td class="td td-text-num">-</td>
+                  <td class="td td-text-num font-bold">15,884,500</td>
+                  <td class="td td--left">3월 추가분</td>
+                </tr>
+                <tr class="tr summary-row">
+                  <td class="td" colspan="2">합계</td>
+                  <td class="td"></td>
+                  <td class="td td-text-num text-green-600">8,500,000</td>
+                  <td class="td td-text-num text-red-600">2,615,500</td>
+                  <td class="td td-text-num">15,884,500</td>
+                  <td class="td"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '../';</script>
+  <script src="../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'accounting', menuLabel: '전표관리', subMenuHref: 'voucher/bank.html' });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전표입력 - 키드키즈 회계</title>
+
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+
+  <style>
+    /* Mode tabs */
+    .mode-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 10px;
+    }
+    .mode-tab {
+      padding: 7px 18px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #fff;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      margin-right: -1px;
+      transition: all 0.15s;
+    }
+    .mode-tab--active {
+      background: #14b8a6;
+      color: #fff;
+      border-color: #14b8a6;
+      z-index: 1;
+      position: relative;
+    }
+    .mode-tab:not(.mode-tab--active):hover { background: #f8fafc; }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .filter-bar label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #334155;
+      white-space: nowrap;
+    }
+    .filter-input {
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      background: #fff;
+    }
+    .filter-input[type="date"] { min-width: 120px; }
+    .filter-select {
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      background: #fff;
+      min-width: 100px;
+    }
+    .filter-toggle {
+      display: inline-flex;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .filter-toggle__btn {
+      padding: 4px 12px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #fff;
+      color: #64748b;
+      border: none;
+    }
+    .filter-toggle__btn--active { background: #3b82f6; color: #fff; }
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-outline { background: #fff; color: #475569; border: 1px solid #e2e8f0; }
+    .btn-outline:hover { background: #f8fafc; }
+
+    /* Voucher table */
+    .voucher-table-wrap {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    .voucher-table {
+      width: 100%;
+      min-width: 1200px;
+      font-size: 11px;
+      border-collapse: collapse;
+    }
+    .voucher-table th {
+      padding: 7px 6px;
+      text-align: center;
+      font-weight: 700;
+      color: #334155;
+      background: #fde047;
+      border-bottom: 1px solid #e2e8f0;
+      border-right: 1px solid rgba(0,0,0,0.06);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .voucher-table th:last-child { border-right: none; }
+    .voucher-table td {
+      padding: 5px 6px;
+      border-bottom: 1px solid #f1f5f9;
+      border-right: 1px solid #f8fafc;
+      color: #475569;
+      white-space: nowrap;
+    }
+    .voucher-table td:last-child { border-right: none; }
+    .voucher-table tbody tr:hover { background: #f8fafc; }
+    .voucher-table .td-center { text-align: center; }
+    .voucher-table .td-right { text-align: right; font-variant-numeric: tabular-nums; }
+    .voucher-table .td-left { text-align: left; }
+
+    /* Type badges */
+    .type-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .type-badge--income { background: #dbeafe; color: #1d4ed8; }
+    .type-badge--expense { background: #fee2e2; color: #dc2626; }
+
+    /* Evidence badges */
+    .evidence-badge {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .evidence-badge--tax { background: #dcfce7; color: #15803d; }
+    .evidence-badge--cash { background: #e0e7ff; color: #4338ca; }
+    .evidence-badge--card { background: #fce7f3; color: #be185d; }
+    .evidence-badge--bank { background: #fef3c7; color: #92400e; }
+    .evidence-badge--etc { background: #f1f5f9; color: #64748b; }
+
+    /* Totals row */
+    .voucher-table .row-total {
+      background: #f8fafc;
+      font-weight: 700;
+    }
+    .voucher-table .row-total td {
+      border-top: 2px solid #e2e8f0;
+      padding: 8px 6px;
+    }
+
+    /* New entry row */
+    .voucher-table .row-new {
+      background: #fffbeb;
+    }
+    .voucher-table .row-new td {
+      padding: 4px 4px;
+    }
+    .row-input {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 3px;
+      padding: 3px 5px;
+      font-size: 10px;
+      background: #fff;
+    }
+    .row-input:focus { border-color: #60a5fa; }
+    .row-select {
+      border: 1px solid #e2e8f0;
+      border-radius: 3px;
+      padding: 3px 4px;
+      font-size: 10px;
+      background: #fff;
+      width: 100%;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 12px;
+    }
+    .page-btn {
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: #fff;
+      color: #475569;
+      cursor: pointer;
+    }
+    .page-btn:hover { background: #f1f5f9; }
+    .page-btn--active { background: #14b8a6; color: #fff; border-color: #14b8a6; }
+
+    /* Bottom totals bar */
+    .totals-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 24px;
+      padding: 10px 16px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .totals-bar__item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .totals-bar__label { color: #64748b; font-weight: 500; }
+    .totals-bar__value--income { color: #2563eb; }
+    .totals-bar__value--expense { color: #dc2626; }
+  </style>
+</head>
+<body>
+<div class="app-container">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="header-band1">
+      <div class="logo">키드키즈 <span class="logo-sub">회계관리</span></div>
+      <nav class="category-nav">
+        <div class="category-item category-item--active"><div class="category-icon category-icon--active">&#128200;</div><span class="category-label">회계</span></div>
+        <div class="category-item"><div class="category-icon">&#128176;</div><span class="category-label">급여</span></div>
+        <div class="category-item"><div class="category-icon">&#128218;</div><span class="category-label">서식</span></div>
+        <div class="category-item"><div class="category-icon">&#9881;</div><span class="category-label">설정</span></div>
+      </nav>
+      <div class="user-area">
+        <span class="center-name-btn">햇살어린이집 &#9662;</span>
+        <span class="timer">29:45</span>
+        <button class="logout-btn">로그아웃</button>
+      </div>
+    </div>
+    <div class="header-band2">
+      <a href="../accounting.html" class="gnb-item">회계현황</a>
+      <a href="../budget/create.html" class="gnb-item">예산</a>
+      <a href="input.html" class="gnb-item gnb-item--active">전표</a>
+      <a class="gnb-item">결산</a>
+      <a class="gnb-item">업무관리</a>
+      <a class="gnb-item">고정자산</a>
+    </div>
+    <div class="header-band3">
+      <div class="sub-tab-bar">
+        <a href="input.html" class="sub-tab-item sub-tab-item--active">전표입력</a>
+        <a href="deleted.html" class="sub-tab-item">삭제전표</a>
+        <a href="balance.html" class="sub-tab-item">잔액비교</a>
+        <a href="transactions.html" class="sub-tab-item">거래내역</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-title">회계</div>
+      <div class="sidebar-menu-item">회계현황 <span class="chevron">&#9654;</span></div>
+      <div class="sidebar-submenu"><a href="../accounting.html" class="sidebar-submenu-item">회계현황</a></div>
+      <div class="sidebar-menu-item">예산 <span class="chevron">&#9654;</span></div>
+      <div class="sidebar-submenu">
+        <a href="../budget/create.html" class="sidebar-submenu-item">예산작성</a>
+        <a href="../budget/transfer.html" class="sidebar-submenu-item">과목전용</a>
+        <a href="../budget/report.html" class="sidebar-submenu-item">예산보고서</a>
+        <a href="../budget/execution.html" class="sidebar-submenu-item">예산대비집행현황</a>
+      </div>
+      <div class="sidebar-menu-item sidebar-menu-item--open">전표 <span class="chevron chevron--open">&#9654;</span></div>
+      <div class="sidebar-submenu is-open">
+        <a href="input.html" class="sidebar-submenu-item sidebar-submenu-item--active">전표입력</a>
+        <a href="deleted.html" class="sidebar-submenu-item">삭제전표</a>
+        <a href="balance.html" class="sidebar-submenu-item">잔액비교</a>
+        <a href="transactions.html" class="sidebar-submenu-item">거래내역</a>
+      </div>
+      <div class="sidebar-footer">
+        <div class="sidebar-center-card"><strong>햇살어린이집</strong>인가번호: 12345<br>원장: 김영희</div>
+      </div>
+    </aside>
+
+    <main id="content" class="content-area">
+      <div class="page-wrapper">
+
+        <!-- Mode tabs -->
+        <div class="mode-tabs">
+          <button class="mode-tab mode-tab--active" data-mode="simple">간편입력</button>
+          <button class="mode-tab" data-mode="single">단식</button>
+          <button class="mode-tab" data-mode="double">복식</button>
+          <button class="mode-tab" data-mode="batch">일괄수정</button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+          <label>기간</label>
+          <input type="date" class="filter-input" value="2025-03-01">
+          <span style="color:#94a3b8">~</span>
+          <input type="date" class="filter-input" value="2025-03-31">
+          <div class="filter-toggle">
+            <button class="filter-toggle__btn filter-toggle__btn--active">전체</button>
+            <button class="filter-toggle__btn">수입</button>
+            <button class="filter-toggle__btn">지출</button>
+          </div>
+          <select class="filter-select">
+            <option value="">계정 전체</option>
+            <option>인건비</option>
+            <option>관리운영비</option>
+            <option>보육활동비</option>
+            <option>보조금수입</option>
+            <option>부모부담수입</option>
+          </select>
+          <input type="text" class="filter-input" placeholder="적요/거래처 검색" style="min-width:140px">
+          <button class="btn-sm btn-primary">검색</button>
+          <button class="btn-sm btn-outline">초기화</button>
+        </div>
+
+        <!-- Voucher table -->
+        <div class="voucher-table-wrap">
+          <table class="voucher-table" id="voucherTable">
+            <thead>
+              <tr>
+                <th style="width:30px"><input type="checkbox" id="checkAll"></th>
+                <th style="width:40px">번호</th>
+                <th style="width:50px">입력</th>
+                <th style="width:80px">출납일</th>
+                <th style="width:50px">구분</th>
+                <th style="width:80px">계정</th>
+                <th style="width:90px">세목</th>
+                <th style="width:140px">적요</th>
+                <th style="width:100px">거래처</th>
+                <th style="width:100px">수입금액</th>
+                <th style="width:100px">지출금액</th>
+                <th style="width:80px">증빙</th>
+              </tr>
+            </thead>
+            <tbody id="voucherBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Totals bar -->
+        <div class="totals-bar">
+          <div class="totals-bar__item">
+            <span class="totals-bar__label">수입합계</span>
+            <span class="totals-bar__value--income" id="totalIncome">0</span>
+          </div>
+          <div class="totals-bar__item">
+            <span class="totals-bar__label">지출합계</span>
+            <span class="totals-bar__value--expense" id="totalExpense">0</span>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button class="page-btn">&laquo;</button>
+          <button class="page-btn">&lsaquo;</button>
+          <button class="page-btn page-btn--active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">&rsaquo;</button>
+          <button class="page-btn">&raquo;</button>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+var basePath = '../';
+
+function fmt(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+// Evidence types
+var evidenceTypes = [
+  { key: 'tax', label: '세금계산서', cls: 'evidence-badge--tax' },
+  { key: 'cash', label: '현금영수증', cls: 'evidence-badge--cash' },
+  { key: 'card', label: '카드전표', cls: 'evidence-badge--card' },
+  { key: 'bank', label: '통장입금', cls: 'evidence-badge--bank' },
+  { key: 'etc', label: '기타', cls: 'evidence-badge--etc' }
+];
+
+function evBadge(key) {
+  var e = evidenceTypes.find(function(t) { return t.key === key; });
+  if (!e) return '';
+  return '<span class="evidence-badge ' + e.cls + '">' + e.label + '</span>';
+}
+
+// 50+ sample voucher rows
+var vouchers = [
+  { no: 1, inputDate: '03-01', cashDate: '2025-03-01', type: 'income', account: '보조금수입', detail: '기본보육료', summary: '3월 기본보육료 입금', vendor: '서울시', income: 4625000, expense: 0, evidence: 'bank' },
+  { no: 2, inputDate: '03-01', cashDate: '2025-03-01', type: 'income', account: '보조금수입', detail: '누리과정보육료', summary: '3월 누리과정보육료', vendor: '서울시', income: 2050000, expense: 0, evidence: 'bank' },
+  { no: 3, inputDate: '03-01', cashDate: '2025-03-01', type: 'income', account: '보조금수입', detail: '영아보육료', summary: '3월 영아보육료 입금', vendor: '서울시', income: 1400000, expense: 0, evidence: 'bank' },
+  { no: 4, inputDate: '03-01', cashDate: '2025-03-02', type: 'income', account: '보조금수입', detail: '처우개선비', summary: '3월 처우개선비', vendor: '서울시', income: 900000, expense: 0, evidence: 'bank' },
+  { no: 5, inputDate: '03-02', cashDate: '2025-03-03', type: 'income', account: '부모부담수입', detail: '특별활동비', summary: '3월 특별활동비 수납', vendor: '학부모', income: 640000, expense: 0, evidence: 'bank' },
+  { no: 6, inputDate: '03-02', cashDate: '2025-03-03', type: 'income', account: '부모부담수입', detail: '기타필요경비', summary: '3월 필요경비 수납', vendor: '학부모', income: 320000, expense: 0, evidence: 'bank' },
+  { no: 7, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '원장급여', summary: '3월 원장급여', vendor: '김영희', income: 0, expense: 3000000, evidence: 'bank' },
+  { no: 8, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '원장수당', summary: '3월 원장수당', vendor: '김영희', income: 0, expense: 300000, evidence: 'bank' },
+  { no: 9, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '교사급여', summary: '3월 교사급여(이수진)', vendor: '이수진', income: 0, expense: 2800000, evidence: 'bank' },
+  { no: 10, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '교사급여', summary: '3월 교사급여(박미영)', vendor: '박미영', income: 0, expense: 2700000, evidence: 'bank' },
+  { no: 11, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '교사급여', summary: '3월 교사급여(최정은)', vendor: '최정은', income: 0, expense: 2600000, evidence: 'bank' },
+  { no: 12, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '교사급여', summary: '3월 교사급여(한지원)', vendor: '한지원', income: 0, expense: 2500000, evidence: 'bank' },
+  { no: 13, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '교사수당', summary: '3월 교사수당(이수진)', vendor: '이수진', income: 0, expense: 150000, evidence: 'bank' },
+  { no: 14, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '교사수당', summary: '3월 교사수당(박미영)', vendor: '박미영', income: 0, expense: 150000, evidence: 'bank' },
+  { no: 15, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '교사수당', summary: '3월 교사수당(최정은)', vendor: '최정은', income: 0, expense: 150000, evidence: 'bank' },
+  { no: 16, inputDate: '03-03', cashDate: '2025-03-05', type: 'expense', account: '인건비', detail: '교사수당', summary: '3월 교사수당(한지원)', vendor: '한지원', income: 0, expense: 150000, evidence: 'bank' },
+  { no: 17, inputDate: '03-05', cashDate: '2025-03-06', type: 'expense', account: '관리운영비', detail: '수도광열비', summary: '3월 수도요금', vendor: '서울시수도사업소', income: 0, expense: 185000, evidence: 'tax' },
+  { no: 18, inputDate: '03-05', cashDate: '2025-03-06', type: 'expense', account: '관리운영비', detail: '수도광열비', summary: '3월 도시가스요금', vendor: '서울도시가스', income: 0, expense: 320000, evidence: 'tax' },
+  { no: 19, inputDate: '03-05', cashDate: '2025-03-07', type: 'expense', account: '관리운영비', detail: '전기요금', summary: '3월 전기요금', vendor: '한국전력공사', income: 0, expense: 245000, evidence: 'tax' },
+  { no: 20, inputDate: '03-06', cashDate: '2025-03-07', type: 'expense', account: '관리운영비', detail: '통신비', summary: '3월 인터넷/전화요금', vendor: 'KT', income: 0, expense: 55000, evidence: 'tax' },
+  { no: 21, inputDate: '03-07', cashDate: '2025-03-08', type: 'expense', account: '보육활동비', detail: '급식비', summary: '쌀 구입', vendor: '농협하나로마트', income: 0, expense: 180000, evidence: 'card' },
+  { no: 22, inputDate: '03-07', cashDate: '2025-03-08', type: 'expense', account: '보육활동비', detail: '급식비', summary: '채소류 구입', vendor: '가락시장청과', income: 0, expense: 125000, evidence: 'cash' },
+  { no: 23, inputDate: '03-08', cashDate: '2025-03-10', type: 'expense', account: '보육활동비', detail: '급식비', summary: '육류 구입', vendor: '한우마트', income: 0, expense: 210000, evidence: 'card' },
+  { no: 24, inputDate: '03-08', cashDate: '2025-03-10', type: 'expense', account: '보육활동비', detail: '급식비', summary: '수산물 구입', vendor: '노량진수산시장', income: 0, expense: 95000, evidence: 'cash' },
+  { no: 25, inputDate: '03-09', cashDate: '2025-03-10', type: 'expense', account: '보육활동비', detail: '급식비', summary: '양념/조미료', vendor: '이마트', income: 0, expense: 45000, evidence: 'card' },
+  { no: 26, inputDate: '03-10', cashDate: '2025-03-11', type: 'expense', account: '보육활동비', detail: '간식비', summary: '과일 구입', vendor: '과일나라', income: 0, expense: 88000, evidence: 'cash' },
+  { no: 27, inputDate: '03-10', cashDate: '2025-03-11', type: 'expense', account: '보육활동비', detail: '간식비', summary: '우유 구입', vendor: '서울우유', income: 0, expense: 156000, evidence: 'tax' },
+  { no: 28, inputDate: '03-10', cashDate: '2025-03-11', type: 'expense', account: '보육활동비', detail: '간식비', summary: '빵/과자류', vendor: '파리바게뜨', income: 0, expense: 42000, evidence: 'card' },
+  { no: 29, inputDate: '03-11', cashDate: '2025-03-12', type: 'expense', account: '관리운영비', detail: '소모품비', summary: 'A4용지/토너 구입', vendor: '오피스디포', income: 0, expense: 85000, evidence: 'card' },
+  { no: 30, inputDate: '03-11', cashDate: '2025-03-12', type: 'expense', account: '관리운영비', detail: '소모품비', summary: '청소용품 구입', vendor: '다이소', income: 0, expense: 32000, evidence: 'cash' },
+  { no: 31, inputDate: '03-12', cashDate: '2025-03-13', type: 'expense', account: '보육활동비', detail: '교재교구구입비', summary: '3월 교재교구 구입', vendor: '키드키즈몰', income: 0, expense: 250000, evidence: 'card' },
+  { no: 32, inputDate: '03-12', cashDate: '2025-03-13', type: 'expense', account: '보육활동비', detail: '교재교구구입비', summary: '미술재료 구입', vendor: '화방넷', income: 0, expense: 78000, evidence: 'cash' },
+  { no: 33, inputDate: '03-13', cashDate: '2025-03-14', type: 'expense', account: '보육활동비', detail: '특별활동비', summary: '3월 영어수업 강사료', vendor: '정글잉글리쉬', income: 0, expense: 200000, evidence: 'tax' },
+  { no: 34, inputDate: '03-13', cashDate: '2025-03-14', type: 'expense', account: '보육활동비', detail: '특별활동비', summary: '3월 체육수업 강사료', vendor: '키즈스포츠', income: 0, expense: 180000, evidence: 'tax' },
+  { no: 35, inputDate: '03-14', cashDate: '2025-03-15', type: 'expense', account: '보육활동비', detail: '급식비', summary: '채소류 2차 구입', vendor: '가락시장청과', income: 0, expense: 98000, evidence: 'cash' },
+  { no: 36, inputDate: '03-14', cashDate: '2025-03-15', type: 'expense', account: '보육활동비', detail: '급식비', summary: '두부/콩나물 등', vendor: '풀무원', income: 0, expense: 45000, evidence: 'card' },
+  { no: 37, inputDate: '03-15', cashDate: '2025-03-17', type: 'expense', account: '보육활동비', detail: '급식비', summary: '유제품 구입', vendor: '매일유업', income: 0, expense: 67000, evidence: 'tax' },
+  { no: 38, inputDate: '03-15', cashDate: '2025-03-17', type: 'income', account: '기타수입', detail: '이자수입', summary: '3월 보통예금 이자', vendor: '국민은행', income: 2500, expense: 0, evidence: 'bank' },
+  { no: 39, inputDate: '03-16', cashDate: '2025-03-17', type: 'expense', account: '보육활동비', detail: '간식비', summary: '요구르트 구입', vendor: '빙그레', income: 0, expense: 38000, evidence: 'card' },
+  { no: 40, inputDate: '03-17', cashDate: '2025-03-18', type: 'expense', account: '관리운영비', detail: '수도광열비', summary: '등유 구입', vendor: 'GS칼텍스', income: 0, expense: 230000, evidence: 'tax' },
+  { no: 41, inputDate: '03-18', cashDate: '2025-03-19', type: 'expense', account: '보육활동비', detail: '급식비', summary: '계란 구입', vendor: '농협하나로마트', income: 0, expense: 52000, evidence: 'card' },
+  { no: 42, inputDate: '03-18', cashDate: '2025-03-19', type: 'expense', account: '보육활동비', detail: '급식비', summary: '냉동식품 구입', vendor: 'CJ제일제당', income: 0, expense: 78000, evidence: 'card' },
+  { no: 43, inputDate: '03-19', cashDate: '2025-03-20', type: 'expense', account: '관리운영비', detail: '소모품비', summary: '위생용품 구입', vendor: '쿠팡', income: 0, expense: 45000, evidence: 'card' },
+  { no: 44, inputDate: '03-19', cashDate: '2025-03-20', type: 'expense', account: '관리운영비', detail: '소모품비', summary: '전구/배터리 교체', vendor: '다이소', income: 0, expense: 18000, evidence: 'cash' },
+  { no: 45, inputDate: '03-20', cashDate: '2025-03-21', type: 'expense', account: '보육활동비', detail: '교재교구구입비', summary: '블록/퍼즐 구입', vendor: '레고코리아', income: 0, expense: 120000, evidence: 'card' },
+  { no: 46, inputDate: '03-20', cashDate: '2025-03-21', type: 'expense', account: '보육활동비', detail: '간식비', summary: '떡 구입', vendor: '떡방앗간', income: 0, expense: 35000, evidence: 'cash' },
+  { no: 47, inputDate: '03-21', cashDate: '2025-03-22', type: 'expense', account: '보육활동비', detail: '급식비', summary: '반찬거리 구입', vendor: '이마트', income: 0, expense: 135000, evidence: 'card' },
+  { no: 48, inputDate: '03-21', cashDate: '2025-03-22', type: 'expense', account: '보육활동비', detail: '특별활동비', summary: '3월 음악수업 강사료', vendor: '뮤직스쿨', income: 0, expense: 150000, evidence: 'tax' },
+  { no: 49, inputDate: '03-22', cashDate: '2025-03-24', type: 'expense', account: '보육활동비', detail: '급식비', summary: '생선류 구입', vendor: '노량진수산시장', income: 0, expense: 110000, evidence: 'cash' },
+  { no: 50, inputDate: '03-22', cashDate: '2025-03-24', type: 'expense', account: '보육활동비', detail: '간식비', summary: '과일 2차 구입', vendor: '과일나라', income: 0, expense: 72000, evidence: 'cash' },
+  { no: 51, inputDate: '03-23', cashDate: '2025-03-25', type: 'expense', account: '관리운영비', detail: '전기요금', summary: '전기요금 추가분', vendor: '한국전력공사', income: 0, expense: 35000, evidence: 'tax' },
+  { no: 52, inputDate: '03-24', cashDate: '2025-03-25', type: 'expense', account: '보육활동비', detail: '교재교구구입비', summary: '도서 구입', vendor: '교보문고', income: 0, expense: 72000, evidence: 'card' },
+  { no: 53, inputDate: '03-25', cashDate: '2025-03-26', type: 'expense', account: '보육활동비', detail: '급식비', summary: '채소류 3차 구입', vendor: '가락시장청과', income: 0, expense: 88000, evidence: 'cash' },
+  { no: 54, inputDate: '03-25', cashDate: '2025-03-26', type: 'expense', account: '보육활동비', detail: '간식비', summary: '음료 구입', vendor: '편의점', income: 0, expense: 28000, evidence: 'card' },
+  { no: 55, inputDate: '03-26', cashDate: '2025-03-27', type: 'expense', account: '보육활동비', detail: '급식비', summary: '육류 2차 구입', vendor: '한우마트', income: 0, expense: 165000, evidence: 'card' }
+];
+
+function renderVoucherTable() {
+  var tbody = document.getElementById('voucherBody');
+  var totalIncome = 0, totalExpense = 0;
+
+  // New entry row
+  var html = '<tr class="row-new">' +
+    '<td class="td-center"></td>' +
+    '<td class="td-center" style="color:#94a3b8">NEW</td>' +
+    '<td class="td-center">-</td>' +
+    '<td><input type="date" class="row-input" value="2025-03-27"></td>' +
+    '<td><select class="row-select"><option>수입</option><option>지출</option></select></td>' +
+    '<td><select class="row-select"><option value="">선택</option><option>인건비</option><option>관리운영비</option><option>보육활동비</option><option>보조금수입</option><option>부모부담수입</option></select></td>' +
+    '<td><select class="row-select"><option value="">선택</option></select></td>' +
+    '<td><input type="text" class="row-input" placeholder="적요 입력"></td>' +
+    '<td><input type="text" class="row-input" placeholder="거래처"></td>' +
+    '<td><input type="text" class="row-input" style="text-align:right" placeholder="0"></td>' +
+    '<td><input type="text" class="row-input" style="text-align:right" placeholder="0"></td>' +
+    '<td><select class="row-select"><option>세금계산서</option><option>현금영수증</option><option>카드전표</option><option>통장입금</option><option>기타</option></select></td>' +
+  '</tr>';
+
+  vouchers.forEach(function(v) {
+    totalIncome += v.income;
+    totalExpense += v.expense;
+    var typeBadge = v.type === 'income'
+      ? '<span class="type-badge type-badge--income">수입</span>'
+      : '<span class="type-badge type-badge--expense">지출</span>';
+    html += '<tr>' +
+      '<td class="td-center"><input type="checkbox" class="row-check"></td>' +
+      '<td class="td-center">' + v.no + '</td>' +
+      '<td class="td-center" style="font-size:10px;color:#94a3b8">' + v.inputDate + '</td>' +
+      '<td class="td-center">' + v.cashDate + '</td>' +
+      '<td class="td-center">' + typeBadge + '</td>' +
+      '<td class="td-left">' + v.account + '</td>' +
+      '<td class="td-left">' + v.detail + '</td>' +
+      '<td class="td-left">' + v.summary + '</td>' +
+      '<td class="td-left">' + v.vendor + '</td>' +
+      '<td class="td-right">' + (v.income > 0 ? fmt(v.income) : '') + '</td>' +
+      '<td class="td-right">' + (v.expense > 0 ? fmt(v.expense) : '') + '</td>' +
+      '<td class="td-center">' + evBadge(v.evidence) + '</td>' +
+    '</tr>';
+  });
+
+  // Total row
+  html += '<tr class="row-total">' +
+    '<td colspan="9" style="text-align:right;padding-right:12px">합계</td>' +
+    '<td class="td-right" style="color:#2563eb">' + fmt(totalIncome) + '</td>' +
+    '<td class="td-right" style="color:#dc2626">' + fmt(totalExpense) + '</td>' +
+    '<td></td>' +
+  '</tr>';
+
+  tbody.innerHTML = html;
+  document.getElementById('totalIncome').textContent = fmt(totalIncome);
+  document.getElementById('totalExpense').textContent = fmt(totalExpense);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  renderVoucherTable();
+
+  // Check all
+  document.getElementById('checkAll').addEventListener('change', function() {
+    var checked = this.checked;
+    document.querySelectorAll('.row-check').forEach(function(cb) { cb.checked = checked; });
+  });
+
+  // Mode tabs
+  document.querySelectorAll('.mode-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.mode-tab').forEach(function(t) { t.classList.remove('mode-tab--active'); });
+      this.classList.add('mode-tab--active');
+    });
+  });
+
+  // Filter toggles
+  document.querySelectorAll('.filter-toggle__btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      this.parentElement.querySelectorAll('.filter-toggle__btn').forEach(function(b) { b.classList.remove('filter-toggle__btn--active'); });
+      this.classList.add('filter-toggle__btn--active');
+    });
+  });
+
+  // Sidebar toggle
+  document.querySelectorAll('.sidebar-menu-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      this.classList.toggle('sidebar-menu-item--open');
+      var chevron = this.querySelector('.chevron');
+      if (chevron) chevron.classList.toggle('chevron--open');
+      var sub = this.nextElementSibling;
+      if (sub && sub.classList.contains('sidebar-submenu')) sub.classList.toggle('is-open');
+    });
+  });
+
+  // Column sort (click header to sort)
+  document.querySelectorAll('.voucher-table th').forEach(function(th, idx) {
+    if (idx < 2) return; // skip checkbox & no
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', function() {
+      // Simple visual feedback
+      document.querySelectorAll('.voucher-table th').forEach(function(h) { h.style.background = '#fde047'; });
+      this.style.background = '#fbbf24';
+    });
+  });
+});
+</script>
+</body>
+</html>

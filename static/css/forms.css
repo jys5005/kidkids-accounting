@@ -1,0 +1,206 @@
+/* ==========================================================================
+   forms.css - Form Elements
+   ========================================================================== */
+
+/* --- Text input --- */
+.input-text {
+  width: 100%;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #334155; /* slate-700 */
+  background-color: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  line-height: 1.5;
+}
+
+.input-text:focus {
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* --- Text input disabled --- */
+.input-text--disabled {
+  background-color: #f1f5f9; /* slate-100 */
+  color: #94a3b8; /* slate-400 */
+  cursor: not-allowed;
+}
+
+/* --- Password input --- */
+.input-password {
+  width: 100%;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #334155; /* slate-700 */
+  background-color: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  line-height: 1.5;
+}
+
+.input-password:focus {
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* --- Password input disabled --- */
+.input-password--disabled {
+  background-color: #f1f5f9; /* slate-100 */
+  color: #94a3b8; /* slate-400 */
+  cursor: not-allowed;
+}
+
+/* --- Number input --- */
+.input-number {
+  width: 100%;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #334155; /* slate-700 */
+  background-color: #ffffff;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  line-height: 1.5;
+}
+
+.input-number:focus {
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* --- Number input disabled --- */
+.input-number--disabled {
+  background-color: #f1f5f9; /* slate-100 */
+  color: #94a3b8; /* slate-400 */
+  cursor: not-allowed;
+}
+
+/* --- Select box --- */
+.select-box {
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 6px;
+  padding: 6px 28px 6px 10px;
+  font-size: 11px;
+  color: #334155; /* slate-700 */
+  background-color: #ffffff;
+  min-width: 200px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  line-height: 1.5;
+}
+
+.select-box:focus {
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* --- Small select box --- */
+.select-box--small {
+  min-width: 120px;
+  padding: 4px 24px 4px 8px;
+  font-size: 10px;
+}
+
+/* --- Checkbox --- */
+.checkbox {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 3px;
+  background-color: #ffffff;
+  cursor: pointer;
+  accent-color: #3b82f6; /* blue-500 */
+  vertical-align: middle;
+}
+
+.checkbox:checked {
+  background-color: #3b82f6; /* blue-500 */
+  border-color: #3b82f6; /* blue-500 */
+}
+
+/* --- Radio button --- */
+.radio {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 50%;
+  background-color: #ffffff;
+  cursor: pointer;
+  accent-color: #3b82f6; /* blue-500 */
+  vertical-align: middle;
+}
+
+.radio:checked {
+  border-color: #3b82f6; /* blue-500 */
+}
+
+/* --- File input --- */
+.input-file {
+  font-size: 11px;
+  color: #64748b; /* slate-500 */
+}
+
+.input-file::file-selector-button {
+  padding: 4px 12px;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 6px;
+  background-color: #f8fafc; /* slate-50 */
+  color: #475569; /* slate-600 */
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.input-file::file-selector-button:hover {
+  background-color: #f1f5f9; /* slate-100 */
+}
+
+/* --- Date input --- */
+.date-input {
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #334155; /* slate-700 */
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.date-input:focus {
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* --- Field label --- */
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569; /* slate-600 */
+  margin-bottom: 4px;
+}
+
+/* --- Medium field label --- */
+.field-label--md {
+  font-size: 12px;
+}
+
+/* --- Field group (label + input wrapper) --- */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

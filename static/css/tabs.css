@@ -1,0 +1,123 @@
+/* ==========================================================================
+   tabs.css - Tab Navigation Styles
+   ========================================================================== */
+
+/* --- Tab bar container --- */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0; /* slate-200 */
+  gap: 0;
+  margin-bottom: 16px;
+}
+
+/* --- Individual tab item --- */
+.tab-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  margin-bottom: -1px; /* overlap container border */
+}
+
+.tab-item:hover {
+  color: #334155; /* slate-700 */
+}
+
+/* --- Active tab item: teal-700 text, teal-500 border --- */
+.tab-item--active {
+  color: #0f766e; /* teal-700 */
+  border-bottom-color: #14b8a6; /* teal-500 */
+}
+
+/* --- Inactive tab item: slate-400 text, transparent border --- */
+.tab-item--inactive {
+  color: #94a3b8; /* slate-400 */
+  border-bottom-color: transparent;
+}
+
+.tab-item--inactive:hover {
+  color: #64748b; /* slate-500 */
+}
+
+/* ---------------------------------------------------------------------------
+   Sub-tab bar (smaller inner variant)
+   --------------------------------------------------------------------------- */
+
+/* --- Sub-tab bar container --- */
+.sub-tab-bar-inner {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0; /* slate-200 */
+  gap: 0;
+  margin-bottom: 12px;
+}
+
+/* --- Sub-tab items (smaller font and padding) --- */
+.sub-tab-bar-inner .tab-item {
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------------------------
+   Pill Tabs (alternative tab style)
+   --------------------------------------------------------------------------- */
+
+/* --- Pill tabs container --- */
+.pill-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+/* --- Pill tab item --- */
+.pill-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b; /* slate-500 */
+  background-color: #f1f5f9; /* slate-100 */
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  white-space: nowrap;
+}
+
+.pill-tab:hover {
+  background-color: #e2e8f0; /* slate-200 */
+  color: #334155; /* slate-700 */
+}
+
+/* --- Active pill tab --- */
+.pill-tab--active {
+  background-color: #0f766e; /* teal-700 */
+  color: #ffffff;
+}
+
+.pill-tab--active:hover {
+  background-color: #115e59; /* teal-800 */
+  color: #ffffff;
+}
+
+/* ---------------------------------------------------------------------------
+   Tab Content Panels
+   --------------------------------------------------------------------------- */
+
+/* --- Tab panel (hidden by default) --- */
+.tab-panel {
+  display: none;
+}
+
+/* --- Active tab panel --- */
+.tab-panel--active {
+  display: block;
+}

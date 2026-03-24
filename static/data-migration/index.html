@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>데이터이관 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/tabs.css">
+  <link rel="stylesheet" href="../css/table.css">
+  <link rel="stylesheet" href="../css/forms.css">
+  <link rel="stylesheet" href="../css/buttons.css">
+  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="../css/cards.css">
+  <link rel="stylesheet" href="../css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">데이터이관</h2>
+          </div>
+
+          <div class="tab-bar">
+            <a href="index.html" class="tab-item tab-item--active">데이터이관</a>
+            <a href="../auto-login/index.html" class="tab-item tab-item--inactive">자동로그인</a>
+          </div>
+
+          <div class="card mb-16">
+            <div class="card-header"><span class="card-title">이관 원본 프로그램 선택</span></div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <select class="select-box" style="min-width:240px;">
+                <option value="">프로그램을 선택하세요</option>
+                <option>e-보육 (보건복지부)</option>
+                <option>CIS (보육통합정보시스템)</option>
+                <option>아이사랑 (한국보육진흥원)</option>
+                <option>기타 회계 프로그램</option>
+              </select>
+              <button class="btn btn--md btn--primary">연결</button>
+            </div>
+          </div>
+
+          <div class="card mb-16">
+            <div class="card-header"><span class="card-title">계정과목 매핑</span></div>
+            <div class="table-container" style="border:none;">
+              <table class="data-table" style="min-width:600px;">
+                <thead><tr>
+                  <th class="th" style="width:50px;">No</th>
+                  <th class="th" style="width:200px;">원본 계정과목</th>
+                  <th class="th" style="width:60px;"></th>
+                  <th class="th" style="width:200px;">키드키즈 계정과목</th>
+                  <th class="th th--last" style="width:80px;">상태</th>
+                </tr></thead>
+                <tbody>
+                  <tr class="tr"><td class="td">1</td><td class="td td--left">보육료 수입</td><td class="td">&#8594;</td><td class="td td--left">보육료수입</td><td class="td"><span class="badge badge--green">매핑완료</span></td></tr>
+                  <tr class="tr"><td class="td">2</td><td class="td td--left">정부 보조금</td><td class="td">&#8594;</td><td class="td td--left">정부보조금수입</td><td class="td"><span class="badge badge--green">매핑완료</span></td></tr>
+                  <tr class="tr"><td class="td">3</td><td class="td td--left">인건비 지출</td><td class="td">&#8594;</td><td class="td td--left">인건비</td><td class="td"><span class="badge badge--green">매핑완료</span></td></tr>
+                  <tr class="tr"><td class="td">4</td><td class="td td--left">관리비</td><td class="td">&#8594;</td><td class="td td--left">관리운영비</td><td class="td"><span class="badge badge--amber">확인필요</span></td></tr>
+                  <tr class="tr"><td class="td">5</td><td class="td td--left">기타</td><td class="td">&#8594;</td><td class="td td--left text-slate-400">미지정</td><td class="td"><span class="badge badge--red">미매핑</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">이관 진행</span></div>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
+              <span class="text-sm text-slate-600">진행률: 60%</span>
+              <button class="btn btn--md btn--primary">이관 시작</button>
+              <button class="btn btn--md btn--secondary">취소</button>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-bar__fill" style="width:60%;"></div>
+            </div>
+            <div class="mt-8 text-xs text-slate-400">전표 데이터 1,234건 중 740건 이관 완료</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '../';</script>
+  <script src="../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'settings', menuLabel: '설정', subMenuHref: 'data-migration/index.html' });
+    });
+  </script>
+</body>
+</html>

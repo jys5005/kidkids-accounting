@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>환경설정 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/tabs.css">
+  <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/buttons.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">환경설정</h2>
+          </div>
+
+          <!-- CIS status card -->
+          <div class="status-card mb-16">
+            <div class="status-card__icon status-card__icon--green">&#10003;</div>
+            <div class="status-card__body">
+              <div class="status-card__title">CIS 연동 상태: 정상</div>
+              <div class="status-card__desc">보육통합정보시스템과 연동이 정상적으로 작동 중입니다. 마지막 동기화: 2026-03-24 09:30</div>
+            </div>
+            <button class="btn btn--md btn--secondary">동기화</button>
+          </div>
+
+          <!-- Program auth status list -->
+          <div class="card mb-16">
+            <div class="card-header"><span class="card-title">프로그램 인증 상태</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="status-card">
+                <div class="status-card__icon status-card__icon--green">&#128274;</div>
+                <div class="status-card__body">
+                  <div class="status-card__title">CIS (보육통합정보시스템)</div>
+                  <div class="status-card__desc">인증완료 - 유효기간: 2026-12-31</div>
+                </div>
+                <span class="badge badge--green">인증됨</span>
+              </div>
+              <div class="status-card">
+                <div class="status-card__icon status-card__icon--green">&#128274;</div>
+                <div class="status-card__body">
+                  <div class="status-card__title">e-보육</div>
+                  <div class="status-card__desc">인증완료 - 유효기간: 2026-06-30</div>
+                </div>
+                <span class="badge badge--green">인증됨</span>
+              </div>
+              <div class="status-card">
+                <div class="status-card__icon status-card__icon--amber">&#9888;</div>
+                <div class="status-card__body">
+                  <div class="status-card__title">아이사랑</div>
+                  <div class="status-card__desc">인증 만료 예정 - 2026-04-15</div>
+                </div>
+                <span class="badge badge--amber">만료예정</span>
+              </div>
+              <div class="status-card">
+                <div class="status-card__icon status-card__icon--red">&#10007;</div>
+                <div class="status-card__body">
+                  <div class="status-card__title">지자체 보고시스템</div>
+                  <div class="status-card__desc">인증이 필요합니다</div>
+                </div>
+                <span class="badge badge--red">미인증</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Links to sub-settings -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">설정 메뉴</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <a href="auto-login/index.html" class="status-card" style="cursor:pointer;">
+                <div class="status-card__icon status-card__icon--blue">&#128273;</div>
+                <div class="status-card__body">
+                  <div class="status-card__title">자동로그인 설정</div>
+                  <div class="status-card__desc">외부 시스템 자동로그인 관리</div>
+                </div>
+              </a>
+              <a href="data-migration/index.html" class="status-card" style="cursor:pointer;">
+                <div class="status-card__icon status-card__icon--blue">&#128230;</div>
+                <div class="status-card__body">
+                  <div class="status-card__title">데이터이관</div>
+                  <div class="status-card__desc">외부 프로그램 데이터 가져오기</div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '';</script>
+  <script src="js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'settings', menuLabel: '설정', subMenuHref: 'settings.html' });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+/* ==========================================================================
+   layout.css - Page Layout Structure
+   ========================================================================== */
+
+/* --- App container: full viewport flex column --- */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* --- Main area: sidebar + content side by side --- */
+.main-area {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* --- Content area: fills remaining space --- */
+.content-area {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0; /* prevent flex child overflow */
+  background-color: #f8fafc; /* slate-50 */
+}
+
+/* --- Page wrapper: inner content padding --- */
+.page-wrapper {
+  padding: 24px;
+}
+
+/* --- Space-y helper for page-wrapper children --- */
+.page-wrapper > * + * {
+  margin-top: 16px;
+}
+
+/* --- Section header: flex row with title left, actions right --- */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+/* --- Section title --- */
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+}
+
+/* --- Header right area (buttons/controls) --- */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- Header label (small label in header area) --- */
+.header-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b; /* slate-500 */
+  white-space: nowrap;
+}

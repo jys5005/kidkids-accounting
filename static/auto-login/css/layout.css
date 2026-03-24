@@ -1,0 +1,35 @@
+/* ============================================
+   layout.css - 페이지 전체 레이아웃
+   ============================================ */
+
+.page-wrapper {
+  padding: 24px;
+}
+
+.page-wrapper > * + * {
+  margin-top: 16px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b; /* slate-800 */
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569; /* slate-600 */
+}

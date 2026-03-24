@@ -6,8 +6,7 @@
       "runtimeExecutable": "npm.cmd",
       "runtimeArgs": ["run", "dev"],
       "port": 4000,
-      "cwd": "C:/projects/kidkids-accounting",
-      "autoPort": false
+      "cwd": "C:/projects/kidkids-accounting"
     }
   ]
 }

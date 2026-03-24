@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>예산대비집행현황 - 키드키즈 회계</title>
+
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+
+  <style>
+    .exec-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .exec-toolbar__left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .year-select {
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 11px;
+      background: #fff;
+    }
+    .toggle-tabs {
+      display: inline-flex;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .toggle-tab {
+      padding: 5px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #fff;
+      color: #64748b;
+      border: none;
+      transition: all 0.15s;
+    }
+    .toggle-tab--active { background: #14b8a6; color: #fff; }
+    .toggle-tab:not(.toggle-tab--active):hover { background: #f1f5f9; }
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: #fff;
+      color: #475569;
+      cursor: pointer;
+    }
+    .btn-icon:hover { background: #f8fafc; }
+
+    .exec-table {
+      width: 100%;
+      font-size: 11px;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .exec-table th {
+      padding: 8px 10px;
+      text-align: center;
+      font-weight: 700;
+      color: #334155;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      border-right: 1px solid #f1f5f9;
+      white-space: nowrap;
+    }
+    .exec-table th:last-child { border-right: none; }
+    .exec-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      border-right: 1px solid #f1f5f9;
+      color: #475569;
+    }
+    .exec-table td:last-child { border-right: none; }
+    .exec-table .row-section {
+      background: #eff6ff;
+      font-weight: 700;
+      color: #1e40af;
+    }
+    .exec-table .row-section--expense {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+    .exec-table .row-cat {
+      font-weight: 600;
+      color: #334155;
+    }
+    .exec-table .row-total {
+      background: #fef3c7;
+      font-weight: 700;
+      color: #92400e;
+    }
+    .amount { text-align: right; font-variant-numeric: tabular-nums; }
+    .rate-cell {
+      text-align: center;
+      font-weight: 600;
+    }
+    .rate-cell--low { color: #22c55e; }
+    .rate-cell--mid { color: #eab308; }
+    .rate-cell--high { color: #ef4444; }
+    .exec-progress {
+      width: 60px;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+    .exec-progress__fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+    .exec-progress__fill--low { background: #22c55e; }
+    .exec-progress__fill--mid { background: #eab308; }
+    .exec-progress__fill--high { background: #ef4444; }
+  </style>
+</head>
+<body>
+<div class="app-container">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="header-band1">
+      <div class="logo">키드키즈 <span class="logo-sub">회계관리</span></div>
+      <nav class="category-nav">
+        <div class="category-item category-item--active"><div class="category-icon category-icon--active">&#128200;</div><span class="category-label">회계</span></div>
+        <div class="category-item"><div class="category-icon">&#128176;</div><span class="category-label">급여</span></div>
+        <div class="category-item"><div class="category-icon">&#128218;</div><span class="category-label">서식</span></div>
+        <div class="category-item"><div class="category-icon">&#9881;</div><span class="category-label">설정</span></div>
+      </nav>
+      <div class="user-area">
+        <span class="center-name-btn">햇살어린이집 &#9662;</span>
+        <span class="timer">29:45</span>
+        <button class="logout-btn">로그아웃</button>
+      </div>
+    </div>
+    <div class="header-band2">
+      <a href="../accounting.html" class="gnb-item">회계현황</a>
+      <a href="create.html" class="gnb-item gnb-item--active">예산</a>
+      <a href="../voucher/input.html" class="gnb-item">전표</a>
+      <a class="gnb-item">결산</a>
+      <a class="gnb-item">업무관리</a>
+      <a class="gnb-item">고정자산</a>
+    </div>
+    <div class="header-band3">
+      <div class="sub-tab-bar">
+        <a href="create.html" class="sub-tab-item">예산작성</a>
+        <a href="transfer.html" class="sub-tab-item">과목전용</a>
+        <a href="report.html" class="sub-tab-item">예산보고서</a>
+        <a href="execution.html" class="sub-tab-item sub-tab-item--active">예산대비집행현황</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-title">회계</div>
+      <div class="sidebar-menu-item">회계현황 <span class="chevron">&#9654;</span></div>
+      <div class="sidebar-submenu"><a href="../accounting.html" class="sidebar-submenu-item">회계현황</a></div>
+      <div class="sidebar-menu-item sidebar-menu-item--open">예산 <span class="chevron chevron--open">&#9654;</span></div>
+      <div class="sidebar-submenu is-open">
+        <a href="create.html" class="sidebar-submenu-item">예산작성</a>
+        <a href="transfer.html" class="sidebar-submenu-item">과목전용</a>
+        <a href="report.html" class="sidebar-submenu-item">예산보고서</a>
+        <a href="execution.html" class="sidebar-submenu-item sidebar-submenu-item--active">예산대비집행현황</a>
+      </div>
+      <div class="sidebar-menu-item">전표 <span class="chevron">&#9654;</span></div>
+      <div class="sidebar-submenu">
+        <a href="../voucher/input.html" class="sidebar-submenu-item">전표입력</a>
+        <a href="../voucher/deleted.html" class="sidebar-submenu-item">삭제전표</a>
+        <a href="../voucher/balance.html" class="sidebar-submenu-item">잔액비교</a>
+        <a href="../voucher/transactions.html" class="sidebar-submenu-item">거래내역</a>
+      </div>
+      <div class="sidebar-footer">
+        <div class="sidebar-center-card"><strong>햇살어린이집</strong>인가번호: 12345<br>원장: 김영희</div>
+      </div>
+    </aside>
+
+    <main id="content" class="content-area">
+      <div class="page-wrapper">
+
+        <div class="exec-toolbar">
+          <div class="exec-toolbar__left">
+            <select class="year-select"><option>2025년</option><option>2024년</option></select>
+            <div class="toggle-tabs">
+              <button class="toggle-tab toggle-tab--active">월별</button>
+              <button class="toggle-tab">연간</button>
+            </div>
+          </div>
+          <div>
+            <button class="btn-icon">&#128424; 인쇄</button>
+            <button class="btn-icon">&#128196; 엑셀</button>
+          </div>
+        </div>
+
+        <table class="exec-table" id="execTable">
+          <thead>
+            <tr>
+              <th style="width:25%">과목</th>
+              <th style="width:15%">예산액</th>
+              <th style="width:15%">집행액</th>
+              <th style="width:15%">잔액</th>
+              <th style="width:30%">집행률(%)</th>
+            </tr>
+          </thead>
+          <tbody id="execBody"></tbody>
+        </table>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+var basePath = '../';
+
+function fmt(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+var execData = {
+  income: [
+    { name: '보조금수입', budget: 35900000, executed: 8950000 },
+    { name: '  국고보조금 - 기본보육료', budget: 18500000, executed: 4625000 },
+    { name: '  국고보조금 - 누리과정보육료', budget: 8200000, executed: 2050000 },
+    { name: '  국고보조금 - 영아보육료', budget: 5600000, executed: 1400000 },
+    { name: '  시도보조금 - 처우개선비', budget: 3600000, executed: 875000 },
+    { name: '부모부담수입', budget: 3600000, executed: 960000 },
+    { name: '  보육료 - 특별활동비', budget: 2400000, executed: 640000 },
+    { name: '  보육료 - 기타필요경비', budget: 1200000, executed: 320000 },
+    { name: '기타수입', budget: 30000, executed: 7500 },
+    { name: '이월금', budget: 3250000, executed: 3250000 }
+  ],
+  expense: [
+    { name: '인건비', budget: 21600000, executed: 5400000 },
+    { name: '  원장급여', budget: 3600000, executed: 900000 },
+    { name: '  원장수당', budget: 1200000, executed: 300000 },
+    { name: '  교사급여', budget: 14400000, executed: 3600000 },
+    { name: '  교사수당', budget: 2400000, executed: 600000 },
+    { name: '관리운영비', budget: 7800000, executed: 2100000 },
+    { name: '  수도광열비', budget: 3600000, executed: 980000 },
+    { name: '  전기요금', budget: 2400000, executed: 720000 },
+    { name: '  통신비', budget: 600000, executed: 150000 },
+    { name: '  소모품비', budget: 1200000, executed: 250000 },
+    { name: '보육활동비', budget: 13380000, executed: 3650000 },
+    { name: '  급식비', budget: 7200000, executed: 1920000 },
+    { name: '  간식비', budget: 2880000, executed: 780000 },
+    { name: '  교재교구구입비', budget: 1800000, executed: 520000 },
+    { name: '  특별활동비', budget: 1500000, executed: 430000 }
+  ]
+};
+
+function rateClass(pct) {
+  if (pct < 50) return 'low';
+  if (pct < 80) return 'mid';
+  return 'high';
+}
+
+function renderExecTable() {
+  var tbody = document.getElementById('execBody');
+  var html = '';
+
+  // Income section
+  html += '<tr class="row-section"><td colspan="5">[ 수입 ]</td></tr>';
+  var incTotal = { budget: 0, executed: 0 };
+  execData.income.forEach(function(r) {
+    var isCat = !r.name.startsWith('  ');
+    if (isCat) { incTotal.budget += r.budget; incTotal.executed += r.executed; }
+    var remain = r.budget - r.executed;
+    var pct = r.budget > 0 ? Math.round(r.executed / r.budget * 100) : 0;
+    var cls = rateClass(pct);
+    html += '<tr class="' + (isCat ? 'row-cat' : '') + '">' +
+      '<td>' + r.name + '</td>' +
+      '<td class="amount">' + fmt(r.budget) + '</td>' +
+      '<td class="amount">' + fmt(r.executed) + '</td>' +
+      '<td class="amount">' + fmt(remain) + '</td>' +
+      '<td class="rate-cell rate-cell--' + cls + '">' + pct + '%' +
+        '<div class="exec-progress"><div class="exec-progress__fill exec-progress__fill--' + cls + '" style="width:' + Math.min(pct, 100) + '%"></div></div>' +
+      '</td></tr>';
+  });
+  var incRemain = incTotal.budget - incTotal.executed;
+  var incPct = Math.round(incTotal.executed / incTotal.budget * 100);
+  html += '<tr class="row-total"><td>수입 합계</td><td class="amount">' + fmt(incTotal.budget) + '</td><td class="amount">' + fmt(incTotal.executed) + '</td><td class="amount">' + fmt(incRemain) + '</td><td class="rate-cell">' + incPct + '%</td></tr>';
+
+  // Expense section
+  html += '<tr class="row-section row-section--expense"><td colspan="5">[ 지출 ]</td></tr>';
+  var expTotal = { budget: 0, executed: 0 };
+  execData.expense.forEach(function(r) {
+    var isCat = !r.name.startsWith('  ');
+    if (isCat) { expTotal.budget += r.budget; expTotal.executed += r.executed; }
+    var remain = r.budget - r.executed;
+    var pct = r.budget > 0 ? Math.round(r.executed / r.budget * 100) : 0;
+    var cls = rateClass(pct);
+    html += '<tr class="' + (isCat ? 'row-cat' : '') + '">' +
+      '<td>' + r.name + '</td>' +
+      '<td class="amount">' + fmt(r.budget) + '</td>' +
+      '<td class="amount">' + fmt(r.executed) + '</td>' +
+      '<td class="amount">' + fmt(remain) + '</td>' +
+      '<td class="rate-cell rate-cell--' + cls + '">' + pct + '%' +
+        '<div class="exec-progress"><div class="exec-progress__fill exec-progress__fill--' + cls + '" style="width:' + Math.min(pct, 100) + '%"></div></div>' +
+      '</td></tr>';
+  });
+  var expRemain = expTotal.budget - expTotal.executed;
+  var expPct = Math.round(expTotal.executed / expTotal.budget * 100);
+  html += '<tr class="row-total"><td>지출 합계</td><td class="amount">' + fmt(expTotal.budget) + '</td><td class="amount">' + fmt(expTotal.executed) + '</td><td class="amount">' + fmt(expRemain) + '</td><td class="rate-cell">' + expPct + '%</td></tr>';
+
+  tbody.innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  renderExecTable();
+
+  document.querySelectorAll('.toggle-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.toggle-tab').forEach(function(t) { t.classList.remove('toggle-tab--active'); });
+      this.classList.add('toggle-tab--active');
+    });
+  });
+
+  document.querySelectorAll('.sidebar-menu-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      this.classList.toggle('sidebar-menu-item--open');
+      var chevron = this.querySelector('.chevron');
+      if (chevron) chevron.classList.toggle('chevron--open');
+      var sub = this.nextElementSibling;
+      if (sub && sub.classList.contains('sidebar-submenu')) sub.classList.toggle('is-open');
+    });
+  });
+});
+</script>
+</body>
+</html>

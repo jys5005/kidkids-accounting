@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>현금장부 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/tabs.css">
+  <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/buttons.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">현금장부</h2>
+            <div class="header-right">
+              <button class="btn btn--md btn--success">엑셀 다운로드</button>
+            </div>
+          </div>
+
+          <div class="search-bar">
+            <span class="search-bar__label">프로그램</span>
+            <select class="select-box" style="min-width:180px;">
+              <option>전체</option>
+              <option>CIS (보육통합정보시스템)</option>
+              <option>e-보육</option>
+            </select>
+            <span class="search-bar__label">조회기간</span>
+            <input type="date" class="date-input" value="2026-03-01">
+            <span class="text-slate-400">~</span>
+            <input type="date" class="date-input" value="2026-03-31">
+            <button class="btn btn--md btn--primary">조회</button>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="th" style="width:50px;">No</th>
+                  <th class="th" style="width:100px;">일자</th>
+                  <th class="th" style="width:70px;">구분</th>
+                  <th class="th" style="width:140px;">계정</th>
+                  <th class="th" style="width:200px;">적요</th>
+                  <th class="th" style="width:120px;">수입</th>
+                  <th class="th" style="width:120px;">지출</th>
+                  <th class="th th--last" style="width:130px;">잔액</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="tr"><td class="td">-</td><td class="td td-text-date">2026-03-01</td><td class="td">이월</td><td class="td">-</td><td class="td td--left">전월이월금</td><td class="td td-text-num">-</td><td class="td td-text-num">-</td><td class="td td-text-num font-bold">10,000,000</td></tr>
+                <tr class="tr"><td class="td">1</td><td class="td td-text-date">2026-03-02</td><td class="td"><span class="badge badge--blue">수입</span></td><td class="td td--left">보육료수입</td><td class="td td--left">3월 보육료 입금</td><td class="td td-text-num text-blue-600">5,000,000</td><td class="td td-text-num">-</td><td class="td td-text-num font-bold">15,000,000</td></tr>
+                <tr class="tr"><td class="td">2</td><td class="td td-text-date">2026-03-05</td><td class="td"><span class="badge badge--red">지출</span></td><td class="td td--left">급식비</td><td class="td td--left">식재료비 결제</td><td class="td td-text-num">-</td><td class="td td-text-num text-red-600">850,000</td><td class="td td-text-num font-bold">14,150,000</td></tr>
+                <tr class="tr"><td class="td">3</td><td class="td td-text-date">2026-03-08</td><td class="td"><span class="badge badge--red">지출</span></td><td class="td td--left">관리운영비</td><td class="td td--left">수도요금</td><td class="td td-text-num">-</td><td class="td td-text-num text-red-600">125,000</td><td class="td td-text-num font-bold">14,025,000</td></tr>
+                <tr class="tr"><td class="td">4</td><td class="td td-text-date">2026-03-10</td><td class="td"><span class="badge badge--blue">수입</span></td><td class="td td--left">특별활동수입</td><td class="td td--left">학부모 수납금</td><td class="td td-text-num text-blue-600">2,500,000</td><td class="td td-text-num">-</td><td class="td td-text-num font-bold">16,525,000</td></tr>
+                <tr class="tr"><td class="td">5</td><td class="td td-text-date">2026-03-12</td><td class="td"><span class="badge badge--red">지출</span></td><td class="td td--left">인건비</td><td class="td td--left">교직원 급여</td><td class="td td-text-num">-</td><td class="td td-text-num text-red-600">4,000,000</td><td class="td td-text-num font-bold">12,525,000</td></tr>
+                <tr class="tr"><td class="td">6</td><td class="td td-text-date">2026-03-15</td><td class="td"><span class="badge badge--red">지출</span></td><td class="td td--left">보육활동비</td><td class="td td--left">교재교구 구입</td><td class="td td-text-num">-</td><td class="td td-text-num text-red-600">350,000</td><td class="td td-text-num font-bold">12,175,000</td></tr>
+                <tr class="tr"><td class="td">7</td><td class="td td-text-date">2026-03-18</td><td class="td"><span class="badge badge--blue">수입</span></td><td class="td td--left">정부보조금수입</td><td class="td td--left">누리과정보조금</td><td class="td td-text-num text-blue-600">2,000,000</td><td class="td td-text-num">-</td><td class="td td-text-num font-bold">14,175,000</td></tr>
+                <tr class="tr summary-row">
+                  <td class="td" colspan="5">합계</td>
+                  <td class="td td-text-num text-blue-600">9,500,000</td>
+                  <td class="td td-text-num text-red-600">5,325,000</td>
+                  <td class="td td-text-num">14,175,000</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '';</script>
+  <script src="js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'accounting', menuLabel: '장부', subMenuHref: 'cash-ledger.html' });
+    });
+  </script>
+</body>
+</html>

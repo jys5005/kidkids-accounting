@@ -87,7 +87,13 @@ const categories: MenuCategory[] = [
           { label: '보육통합인증키', href: '/settings/cis-auth' },
         ],
       },
-      { label: '데이터이관', href: '/data-migration' },
+      {
+        label: '데이터이관',
+        children: [
+          { label: '데이터이관', href: '/data-migration' },
+          { label: '자동로그인', href: '/data-migration/auto-login' },
+        ],
+      },
     ],
   },
   {

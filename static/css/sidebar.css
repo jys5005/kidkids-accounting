@@ -1,0 +1,132 @@
+/* ==========================================================================
+   sidebar.css - Left Sidebar Navigation (208px wide)
+   ========================================================================== */
+
+/* --- Sidebar container --- */
+.sidebar {
+  width: 208px;
+  min-width: 208px;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0; /* slate-200 */
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 132px); /* subtract header bands height */
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* --- Sidebar category title --- */
+.sidebar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+  padding: 16px 16px 8px 16px;
+  border-bottom: 1px solid #f1f5f9; /* slate-100 */
+}
+
+/* --- Accordion menu item (top-level) --- */
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569; /* slate-600 */
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  user-select: none;
+  border-bottom: 1px solid #f8fafc; /* slate-50 */
+}
+
+.sidebar-menu-item:hover {
+  background-color: #f8fafc; /* slate-50 */
+}
+
+/* --- Open state for accordion menu item --- */
+.sidebar-menu-item--open {
+  color: #1e40af; /* blue-800 */
+  font-weight: 600;
+  background-color: #f8fafc; /* slate-50 */
+}
+
+/* --- Chevron icon for accordion toggle --- */
+.chevron {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  color: #94a3b8; /* slate-400 */
+  flex-shrink: 0;
+}
+
+/* --- Chevron open (rotated) state --- */
+.chevron--open {
+  transform: rotate(90deg);
+}
+
+/* --- Submenu container (hidden by default) --- */
+.sidebar-submenu {
+  display: none;
+  flex-direction: column;
+  padding: 2px 0 4px 0;
+  background-color: #fafbfc;
+}
+
+.sidebar-menu-item--open + .sidebar-submenu,
+.sidebar-submenu.is-open {
+  display: flex;
+}
+
+/* --- Submenu individual item --- */
+.sidebar-submenu-item {
+  display: block;
+  padding: 6px 16px 6px 28px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #64748b; /* slate-500 */
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  margin-left: 16px;
+  transition: all 0.15s ease;
+}
+
+.sidebar-submenu-item:hover {
+  color: #334155; /* slate-700 */
+  background-color: #f1f5f9; /* slate-100 */
+}
+
+/* --- Active submenu item: blue-50 bg, blue-700 text --- */
+.sidebar-submenu-item--active {
+  background-color: #eff6ff; /* blue-50 */
+  color: #1d4ed8; /* blue-700 */
+  font-weight: 600;
+  border-left-color: #1d4ed8; /* blue-700 */
+}
+
+/* --- Sidebar footer area --- */
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid #f1f5f9; /* slate-100 */
+}
+
+/* --- Center info card at bottom --- */
+.sidebar-center-card {
+  background-color: #f8fafc; /* slate-50 */
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 10px;
+  color: #64748b; /* slate-500 */
+  line-height: 1.6;
+}
+
+.sidebar-center-card strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155; /* slate-700 */
+  margin-bottom: 4px;
+}

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보조금정산서 - 키드키즈 회계</title>
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/tabs.css">
+  <link rel="stylesheet" href="../css/table.css">
+  <link rel="stylesheet" href="../css/forms.css">
+  <link rel="stylesheet" href="../css/buttons.css">
+  <link rel="stylesheet" href="../css/modal.css">
+  <link rel="stylesheet" href="../css/cards.css">
+  <link rel="stylesheet" href="../css/utilities.css">
+</head>
+<body>
+  <div class="app-container">
+    <div id="header"></div>
+    <div class="main-area">
+      <div id="sidebar"></div>
+      <div class="content-area">
+        <div id="content" class="page-wrapper">
+
+          <div class="section-header">
+            <h2 class="section-title">보조금정산서</h2>
+            <div class="header-right">
+              <button class="btn btn--md btn--primary">자동매칭</button>
+              <button class="btn btn--md btn--secondary">초기화</button>
+            </div>
+          </div>
+
+          <div class="search-bar">
+            <span class="search-bar__label">조회기간</span>
+            <input type="date" class="date-input" value="2026-03-01">
+            <span class="text-slate-400">~</span>
+            <input type="date" class="date-input" value="2026-03-31">
+            <span class="search-bar__label">검색어</span>
+            <input type="text" class="input-text" style="width:160px;" placeholder="적요 검색">
+            <button class="btn btn--md btn--primary">조회</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start;">
+            <!-- Left: 보조금거래 -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">보조금거래</span>
+                <span class="badge badge--blue">5건</span>
+              </div>
+              <div class="table-container" style="border:none;">
+                <table class="data-table" style="min-width:auto;">
+                  <thead><tr>
+                    <th class="th" style="width:30px;"><input type="checkbox" class="checkbox"></th>
+                    <th class="th">일자</th><th class="th">적요</th><th class="th th--last">금액</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr class="tr"><td class="td"><input type="checkbox" class="checkbox"></td><td class="td td-text-date">03-05</td><td class="td td--left">보육료 입금</td><td class="td td-text-num">3,000,000</td></tr>
+                    <tr class="tr"><td class="td"><input type="checkbox" class="checkbox"></td><td class="td td-text-date">03-10</td><td class="td td--left">누리과정보조금</td><td class="td td-text-num">2,000,000</td></tr>
+                    <tr class="tr"><td class="td"><input type="checkbox" class="checkbox"></td><td class="td td-text-date">03-12</td><td class="td td--left">영아반지원금</td><td class="td td-text-num">1,500,000</td></tr>
+                    <tr class="tr"><td class="td"><input type="checkbox" class="checkbox"></td><td class="td td-text-date">03-15</td><td class="td td--left">급식비지원</td><td class="td td-text-num">800,000</td></tr>
+                    <tr class="tr"><td class="td"><input type="checkbox" class="checkbox"></td><td class="td td-text-date">03-20</td><td class="td td--left">특별활동지원</td><td class="td td-text-num">500,000</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Arrow buttons -->
+            <div style="display:flex;flex-direction:column;gap:8px;padding-top:80px;">
+              <button class="arrow-btn" title="오른쪽으로 이동">&#9654;</button>
+              <button class="arrow-btn" title="왼쪽으로 이동">&#9664;</button>
+            </div>
+
+            <!-- Right: 일반거래 -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">일반거래</span>
+                <span class="badge badge--slate">3건</span>
+              </div>
+              <div class="table-container" style="border:none;">
+                <table class="data-table" style="min-width:auto;">
+                  <thead><tr>
+                    <th class="th" style="width:30px;"><input type="checkbox" class="checkbox"></th>
+                    <th class="th">일자</th><th class="th">적요</th><th class="th th--last">금액</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr class="tr"><td class="td"><input type="checkbox" class="checkbox"></td><td class="td td-text-date">03-08</td><td class="td td--left">학부모 수납</td><td class="td td-text-num">1,200,000</td></tr>
+                    <tr class="tr"><td class="td"><input type="checkbox" class="checkbox"></td><td class="td td-text-date">03-14</td><td class="td td--left">특별활동비 수납</td><td class="td td-text-num">800,000</td></tr>
+                    <tr class="tr"><td class="td"><input type="checkbox" class="checkbox"></td><td class="td td-text-date">03-22</td><td class="td td--left">기타수입</td><td class="td td-text-num">150,000</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>var basePath = '../';</script>
+  <script src="../js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initApp({ categoryKey: 'accounting', menuLabel: '정산', subMenuHref: 'reconciliation/settlement.html' });
+    });
+  </script>
+</body>
+</html>
