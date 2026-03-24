@@ -147,3 +147,20 @@
 - **DraggableModal 드래그 안정화**: document 레벨 mousemove/mouseup 이벤트로 변경 → 빠른 마우스 이동 시 드래그 유실 방지
 - **법정아동필요경비정산 체크박스**: 헤더 전체선택/개별 행 선택 체크박스 state 연결
 - **일괄매칭 기능**: "매칭하기"→"일괄매칭" 텍스트 변경, 원아 선택 후 체크된 전표에 일괄 매칭 처리
+
+### 2026-03-24 (자동로그인 + 순수 HTML/CSS/JS 변환)
+- **자동로그인 페이지** (`/data-migration/auto-login`)
+  - 업체 선택 드롭다운 (보육나라/장부나라/키즈홈 등 16개)
+  - 로그인방식: id+pw / 공인인증서 선택, 방식에 따라 필드 활성/비활성
+  - 인포텍 인증프로그램 모달 (인증서 저장위치/선택/파일가져오기/비밀번호)
+  - 통합e(4000) program-auth/program-verify API 프록시 연동
+  - 검증(실행) 버튼: puppeteer 로그인 테스트
+  - 테이블: 연번/업체명/시설명/로그인방식/아이디/비번/인증서등록/저장삭제/검증/최종로그인/로그인/월회계보고/추경회계보고/결산회계보고/카드매칭
+- **필요경비정산서 탭명 수정**
+  - 3번 탭: "개인별세출(요율)정산서" → "개인별필요경비정산서"
+  - 4번 탭: "세출요율정산서" → "개인별세출(요율)정산서"
+- **전체 사이트 순수 HTML/CSS/JS 변환** (`/static/`)
+  - CSS 11개 파일: reset, layout, header, sidebar, tabs, table, forms, buttons, modal, cards, utilities
+  - JS 2개 파일: common.js (헤더/사이드바/네비게이션/타이머), accounts.js (계정과목 데이터)
+  - HTML 27개 페이지: accounting, budget(4), voucher(5), monthly-report, settlement(2), reconciliation(7), cash-ledger, data-migration(2), settings, staff, children, calculator/meal
+  - 각 CSS 클래스 개별 정의 → 수정 용이
