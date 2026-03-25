@@ -40,6 +40,7 @@ const SOURCE_OPTIONS = [
   { value: 'incheon', label: '인천시어린이집관리시스템', url: 'aincheon.co.kr', features: ['현금출납부'], authType: 'cert' as const },
   { value: 'seoul', label: '서울시어린이집관리시스템', url: '', features: [], authType: 'idpw' as const },
   { value: 'wisean', label: '와이즈안', url: '', features: [], authType: 'idpw' as const },
+  { value: 'ifriends', label: '아이프렌즈', url: 'i-friends.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
 ] as const
 
 type SourceType = typeof SOURCE_OPTIONS[number]['value']
@@ -127,6 +128,82 @@ const MAPPING_TABLE = {
     pattern: '7자리 코드(AAAABBB) → AAAA-BBB 자동 변환 (예: 1221111→1221-111, 2421141→2421-141)',
   },
   kidshome: {
+    income: [
+      { by24: '', by24Name: '정부지원보육료', sunote: '1111', sunoteNote: '' },
+      { by24: '', by24Name: '부모부담보육료', sunote: '1112', sunoteNote: '' },
+      { by24: '', by24Name: '특별활동비', sunote: '1211', sunoteNote: '' },
+      { by24: '', by24Name: '기타필요경비', sunote: '1221', sunoteNote: '', group: true },
+      { by24: '', by24Name: '  입학준비금', sunote: '1221-111', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  현장학습비', sunote: '1221-112', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  차량운행비', sunote: '1221-113', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  부모부담행사비', sunote: '1221-121', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  조석식비', sunote: '1221-131', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  특성화비', sunote: '1221-141', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '인건비보조금', sunote: '1311', sunoteNote: '' },
+      { by24: '', by24Name: '기관보육료', sunote: '1321', sunoteNote: '' },
+      { by24: '', by24Name: '연장보육료', sunote: '1322', sunoteNote: '' },
+      { by24: '', by24Name: '공공형운영비', sunote: '1323', sunoteNote: '' },
+      { by24: '', by24Name: '그밖의지원금', sunote: '1324', sunoteNote: '' },
+      { by24: '', by24Name: '자본보조금', sunote: '1331', sunoteNote: '' },
+      { by24: '', by24Name: '전입금', sunote: '1411', sunoteNote: '' },
+      { by24: '', by24Name: '단기차입금', sunote: '1421', sunoteNote: '' },
+      { by24: '', by24Name: '장기차입금', sunote: '1422', sunoteNote: '' },
+      { by24: '', by24Name: '지정후원금', sunote: '1511', sunoteNote: '' },
+      { by24: '', by24Name: '비지정후원금', sunote: '1512', sunoteNote: '' },
+      { by24: '', by24Name: '적립금처분수입', sunote: '1611', sunoteNote: '' },
+      { by24: '', by24Name: '과년도수입', sunote: '1711', sunoteNote: '' },
+      { by24: '', by24Name: '이자수입', sunote: '1811', sunoteNote: '' },
+      { by24: '', by24Name: '잡수입', sunote: '1812', sunoteNote: '' },
+      { by24: '', by24Name: '전년도이월금', sunote: '1911', sunoteNote: '이관 시 스킵' },
+    ],
+    expense: [
+      { by24: '', by24Name: '원장급여', sunote: '2111', sunoteNote: '' },
+      { by24: '', by24Name: '원장수당', sunote: '2112', sunoteNote: '' },
+      { by24: '', by24Name: '보육교직원급여', sunote: '2121', sunoteNote: '' },
+      { by24: '', by24Name: '보육교직원수당', sunote: '2122', sunoteNote: '' },
+      { by24: '', by24Name: '기타인건비', sunote: '2131', sunoteNote: '' },
+      { by24: '', by24Name: '법정부담금', sunote: '2141', sunoteNote: '' },
+      { by24: '', by24Name: '퇴직금및퇴직적립금', sunote: '2142', sunoteNote: '', group: true },
+      { by24: '', by24Name: '  퇴직금', sunote: '2142-112', sunoteNote: '적요 키워드 자동', sub: true },
+      { by24: '', by24Name: '  퇴직적립금', sunote: '2142-121', sunoteNote: '적요 키워드 자동', sub: true },
+      { by24: '', by24Name: '수용비및수수료', sunote: '2211', sunoteNote: '' },
+      { by24: '', by24Name: '공공요금및제세공과금', sunote: '2212', sunoteNote: '' },
+      { by24: '', by24Name: '연료비', sunote: '2213', sunoteNote: '' },
+      { by24: '', by24Name: '여비', sunote: '2214', sunoteNote: '' },
+      { by24: '', by24Name: '차량비', sunote: '2215', sunoteNote: '' },
+      { by24: '', by24Name: '복리후생비', sunote: '2216', sunoteNote: '' },
+      { by24: '', by24Name: '기타운영비', sunote: '2217', sunoteNote: '' },
+      { by24: '', by24Name: '업무추진비', sunote: '2221', sunoteNote: '' },
+      { by24: '', by24Name: '직책급', sunote: '2222', sunoteNote: '' },
+      { by24: '', by24Name: '회의비', sunote: '2223', sunoteNote: '' },
+      { by24: '', by24Name: '교직원연수·연구비', sunote: '2311', sunoteNote: '' },
+      { by24: '', by24Name: '교재.교구구입비', sunote: '2312', sunoteNote: '' },
+      { by24: '', by24Name: '행사비', sunote: '2313', sunoteNote: '' },
+      { by24: '', by24Name: '영유아복리비', sunote: '2314', sunoteNote: '' },
+      { by24: '', by24Name: '급식.간식재료비', sunote: '2315', sunoteNote: '' },
+      { by24: '', by24Name: '특별활동비지출', sunote: '2411', sunoteNote: '' },
+      { by24: '', by24Name: '기타필요경비지출', sunote: '2421', sunoteNote: '', group: true },
+      { by24: '', by24Name: '  입학준비금', sunote: '2421-111', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  현장학습비', sunote: '2421-121', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  차량운행비', sunote: '2421-131', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  부모부담행사비', sunote: '2421-141', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  조석식비', sunote: '2421-151', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '  특성화비', sunote: '2421-161', sunoteNote: '', sub: true },
+      { by24: '', by24Name: '적립금', sunote: '2511', sunoteNote: '' },
+      { by24: '', by24Name: '단기차입금상환', sunote: '2611', sunoteNote: '' },
+      { by24: '', by24Name: '장기차입금상환', sunote: '2612', sunoteNote: '' },
+      { by24: '', by24Name: '보조금반환금', sunote: '2621', sunoteNote: '' },
+      { by24: '', by24Name: '보호자반환금', sunote: '2622', sunoteNote: '' },
+      { by24: '', by24Name: '법인회계전출금', sunote: '2623', sunoteNote: '' },
+      { by24: '', by24Name: '시설비', sunote: '2711', sunoteNote: '' },
+      { by24: '', by24Name: '시설장비유지비', sunote: '2712', sunoteNote: '' },
+      { by24: '', by24Name: '자산취득비', sunote: '2721', sunoteNote: '' },
+      { by24: '', by24Name: '과년도지출', sunote: '2811', sunoteNote: '' },
+      { by24: '', by24Name: '잡지출', sunote: '2911', sunoteNote: '' },
+    ],
+    pattern: '계정명 → sunote 코드 자동 매핑 (계정명 기반)',
+  },
+  ifriends: {
     income: [
       { by24: '', by24Name: '정부지원보육료', sunote: '1111', sunoteNote: '' },
       { by24: '', by24Name: '부모부담보육료', sunote: '1112', sunoteNote: '' },
@@ -350,7 +427,7 @@ export default function DataMigrationPage() {
         return results.map(r => ({
           ...r,
           rows: r.rows.map(row => {
-            if (row.accountCode) return row
+            if (row.accountCode && row.accountCode.length <= 8) return row
 
             const name = row.accountName.replace(/[.\s·]/g, '')
             const match = allItems.find(m => {
@@ -524,23 +601,31 @@ export default function DataMigrationPage() {
         [`[${label}] 현금출납부`],
         [`전월이월: ${fmtAmt(result.summary.monthStart)}원`, '', '', `수입합계: ${fmtAmt(result.summary.monthIncome)}원`, '', `지출합계: ${fmtAmt(result.summary.monthExpense)}원`],
         [],
-        ['일자', '발행번호', '계정코드', '계정과목', '적요', '수입금액', '지출금액', '잔액'],
-        ...result.rows.map((r) => [
-          r.date,
+        ['일자', '발행번호', '계정코드', '계정과목', '세목', '적요', '수입금액', '지출금액', '잔액'],
+        ...result.rows.map((r) => {
+          let dateStr = r.date
+          if (dateStr.length >= 8) {
+            dateStr = `${dateStr.substring(0, 4)}/${dateStr.substring(4, 6)}/${dateStr.substring(6, 8)}`
+          } else {
+            dateStr = `${ym.substring(0, 4)}/${ym.substring(4)}/${dateStr.padStart(2, '0')}`
+          }
+          return [
+          dateStr,
           r.docNo,
           r.accountCode,
           r.accountName,
+          r.subAccountName || '',
           r.summary,
           r.income || '',
           r.expense || '',
           r.balance || '',
-        ]),
+        ]}),
       ]
 
       const ws = XLSX.utils.aoa_to_sheet(rows)
       // 열 너비 설정
       ws['!cols'] = [
-        { wch: 6 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+        { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
       ]
       XLSX.utils.book_append_sheet(wb, ws, label)
     }
@@ -558,19 +643,26 @@ export default function DataMigrationPage() {
 
     const wb = XLSX.utils.book_new()
     const rows: (string | number)[][] = [
-      ['날짜', '발행번호', '계정코드', '계정과목', '적요', '수입금액', '지출금액', '잔액'],
+      ['날짜', '발행번호', '계정코드', '계정과목', '세목', '적요', '수입금액', '지출금액', '잔액'],
     ]
 
     for (const result of allData) {
-      const yyyy = result.yearMonth.substring(0, 4)
-      const mm = result.yearMonth.substring(4)
       for (const r of result.rows) {
-        const dd = r.date.padStart(2, '0')
+        // date: "20210309" (8자리) 또는 "9" (일자만)
+        let dateStr = r.date
+        if (dateStr.length >= 8) {
+          dateStr = `${dateStr.substring(0, 4)}/${dateStr.substring(4, 6)}/${dateStr.substring(6, 8)}`
+        } else {
+          const yyyy = result.yearMonth.substring(0, 4)
+          const mm = result.yearMonth.substring(4)
+          dateStr = `${yyyy}/${mm}/${dateStr.padStart(2, '0')}`
+        }
         rows.push([
-          `${yyyy}/${mm}/${dd}`,
+          dateStr,
           r.docNo,
           r.accountCode,
           r.accountName,
+          r.subAccountName || '',
           r.summary,
           r.income || '',
           r.expense || '',
@@ -827,7 +919,7 @@ export default function DataMigrationPage() {
             </button>
 
             {/* 저장된 데이터 불러오기 */}
-            {(source === 'kidshome' || source === 'by24' || source === 'incheon') && (
+            {(source === 'kidshome' || source === 'by24' || source === 'incheon' || source === 'ifriends') && (
               <button
                 onClick={async () => {
                   const storedUserId = currentSource.authType === 'cert' ? (programAuth?.certName || '') : sourceId
@@ -858,7 +950,7 @@ export default function DataMigrationPage() {
                       const mapped = results.map(r => ({
                         ...r,
                         rows: r.rows.map(row => {
-                          if (row.accountCode) return row
+                          if (row.accountCode && row.accountCode.length <= 8) return row
                           const name = row.accountName.replace(/[.\s·]/g, '')
                           const match = allItems.find(m => m.by24Name.replace(/[.\s·]/g, '').trim() === name)
                           if (!match) return row

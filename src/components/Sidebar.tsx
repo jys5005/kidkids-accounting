@@ -106,6 +106,7 @@ const categories: MenuCategory[] = [
           { label: '교직원정보', href: '/staff/info' },
           { label: '출근부', href: '/staff/attendance' },
           { label: '증명서', href: '/staff/certificate' },
+          { label: '교사교육', href: '/staff/education' },
           { label: '공문서', href: '/staff/document' },
         ],
       },
