@@ -319,24 +319,108 @@ export default function AutoLoginPage() {
 
   // 메뉴 이동 (월회계보고/추경/결산/카드매칭)
   const [navIdx, setNavIdx] = useState<number | null>(null)
-  const handleNavigate = async (idx: number, menuName: string) => {
+  // 카드매칭 내역 모달 인덱스
+  const [historyIdx, setHistoryIdx] = useState<number | null>(null)
+  // 카드매칭 구간 선택 모달 인덱스
+  const [matchRangeIdx, setMatchRangeIdx] = useState<number | null>(null)
+  // 행별 최근 매핑 정보 (캐시) — { rowIdx: { targetMonth, matched, runAt } }
+  const [latestMatch, setLatestMatch] = useState<Record<number, { targetMonth: string; matched: number; runAt: string } | null>>({})
+
+  // 카드매칭 행에 대해 최근 이력 조회 (rows 변경 시) — 로컬 프록시 경유
+  const refreshLatestMatch = useCallback(async (idx: number) => {
+    const row = rows[idx]
+    if (!row) return
+    const facilityKey = row.facilityName || row.label || `idx-${idx}`
+    if (!facilityKey) return
+    try {
+      const res = await fetch(`/api/card-match-history?facilityKey=${encodeURIComponent(facilityKey)}`)
+      const data = await res.json()
+      const list = (data.list || []) as Array<{ targetMonth: string; matched: number; runAt: string }>
+      if (list.length === 0) { setLatestMatch(prev => ({ ...prev, [idx]: null })); return }
+      const latest = list.slice().sort((a, b) => (b.runAt || '').localeCompare(a.runAt || ''))[0]
+      setLatestMatch(prev => ({ ...prev, [idx]: latest }))
+    } catch {
+      // 무시
+    }
+  }, [rows])
+
+  useEffect(() => {
+    rows.forEach((_, idx) => refreshLatestMatch(idx))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows])
+
+  /** "YYYY-MM" 시작 ~ 종료 사이의 월 목록 반환 */
+  const monthsInRange = (start: string, end: string): string[] => {
+    const [sy, sm] = start.split('-').map(Number)
+    const [ey, em] = end.split('-').map(Number)
+    const result: string[] = []
+    let y = sy, m = sm
+    let safety = 0
+    while ((y < ey || (y === ey && m <= em)) && safety++ < 60) {
+      result.push(`${y}-${String(m).padStart(2, '0')}`)
+      m++
+      if (m > 12) { m = 1; y++ }
+    }
+    return result
+  }
+
+  const handleNavigate = async (idx: number, menuName: string, opts?: { monthList?: string[] }) => {
     const row = rows[idx]
     if (row.authType === 'cert' && (!row.certFile || !row.certPw)) { alert('인증서를 등록해주세요.'); return }
+
+    // 카드매칭은 구간 모달에서 monthList 를 받아옴 — 모달 아직이면 모달 열기
+    let monthList: string[]
+    if (menuName === '카드매칭') {
+      if (!opts?.monthList || opts.monthList.length === 0) {
+        setMatchRangeIdx(idx)  // 모달 오픈, 매핑 시작은 모달에서 호출
+        return
+      }
+      monthList = opts.monthList
+    } else {
+      monthList = ['']  // 그 외 메뉴는 월 의미 없음, 1회 호출
+    }
+
     setNavIdx(idx)
+    const facilityKey = row.facilityName || row.label || `idx-${idx}`
+    let totalMatched = 0, totalSkipped = 0, totalErrors = 0
+    const monthResults: string[] = []
     try {
-      const res = await fetch('/api/auto-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          company: row.label,
-          action: 'navigate',
-          menuName,
-          certName: row.certFile,
-          certPw: row.certPw,
-        }),
-      })
-      const data = await res.json()
-      if (!data.success) alert(data.error || data.message || `${menuName} 이동 실패`)
+      for (const targetMonth of monthList) {
+        const res = await fetch('/api/auto-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            company: row.label,
+            action: 'navigate',
+            menuName,
+            targetMonth: targetMonth || undefined,
+            certName: row.certFile,
+            certPw: row.certPw,
+            facilityKey,
+          }),
+        })
+        const data = await res.json()
+        if (!data.success) {
+          alert(data.error || data.message || `${menuName} ${targetMonth || ''} 실패`)
+          break
+        }
+        if (menuName === '카드매칭' && data.result) {
+          totalMatched += data.result.matched || 0
+          totalSkipped += data.result.skipped || 0
+          totalErrors += (data.result.errors || []).length
+          monthResults.push(`${targetMonth} → 성공 ${data.result.matched} / 스킵 ${data.result.skipped}`)
+        }
+      }
+      if (menuName === '카드매칭' && monthList.length > 0) {
+        alert(
+          `카드매칭 완료\n` +
+          `대상: ${monthList[0]} ~ ${monthList[monthList.length - 1]} (${monthList.length}개월)\n` +
+          `성공 ${totalMatched}건 / 스킵 ${totalSkipped}건 / 실패 ${totalErrors}건\n\n` +
+          monthResults.join('\n')
+        )
+        // 카드매칭 완료 후 행의 최근 매핑 정보 새로고침
+        refreshLatestMatch(idx)
+      }
     } catch (e) {
       alert(`이동 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`)
     } finally {
@@ -497,13 +581,68 @@ export default function AutoLoginPage() {
                     {navIdx === idx ? '이동중...' : '이동'}
                   </button>
                 </td>
-                <td className="px-2 py-2.5 text-center border-r border-slate-100"><span className="text-slate-300">-</span></td>
-                <td className="px-2 py-2.5 text-center"><span className="text-slate-300">-</span></td>
+                <td className="px-2 py-2.5 text-center border-r border-slate-100">
+                  <button
+                    onClick={() => handleNavigate(idx, '결산회계보고')}
+                    disabled={navIdx === idx}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${navIdx === idx ? 'text-slate-400 border border-slate-200 bg-slate-50' : 'text-indigo-600 border border-indigo-300 bg-indigo-50 hover:bg-indigo-100'}`}
+                  >
+                    {navIdx === idx ? '이동중...' : '이동'}
+                  </button>
+                </td>
+                <td className="px-2 py-2.5 text-center">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => handleNavigate(idx, '카드매칭')}
+                        disabled={navIdx === idx}
+                        className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${navIdx === idx ? 'text-slate-400 border border-slate-200 bg-slate-50' : 'text-indigo-600 border border-indigo-300 bg-indigo-50 hover:bg-indigo-100'}`}
+                      >
+                        {navIdx === idx ? '매핑중...' : '매핑'}
+                      </button>
+                      <button
+                        onClick={() => setHistoryIdx(idx)}
+                        className="px-1.5 py-0.5 text-[10px] font-bold text-slate-600 border border-slate-300 bg-white rounded hover:bg-slate-50"
+                      >
+                        내역
+                      </button>
+                    </div>
+                    {latestMatch[idx] && (
+                      <div className="text-[9px] text-slate-500 leading-tight whitespace-nowrap">
+                        <span className="text-blue-600 font-bold">{latestMatch[idx]!.matched}건</span>
+                        <span className="mx-1">·</span>
+                        <span>{latestMatch[idx]!.targetMonth}</span>
+                        <div className="text-[8px] text-slate-400">{(latestMatch[idx]!.runAt || '').slice(0, 10)}</div>
+                      </div>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* 카드매칭 구간 선택 모달 */}
+      {matchRangeIdx !== null && (
+        <CardMatchRangeModal
+          facilityKey={rows[matchRangeIdx]?.facilityName || rows[matchRangeIdx]?.label || `idx-${matchRangeIdx}`}
+          onClose={() => setMatchRangeIdx(null)}
+          onStart={(monthList) => {
+            const idx = matchRangeIdx
+            setMatchRangeIdx(null)
+            if (idx !== null) handleNavigate(idx, '카드매칭', { monthList })
+          }}
+        />
+      )}
+
+      {/* 카드매칭 내역 모달 */}
+      {historyIdx !== null && (
+        <CardMatchHistoryModal
+          facilityKey={rows[historyIdx]?.facilityName || rows[historyIdx]?.label || `idx-${historyIdx}`}
+          onClose={() => setHistoryIdx(null)}
+        />
+      )}
 
       {/* 인포텍 인증프로그램 모달 */}
       {certModalIdx !== null && (
@@ -674,6 +813,223 @@ export default function AutoLoginPage() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── 카드매칭 내역 모달 ─────────────────────────────────────────────────
+const PLATFORM_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'
+
+interface HistoryEntry {
+  runAt:        string
+  targetMonth:  string  // "YYYY-MM"
+  matched:      number
+  skipped:      number
+  errorCount:   number
+  errorSamples?: string[]
+}
+
+// ─── 카드매칭 구간 선택 모달 ─────────────────────────────────────────────
+/**
+ * 회계연도 + 시작월 + 종료월 드롭다운으로 매핑 구간 선택.
+ * - 회계연도 1년(3월~익년 2월) 안에서만 선택 가능
+ * - 종료월 옵션은 시작월 이후 ~ 회계연도 마지막 월(2월) 까지만 노출
+ */
+function CardMatchRangeModal({
+  facilityKey, onClose, onStart,
+}: { facilityKey: string; onClose: () => void; onStart: (monthList: string[]) => void }) {
+  const now = new Date()
+  // 회계연도: 1~2월은 전년도, 3월부터는 당해
+  const fyDefault = now.getMonth() < 2 ? now.getFullYear() - 1 : now.getFullYear()
+  const [fiscalYear, setFiscalYear] = useState<number>(fyDefault)
+
+  // 회계연도 12개월 (3,4,...,12,1,2) — 각 월의 (년, 월) 쌍 반환
+  const monthsOfFY = (fy: number): { ym: string; label: string; monthIdx: number }[] => {
+    const arr: { ym: string; label: string; monthIdx: number }[] = []
+    for (let i = 0; i < 12; i++) {
+      const m = ((2 + i) % 12) + 1  // 3,4,5,...,12,1,2
+      const y = i < 10 ? fy : fy + 1
+      arr.push({ ym: `${y}-${String(m).padStart(2, '0')}`, label: `${y}년 ${String(m).padStart(2, '0')}월`, monthIdx: i })
+    }
+    return arr
+  }
+
+  const fyMonths = monthsOfFY(fiscalYear)
+  // 기본값: 시작월 = 회계연도 첫 월(03월), 종료월 = 회계연도 마지막 월(익년 02월)
+  const [startYm, setStartYm] = useState<string>(fyMonths[0].ym)
+  const [endYm, setEndYm] = useState<string>(fyMonths[fyMonths.length - 1].ym)
+
+  // 회계연도 변경 시 시작=03월 / 종료=익년 02월 으로 재설정
+  useEffect(() => {
+    const arr = monthsOfFY(fiscalYear)
+    setStartYm(arr[0].ym)
+    setEndYm(arr[arr.length - 1].ym)
+  }, [fiscalYear])
+
+  // 시작월 변경 시 종료월이 시작월보다 이르면 자동으로 시작월로 맞춤
+  useEffect(() => {
+    const startIdx = fyMonths.findIndex(x => x.ym === startYm)
+    const endIdx = fyMonths.findIndex(x => x.ym === endYm)
+    if (startIdx >= 0 && endIdx >= 0 && endIdx < startIdx) setEndYm(startYm)
+  }, [startYm])  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const startIdx = fyMonths.findIndex(x => x.ym === startYm)
+  const endOptions = startIdx >= 0 ? fyMonths.slice(startIdx) : fyMonths
+
+  const handleStart = () => {
+    const sIdx = fyMonths.findIndex(x => x.ym === startYm)
+    const eIdx = fyMonths.findIndex(x => x.ym === endYm)
+    if (sIdx < 0 || eIdx < 0 || eIdx < sIdx) { alert('시작월/종료월 선택 오류'); return }
+    const list = fyMonths.slice(sIdx, eIdx + 1).map(x => x.ym)
+    onStart(list)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl p-5 w-[460px] space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+          <h3 className="text-[14px] font-bold text-slate-800">카드매칭 구간 선택 <span className="text-[11px] text-slate-400 ml-2">{facilityKey}</span></h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-[18px]">×</button>
+        </div>
+        <div className="space-y-3 py-2">
+          <div className="flex items-center gap-3">
+            <label className="text-[11px] font-bold text-slate-600 w-16">회계연도</label>
+            <select
+              value={fiscalYear}
+              onChange={e => setFiscalYear(Number(e.target.value))}
+              className="border border-slate-300 rounded px-2 py-1.5 text-[11px] flex-1"
+            >
+              {[fyDefault - 2, fyDefault - 1, fyDefault, fyDefault + 1].map(y => (
+                <option key={y} value={y}>{y}년 ({y}-03 ~ {y + 1}-02)</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-[11px] font-bold text-slate-600 w-16">시작월</label>
+            <select
+              value={startYm}
+              onChange={e => setStartYm(e.target.value)}
+              className="border border-slate-300 rounded px-2 py-1.5 text-[11px] flex-1"
+            >
+              {fyMonths.map(x => <option key={x.ym} value={x.ym}>{x.label}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-[11px] font-bold text-slate-600 w-16">종료월</label>
+            <select
+              value={endYm}
+              onChange={e => setEndYm(e.target.value)}
+              className="border border-slate-300 rounded px-2 py-1.5 text-[11px] flex-1"
+            >
+              {endOptions.map(x => <option key={x.ym} value={x.ym}>{x.label}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 rounded p-2 text-[10px] text-amber-700">
+          선택한 구간의 모든 월을 순차로 매핑합니다. 회계연도(3월~익년 2월) 한 개 안에서만 처리됩니다.
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <button onClick={onClose} className="px-3 py-1.5 text-[11px] font-bold text-slate-600 border border-slate-300 bg-white rounded hover:bg-slate-50">취소</button>
+          <button onClick={handleStart} className="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-500 hover:bg-indigo-600 rounded">매핑 시작</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CardMatchHistoryModal({ facilityKey, onClose }: { facilityKey: string; onClose: () => void }) {
+  const now = new Date()
+  // 회계연도: 1~2월은 전년도, 3월부터는 당해
+  const fyDefault = now.getMonth() < 2 ? now.getFullYear() - 1 : now.getFullYear()
+  const [fiscalYear, setFiscalYear] = useState<number>(fyDefault)
+  const [list, setList] = useState<HistoryEntry[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    // 로컬 프록시 경유 (CORS 회피)
+    fetch(`/api/card-match-history?facilityKey=${encodeURIComponent(facilityKey)}`)
+      .then(r => r.json())
+      .then(data => { if (!cancelled) setList(data.list || []) })
+      .catch(() => { if (!cancelled) setList([]) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [facilityKey])
+
+  // 회계연도 12개월 (3월~익년 2월)
+  const months: string[] = []
+  for (let i = 0; i < 12; i++) {
+    const m = ((2 + i) % 12) + 1  // 3,4,5,...,12,1,2
+    const y = i < 10 ? fiscalYear : fiscalYear + 1
+    months.push(`${y}-${String(m).padStart(2, '0')}`)
+  }
+
+  // 각 월의 최신 실행 이력 (최신 runAt 기준)
+  const latestByMonth = new Map<string, HistoryEntry>()
+  for (const e of list) {
+    const cur = latestByMonth.get(e.targetMonth)
+    if (!cur || (e.runAt || '') > (cur.runAt || '')) latestByMonth.set(e.targetMonth, e)
+  }
+
+  const fmtDt = (iso: string) => {
+    if (!iso) return '-'
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return iso
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl p-5 w-[520px] space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+          <h3 className="text-[14px] font-bold text-slate-800">카드매칭 내역 <span className="text-[11px] text-slate-400 ml-2">{facilityKey}</span></h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-[18px]">×</button>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold text-slate-600">회계연도</span>
+          <select
+            value={fiscalYear}
+            onChange={e => setFiscalYear(Number(e.target.value))}
+            className="border border-slate-300 rounded px-2 py-1 text-[11px]"
+          >
+            {[fyDefault - 2, fyDefault - 1, fyDefault, fyDefault + 1].map(y => (
+              <option key={y} value={y}>{y}년</option>
+            ))}
+          </select>
+          <span className="text-[10px] text-slate-400">({fiscalYear}년 03월 ~ {fiscalYear + 1}년 02월)</span>
+        </div>
+        <div className="border border-slate-200 rounded overflow-hidden">
+          <table className="w-full text-[11px]">
+            <thead className="bg-slate-50">
+              <tr className="border-b border-slate-200">
+                <th className="px-3 py-2 text-center font-bold text-slate-700 w-24">월</th>
+                <th className="px-3 py-2 text-center font-bold text-slate-700 w-20">매핑개수</th>
+                <th className="px-3 py-2 text-center font-bold text-slate-700">매핑일시</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr><td colSpan={3} className="px-3 py-4 text-center text-slate-400">불러오는 중...</td></tr>
+              )}
+              {!loading && months.map(ym => {
+                const [y, m] = ym.split('-')
+                const e = latestByMonth.get(ym)
+                return (
+                  <tr key={ym} className="border-b border-slate-100 hover:bg-slate-50/40">
+                    <td className="px-3 py-2 text-center text-slate-700">{y}년 {m}월</td>
+                    <td className="px-3 py-2 text-center">{e ? <span className="font-bold text-blue-600">{e.matched}건</span> : <span className="text-slate-300">-</span>}</td>
+                    <td className="px-3 py-2 text-center text-slate-500">{e ? fmtDt(e.runAt) : <span className="text-slate-300">-</span>}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex justify-end pt-2">
+          <button onClick={onClose} className="px-3 py-1.5 text-[11px] font-bold text-white bg-slate-500 hover:bg-slate-600 rounded">닫기</button>
+        </div>
+      </div>
     </div>
   )
 }
