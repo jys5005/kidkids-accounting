@@ -268,8 +268,20 @@ npx next dev -p 3000
 - 관코드 2자리 (01~09), 항코드 3자리 (110~910)
 - 세목명칭: 조석식비→아침,저녁급식비, 특성화비→기타시도특성화비
 
+## 자동로그인 페이지 (`/data-migration/auto-login`)
+- **페이지**: `src/app/data-migration/auto-login/page.tsx`
+- **API**: `src/app/api/auto-login/route.ts` — 통합e의 `/api/incheon/login`, `/api/incheon/navigate`로 프록시
+- **인천시 UniSign 통합**:
+  - 로그인 버튼 → 통합e `loginAincheon` 호출 (UniSign iframe+postMessage로 인증서 선택+비번 자동 입력)
+  - 월회계보고/예산회계보고/결산회계보고/카드매칭 컬럼에 "이동" 버튼 (action:'navigate')
+  - 이동 버튼은 **로그인+이동 원샷** — 세션 없으면 자동로그인 후 해당 탭 클릭
+- **로컬 개발 환경 인증 우회**: `src/proxy.ts`에서 `NODE_ENV==='development'` 시 세션 체크 생략
+
+## 교직원 교육 (`/staff/education`)
+- 법정의무/보수/직무/승급/기타 교육 5종 관리, 이수/진행중/미이수 상태, 수료증 발급 여부
+
 ## 연동 프로젝트
-- **통합e** (`C:\projects\childcare-platform`): Next.js 15, 포트 4000
+- **통합e** (`C:\projects\childcare-platform`): Next.js 15, 포트 3000 (dev) / 4000 (prod)
 - 환경변수: `NEXT_PUBLIC_PLATFORM_URL` (통합e URL)
 
 ## 컨벤션

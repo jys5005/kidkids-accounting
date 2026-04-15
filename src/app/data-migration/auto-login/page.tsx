@@ -317,6 +317,33 @@ export default function AutoLoginPage() {
     }
   }
 
+  // 메뉴 이동 (월회계보고/추경/결산/카드매칭)
+  const [navIdx, setNavIdx] = useState<number | null>(null)
+  const handleNavigate = async (idx: number, menuName: string) => {
+    const row = rows[idx]
+    if (row.authType === 'cert' && (!row.certFile || !row.certPw)) { alert('인증서를 등록해주세요.'); return }
+    setNavIdx(idx)
+    try {
+      const res = await fetch('/api/auto-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company: row.label,
+          action: 'navigate',
+          menuName,
+          certName: row.certFile,
+          certPw: row.certPw,
+        }),
+      })
+      const data = await res.json()
+      if (!data.success) alert(data.error || data.message || `${menuName} 이동 실패`)
+    } catch (e) {
+      alert(`이동 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`)
+    } finally {
+      setNavIdx(null)
+    }
+  }
+
   const handleAdd = () => {
     if (!selectedCompany) { alert('업체를 선택해주세요.'); return }
     save([...rows, makeRow(selectedCompany)])
@@ -362,7 +389,7 @@ export default function AutoLoginPage() {
               <th className={TH} style={{width:90}}>최종로그인</th>
               <th className={TH} style={{width:50}}>로그인</th>
               <th className={TH} style={{width:70}}>월회계보고</th>
-              <th className={TH} style={{width:70}}>추경회계보고</th>
+              <th className={TH} style={{width:70}}>예산회계보고</th>
               <th className={TH} style={{width:70}}>결산회계보고</th>
               <th className={`${TH} border-r-0`} style={{width:70}}>카드매칭</th>
             </tr>
@@ -452,8 +479,24 @@ export default function AutoLoginPage() {
                     </button>
                   ) : <span className="text-slate-300">-</span>}
                 </td>
-                <td className="px-2 py-2.5 text-center border-r border-slate-100"><span className="text-slate-300">-</span></td>
-                <td className="px-2 py-2.5 text-center border-r border-slate-100"><span className="text-slate-300">-</span></td>
+                <td className="px-2 py-2.5 text-center border-r border-slate-100">
+                  <button
+                    onClick={() => handleNavigate(idx, '월회계보고')}
+                    disabled={navIdx === idx}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${navIdx === idx ? 'text-slate-400 border border-slate-200 bg-slate-50' : 'text-indigo-600 border border-indigo-300 bg-indigo-50 hover:bg-indigo-100'}`}
+                  >
+                    {navIdx === idx ? '이동중...' : '이동'}
+                  </button>
+                </td>
+                <td className="px-2 py-2.5 text-center border-r border-slate-100">
+                  <button
+                    onClick={() => handleNavigate(idx, '예산회계보고')}
+                    disabled={navIdx === idx}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${navIdx === idx ? 'text-slate-400 border border-slate-200 bg-slate-50' : 'text-indigo-600 border border-indigo-300 bg-indigo-50 hover:bg-indigo-100'}`}
+                  >
+                    {navIdx === idx ? '이동중...' : '이동'}
+                  </button>
+                </td>
                 <td className="px-2 py-2.5 text-center border-r border-slate-100"><span className="text-slate-300">-</span></td>
                 <td className="px-2 py-2.5 text-center"><span className="text-slate-300">-</span></td>
               </tr>

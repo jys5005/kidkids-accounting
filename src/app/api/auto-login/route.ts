@@ -25,20 +25,6 @@ const LOGIN_URLS: Record<string, string> = {
 
 export const maxDuration = 120
 
-/** 통합e에서 인증서 설정 가져오기 */
-async function getCertConfig() {
-  const res = await fetch(`${PLATFORM_URL}/api/settings/cert-save`)
-  const json = await res.json()
-  const d = json.data || json
-  return { signCert: d.signCert || '', signPri: d.signPri || '', signPw: d.signPw || '' }
-}
-
-/** 통합e에서 CIS 설정 가져오기 */
-async function getCisConfig() {
-  const res = await fetch(`${PLATFORM_URL}/api/settings/exweb-config`)
-  return res.json()
-}
-
 /** Puppeteer headful 모드로 브라우저를 열고 사이트에 자동 로그인 */
 async function openAndLogin(company: string, authType: string, id: string, pw: string, certPw: string) {
   const url = LOGIN_URLS[company]
@@ -57,79 +43,28 @@ async function openAndLogin(company: string, authType: string, id: string, pw: s
 
   const page = await browser.newPage()
 
-  // 인천시어린이집관리시스템: ExWeb certSelect를 가로채서 자동 로그인
-  if (company === '인천시어린이집관리시스템') {
-    const cert = await getCertConfig()
-
-    if (!cert.signCert || !cert.signPri) {
-      browser.disconnect()
-      throw new Error('인증서 파일 경로를 찾을 수 없습니다.')
-    }
-
-    // 페이지 로드 전에 request interception 설정
-    await page.setRequestInterception(true)
-    page.on('request', (req) => {
-      const u = req.url()
-      if (u.includes('127.0.0.1') && u.includes('certSelect')) {
-        console.log('[자동로그인] certSelect 가로채기!')
-        req.respond({
-          status: 200,
-          contentType: 'application/json; charset=UTF-8',
-          body: JSON.stringify({
-            errYn: 'N', errMsg: '',
-            cert_nm: '자동선택',
-            file1: cert.signCert,
-            file2: cert.signPri,
-            cert_pw: certPw || cert.signPw,
-            end_dt: '20271231', pub_dt: '20250101',
-            org_nm: '', oid: '', sn: '',
-          }),
-        })
-      } else {
-        req.continue()
-      }
-    })
-
-    // 이제 페이지 로드 (interception이 이미 설정됨)
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 })
-
-    // WebSquare 로딩 대기 (7초 - 충분히)
-    await new Promise(r => setTimeout(r, 7000))
-
-    // "공동인증서 로그인" 버튼 클릭
-    const clicked = await page.evaluate(() => {
-      const all = document.querySelectorAll('*')
-      for (const el of all) {
-        const text = (el.textContent || '').trim()
-        // 정확히 "공동인증서 로그인" 매칭
-        if (text === '공동인증서 로그인' && (el as HTMLElement).offsetWidth > 0) {
-          ;(el as HTMLElement).click()
-          return '공동인증서 로그인 클릭!'
-        }
-      }
-      // 폴백: "로그인" 포함된 큰 버튼
-      for (const el of all) {
-        const text = (el.textContent || '').trim()
-        if (text.includes('로그인') && (el as HTMLElement).offsetWidth > 50) {
-          ;(el as HTMLElement).click()
-          return '로그인 버튼 클릭: ' + text.substring(0, 30)
-        }
-      }
-      return null
-    })
-
-    console.log('[자동로그인]', clicked)
-
-    // 인증서 선택 및 로그인 처리 대기
-    await new Promise(r => setTimeout(r, 10000))
-  } else {
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 })
-  }
+  // 인천시는 UniSign 통합 경로(아래 함수 상단에서 처리)로 분기되므로 여기로 내려오지 않음.
+  await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 })
 
   // 브라우저를 닫지 않고 사용자에게 넘김
   browser.disconnect()
 
   return { success: true, message: `${company} 자동 로그인 완료` }
+}
+
+/** 인천시는 통합e의 loginAincheon(UniSign 브릿지)을 재사용 */
+async function loginIncheonViaPlatform(certName: string, certPw: string) {
+  const res = await fetch(`${PLATFORM_URL}/api/incheon/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ certName, certPw, useSavedCert: !certName || !certPw }),
+    signal: AbortSignal.timeout(120000),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || data.message || `통합e 로그인 API 오류 (${res.status})`)
+  }
+  return { success: true as const, message: data.message || '인천시어린이집관리시스템 자동 로그인 완료' }
 }
 
 /** POST: 저장/검증/로그인 */
@@ -143,9 +78,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `${company}는 지원하지 않는 업체입니다.` }, { status: 400 })
     }
 
+    // 메뉴 이동 요청: 로그인된 세션 있으면 탭만, 없으면 로그인+이동 원샷
+    if (action === 'navigate') {
+      try {
+        const res = await fetch(`${PLATFORM_URL}/api/incheon/navigate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ menuName: body.menuName, certName, certPw }),
+          signal: AbortSignal.timeout(120000),
+        })
+        const data = await res.json().catch(() => ({}))
+        return NextResponse.json(data, { status: res.status })
+      } catch (e) {
+        return NextResponse.json({ success: false, error: e instanceof Error ? e.message : '이동 실패' }, { status: 500 })
+      }
+    }
+
     // 로그인 요청: Puppeteer headful 모드로 브라우저 열기
     if (action === 'login') {
       try {
+        // 인천시는 통합e의 UniSign 로그인 파이프라인을 사용 (인증서 선택/비번 입력 자동)
+        if (company === '인천시어린이집관리시스템') {
+          const result = await loginIncheonViaPlatform(certName || '', certPw || '')
+          return NextResponse.json(result)
+        }
         const result = await openAndLogin(company, authType, id, pw, certPw)
         return NextResponse.json(result)
       } catch (e) {

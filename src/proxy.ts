@@ -10,6 +10,11 @@ export function proxy(request: NextRequest) {
 
   if (isPublic) return NextResponse.next()
 
+  // 로컬 개발 환경에서는 인증 우회
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.next()
+  }
+
   const session = request.cookies.get('auth_session')?.value
   if (!session) {
     // 통합e 로그인 페이지로 리다이렉트 (returnTo 포함)
