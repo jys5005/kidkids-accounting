@@ -33,10 +33,12 @@ async function openAndLogin(company: string, authType: string, id: string, pw: s
 
   // 시스템 Chrome + 영구 user-data-dir 사용 (CROSSCERT/UniSign 등 cert 프로그램 설치 영구 반영)
   // - 시스템 Chrome 경로: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' (Windows)
-  // - userDataDir: %LOCALAPPDATA%\\PuppeteerAutoLogin (시스템 Chrome 프로필과 분리)
-  const userDataDir = process.env.LOCALAPPDATA
+  // - userDataDir: %LOCALAPPDATA%\\PuppeteerAutoLogin\\{programId} (업체별 분리 — 동시 로그인 시 충돌 방지)
+  const programId = PROGRAM_MAP[company] || company.replace(/[^a-zA-Z0-9가-힣]/g, '_')
+  const baseDir = process.env.LOCALAPPDATA
     ? `${process.env.LOCALAPPDATA}\\PuppeteerAutoLogin`
     : './.puppeteer-userdata'
+  const userDataDir = `${baseDir}\\${programId}`
   const browser = await puppeteer.launch({
     headless: false,
     defaultViewport: null,
@@ -66,45 +68,84 @@ async function openAndLogin(company: string, authType: string, id: string, pw: s
   // 경기도: "공동인증서 (개인)" 버튼 자동 클릭
   if (company === '경기도어린이집관리시스템') {
     try {
-      await new Promise(r => setTimeout(r, 3000))
-      const target = await page.evaluate(() => {
-        // "공동인증서" + "개인" 둘 다 포함하는 element 중 가장 작은 것 (= 카드 전체)
-        const all = Array.from(document.querySelectorAll<HTMLElement>('*'))
-        const candidates: { el: HTMLElement; area: number; r: DOMRect }[] = []
-        for (const el of all) {
-          if (el.offsetWidth === 0 || el.offsetHeight === 0) continue
-          const t = (el.textContent || '').replace(/\s+/g, '').trim()
-          if (!/공[동인]인증서/.test(t)) continue
-          if (!/개인/.test(t)) continue
-          // 법인 단어가 같이 있으면 스킵 (전체 wrap)
-          if (/법인/.test(t) && t.length > 30) continue
-          const r = el.getBoundingClientRect()
-          if (r.width === 0 || r.height === 0) continue
-          if (r.width > 600 || r.height > 600) continue  // 너무 큰 wrap 제외
-          candidates.push({ el, area: r.width * r.height, r })
-        }
-        if (candidates.length === 0) return null
-        // 가장 작은 영역 = 가장 좁은 카드 / 텍스트만 감싸는 element
-        candidates.sort((a, b) => a.area - b.area)
-        const pick = candidates[0]
-        pick.el.scrollIntoView({ block: 'center' })
-        return {
-          tag: pick.el.tagName,
-          cls: (pick.el.className || '').toString().substring(0, 60),
-          id: pick.el.id,
-          x: pick.r.left + pick.r.width / 2,
-          y: pick.r.top + pick.r.height / 2,
-          w: pick.r.width, h: pick.r.height,
-          totalCandidates: candidates.length,
-          textPreview: (pick.el.textContent || '').replace(/\s+/g, ' ').trim().substring(0, 80),
-        }
-      })
+      // WebSquare 렌더링 대기 — 최대 15초, "공동인증서" 텍스트 등장까지
+      let textReady = false
+      for (let i = 0; i < 15; i++) {
+        await new Promise(r => setTimeout(r, 1000))
+        const found = await page.evaluate(() => /공동인증서\s*\(?\s*개인/.test(document.body.innerText))
+        if (found) { textReady = true; break }
+      }
+      console.log(`[gyeonggi] 텍스트 대기: ${textReady ? 'ready' : 'timeout'}`)
+
+      // 모든 frame에서 공동인증서(개인) 카드 탐색
+      let target: any = null
+      for (const frame of page.frames()) {
+        try {
+          const f = await frame.evaluate(() => {
+            const all = Array.from(document.querySelectorAll<HTMLElement>('*'))
+            const candidates: { el: HTMLElement; area: number; r: DOMRect; t: string }[] = []
+            for (const el of all) {
+              const r = el.getBoundingClientRect()
+              if (r.width === 0 || r.height === 0) continue
+              if (r.width > 900 || r.height > 900) continue
+              const t = (el.textContent || '').replace(/\s+/g, '').trim()
+              if (!/공동인증서/.test(t)) continue
+              if (!/개인/.test(t)) continue
+              if (/법인/.test(t) && t.length > 30) continue
+              if (t.length > 60) continue  // 텍스트가 너무 길면 상위 wrap
+              candidates.push({ el, area: r.width * r.height, r, t })
+            }
+            if (candidates.length === 0) return null
+            // 가장 작은 영역 (텍스트만 감싸는 element)
+            candidates.sort((a, b) => a.area - b.area)
+            const pick = candidates[0]
+            pick.el.scrollIntoView({ block: 'center' })
+            return {
+              tag: pick.el.tagName,
+              cls: (pick.el.className || '').toString().substring(0, 60),
+              id: pick.el.id,
+              x: pick.r.left + pick.r.width / 2,
+              y: pick.r.top + pick.r.height / 2,
+              w: pick.r.width, h: pick.r.height,
+              totalCandidates: candidates.length,
+              textPreview: pick.t.substring(0, 60),
+            }
+          })
+          if (f) {
+            target = { ...f, frameUrl: frame.url() }
+            break
+          }
+        } catch { /* iframe cross-origin 등 무시 */ }
+      }
       console.log(`[gyeonggi] 공동인증서(개인) 후보:`, JSON.stringify(target))
       if (target && target.w > 0) {
         await page.mouse.click(target.x, target.y, { delay: 50 })
         console.log(`[gyeonggi] 좌표 클릭 (${target.x},${target.y})`)
       } else {
-        console.log(`[gyeonggi] 공동인증서(개인) 버튼 못 찾음 — 사용자 직접 클릭 필요`)
+        // 폴백: SVG/img 하위 텍스트 노드까지 포함해서 더 넓게 찾기
+        const fb = await page.evaluate(() => {
+          const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+          const nodes: { text: string; rect: DOMRect }[] = []
+          let n: Node | null
+          while ((n = walker.nextNode())) {
+            const t = (n.textContent || '').trim()
+            if (!/공동인증서/.test(t) || !/개인/.test(t)) continue
+            const range = document.createRange()
+            range.selectNodeContents(n)
+            const r = range.getBoundingClientRect()
+            if (r.width === 0) continue
+            nodes.push({ text: t, rect: r })
+          }
+          if (nodes.length === 0) return null
+          const pick = nodes[0]
+          return { x: pick.rect.left + pick.rect.width / 2, y: pick.rect.top + pick.rect.height / 2, text: pick.text }
+        })
+        if (fb) {
+          await page.mouse.click(fb.x, fb.y, { delay: 50 })
+          console.log(`[gyeonggi] 폴백 TextNode 클릭 (${fb.x},${fb.y}) "${fb.text}"`)
+        } else {
+          console.log(`[gyeonggi] 공동인증서(개인) 버튼 못 찾음 — 사용자 직접 클릭 필요`)
+        }
       }
 
       // 퀴즈 모달 자동 처리 — 한글 단어 또는 수식 동적 분기

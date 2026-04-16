@@ -67,6 +67,59 @@ type Row = {
   certPw: string
   lastLogin: string
   verifyStatus?: 'success' | 'fail' | ''
+  // cert-only 세션 캐시 (A0001 ping 성공 시 채움)
+  bizNo?:    string   // 어린이집 사업자번호 10자리 (uid)
+  mberId?:   string
+  mberNm?:   string
+  ccctSn?:   number | string
+  accounts?: Array<{ ccno?: string; bkcdNm?: string; ccnNcm?: string; main?: boolean }>
+}
+
+// 업체 라벨 → Infotech orgCd (cert-only ExWeb 경로를 쓰는 시스템만)
+// 인천시는 오전에 이미 UniSign 기반 /api/incheon/login 으로 동작 중이므로 제외 — 건드리지 않는다
+const ORG_CD_MAP: Record<string, string> = {
+  '경기도어린이집관리시스템': 'accgg',
+}
+
+// ExWeb execute — ExWeb 이 file1/file2 를 읽어 BASE64 로 Infotech 게이트웨이에 전송
+async function exwebExecute(params: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const body = { loginMethod: 'CERT', ...params }
+  return callExWeb('execute', JSON.stringify(body))
+}
+
+// cert-only 세션 ping — A0001 빈 data 로 호출해 세션 메타만 추출
+async function pingCertSession(orgCd: string, uid: string, cert: { file1: string; file2: string; cert_pw: string }) {
+  const json = await exwebExecute({
+    appCd:        'sunote.prod',
+    orgCd,
+    svcCd:        'A0001',
+    uid,
+    signCert:     cert.file1,
+    signPri:      cert.file2,
+    signPw:       cert.cert_pw,
+    memo:         '세션확인',
+    record_count: '0',
+    data:         [],
+  })
+  const r = json as { resCd?: string; out?: Record<string, unknown>; outJson?: Record<string, unknown> }
+  const out = (r.out || r.outJson || {}) as {
+    mbers?:           { mberId?: string; mberNm?: string; lastLginDttm?: string }
+    user?:            { ccctSn?: number | string; ccctNm?: string }
+    estiYear?:        { actgYr?: string }
+    bankAccountList?: Array<{ ccno?: string; bkcdNm?: string; ccnNcm?: string; mnbsCcnAt?: string }>
+    errYn?:           'Y' | 'N'
+    errMsg?:          string
+  }
+  return {
+    ok:      r.resCd !== 'E002' && out.errYn !== 'Y',
+    errMsg:  out.errMsg,
+    mberId:  out.mbers?.mberId,
+    mberNm:  out.mbers?.mberNm,
+    ccctSn:  out.user?.ccctSn,
+    ccctNm:  out.user?.ccctNm,
+    actgYr:  out.estiYear?.actgYr,
+    accounts: (out.bankAccountList || []).map(a => ({ ccno: a.ccno, bkcdNm: a.bkcdNm, ccnNcm: a.ccnNcm, main: a.mnbsCcnAt === 'Y' })),
+  }
 }
 
 const TH = 'px-2 py-2 text-center font-bold text-slate-700 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-yellow-300'
@@ -275,12 +328,67 @@ export default function AutoLoginPage() {
 
   const handleLogin = async (idx: number) => {
     const row = rows[idx]
-    if (row.authType === 'cert' && (!row.certFile || !row.certPw)) { alert('인증서를 등록해주세요.'); return }
+    if (row.authType === 'cert' && !row.certFile) { alert('인증서를 등록해주세요.'); return }
     if (row.authType === 'id+pw' && (!row.id || !row.pw)) { alert('아이디와 비밀번호를 입력해주세요.'); return }
 
+    // cert-only 지원 시스템(경기도/인천시) + cert 인증이면 ExWeb 경로 — 브라우저 안 띄움
+    const orgCd = ORG_CD_MAP[row.label]
+    if (orgCd && row.authType === 'cert') {
+      if (!row.bizNo || row.bizNo.replace(/\D/g, '').length !== 10) {
+        alert('사업자번호 10자리를 입력해주세요. (시설명 옆 [사업자번호] 필드)'); return
+      }
+      setLoginIdx(idx)
+      try {
+        // 1) ExWeb 설치 확인
+        const setup = await checkExWeb()
+        if (!setup.available) {
+          alert('ExWeb(NonActiveX) 가 설치되어 있지 않거나 실행 중이 아닙니다.\nhttps://127.0.0.1:16566 확인')
+          return
+        }
+        // 2) 인증서 선택 + 비번 입력 (ExWeb 팝업)
+        const cert = await selectCertPopup()
+        // 3) cert-only 세션 ping
+        const uid = row.bizNo.replace(/\D/g, '')
+        const s = await pingCertSession(orgCd, uid, cert)
+        if (!s.ok) {
+          const next = [...rows]
+          next[idx] = { ...next[idx], verifyStatus: 'fail' }
+          save(next)
+          alert(`로그인 실패: ${s.errMsg || '알 수 없음'}`)
+          return
+        }
+        // 4) 세션정보 row 에 저장
+        const now = new Date()
+        const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`
+        const next = [...rows]
+        next[idx] = {
+          ...next[idx],
+          certFile:     cert.cert_nm || next[idx].certFile,
+          certPw:       cert.cert_pw,
+          lastLogin:    dateStr,
+          verifyStatus: 'success',
+          mberId:       s.mberId,
+          mberNm:       s.mberNm,
+          ccctSn:       s.ccctSn,
+          accounts:     s.accounts,
+        }
+        save(next)
+        const acct = s.accounts[0]
+        alert(`로그인 성공\n회원: ${s.mberNm || ''} (${s.mberId || ''})\n어린이집: ${s.ccctNm || ''}${acct ? `\n계좌: ${acct.bkcdNm || ''} ${acct.ccno || ''}` : ''}`)
+      } catch (e) {
+        const next = [...rows]
+        next[idx] = { ...next[idx], verifyStatus: 'fail' }
+        save(next)
+        alert(`로그인 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`)
+      } finally {
+        setLoginIdx(null)
+      }
+      return
+    }
+
+    // 그 외 시스템: 기존 Puppeteer 자동로그인 (브라우저 열기)
     setLoginIdx(idx)
     try {
-      // Puppeteer로 해당 사이트에 자동 로그인 (서버에서 브라우저를 직접 열어줌)
       const res = await fetch('/api/auto-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -491,6 +599,21 @@ export default function AutoLoginPage() {
                     placeholder="시설명 입력"
                     className="w-full border border-slate-300 rounded px-1.5 py-1 text-[11px] focus:outline-none focus:border-blue-400 placeholder:text-slate-300"
                   />
+                  {ORG_CD_MAP[row.label] && (
+                    <input
+                      type="text"
+                      value={row.bizNo || ''}
+                      onChange={e => handleChange(idx, 'bizNo' as keyof Row, e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="사업자번호 10자리"
+                      className="w-full border border-slate-300 rounded px-1.5 py-1 text-[11px] focus:outline-none focus:border-blue-400 placeholder:text-slate-300 mt-1"
+                      maxLength={10}
+                    />
+                  )}
+                  {row.mberNm && (
+                    <div className="text-[10px] text-emerald-700 mt-0.5 truncate" title={`${row.mberNm} (${row.mberId})`}>
+                      {row.mberNm}
+                    </div>
+                  )}
                 </td>
                 <td className="px-1.5 py-1.5 text-center border-r border-slate-100">
                   <select
@@ -554,13 +677,25 @@ export default function AutoLoginPage() {
                 <td className="px-2 py-2.5 text-center border-r border-slate-100 text-[10px] text-slate-500">{row.lastLogin || '-'}</td>
                 <td className="px-2 py-2.5 text-center border-r border-slate-100">
                   {(row.id || row.certFile) ? (
-                    <button
-                      onClick={() => handleLogin(idx)}
-                      disabled={loginIdx === idx}
-                      className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${loginIdx === idx ? 'text-slate-400 border border-slate-200 bg-slate-50' : 'text-teal-600 border border-teal-300 bg-teal-50 hover:bg-teal-100'}`}
-                    >
-                      {loginIdx === idx ? '로그인중...' : '로그인'}
-                    </button>
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => handleLogin(idx)}
+                        disabled={loginIdx === idx}
+                        className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${loginIdx === idx ? 'text-slate-400 border border-slate-200 bg-slate-50' : 'text-teal-600 border border-teal-300 bg-teal-50 hover:bg-teal-100'}`}
+                        title="cert-only API 검증 (빠름, 화면 안 뜸)"
+                      >
+                        {loginIdx === idx ? '로그인중...' : '로그인'}
+                      </button>
+                      {ORG_CD_MAP[row.label] && (
+                        <button
+                          onClick={() => window.open('https://www.accgg.co.kr/websquare/user_index.html', '_blank', 'noopener')}
+                          className="px-1.5 py-0.5 text-[10px] font-bold text-sky-600 border border-sky-300 bg-sky-50 rounded hover:bg-sky-100"
+                          title="경기도 사이트 새 탭으로 열기 (사용자 직접 로그인)"
+                        >
+                          사이트
+                        </button>
+                      )}
+                    </div>
                   ) : <span className="text-slate-300">-</span>}
                 </td>
                 <td className="px-2 py-2.5 text-center border-r border-slate-100">
