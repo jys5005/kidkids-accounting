@@ -21,6 +21,7 @@ function ChildDetailModal({ child, onClose }: { child: any; onClose: () => void 
     careType: '기본보육', careTime: '기본',
     careFee: '0', etcFee: '0', etcExpense: '0', specialFee: '0',
     leaveReason: '',
+    relation: '부',
   })
   const u = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }))
 
