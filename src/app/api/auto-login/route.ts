@@ -40,7 +40,7 @@ async function openAndLogin(company: string, authType: string, id: string, pw: s
     : './.puppeteer-userdata'
   const userDataDir = `${baseDir}\\${programId}`
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: process.platform !== 'win32',
     defaultViewport: null,
     executablePath: process.env.CHROME_PATH || undefined,
     userDataDir,
