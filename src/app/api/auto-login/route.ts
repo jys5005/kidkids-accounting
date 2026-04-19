@@ -26,11 +26,8 @@ const LOGIN_URLS: Record<string, string> = {
 
 export const maxDuration = 120
 
-/** 런타임에 headless 결정 (빌드타임 인라인 방지) */
-function shouldHeadless(): boolean {
-  const env = process.env
-  return env['CHROME_HEADFUL'] !== '1'
-}
+/** 런타임에 headless 결정 */
+const IS_WINDOWS = require('os').platform() === 'win32'
 
 /** Puppeteer headful 모드로 브라우저를 열고 사이트에 자동 로그인 */
 async function openAndLogin(company: string, authType: string, id: string, pw: string, certPw: string, certName?: string) {
@@ -46,7 +43,7 @@ async function openAndLogin(company: string, authType: string, id: string, pw: s
     : './.puppeteer-userdata'
   const userDataDir = `${baseDir}\\${programId}`
   const browser = await puppeteer.launch({
-    headless: shouldHeadless(),
+    headless: !IS_WINDOWS,
     defaultViewport: null,
     executablePath: process.env.CHROME_PATH || undefined,
     userDataDir,
