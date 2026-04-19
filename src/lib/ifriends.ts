@@ -14,7 +14,7 @@ let browser: Browser | null = null
 async function getBrowser(): Promise<Browser> {
   if (browser && browser.connected) return browser
   browser = await puppeteer.launch({
-    headless: false,
+    headless: process.env.CHROME_HEADFUL === '1' ? false : true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   })
   return browser
