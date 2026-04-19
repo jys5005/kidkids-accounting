@@ -42,7 +42,7 @@ async function openAndLogin(company: string, authType: string, id: string, pw: s
   const browser = await puppeteer.launch({
     headless: false,
     defaultViewport: null,
-    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    executablePath: process.env.CHROME_PATH || undefined,
     userDataDir,
     args: [
       '--start-maximized', '--no-sandbox', '--disable-notifications', '--disable-popup-blocking',
