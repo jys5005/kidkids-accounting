@@ -42,8 +42,10 @@ async function openAndLogin(company: string, authType: string, id: string, pw: s
     ? `${process.env.LOCALAPPDATA}\\PuppeteerAutoLogin`
     : './.puppeteer-userdata'
   const userDataDir = `${baseDir}\\${programId}`
+  const headlessVal = !IS_WINDOWS
+  console.log(`[auto-login] headless=${headlessVal} IS_WINDOWS=${IS_WINDOWS} platform=${require('os').platform()}`)
   const browser = await puppeteer.launch({
-    headless: !IS_WINDOWS,
+    headless: headlessVal,
     defaultViewport: null,
     executablePath: process.env.CHROME_PATH || undefined,
     userDataDir,
