@@ -115,15 +115,8 @@ export default function Header() {
     m.children?.some((c) => pathname === c.href || pathname?.startsWith(c.href + '/'))
   )
 
-  // GNB 바 배경색 — 카테고리 아이콘 동그라미 색과 동일하게 통일
-  const gnbBgClass: Record<string, string> = {
-    accounting: 'bg-blue-500',
-    staff:      'bg-emerald-500',
-    children:   'bg-orange-400',
-    supplies:   'bg-purple-500',
-    community:  'bg-rose-400',
-  }
-  const gnbBg = gnbBgClass[activeKey] || 'bg-blue-500'
+  // GNB 바 — 항상 [CIS 검증] 버튼과 동일한 청록(teal-cyan) 톤 단색
+  const gnbBg = 'bg-gradient-to-r from-teal-400 to-cyan-500'
 
   return (
     <div className="shrink-0">
