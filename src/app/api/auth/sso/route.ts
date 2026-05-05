@@ -45,6 +45,8 @@ export async function GET(request: NextRequest) {
       sameSite: 'lax',
       maxAge: 60 * 60 * 8,
       path: '/',
+      // prod 에서 cert24.kr ↔ accounting.cert24.kr cookie 자동 공유
+      ...(process.env.NODE_ENV === 'production' ? { domain: '.cert24.kr' } : {}),
     })
 
     return response

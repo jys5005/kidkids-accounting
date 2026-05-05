@@ -115,6 +115,16 @@ export default function Header() {
     m.children?.some((c) => pathname === c.href || pathname?.startsWith(c.href + '/'))
   )
 
+  // GNB 바 배경색 — 카테고리 아이콘 동그라미 색과 동일하게 통일
+  const gnbBgClass: Record<string, string> = {
+    accounting: 'bg-blue-500',
+    staff:      'bg-emerald-500',
+    children:   'bg-orange-400',
+    supplies:   'bg-purple-500',
+    community:  'bg-rose-400',
+  }
+  const gnbBg = gnbBgClass[activeKey] || 'bg-blue-500'
+
   return (
     <div className="shrink-0">
       {/* 1단: 흰 배경 — 로고 + 대메뉴 + 유저 */}
@@ -143,7 +153,7 @@ export default function Header() {
                 <Link
                   key={cat.key}
                   href={cat.menus[0].href || cat.menus[0].children?.[0].href || '#'}
-                  className={`flex items-center gap-2 px-5 py-1.5 rounded-lg transition-colors ${
+                  className={`flex items-center gap-2 px-5 py-1.5 rounded-lg transition-colors shrink-0 whitespace-nowrap ${
                     isActive ? 'text-slate-800' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50 sub-tab-hover'
                   }`}
                 >
@@ -260,9 +270,9 @@ export default function Header() {
         </div>
       </div>
 
-      {/* 2단: GNB 틸 그라데이션 바 */}
-      <div className="bg-gradient-to-r from-teal-400 via-teal-500 to-cyan-600">
-        <div className="max-w-6xl mx-auto px-5 flex items-center gap-2 py-1 overflow-x-auto scrollbar-hide">
+      {/* 2단: GNB 바 — 활성 카테고리 아이콘 색과 동일 */}
+      <div className={gnbBg}>
+        <div className="px-5 flex items-center gap-2 py-1 overflow-x-auto scrollbar-hide">
           {currentCategory.menus.map((item) => {
             const href = item.href || item.children?.[0]?.href || '#'
             const isActive = item.href
