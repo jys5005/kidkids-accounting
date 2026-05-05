@@ -127,8 +127,9 @@ export default function Header() {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full hover:from-teal-500 hover:to-cyan-600 transition-all shadow-sm mr-1"
+              title="통합e — CIS 검증으로 이동 (새 탭)"
             >
-              통합<span className="italic">e</span>
+              CIS 검증
               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
