@@ -6,7 +6,7 @@ export default function AccountingPage() {
   const [yearmon] = useState('2026-02')
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5 max-w-6xl mx-auto">
       {/* 이달의 장부진행 */}
       <div className="bg-white rounded-xl border border-slate-200 p-5 hover:bg-slate-50/50 transition-colors">
         <div className="flex items-center justify-between mb-4">
