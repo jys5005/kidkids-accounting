@@ -79,13 +79,16 @@ export default function Header() {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {
+          const p = (data.profile ?? {}) as Record<string, string | undefined>
+          const phone = data.phone || p.phone || p.hpNo || p.mobile || p.tel || ''
+          const email = data.email || p.email || ''
           setProfileData({
-            centerName: data.centerName || '베르디움어린이집',
+            centerName: data.centerName || p.centerName || '',
             displayName: data.displayName || data.userId || '',
-            phone: data.phone || '',
-            email: data.email || '',
+            phone,
+            email,
           })
-          setEditData({ phone: data.phone || '', email: data.email || '' })
+          setEditData({ phone, email })
         }
       })
       .catch(() => {})

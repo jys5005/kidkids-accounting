@@ -11,19 +11,29 @@ export async function GET(request: NextRequest) {
   try {
     const data = JSON.parse(session)
 
-    // 통합e에서 displayName, centerName 가져오기
-    if (!data.displayName) {
-      try {
-        const res = await fetch(`${PLATFORM_URL}/api/auth/me`, {
-          headers: { Cookie: `auth_session=${session}` },
+    // 통합e me 호출 — displayName/centerName 외에 profile(phone/email/주소 등) 까지 모두 가져옴.
+    // 통합e 응답이 우선 (centerName 은 facilities 테이블 기준이라 신뢰값).
+    try {
+      const res = await fetch(`${PLATFORM_URL}/api/auth/me`, {
+        headers: { Cookie: `auth_session=${session}` },
+      })
+      if (res.ok) {
+        const me = await res.json()
+        const profile = (me.profile ?? {}) as Record<string, unknown>
+        return NextResponse.json({
+          ...data,
+          ...me,
+          phone: (me.phone as string)
+            || (profile.phone as string)
+            || (profile.hpNo as string)
+            || (profile.mobile as string)
+            || (profile.tel as string)
+            || '',
+          email: (me.email as string) || (profile.email as string) || '',
+          centerName: me.centerName || (profile.centerName as string) || data.centerName || '',
         })
-        if (res.ok) {
-          const me = await res.json()
-          if (me.displayName) data.displayName = me.displayName
-          if (me.centerName) data.centerName = me.centerName
-        }
-      } catch {}
-    }
+      }
+    } catch {}
 
     return NextResponse.json(data)
   } catch {
