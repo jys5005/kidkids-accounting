@@ -10,9 +10,20 @@ export async function GET(request: NextRequest) {
   const from = request.nextUrl.searchParams.get('from') || TONGHAP_URL
   const silent = request.nextUrl.searchParams.get('silent') === '1'
 
+  // nginx reverse proxy 뒤에서는 request.url 의 host 가 internal(localhost:4001)이라
+  // 외부 client 에 location 헤더 그대로 전달 시 ERR_CONNECTION_REFUSED 발생.
+  // X-Forwarded-Host / Host 헤더로 외부 url 재구성.
+  const fwdHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+  const fwdProto = request.headers.get('x-forwarded-proto') || 'https'
+  const externalBase = fwdHost ? `${fwdProto}://${fwdHost}` : ''
+  const externalSelfUrl = externalBase
+    ? `${externalBase}${request.nextUrl.pathname}${request.nextUrl.search}`
+    : request.url
+  const externalAccountingUrl = externalBase ? `${externalBase}/accounting` : new URL('/accounting', request.url).toString()
+
   if (!token) {
     if (silent) return NextResponse.json({ ok: false, reason: 'no-token' }, { status: 401 })
-    return NextResponse.redirect(`${from}/login?returnTo=${encodeURIComponent(request.url)}`)
+    return NextResponse.redirect(`${from}/login?returnTo=${encodeURIComponent(externalSelfUrl)}`)
   }
 
   try {
@@ -27,7 +38,7 @@ export async function GET(request: NextRequest) {
     const sessionData = JSON.stringify(result.session)
     const response = silent
       ? NextResponse.json({ ok: true })
-      : NextResponse.redirect(new URL('/accounting', request.url))
+      : NextResponse.redirect(externalAccountingUrl)
     response.cookies.set('auth_session', sessionData, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
