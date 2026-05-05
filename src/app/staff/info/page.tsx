@@ -2,18 +2,7 @@
 import React, { useState } from 'react'
 import DraggableModal from '@/components/DraggableModal'
 
-const staffList = [
-  { id: 1, name: '홍길동', ssn: '700101-1******', staffNo: 'B20150001', hireDate: '2015-03-01', leaveDate: '', phone: '010-1111-1111', type: '원장', status: '재직', contract: 'O', login: 'O', note: '' },
-  { id: 2, name: '김미영', ssn: '920315-2******', staffNo: 'B20200001', hireDate: '2020-03-01', leaveDate: '', phone: '010-2222-2222', type: '보육교사', status: '재직', contract: 'O', login: 'O', note: '' },
-  { id: 3, name: '이수진', ssn: '930822-2******', staffNo: 'B20210001', hireDate: '2021-03-01', leaveDate: '', phone: '010-3333-3333', type: '보육교사', status: '재직', contract: 'O', login: 'O', note: '' },
-  { id: 4, name: '박정은', ssn: '880514-2******', staffNo: 'B20190001', hireDate: '2019-09-01', leaveDate: '', phone: '010-4444-4444', type: '보육교사', status: '재직', contract: 'O', login: 'O', note: '' },
-  { id: 5, name: '최영희', ssn: '950228-2******', staffNo: 'B20220001', hireDate: '2022-03-01', leaveDate: '', phone: '010-5555-5555', type: '보육교사', status: '재직', contract: '', login: 'O', note: '' },
-  { id: 6, name: '정하나', ssn: '970605-2******', staffNo: 'B20230001', hireDate: '2023-03-01', leaveDate: '', phone: '010-6666-6666', type: '보육교사', status: '재직', contract: '', login: 'O', note: '' },
-  { id: 7, name: '한지민', ssn: '860120-2******', staffNo: 'B20180001', hireDate: '2018-03-01', leaveDate: '', phone: '010-7777-7777', type: '보육교사', status: '재직', contract: 'O', login: 'O', note: '' },
-  { id: 8, name: '오세라', ssn: '000311-4******', staffNo: 'B20240001', hireDate: '2024-03-01', leaveDate: '', phone: '010-8888-8888', type: '보조교사', status: '재직', contract: '', login: 'O', note: '' },
-  { id: 9, name: '강민지', ssn: '850907-2******', staffNo: 'B20200002', hireDate: '2020-09-01', leaveDate: '', phone: '010-9999-9999', type: '조리사', status: '재직', contract: 'O', login: '', note: '' },
-  { id: 10, name: '송다은', ssn: '940714-2******', staffNo: 'B20220002', hireDate: '2022-03-01', leaveDate: '2025-08-31', phone: '010-1010-1010', type: '보육교사', status: '퇴직', contract: '', login: '', note: '' },
-]
+const staffList: { id: number; name: string; ssn: string; staffNo: string; hireDate: string; leaveDate: string; phone: string; type: string; status: string; contract: string; login: string; note: string }[] = []
 
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 const labelCls = "text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200 whitespace-nowrap w-[120px] min-w-[120px]"

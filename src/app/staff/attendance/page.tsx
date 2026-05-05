@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 
-const staffNames = ['홍길동','김미영','이수진','박정은','최영희','정하나','한지민','오세라','강민지']
+const staffNames: string[] = []
 const statusMap: Record<string, string> = { 'O': 'text-blue-600', 'X': 'text-red-500', '반': 'text-orange-500', '휴': 'text-purple-500', '연': 'text-green-600' }
 
 export default function AttendancePage() {

@@ -12,10 +12,7 @@ type SubsidyRow = {
   basis: string
 }
 
-const mockData: SubsidyRow[] = [
-  { date: '2026-03-11', name: '기관보육료', amount: 11391000, org: '기관보육료', basis: '기관보육료' },
-  { date: '2026-03-18', name: '연장보육료', amount: 1141000, org: '연장보육료', basis: '연장보육료' },
-]
+const mockData: SubsidyRow[] = []
 
 const TH = 'px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-3 py-2.5 text-center border-b border-slate-100 text-xs'

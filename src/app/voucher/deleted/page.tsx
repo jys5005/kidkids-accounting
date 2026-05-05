@@ -16,23 +16,7 @@ interface DeletedVoucher {
   deletedAt: string
 }
 
-const sampleData: DeletedVoucher[] = [
-  { id: 101, date: '2026-03-03', account: '정부지원 보육료', subAccount: '', summary: '3월 정부지원 보육료 입금 (중복)', income: 15524000, expense: 0, counterpart: '사회보장정보원', note: '자동이체', deletedAt: '2026-03-15' },
-  { id: 102, date: '2026-03-05', account: '보육교직원급여', subAccount: '', summary: '3월 교직원 기본급(중복 입력)', income: 0, expense: 4404593, counterpart: '교직원', note: '자동이체', deletedAt: '2026-03-16' },
-  { id: 103, date: '2026-03-05', account: '수용비 및 수수료', subAccount: '', summary: '사무용품 구입(네이버)', income: 0, expense: 125000, counterpart: '네이버', note: '카드결제', deletedAt: '2026-03-18' },
-  { id: 104, date: '2026-03-06', account: '수용비 및 수수료', subAccount: '', summary: '복사용지 구입', income: 0, expense: 45000, counterpart: '오피스디포', note: '카드결제', deletedAt: '2026-03-18' },
-  { id: 105, date: '2026-03-06', account: '급식·간식재료비', subAccount: '', summary: '급간식 식재료(오입력)', income: 0, expense: 320000, counterpart: '쿠팡', note: '카드결제', deletedAt: '2026-03-17' },
-  { id: 106, date: '2026-03-07', account: '공공요금 및 제세공과금', subAccount: '', summary: '2월 전기요금(중복)', income: 0, expense: 487600, counterpart: '한국전력', note: '자동이체', deletedAt: '2026-03-18' },
-  { id: 107, date: '2026-03-08', account: '수용비 및 수수료', subAccount: '', summary: '11번가 구입', income: 0, expense: 55000, counterpart: '11번가', note: '카드결제', deletedAt: '2026-03-19' },
-  { id: 108, date: '2026-03-10', account: '부모부담 보육료', subAccount: '', summary: '3월 보육료(오입력 정정)', income: 2340000, expense: 0, counterpart: '학부모', note: '계좌이체', deletedAt: '2026-03-17' },
-  { id: 109, date: '2026-03-10', account: '기타 필요경비', subAccount: '차량운행비', summary: '3월 차량운행비(계정 오류)', income: 780000, expense: 0, counterpart: '학부모', note: '계좌이체', deletedAt: '2026-03-18' },
-  { id: 110, date: '2026-03-11', account: '여비', subAccount: '', summary: '출장비 지급', income: 0, expense: 150000, counterpart: '교직원', note: '계좌이체', deletedAt: '2026-03-19' },
-  { id: 111, date: '2026-03-12', account: '교재·교구 구입비', subAccount: '', summary: '교재 구입(취소)', income: 0, expense: 280000, counterpart: '교보문고', note: '카드결제', deletedAt: '2026-03-18' },
-  { id: 112, date: '2026-03-13', account: '기타 운영비', subAccount: '', summary: '소독비(중복)', income: 0, expense: 200000, counterpart: '소독업체', note: '계좌이체', deletedAt: '2026-03-19' },
-  { id: 113, date: '2026-03-14', account: '업무추진비', subAccount: '', summary: '원장 업무추진비', income: 0, expense: 300000, counterpart: '', note: '카드결제', deletedAt: '2026-03-19' },
-  { id: 114, date: '2026-03-15', account: '복리후생비', subAccount: '', summary: '건강검진비(정정)', income: 0, expense: 350000, counterpart: '건강검진센터', note: '카드결제', deletedAt: '2026-03-19' },
-  { id: 115, date: '2026-03-16', account: '급식·간식재료비', subAccount: '', summary: '식재료 추가(계정변경)', income: 0, expense: 670000, counterpart: '농협하나로마트', note: '카드결제', deletedAt: '2026-03-19' },
-]
+const sampleData: DeletedVoucher[] = []
 
 const fmt = (n: number) => n ? n.toLocaleString('ko-KR') : ''
 

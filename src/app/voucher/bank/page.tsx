@@ -24,51 +24,9 @@ interface BankTransaction {
   branch: string
 }
 
-const accounts: BankAccount[] = [
-  { bankName: '국민은행', accountNo: '68120100238901', bizNo: '1378030550', status: '', loginId: 'kidkids01', loginPw: '******' },
-  { bankName: '기업은행', accountNo: '07010312345678', bizNo: '1378030550', status: '', loginId: 'kidkids02', loginPw: '******' },
-  { bankName: '농협', accountNo: '30112005678901', bizNo: '1378030550', status: '', loginId: 'kidkids03', loginPw: '******' },
-  { bankName: '신한은행', accountNo: '100034682383', bizNo: '1378030550', status: '', loginId: 'KCO5202', loginPw: '******' },
-  { bankName: '우리은행', accountNo: '1005603012345', bizNo: '1378030550', status: '', loginId: 'kidkids04', loginPw: '******' },
-  { bankName: '하나은행', accountNo: '15291038291001', bizNo: '1378030550', status: '', loginId: 'kidkids05', loginPw: '******' },
-  { bankName: '우체국', accountNo: '01234567890123', bizNo: '1378030550', status: '', loginId: 'kidkids06', loginPw: '******' },
-  { bankName: 'SC제일은행', accountNo: '23010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids07', loginPw: '******' },
-  { bankName: '대구은행', accountNo: '50481012345678', bizNo: '1378030550', status: '', loginId: 'kidkids08', loginPw: '******' },
-  { bankName: '부산은행', accountNo: '10120012345678', bizNo: '1378030550', status: '', loginId: 'kidkids09', loginPw: '******' },
-  { bankName: '광주은행', accountNo: '32010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids10', loginPw: '******' },
-  { bankName: '경남은행', accountNo: '39010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids11', loginPw: '******' },
-  { bankName: '전북은행', accountNo: '34010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids12', loginPw: '******' },
-  { bankName: '제주은행', accountNo: '35010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids13', loginPw: '******' },
-  { bankName: '새마을금고', accountNo: '45010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids14', loginPw: '******' },
-  { bankName: '신협', accountNo: '48010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids15', loginPw: '******' },
-  { bankName: '케이뱅크', accountNo: '89010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids16', loginPw: '******' },
-  { bankName: '카카오뱅크', accountNo: '333012345678', bizNo: '1378030550', status: '', loginId: 'kidkids17', loginPw: '******' },
-  { bankName: '수협', accountNo: '88010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids18', loginPw: '******' },
-  { bankName: '토스뱅크', accountNo: '91010012345678', bizNo: '1378030550', status: '', loginId: 'kidkids19', loginPw: '******' },
-]
+const accounts: BankAccount[] = []
 
-const sampleTransactions: BankTransaction[] = [
-  { id: 1, accountNo: '1000346823835889229', type: '입금', date: '20260309', time: '101833', withdrawAmt: 0, depositAmt: 612939, balance: 4893507, sender: '778181604BC', medium: 'FB자금', branch: 'FI영2' },
-  { id: 2, accountNo: '1000346823835889230', type: '출금', date: '20260309', time: '130740', withdrawAmt: 4000, depositAmt: 0, balance: 4889507, sender: '주식회사 아성', medium: '신한체', branch: '원신한' },
-  { id: 3, accountNo: '1000346823835889231', type: '출금', date: '20260309', time: '160643', withdrawAmt: 350000, depositAmt: 0, balance: 4539507, sender: '헥토_비버웍스(', medium: '신한체', branch: '원신한' },
-  { id: 4, accountNo: '1000346823835889232', type: '입금', date: '20260310', time: '062030', withdrawAmt: 0, depositAmt: 34997, balance: 4574504, sender: '하나81058301', medium: '타행PC', branch: '(하나)' },
-  { id: 5, accountNo: '1000346823835889233', type: '출금', date: '20260310', time: '093012', withdrawAmt: 150000, depositAmt: 0, balance: 4424504, sender: '쿠팡주식회사', medium: '신한체', branch: '원신한' },
-  { id: 6, accountNo: '1000346823835889234', type: '입금', date: '20260311', time: '090100', withdrawAmt: 0, depositAmt: 15524000, balance: 19948504, sender: '사회보장정보원', medium: '타행PC', branch: '(기업)' },
-  { id: 7, accountNo: '1000346823835889235', type: '입금', date: '20260311', time: '091500', withdrawAmt: 0, depositAmt: 8594960, balance: 28543464, sender: '강남구청', medium: '타행PC', branch: '(우리)' },
-  { id: 8, accountNo: '1000346823835889236', type: '입금', date: '20260311', time: '092000', withdrawAmt: 0, depositAmt: 3200000, balance: 31743464, sender: '사회보장정보원', medium: '타행PC', branch: '(기업)' },
-  { id: 9, accountNo: '1000346823835889237', type: '입금', date: '20260311', time: '093000', withdrawAmt: 0, depositAmt: 1450000, balance: 33193464, sender: '사회보장정보원', medium: '타행PC', branch: '(기업)' },
-  { id: 10, accountNo: '1000346823835889238', type: '출금', date: '20260312', time: '100000', withdrawAmt: 4404593, depositAmt: 0, balance: 28788871, sender: '교직원급여', medium: '신한체', branch: '원신한' },
-  { id: 11, accountNo: '1000346823835889239', type: '출금', date: '20260312', time: '100500', withdrawAmt: 3850000, depositAmt: 0, balance: 24938871, sender: '교직원급여2', medium: '신한체', branch: '원신한' },
-  { id: 12, accountNo: '1000346823835889240', type: '출금', date: '20260312', time: '101000', withdrawAmt: 850000, depositAmt: 0, balance: 24088871, sender: '직책수당', medium: '신한체', branch: '원신한' },
-  { id: 13, accountNo: '1000346823835889241', type: '출금', date: '20260313', time: '090000', withdrawAmt: 396450, depositAmt: 0, balance: 23692421, sender: '국민연금공단', medium: '지로', branch: '원신한' },
-  { id: 14, accountNo: '1000346823835889242', type: '출금', date: '20260313', time: '091000', withdrawAmt: 310270, depositAmt: 0, balance: 23382151, sender: '건강보험공단', medium: '지로', branch: '원신한' },
-  { id: 15, accountNo: '1000346823835889243', type: '출금', date: '20260315', time: '140000', withdrawAmt: 1850000, depositAmt: 0, balance: 21532151, sender: '쿠팡', medium: '신한체', branch: '원신한' },
-  { id: 16, accountNo: '1000346823835889244', type: '입금', date: '20260316', time: '100000', withdrawAmt: 0, depositAmt: 2340000, balance: 23872151, sender: '학부모보육료', medium: '타행PC', branch: '(하나)' },
-  { id: 17, accountNo: '1000346823835889245', type: '입금', date: '20260316', time: '110000', withdrawAmt: 0, depositAmt: 780000, balance: 24652151, sender: '학부모차량비', medium: '타행PC', branch: '(하나)' },
-  { id: 18, accountNo: '1000346823835889246', type: '출금', date: '20260317', time: '093000', withdrawAmt: 487600, depositAmt: 0, balance: 24164551, sender: '한국전력공사', medium: '자동이체', branch: '원신한' },
-  { id: 19, accountNo: '1000346823835889247', type: '출금', date: '20260317', time: '094000', withdrawAmt: 156000, depositAmt: 0, balance: 24008551, sender: '수도사업소', medium: '자동이체', branch: '원신한' },
-  { id: 20, accountNo: '1000346823835889248', type: '입금', date: '20260318', time: '150000', withdrawAmt: 0, depositAmt: 8320, balance: 24016871, sender: '이자', medium: 'FB자금', branch: '원신한' },
-]
+const sampleTransactions: BankTransaction[] = []
 
 const fmt = (n: number) => n ? n.toLocaleString('ko-KR') : '0'
 

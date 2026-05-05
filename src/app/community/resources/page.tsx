@@ -2,19 +2,7 @@
 import React, { useState } from 'react'
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 
-const files = [
-  { id: 134, title: '2025년 시간별 근로계약서', author: '개발자', date: '2023-07-05', hasFile: true },
-  { id: 133, title: '2025년 최저임금호봉별급여대장', author: '개발자', date: '2023-06-14', hasFile: true },
-  { id: 132, title: '2025년 급여대장예시', author: '관리자', date: '2014-03-08', hasFile: true },
-  { id: 131, title: '2025년 보육사업안내', author: '개발자', date: '2013-02-26', hasFile: true },
-  { id: 130, title: '2023년 표준취업규칙', author: '개발자', date: '2012-09-03', hasFile: true },
-  { id: 129, title: '2024년 근로계약서 (보육교사,보조교사)', author: '수전자장부', date: '2012-05-03', hasFile: true },
-  { id: 128, title: '해지요청서', author: '수전자장부', date: '2012-03-09', hasFile: false },
-  { id: 127, title: '24년급여대장 예시표', author: '', date: '', hasFile: true },
-  { id: 126, title: '2024년 최저임금표', author: '', date: '', hasFile: true },
-  { id: 125, title: '재직증명서', author: '', date: '', hasFile: true },
-  { id: 124, title: '경기도어린이집관리시스템등록방법', author: '', date: '', hasFile: true },
-]
+const files: { id: number; title: string; author: string; date: string; hasFile: boolean }[] = []
 
 export default function ResourcesPage() {
   const [mode, setMode] = useState<'list' | 'write'>('list')

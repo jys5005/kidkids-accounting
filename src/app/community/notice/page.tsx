@@ -2,15 +2,7 @@
 import React, { useState } from 'react'
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 
-const posts = [
-  { id: 7, title: '한글 파일 형식 출력 사용방법 - 엣지 활용법', author: '개발자', date: '2023-07-05', hasFile: true },
-  { id: 6, title: '우리은행(인증조회) 서비스를 사용하는 시설에게 안내드립..', author: '개발자', date: '2023-06-14', hasFile: false },
-  { id: 5, title: '인증키발급 안내', author: '관리자', date: '2014-03-08', hasFile: false },
-  { id: 4, title: '적적금 한도액 설정에 대한 안내입니다.', author: '개발자', date: '2013-02-26', hasFile: false },
-  { id: 3, title: '거래 내역 자동저장 설정 또는 해지에 대한 안내입니다.', author: '개발자', date: '2012-09-03', hasFile: false },
-  { id: 2, title: '종사자 관리에서 엑셀업로드 관련 안내드립니다.', author: '수전자장부', date: '2012-05-03', hasFile: false },
-  { id: 1, title: '장부인쇄 시 도장등록하여 사용하세요.', author: '수전자장부', date: '2012-03-09', hasFile: true },
-]
+const posts: { id: number; title: string; author: string; date: string; hasFile: boolean }[] = []
 
 export default function NoticePage() {
   const [mode, setMode] = useState<'list' | 'write'>('list')

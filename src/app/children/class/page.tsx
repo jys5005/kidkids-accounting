@@ -3,27 +3,7 @@ import React, { useState } from 'react'
 import DraggableModal from '@/components/DraggableModal'
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 
-const classData = [
-  { id: 19, name: '2025푸른바다5세아반', count: 0, type: '0세아 반', extended: '' },
-  { id: 18, name: '2025밝은햇살4세아반', count: 1, type: '0세아 반', extended: '' },
-  { id: 17, name: '2025파란하늘3세아반', count: 2, type: '0세아 반', extended: '' },
-  { id: 16, name: '2025들꽃2세아반', count: 0, type: '0세아 반', extended: '' },
-  { id: 15, name: '2025하늘구름누리장애아반', count: 1, type: '', extended: '' },
-  { id: 14, name: '2025향기2세아반', count: 5, type: '0세아 반', extended: '' },
-  { id: 13, name: '2025맑은샘물누리장애아반', count: 1, type: '', extended: '' },
-  { id: 12, name: '2025풀잎반연령혼합반(1.2세)', count: 6, type: '', extended: '' },
-  { id: 11, name: '2025초록풀잎1세아반', count: 4, type: '0세아 반', extended: '' },
-  { id: 10, name: '2025아침이슬0세아반', count: 3, type: '0세아 반', extended: '' },
-  { id: 9, name: '푸른바다5세아반', count: 2, type: '0세아 반', extended: '' },
-  { id: 8, name: '파란하늘반3세아반', count: 0, type: '0세아 반', extended: '' },
-  { id: 7, name: '맑은샘물누리장애아반', count: 0, type: '', extended: '' },
-  { id: 6, name: '들꽃향기2세아반', count: 0, type: '0세아 반', extended: '' },
-  { id: 5, name: '아침이슬2세아반', count: 1, type: '0세아 반', extended: '' },
-  { id: 4, name: '밝은햇살반4.5세이상반', count: 0, type: '', extended: '' },
-  { id: 3, name: '초록풀잎11세아반', count: 1, type: '0세아 반', extended: '' },
-  { id: 2, name: '아기구름0세아반', count: 2, type: '0세아 반', extended: '' },
-  { id: 1, name: '아침이슬.0세아반', count: 2, type: '0세아 반', extended: '' },
-]
+const classData: { id: number; name: string; count: number; type: string; extended: string }[] = []
 
 const classTypes = ['선택','0세아 반','1세아 반','2세아 반','3세아 반','4세아 반','5세아 반','4.5세이상 반','연령혼합반(0.1세)','연령혼합반(1.2세)','연령혼합반(2.3세)','연령혼합반(3.4세 이상)','방과후반','장애아기본반','장애아방과후반','누리장애아반','연장반(0세)']
 

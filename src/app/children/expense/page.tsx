@@ -4,17 +4,7 @@ import DraggableModal from '@/components/DraggableModal'
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const inputCls = "border border-amber-300 rounded px-2 py-1 text-[11px] text-right focus:outline-none focus:border-amber-500 w-[70px]"
 
-const sampleChildren = [
-  { id: 1, name: '곽이안', className: '예쁜반21세아반', residentNo: '231028-3' },
-  { id: 2, name: '김다솜', className: '수리반12세아반', residentNo: '221110-4' },
-  { id: 3, name: '김도하', className: '초롱반1연령혼합반(1,2세)', residentNo: '221115-4' },
-  { id: 4, name: '김준민', className: '초롱반21세아반', residentNo: '230903-3' },
-  { id: 5, name: '민이랑', className: '예쁜반21세아반', residentNo: '240103-4' },
-  { id: 6, name: '정해인', className: '예쁜반11세아반', residentNo: '230408-3' },
-  { id: 7, name: '조연서', className: '수리반12세아반', residentNo: '221018-4' },
-  { id: 8, name: '장시윤', className: '아침이슬.0세아반', residentNo: '240826-3' },
-  { id: 9, name: '조아란', className: '옹달샘연령혼합반(1,2세)', residentNo: '190223-4' },
-]
+const sampleChildren: { id: number; name: string; className: string; residentNo: string }[] = []
 
 type Step = 'select' | 'confirm' | 'edit'
 

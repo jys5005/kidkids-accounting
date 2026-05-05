@@ -4,17 +4,7 @@ const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:out
 
 const classNames = ['전체','2025푸른바다5세아반','2025밝은햇살4세아반','2025파란하늘3세아반','2025들꽃2세아반','2025하늘구름누리장애아반','2025향기2세아반','2025맑은샘물누리장애아반','2025풀잎반연령혼합반(1.2세)','2025초록풀잎1세아반','2025아침이슬0세아반']
 
-const sampleChildren = [
-  { name: '강나윤', phone: '010-5277-2609' },
-  { name: '경한울', phone: '010-4785-5616' },
-  { name: '고나경', phone: '010-9774-7037' },
-  { name: '권서현', phone: '010-4695-8245' },
-  { name: '권지희', phone: '010-7582-2028' },
-  { name: '김가은', phone: '010-6768-6168' },
-  { name: '김가율', phone: '010-8427-9500' },
-  { name: '김건호', phone: '010-7103-0653' },
-  { name: '김다솜', phone: '010-3445-9607' },
-]
+const sampleChildren: { name: string; phone: string }[] = []
 
 export default function AttendancePage() {
   const [month, setMonth] = useState('2026-03')

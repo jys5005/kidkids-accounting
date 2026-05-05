@@ -26,65 +26,9 @@ interface DailyBalance {
 
 const banks = ['신한은행', '국민은행', '농협', '우리은행']
 
-const sampleMonthly: MonthlyBalance[] = [
-  { month: '2026-03', label: '2026년 03월', bankAmounts: { '신한은행': 39069438, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 39069438, accountBalance: -3469148, diff: 42538586, matched: false },
-  { month: '2026-04', label: '2026년 04월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2026-05', label: '2026년 05월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2026-06', label: '2026년 06월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2026-07', label: '2026년 07월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2026-08', label: '2026년 08월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2026-09', label: '2026년 09월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2026-10', label: '2026년 10월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2026-11', label: '2026년 11월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2026-12', label: '2026년 12월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2027-01', label: '2027년 01월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-  { month: '2027-02', label: '2027년 02월', bankAmounts: { '신한은행': 0, '국민은행': 0, '농협': 0, '우리은행': 0 }, bankTotal: 0, accountBalance: 0, diff: 0, matched: true },
-]
+const sampleMonthly: MonthlyBalance[] = []
 
-// 3월 일별 샘플 데이터
-const sampleDaily: DailyBalance[] = Array.from({ length: 19 }, (_, i) => {
-  const day = i + 1
-  const label = `${String(day).padStart(2, '0')}일`
-  const amounts: Record<number, number> = {
-    1: 4486589, 2: 4436249, 3: 4169442, 4: 4936385, 5: 2377098,
-    6: 4250268, 7: 4280568, 8: 4280568, 9: 4530597, 10: 22980844,
-    11: 22360844, 12: 21520844, 13: 21140844, 14: 21340844, 15: 20940844,
-    16: 20185844, 17: 16285844, 18: 15005844, 19: 39069438,
-  }
-  const acctBal: Record<number, number> = {
-    1: -38258018, 2: -38258018, 3: -38258018, 4: -38258018, 5: -38258018,
-    6: -38258018, 7: -38258018, 8: -38258018, 9: -38258018, 10: 22980844,
-    11: 22360844, 12: 21520844, 13: 21140844, 14: 21040844, 15: 20940844,
-    16: 20185844, 17: 16285844, 18: 15005844, 19: -3469148,
-  }
-  // 당일 거래내역 합계 (입금-출금 / 수입-지출)
-  const bankTx: Record<number, number> = {
-    1: 0, 2: -50340, 3: 28768960, 4: 766943, 5: -2559287,
-    6: 1873170, 7: 30300, 8: 0, 9: 250029, 10: 3570000,
-    11: -620000, 12: -840000, 13: -380000, 14: 200000, 15: -400000,
-    16: -755000, 17: -3900000, 18: -1280000, 19: 24063594,
-  }
-  const acctTx: Record<number, number> = {
-    1: -38248018, 2: 0, 3: 28768960, 4: 766943, 5: -1909287,
-    6: 1873170, 7: 30300, 8: 0, 9: 250029, 10: 3570000,
-    11: -620000, 12: -840000, 13: -380000, 14: -100000, 15: -400000,
-    16: -755000, 17: -3900000, 18: -1280000, 19: -18474992,
-  }
-  const bankAmt = amounts[day] || 0
-  const accBal = acctBal[day] || 0
-  const diff = Math.abs(bankAmt - accBal)
-  return {
-    date: `2026-03-${String(day).padStart(2, '0')}`,
-    label,
-    bankAmounts: { '신한은행': bankAmt, '국민은행': 0, '농협': 0, '우리은행': 0 },
-    bankTotal: bankAmt,
-    bankTxTotal: bankTx[day] || 0,
-    accountBalance: accBal,
-    accountTxTotal: acctTx[day] || 0,
-    diff,
-    matched: diff === 0,
-  }
-})
+const sampleDaily: DailyBalance[] = []
 
 const fmt = (n: number) => n ? n.toLocaleString('ko-KR') : '0'
 
@@ -109,37 +53,9 @@ function findMatch(ledgerAmt: number, ledgerSummary: string, isIncome: boolean, 
 
 const subTabs = ['월별 통장잔고 비교', '일별 통장잔고 비교'] as const
 
-// 팝업용 샘플 데이터
-const sampleLedger: Record<string, { date: string; summary: string; income: number; expense: number; account: string }[]> = {
-  '01': [
-    { date: '2026-03-01', summary: '전년도이월금', income: -38248018, expense: 0, account: '전년도 이월금' },
-    { date: '2026-03-01', summary: 'ㅇㅇㅇ', income: 0, expense: 10000, account: '자산취득비(자산취득비)' },
-  ],
-  '03': [
-    { date: '2026-03-03', summary: '3월 정부지원 보육료 입금', income: 15524000, expense: 0, account: '정부지원 보육료' },
-    { date: '2026-03-03', summary: '3월 인건비 보조금 입금', income: 8594960, expense: 0, account: '인건비 보조금' },
-    { date: '2026-03-03', summary: '3월 기관보육료 입금', income: 3200000, expense: 0, account: '기관보육료' },
-    { date: '2026-03-03', summary: '3월 연장보육료', income: 1450000, expense: 0, account: '연장보육료' },
-  ],
-  '05': [
-    { date: '2026-03-05', summary: '3월 교직원 기본급 지급', income: 0, expense: 4404593, account: '보육교직원급여' },
-    { date: '2026-03-05', summary: '3월 교직원 기본급(2)', income: 0, expense: 3850000, account: '보육교직원급여' },
-    { date: '2026-03-05', summary: '3월 퇴직적립금', income: 0, expense: 650000, account: '퇴직금 및 퇴직적립금' },
-  ],
-}
-const sampleBankTx: Record<string, { date: string; accountNo: string; detail: string; deposit: number; withdrawal: number }[]> = {
-  '01': [],
-  '03': [
-    { date: '2026-03-03', accountNo: '110-xxx-xxxx', detail: '사회보장정보원', deposit: 15524000, withdrawal: 0 },
-    { date: '2026-03-03', accountNo: '110-xxx-xxxx', detail: '구청 보조금', deposit: 8594960, withdrawal: 0 },
-    { date: '2026-03-03', accountNo: '110-xxx-xxxx', detail: '기관보육료', deposit: 3200000, withdrawal: 0 },
-    { date: '2026-03-03', accountNo: '110-xxx-xxxx', detail: '연장보육료', deposit: 1450000, withdrawal: 0 },
-  ],
-  '05': [
-    { date: '2026-03-05', accountNo: '110-xxx-xxxx', detail: '급여이체', deposit: 0, withdrawal: 4404593 },
-    { date: '2026-03-05', accountNo: '110-xxx-xxxx', detail: '급여이체(2)', deposit: 0, withdrawal: 3850000 },
-  ],
-}
+// 팝업용 샘플 데이터 — 비움
+const sampleLedger: Record<string, { date: string; summary: string; income: number; expense: number; account: string }[]> = {}
+const sampleBankTx: Record<string, { date: string; accountNo: string; detail: string; deposit: number; withdrawal: number }[]> = {}
 
 export default function BalancePage() {
   const [year, setYear] = useState(2026)

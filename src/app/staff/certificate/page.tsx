@@ -3,11 +3,7 @@ import React, { useState } from 'react'
 
 const certTabs = ['근로계약서','재직증명서','경력증명서','취업규칙','최저임금고시','개인정보동의서']
 
-const staffData = [
-  { id: 3, name: '강민정', ssn: '7201151802429', hireDate: '2025-09-17', leaveDate: '', salary: '', phone: '', type: '', status: '임용', deleted: '' },
-  { id: 2, name: '강수현', ssn: '910712-2******', hireDate: '2024-03-01', leaveDate: '', salary: '', phone: '010-7245-0712', type: '담임교사', status: '임용', deleted: '' },
-  { id: 1, name: '김경자', ssn: '660128-2******', hireDate: '2018-06-07', leaveDate: '', salary: '', phone: '010-9029-8580', type: '조리사', status: '임용', deleted: '' },
-]
+const staffData: { id: number; name: string; ssn: string; hireDate: string; leaveDate: string; salary: string; phone: string; type: string; status: string; deleted: string }[] = []
 
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 

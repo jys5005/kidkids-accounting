@@ -3,14 +3,7 @@ import React, { useState } from 'react'
 
 const educationTypes = ['법정의무교육', '보수교육', '직무교육', '승급교육', '기타교육']
 
-const educationData = [
-  { id: 1, name: '강민정', type: '법정의무교육', title: '아동학대 예방교육', hours: 4, startDate: '2026-01-15', endDate: '2026-01-15', institution: '한국보육진흥원', status: '이수', certificate: true },
-  { id: 2, name: '강수현', type: '법정의무교육', title: '개인정보보호교육', hours: 2, startDate: '2026-02-10', endDate: '2026-02-10', institution: '한국보육진흥원', status: '이수', certificate: true },
-  { id: 3, name: '강수현', type: '보수교육', title: '영유아 안전관리', hours: 8, startDate: '2026-03-05', endDate: '2026-03-06', institution: '중앙육아종합지원센터', status: '이수', certificate: false },
-  { id: 4, name: '김경자', type: '법정의무교육', title: '성희롱 예방교육', hours: 2, startDate: '2026-01-20', endDate: '2026-01-20', institution: '한국보육진흥원', status: '이수', certificate: true },
-  { id: 5, name: '강민정', type: '직무교육', title: '영아보육 직무교육', hours: 40, startDate: '2026-02-01', endDate: '2026-02-28', institution: '중앙육아종합지원센터', status: '진행중', certificate: false },
-  { id: 6, name: '김경자', type: '법정의무교육', title: '긴급복지신고의무자교육', hours: 1, startDate: '2026-03-10', endDate: '2026-03-10', institution: '보건복지부', status: '미이수', certificate: false },
-]
+const educationData: { id: number; name: string; type: string; title: string; hours: number; startDate: string; endDate: string; institution: string; status: string; certificate: boolean }[] = []
 
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 

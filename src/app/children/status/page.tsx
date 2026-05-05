@@ -160,23 +160,7 @@ function ChildDetailModal({ child, onClose }: { child: any; onClose: () => void 
   )
 }
 
-const sampleChildren = [
-  { id: 1, name: '김하은', birth: '2025-08-15', age: '만0세', className: '새싹반', enterDate: '2026-03-01', guardian: '김영수', phone: '010-1234-5678', leaveDate: '', status: '현원' },
-  { id: 2, name: '이서준', birth: '2025-05-22', age: '만0세', className: '새싹반', enterDate: '2026-03-01', guardian: '이정희', phone: '010-2345-6789', leaveDate: '', status: '현원' },
-  { id: 3, name: '박지우', birth: '2024-11-03', age: '만1세', className: '꽃잎반', enterDate: '2025-09-01', guardian: '박민수', phone: '010-3456-7890', leaveDate: '', status: '현원' },
-  { id: 4, name: '최유진', birth: '2024-07-18', age: '만1세', className: '꽃잎반', enterDate: '2025-03-01', guardian: '최상철', phone: '010-4567-8901', leaveDate: '', status: '현원' },
-  { id: 5, name: '정민서', birth: '2024-02-28', age: '만1세', className: '꽃잎반', enterDate: '2025-03-01', guardian: '정우진', phone: '010-5678-9012', leaveDate: '', status: '현원' },
-  { id: 6, name: '한소율', birth: '2023-09-10', age: '만2세', className: '별빛반', enterDate: '2025-03-01', guardian: '한동규', phone: '010-6789-0123', leaveDate: '', status: '현원' },
-  { id: 7, name: '윤서윤', birth: '2023-06-05', age: '만2세', className: '별빛반', enterDate: '2025-03-01', guardian: '윤재호', phone: '010-7890-1234', leaveDate: '', status: '현원' },
-  { id: 8, name: '장예린', birth: '2023-01-20', age: '만2세', className: '별빛반', enterDate: '2024-09-01', guardian: '장호영', phone: '010-8901-2345', leaveDate: '', status: '현원' },
-  { id: 9, name: '오시우', birth: '2022-12-11', age: '만3세', className: '달님반', enterDate: '2024-03-01', guardian: '오성진', phone: '010-9012-3456', leaveDate: '', status: '현원' },
-  { id: 10, name: '송하율', birth: '2022-04-25', age: '만3세', className: '달님반', enterDate: '2024-03-01', guardian: '송민기', phone: '010-0123-4567', leaveDate: '', status: '현원' },
-  { id: 11, name: '임도윤', birth: '2021-08-07', age: '만4세', className: '해님반', enterDate: '2023-03-01', guardian: '임재영', phone: '010-1111-2222', leaveDate: '', status: '현원' },
-  { id: 12, name: '강시은', birth: '2021-03-14', age: '만4세', className: '해님반', enterDate: '2023-03-01', guardian: '강현우', phone: '010-2222-3333', leaveDate: '', status: '현원' },
-  { id: 13, name: '조은우', birth: '2020-11-30', age: '만5세', className: '무지개반', enterDate: '2022-03-01', guardian: '조상현', phone: '010-3333-4444', leaveDate: '', status: '현원' },
-  { id: 14, name: '배서현', birth: '2020-06-19', age: '만5세', className: '무지개반', enterDate: '2022-03-01', guardian: '배준혁', phone: '010-4444-5555', leaveDate: '', status: '현원' },
-  { id: 15, name: '홍지호', birth: '2020-02-08', age: '만5세', className: '무지개반', enterDate: '2022-03-01', leaveDate: '2026-02-28', guardian: '홍길동', phone: '010-5555-6666', status: '퇴소' },
-]
+const sampleChildren: { id: number; name: string; birth: string; age: string; className: string; enterDate: string; guardian: string; phone: string; leaveDate: string; status: string }[] = []
 
 export default function ChildrenStatusPage() {
   const [search, setSearch] = useState('')

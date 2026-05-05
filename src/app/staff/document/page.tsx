@@ -3,15 +3,7 @@ import React, { useState } from 'react'
 
 const templates = ['샘플서식','필요경비 정산서','휴가 공문','상여금 공문','법인 결산서','임면 보고','면직 보고','감가상각비적립','결산서 공문','예산서 공문']
 
-const sampleDocs = [
-  { id: 1, title: '2026년 보육교직원 배치기준 안내', date: '2026-03-15' },
-  { id: 2, title: '어린이집 안전점검 실시 안내', date: '2026-03-12' },
-  { id: 3, title: '보육교직원 의무교육 안내', date: '2026-03-10' },
-  { id: 4, title: '2026년 3월 보육료 지원 안내', date: '2026-03-05' },
-  { id: 5, title: '어린이집 운영위원회 구성 보고', date: '2026-03-03' },
-  { id: 6, title: '보육교직원 채용 보고', date: '2026-02-28' },
-  { id: 7, title: '2026년 어린이집 예산서 제출', date: '2026-02-25' },
-]
+const sampleDocs: { id: number; title: string; date: string }[] = []
 
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 

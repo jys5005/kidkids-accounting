@@ -9,15 +9,7 @@ type Row = {
   income: number; expense: number; code: string; account: string; counterpart: string
 }
 
-const mockData: Row[] = [
-  { id: 1, docNo: 'A000016', date: '2026-03-04', summary: '이송이환3월차량비', income: 60000, expense: 0, code: '221-113', account: '기타 필요경비 (차량운행비)', counterpart: '이송이환3월차량비' },
-  { id: 2, docNo: 'A000020', date: '2026-03-05', summary: '3월 입소료 경울', income: 100000, expense: 0, code: '221-111', account: '기타 필요경비 (입학준비금)', counterpart: '3월 입소료 경울' },
-  { id: 3, docNo: 'A000035', date: '2026-03-10', summary: '이한이준이나입학비', income: 300000, expense: 0, code: '221-111', account: '기타 필요경비 (입학준비금)', counterpart: '이한이준이나입학비' },
-  { id: 4, docNo: 'A000043', date: '2026-03-14', summary: '푸른바다이진우차량비', income: 30000, expense: 0, code: '221-113', account: '기타 필요경비 (차량운행비)', counterpart: '푸른바다이진우차량비' },
-  { id: 5, docNo: 'B000035', date: '2026-03-16', summary: '오르프악기건성회', income: 0, expense: 1160000, code: '411', account: '특별활동비지출', counterpart: '오르프악기건성회' },
-  { id: 6, docNo: 'B000036', date: '2026-03-16', summary: '도자기휴체험건성회', income: 0, expense: 1525000, code: '421-112', account: '기타 필요경비 지출 (현장학습비)', counterpart: '도자기휴체험건성회' },
-  { id: 7, docNo: 'B000037', date: '2026-03-16', summary: '특성화건성회', income: 0, expense: 855000, code: '421-141', account: '기타 필요경비 지출 (기타시도특성화비)', counterpart: '특성화건성회' },
-]
+const mockData: Row[] = []
 
 const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-2 py-2 text-center border-b border-r border-slate-100 text-xs'
@@ -48,15 +40,7 @@ export default function RequiredExpensePage() {
   const [showPersonalChild, setShowPersonalChild] = useState(false)
   const [selectedPersonalChild, setSelectedPersonalChild] = useState('')
 
-  const childList = [
-    { name: '곽이안', className: '예쁜반21세아반' },
-    { name: '김다솜', className: '수리반12세아반' },
-    { name: '김도하', className: '초롱반1연령혼합반(1,2세)' },
-    { name: '김준민', className: '초롱반21세아반' },
-    { name: '민이랑', className: '예쁜반21세아반' },
-    { name: '정해인', className: '예쁜반11세아반' },
-    { name: '조연서', className: '수리반12세아반' },
-  ]
+  const childList: { name: string; className: string }[] = []
 
   const toggleMatch = (name: string) => {
     const next = new Set(matchChecked)

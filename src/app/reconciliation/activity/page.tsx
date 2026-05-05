@@ -14,10 +14,10 @@ function getYmOptions() {
   return opts.reverse()
 }
 
-const mockIncomeBase = [2283000, 2553000, 2487000, 2452000, 2724000, 2794000, 2400019, 2556000, 3101000, 2215000, 2386000, 2660000]
-const mockExpenseBase = [2070000, 6834000, 5012000, 6520000, 7198000, 5118000, 5151000, 5184000, 3813000, 6651000, 3886800, 6753000]
-const mockOtherIncome = [300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000, 300000]
-const mockOtherExpense = [200000, 250000, 220000, 230000, 210000, 240000, 220000, 230000, 210000, 240000, 220000, 230000]
+const mockIncomeBase: number[] = [0,0,0,0,0,0,0,0,0,0,0,0]
+const mockExpenseBase: number[] = [0,0,0,0,0,0,0,0,0,0,0,0]
+const mockOtherIncome: number[] = [0,0,0,0,0,0,0,0,0,0,0,0]
+const mockOtherExpense: number[] = [0,0,0,0,0,0,0,0,0,0,0,0]
 
 const TH = 'px-2 py-2 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-2 py-2 text-center border-b border-r border-slate-100 text-xs'

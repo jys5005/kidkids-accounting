@@ -3,20 +3,8 @@ import React, { useState } from 'react'
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const inputCls = "border border-amber-300 rounded px-2 py-1 text-[11px] text-right focus:outline-none focus:border-amber-500 w-[80px]"
 
-const sampleChildren = [
-  { id: 1, name: '곽이안', status: '현원', residentNo: '231028-3', className: '예쁜반21세아반', enterDate: '2024-11-01', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 2, name: '김가은', status: '퇴소', residentNo: '200301-3', className: '', enterDate: '2022-03-02', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 3, name: '김가율', status: '퇴소', residentNo: '201018-4', className: '', enterDate: '2022-03-02', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 4, name: '김건후', status: '퇴소', residentNo: '220312-3', className: '', enterDate: '2023-03-01', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 5, name: '김다솜', status: '현원', residentNo: '221110-4', className: '수리반12세아반', enterDate: '2024-09-01', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 6, name: '김다온', status: '퇴소', residentNo: '201016-3', className: '', enterDate: '2022-03-02', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 7, name: '김도하', status: '현원', residentNo: '221115-4', className: '초롱반1연령혼합반(1,2세)', enterDate: '2024-03-02', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 8, name: '김서울', status: '퇴소', residentNo: '200831-3', className: '', enterDate: '2021-09-01', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 9, name: '김준민', status: '현원', residentNo: '230903-3', className: '초롱반21세아반', enterDate: '2024-09-01', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 10, name: '민이랑', status: '현원', residentNo: '240103-4', className: '예쁜반21세아반', enterDate: '2024-11-01', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 11, name: '정해인', status: '현원', residentNo: '230408-3', className: '예쁜반11세아반', enterDate: '2024-03-02', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-  { id: 12, name: '조연서', status: '현원', residentNo: '221018-4', className: '수리반12세아반', enterDate: '2024-03-02', fee: 0, etcFee: 0, etcExpense: 0, specialFee: 0, etcMealFee: 0, paid: false, receipt: false },
-]
+type FeeRow = { id: number; name: string; status: string; residentNo: string; className: string; enterDate: string; fee: number; etcFee: number; etcExpense: number; specialFee: number; etcMealFee: number; paid: boolean; receipt: boolean }
+const sampleChildren: FeeRow[] = []
 
 export default function ChildFeePage() {
   const now = new Date()

@@ -4,24 +4,7 @@ import DraggableModal from '@/components/DraggableModal'
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 
-const items = [
-  { id: 1, date: '2013-06-18', name: '아이들이불장', model: '', vendor: '', price: 1644000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 2, date: '2013-07-18', name: '아이들이불장', model: '', vendor: '', price: 1644000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 3, date: '2014-03-10', name: '의자구입', model: '', vendor: '', price: 60000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 4, date: '2014-03-31', name: '진공청소기외', model: '', vendor: '', price: 602220, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 5, date: '2014-04-26', name: '밥솥', model: '', vendor: '', price: 170000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 6, date: '2014-05-31', name: '컴퓨터모니터구입', model: '', vendor: '', price: 221400, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 7, date: '2014-06-30', name: '선풍기구입', model: '', vendor: '', price: 228000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 8, date: '2014-07-28', name: '돌심교구장', model: '', vendor: '', price: 189000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 9, date: '2014-07-28', name: '돌심교구장', model: '', vendor: '', price: 189000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 10, date: '2014-08-08', name: '냉장고구입', model: '', vendor: '', price: 900000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 11, date: '2014-08-29', name: '보안도어락', model: '', vendor: '', price: 200000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 12, date: '2014-09-03', name: '모니터구입외', model: '', vendor: '', price: 175000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 13, date: '2014-09-06', name: '책장', model: '', vendor: '', price: 150000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 14, date: '2014-10-07', name: '청소기구매', model: '', vendor: '', price: 131900, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 15, date: '2014-10-07', name: '청소기구매', model: '', vendor: '', price: 131900, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-  { id: 16, date: '2014-11-01', name: '업소용정소기', model: '', vendor: '', price: 210000, qty: '', usage: '', current: '', lostDate: '', manager: '' },
-]
+const items: { id: number; date: string; name: string; model: string; vendor: string; price: number; qty: string; usage: string; current: string; lostDate: string; manager: string }[] = []
 
 export default function SuppliesStatusPage() {
   const [searchField, setSearchField] = useState('물품명')
