@@ -24,8 +24,10 @@ function useAutoLogout() {
 
   useEffect(() => {
     if (secondsLeft === 0) {
+      // 회계앱 자체 쿠키 정리 → 통합e logout 으로 navigate (양쪽 .cert24.kr 쿠키 expire + /login redirect)
       fetch('/api/auth/logout', { method: 'POST' }).finally(() => {
-        window.location.href = `${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/login`
+        try { sessionStorage.removeItem('accounting-sso-set') } catch {}
+        window.location.href = `${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/api/auth/logout`
       })
     }
   }, [secondsLeft])
@@ -130,16 +132,16 @@ export default function Header() {
       {/* 1단: 흰 배경 — 로고 + 대메뉴 + 유저 */}
       <div className="bg-white border-b border-slate-200">
         <div className="px-5 flex items-end pb-1 pt-6 relative">
-          <Link href="/accounting" className="flex items-center gap-1.5 mr-auto">
-            <span className="text-base font-bold text-slate-800">어린이집회계관리시스템</span>
-            <span className="text-xs text-slate-400 ml-0.5">수전자장부</span>
+          <Link href="/accounting" className="flex items-center gap-1.5 mr-auto flex-shrink-0">
+            <span className="text-lg leading-none">🏠</span>
+            <span className="text-slate-800 font-bold text-sm whitespace-nowrap">통합e</span>
           </Link>
           <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
             <a
               href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full hover:from-teal-500 hover:to-cyan-600 transition-all shadow-sm mr-1"
+              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full hover:from-teal-500 hover:to-cyan-600 transition-all shadow-sm mr-1 whitespace-nowrap shrink-0"
               title="통합e — CIS 검증으로 이동 (새 탭)"
             >
               CIS 검증
@@ -172,7 +174,7 @@ export default function Header() {
               href="https://070remotehelp.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-orange-400 to-red-400 rounded-full hover:from-orange-500 hover:to-red-500 transition-all shadow-sm ml-1"
+              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-orange-400 to-red-400 rounded-full hover:from-orange-500 hover:to-red-500 transition-all shadow-sm ml-1 whitespace-nowrap shrink-0"
             >
               원격지원
               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -255,8 +257,10 @@ export default function Header() {
 
             <button
               onClick={async () => {
-                await fetch('/api/auth/logout', { method: 'POST' })
-                window.location.href = `${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/login`
+                await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
+                try { sessionStorage.removeItem('accounting-sso-set') } catch {}
+                // 통합e logout 으로 navigate — .cert24.kr 쿠키 expire + /login redirect
+                window.location.href = `${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/api/auth/logout`
               }}
               className="flex items-center gap-1 px-2 py-1 text-[11px] text-slate-400 hover:text-red-500 border border-slate-200 rounded-md transition-colors"
               title="로그아웃"
