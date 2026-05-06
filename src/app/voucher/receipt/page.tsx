@@ -223,6 +223,18 @@ function StoreDepositTab() {
 export default function ReceiptPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('store')
 
+  // 새로고침 시 마지막 탭 유지
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const saved = localStorage.getItem('voucher-receipt-tab') as TabKey | null
+      if (saved && tabs.some(t => t.key === saved)) setActiveTab(saved)
+    } catch {}
+  }, [])
+  useEffect(() => {
+    try { localStorage.setItem('voucher-receipt-tab', activeTab) } catch {}
+  }, [activeTab])
+
   return (
     <div className="p-6 space-y-5">
       {/* 상단 탭 메뉴 */}
@@ -635,6 +647,18 @@ type ShopDataRow = {
 
 function ShoppingTab() {
   const [sub, setSub] = useState<SubTab>('전체')
+
+  // 새로고침 시 마지막 sub 탭 유지
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const saved = localStorage.getItem('voucher-receipt-shopping-sub') as SubTab | null
+      if (saved && SUB_TABS.includes(saved)) setSub(saved)
+    } catch {}
+  }, [])
+  useEffect(() => {
+    try { localStorage.setItem('voucher-receipt-shopping-sub', sub) } catch {}
+  }, [sub])
   const [accounts, setAccounts] = useState<ShopAccount[]>([])
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [dataMap, setDataMap] = useState<Record<string, ShopDataRow>>({})  // shopId(per shopType-prefix) → row
