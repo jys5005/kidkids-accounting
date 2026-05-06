@@ -1,27 +1,34 @@
 import { NextResponse } from 'next/server'
 
-// 로그인은 통합e 가 prod 에서 domain '.cert24.kr' 로 set 하므로 동일 도메인으로 expire 시켜야 진짜 삭제됨.
-// 호환성: 도메인 명시 / 도메인 미명시 둘 다 expire (이전 버전 잔존 쿠키 cleanup)
+/**
+ * 로그아웃 — .cert24.kr 도메인 + 도메인 미명시 둘 다 expire.
+ * Next.js cookies.set 은 같은 name 두 번 호출 시 마지막만 반영 → raw Set-Cookie append 사용.
+ */
+function buildExpiredCookies(isProd: boolean): string[] {
+  if (!isProd) {
+    return [`auth_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; SameSite=Lax`]
+  }
+  return [
+    `auth_session=; Domain=.cert24.kr; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Secure; HttpOnly; SameSite=Lax`,
+    `auth_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Secure; HttpOnly; SameSite=Lax`,
+  ]
+}
+
+function applyExpire(response: NextResponse) {
+  const isProd = process.env.NODE_ENV === 'production'
+  for (const c of buildExpiredCookies(isProd)) {
+    response.headers.append('Set-Cookie', c)
+  }
+}
+
 export async function POST() {
   const response = NextResponse.json({ success: true })
-  const isProd = process.env.NODE_ENV === 'production'
-  const baseExpire = {
-    expires: new Date(0),
-    maxAge: 0,
-    path: '/',
-    httpOnly: true,
-    secure: isProd,
-    sameSite: 'lax' as const,
-  }
-  if (isProd) {
-    response.cookies.set('auth_session', '', { ...baseExpire, domain: '.cert24.kr' })
-    response.cookies.set('auth_session', '', { ...baseExpire })
-  } else {
-    response.cookies.delete('auth_session')
-  }
+  applyExpire(response)
   return response
 }
 
 export async function GET() {
-  return POST()
+  const response = NextResponse.json({ success: true })
+  applyExpire(response)
+  return response
 }
