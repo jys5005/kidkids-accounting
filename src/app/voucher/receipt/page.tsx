@@ -641,12 +641,6 @@ function ShoppingTab() {
   const [bizNo, setBizNo] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState('')
-  const ymOpts = useMemo(() => getYmOptions(), [])
-  const now = new Date()
-  const todayYmd = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`
-  const [dateFrom, setDateFrom] = useState(monthStart)
-  const [dateTo, setDateTo] = useState(todayYmd)
   const [busyShopId, setBusyShopId] = useState<string | null>(null)
   const [detail, setDetail] = useState<{ account: ShopAccount; data: ShopDataRow | null } | null>(null)
 
@@ -692,39 +686,45 @@ function ShoppingTab() {
   const filtered = sub === '전체' ? accounts : accounts.filter(a => a.shopType === sub)
   const totalAll = Object.values(counts).reduce((s, n) => s + (Number(n) || 0), 0)
 
-  // 영수증수집하기
-  const collectOne = async (a: ShopAccount) => {
+  // 정상여부 (가벼운 로그인만 검증, 5~15초)
+  const checkLogin = async (a: ShopAccount) => {
     if (!SCRAPABLE_SHOPS.has(a.shopType)) {
-      alert(`${a.shopType} 영수증 수집은 아직 준비중입니다.`)
+      alert(`${a.shopType} 정상여부 체크는 아직 준비중입니다.`)
       return
     }
     if (!a.shopPw) { alert('비밀번호가 등록되어 있지 않습니다. 관리자에게 문의하세요.'); return }
     setBusyShopId(`${a.shopType}::${a.shopId}`)
     try {
-      const r = await fetch('/api/voucher/shop/scrape', {
+      const r = await fetch('/api/voucher/shop/login-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shopType: a.shopType, shopId: a.shopId, shopPw: a.shopPw, startYmd: dateFrom, endYmd: dateTo }),
+        body: JSON.stringify({ shopType: a.shopType, shopId: a.shopId, shopPw: a.shopPw }),
       })
       const j = await r.json()
-      if (!r.ok || !j.success) {
-        alert(`수집 실패: ${j?.message || j?.error || `HTTP ${r.status}`}`)
-      } else {
-        alert(`수집 완료: ${(j.orders || []).length}건`)
-        // page_data 재로드
-        const dr = await fetch(`/api/voucher/shop/data?shopType=${encodeURIComponent(a.shopType)}`).then(rr => rr.json())
-        if (dr?.success && Array.isArray(dr.list)) {
-          setDataMap(prev => {
-            const next = { ...prev }
-            for (const row of dr.list as ShopDataRow[]) {
-              if (row?.shopId) next[`${a.shopType}::${row.shopId}`] = row
-            }
-            return next
-          })
-        }
-      }
+      const now = new Date().toLocaleString('ko-KR')
+      const ok = r.ok && j.success
+      // 결과를 dataMap 에 즉시 반영 (UI 갱신용)
+      setDataMap(prev => ({
+        ...prev,
+        [`${a.shopType}::${a.shopId}`]: {
+          ...(prev[`${a.shopType}::${a.shopId}`] || { shopId: a.shopId }),
+          accountStatus: ok ? '정상' : '오류',
+          errorMessage:  ok ? undefined : (j?.message || j?.error || `HTTP ${r.status}`),
+          buyerName:     ok ? (j.buyerName || prev[`${a.shopType}::${a.shopId}`]?.buyerName) : undefined,
+          lastQueryTime: now,
+        },
+      }))
     } catch (e: any) {
-      alert(`수집 실패: ${e?.message || '연결 실패'}`)
+      const now = new Date().toLocaleString('ko-KR')
+      setDataMap(prev => ({
+        ...prev,
+        [`${a.shopType}::${a.shopId}`]: {
+          ...(prev[`${a.shopType}::${a.shopId}`] || { shopId: a.shopId }),
+          accountStatus: '오류',
+          errorMessage: e?.message || '연결 실패',
+          lastQueryTime: now,
+        },
+      }))
     } finally {
       setBusyShopId(null)
     }
@@ -773,13 +773,11 @@ function ShoppingTab() {
         </div>
       </div>
 
-      {/* 조회기간 + 영수증수집 일괄 */}
-      <div className="flex items-center gap-3 flex-wrap bg-slate-50 px-3 py-2 rounded-lg">
-        <span className="text-xs font-bold text-slate-600">조회기간</span>
-        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-slate-300 rounded px-2 py-1 text-xs bg-white" />
-        <span className="text-xs text-slate-400">~</span>
-        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-slate-300 rounded px-2 py-1 text-xs bg-white" />
-        <span className="text-xs text-slate-400 ml-2">선택한 쇼핑몰만 수집은 행별 [영수증수집하기] 사용</span>
+      {/* 안내 — 이 화면은 등록된 쇼핑몰의 로그인 정상여부만 확인 */}
+      <div className="flex items-center gap-3 flex-wrap bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg">
+        <span className="text-xs text-amber-700">
+          이 화면은 <span className="font-bold">로그인 정상여부</span>만 확인합니다 (5~15초 소요). 실제 영수증 수집은 별도 진행됩니다.
+        </span>
       </div>
 
       {/* 쇼핑몰 계정 테이블 */}
@@ -794,7 +792,7 @@ function ShoppingTab() {
                 <th className={TH}>최근수집</th>
                 <th className={TH}>건수</th>
                 <th className={TH}>상태</th>
-                <th className={TH}>영수증수집</th>
+                <th className={TH}>정상여부</th>
                 <th className={TH}>수집자료보기</th>
                 <th className={TH}>관리</th>
               </tr>
@@ -838,17 +836,17 @@ function ShoppingTab() {
                     <td className="px-3 py-2.5 text-center">
                       {busy ? (
                         <span className="inline-flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
-                          <span className="inline-block w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />수집중
+                          <span className="inline-block w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />확인중
                         </span>
                       ) : (
                         <button
                           disabled={!scrapable}
-                          onClick={() => collectOne(a)}
-                          title={!scrapable ? `${a.shopType} 수집은 준비중입니다.` : undefined}
+                          onClick={() => checkLogin(a)}
+                          title={!scrapable ? `${a.shopType} 정상여부 체크는 준비중입니다.` : '클릭하여 로그인 정상여부 확인 (5~15초)'}
                           className={`px-3 py-1 text-xs font-bold rounded transition-colors ${
                             scrapable ? 'text-white bg-green-600 hover:bg-green-700' : 'text-slate-400 bg-slate-100 cursor-not-allowed'
                           }`}
-                        >영수증수집하기</button>
+                        >정상여부</button>
                       )}
                     </td>
                     <td className="px-3 py-2.5 text-center">
