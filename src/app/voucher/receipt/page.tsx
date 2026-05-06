@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 
 type TabKey = 'store' | 'mobile' | 'transfer' | 'tax' | 'cash' | 'shopping' | 'insurance'
 
@@ -538,105 +538,7 @@ export default function ReceiptPage() {
             </div>
           )}
 
-          {activeTab === 'shopping' && (
-            <div className="space-y-6">
-              {/* 쇼핑몰 스크랩하기 섹션 */}
-              <div>
-                <div className="flex items-center justify-end gap-2 mb-3">
-                  <a href="/cp_guide.pdf" target="_blank" rel="noopener noreferrer" className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors inline-block">쿠팡조회가이드</a>
-                  <a href="/Web_Coupang_Setup.zip" download className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors inline-flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>쿠팡조회설치</a>
-                </div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-600 whitespace-nowrap">조회연월</span>
-                    <select className="border border-slate-300 rounded px-2 py-1.5 text-xs">
-                      <option>2026-03</option>
-                      <option>2026-02</option>
-                      <option>2026-01</option>
-                    </select>
-                    <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
-                  </div>
-                </div>
-                {/* 쇼핑몰 계정 테이블 */}
-                <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-teal-50 border-b border-orange-200">
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">구분</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">아이디</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">비밀번호</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">영수증수집</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">수집자료보기</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">품목삭제</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">관리</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-3 py-2.5 text-center text-slate-700">지마켓</td>
-                        <td className="px-3 py-2.5 text-center text-slate-700">min7709166</td>
-                        <td className="px-3 py-2.5 text-center text-slate-700">min7128</td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">영수증수집하기</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">수집자료보기</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">구매품목삭제</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-2 py-1 text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded transition-colors">관리</button></td>
-                      </tr>
-                      <tr className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-3 py-2.5 text-center text-slate-700">11번가</td>
-                        <td className="px-3 py-2.5 text-center text-slate-700">sofsteel22</td>
-                        <td className="px-3 py-2.5 text-center text-slate-700">jin38461</td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">영수증수집하기</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">수집자료보기</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">구매품목삭제</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-2 py-1 text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded transition-colors">관리</button></td>
-                      </tr>
-                      <tr className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-3 py-2.5 text-center text-slate-700">쿠팡</td>
-                        <td className="px-3 py-2.5 text-center text-slate-700">islim113@nate.com</td>
-                        <td className="px-3 py-2.5 text-center text-slate-700">tjgus414</td>
-                        <td className="px-3 py-2.5 text-center flex items-center justify-center gap-1">
-                          <button className="px-3 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">아이디등록</button>
-                          <button className="px-3 py-1 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">영수증수집하기</button>
-                        </td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">수집자료보기</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">구매품목삭제</button></td>
-                        <td className="px-3 py-2.5 text-center"><button className="px-2 py-1 text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded transition-colors">관리</button></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* 쇼핑몰 거래목록 섹션 */}
-              <div>
-                <div className="flex items-center justify-end mb-3">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">쇼핑몰 영수증 자동매칭하기</button>
-                </div>
-                <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-teal-50 border-b border-orange-200">
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">쇼핑몰</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">거래일자</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">실결제합계</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">가맹점명</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">구매상품</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">결재</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">영수증</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">전표</th>
-                        <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap">매칭</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td colSpan={9} className="text-center py-12 text-slate-400 text-xs">수집된 쇼핑몰 거래내역이 없습니다.</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === 'shopping' && <ShoppingTab />}
 
           {activeTab === 'insurance' && (
             <div className="space-y-4">
@@ -687,6 +589,485 @@ export default function ReceiptPage() {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ───────────────────────────────────────────────────
+   쇼핑몰 탭 — 7 sub-tabs (전체 + 6 쇼핑몰)
+   - 통합e shop_accounts 와 page_data(field='shop-{kind}') 연동
+   - 영수증수집하기: /api/voucher/shop/scrape (오아시스만 구현, 그 외 안내)
+   - 수집자료보기: 모달 (KCP 매출전표 + 주문확인서)
+─────────────────────────────────────────────────── */
+type SubTab = '전체' | '쿠팡' | '11번가' | '지마켓' | '옥션' | '오아시스' | '네이버'
+const SUB_TABS: SubTab[] = ['전체', '쿠팡', '11번가', '지마켓', '옥션', '오아시스', '네이버']
+const SCRAPABLE_SHOPS: Set<string> = new Set(['오아시스'])
+
+const SHOP_FAVICON: Record<string, string> = {
+  '쿠팡':     'https://www.google.com/s2/favicons?domain=coupang.com&sz=32',
+  '11번가':   'https://www.google.com/s2/favicons?domain=11st.co.kr&sz=32',
+  '지마켓':   'https://www.google.com/s2/favicons?domain=gmarket.co.kr&sz=32',
+  '옥션':     'https://www.google.com/s2/favicons?domain=auction.co.kr&sz=32',
+  '오아시스': 'https://www.google.com/s2/favicons?domain=www.oasis.co.kr&sz=32',
+  '네이버':   '',
+}
+
+type ShopAccount = {
+  bizNo: string
+  bizName: string
+  accountingId: string
+  shopType: string
+  shopId: string
+  shopPw: string
+  status?: string
+}
+type ShopOrder = any  // 통합e 의 OasisOrder shape (orderId/orderDate/productName/totalAmount/status/receipt/confirm)
+type ShopDataRow = {
+  shopId: string
+  queryCount?: number
+  lastQueryTime?: string
+  accountStatus?: '정상' | '오류'
+  errorMessage?: string
+  buyerName?: string
+  dateRange?: string
+  orders?: ShopOrder[]
+}
+
+function ShoppingTab() {
+  const [sub, setSub] = useState<SubTab>('전체')
+  const [accounts, setAccounts] = useState<ShopAccount[]>([])
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const [dataMap, setDataMap] = useState<Record<string, ShopDataRow>>({})  // shopId(per shopType-prefix) → row
+  const [bizNo, setBizNo] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState('')
+  const ymOpts = useMemo(() => getYmOptions(), [])
+  const now = new Date()
+  const todayYmd = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`
+  const [dateFrom, setDateFrom] = useState(monthStart)
+  const [dateTo, setDateTo] = useState(todayYmd)
+  const [busyShopId, setBusyShopId] = useState<string | null>(null)
+  const [detail, setDetail] = useState<{ account: ShopAccount; data: ShopDataRow | null } | null>(null)
+
+  // 마운트: 계정 + 건수 + 데이터(쇼핑몰별) 일괄 로드
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const [acctR, countR] = await Promise.all([
+          fetch('/api/voucher/shop/accounts').then(r => r.json()),
+          fetch('/api/voucher/shop/accounts?counts=1').then(r => r.json()),
+        ])
+        if (cancelled) return
+        if (!acctR.success) { setErrorMsg(acctR.error || '계정 조회 실패'); setLoading(false); return }
+        setBizNo(acctR.bizNo || null)
+        setAccounts(Array.isArray(acctR.accounts) ? acctR.accounts : [])
+        setCounts(countR?.counts || {})
+
+        // 등록된 쇼핑몰만 page_data 병렬 fetch
+        const shopTypesPresent = Array.from(new Set((acctR.accounts || []).map((a: ShopAccount) => a.shopType))).filter(Boolean) as string[]
+        const dataRes = await Promise.all(
+          shopTypesPresent.map(st =>
+            fetch(`/api/voucher/shop/data?shopType=${encodeURIComponent(st)}`).then(r => r.json()).then(j => ({ st, list: Array.isArray(j.list) ? j.list : [] }))
+          )
+        )
+        if (cancelled) return
+        const map: Record<string, ShopDataRow> = {}
+        for (const { st, list } of dataRes) {
+          for (const r of list as ShopDataRow[]) {
+            if (r && r.shopId) map[`${st}::${r.shopId}`] = r
+          }
+        }
+        setDataMap(map)
+      } catch (e: any) {
+        setErrorMsg(e?.message || '로딩 실패')
+      } finally {
+        setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  const filtered = sub === '전체' ? accounts : accounts.filter(a => a.shopType === sub)
+  const totalAll = Object.values(counts).reduce((s, n) => s + (Number(n) || 0), 0)
+
+  // 영수증수집하기
+  const collectOne = async (a: ShopAccount) => {
+    if (!SCRAPABLE_SHOPS.has(a.shopType)) {
+      alert(`${a.shopType} 영수증 수집은 아직 준비중입니다.`)
+      return
+    }
+    if (!a.shopPw) { alert('비밀번호가 등록되어 있지 않습니다. 관리자에게 문의하세요.'); return }
+    setBusyShopId(`${a.shopType}::${a.shopId}`)
+    try {
+      const r = await fetch('/api/voucher/shop/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shopType: a.shopType, shopId: a.shopId, shopPw: a.shopPw, startYmd: dateFrom, endYmd: dateTo }),
+      })
+      const j = await r.json()
+      if (!r.ok || !j.success) {
+        alert(`수집 실패: ${j?.message || j?.error || `HTTP ${r.status}`}`)
+      } else {
+        alert(`수집 완료: ${(j.orders || []).length}건`)
+        // page_data 재로드
+        const dr = await fetch(`/api/voucher/shop/data?shopType=${encodeURIComponent(a.shopType)}`).then(rr => rr.json())
+        if (dr?.success && Array.isArray(dr.list)) {
+          setDataMap(prev => {
+            const next = { ...prev }
+            for (const row of dr.list as ShopDataRow[]) {
+              if (row?.shopId) next[`${a.shopType}::${row.shopId}`] = row
+            }
+            return next
+          })
+        }
+      }
+    } catch (e: any) {
+      alert(`수집 실패: ${e?.message || '연결 실패'}`)
+    } finally {
+      setBusyShopId(null)
+    }
+  }
+
+  const TH = 'px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap text-xs'
+
+  // 거래목록 (수집된 모든 주문 flat) — 현재 sub 탭에 해당하는 것만
+  const orders: { acct: ShopAccount; order: ShopOrder; data: ShopDataRow }[] = []
+  for (const a of filtered) {
+    const data = dataMap[`${a.shopType}::${a.shopId}`]
+    if (!data || !Array.isArray(data.orders)) continue
+    for (const o of data.orders) orders.push({ acct: a, order: o, data })
+  }
+  orders.sort((a, b) => (b.order.orderDate || '').localeCompare(a.order.orderDate || ''))
+
+  return (
+    <div className="space-y-6">
+      {/* 안내 + bizNo 표시 */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          {SUB_TABS.map(t => {
+            const cnt = t === '전체' ? totalAll : (counts[t] || 0)
+            const isActive = sub === t
+            return (
+              <button
+                key={t}
+                onClick={() => setSub(t)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                  isActive
+                    ? 'bg-teal-500 text-white border-teal-500 shadow-sm shadow-teal-200'
+                    : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                {SHOP_FAVICON[t] && <img src={SHOP_FAVICON[t]} alt="" className="w-3.5 h-3.5 rounded-sm" />}
+                {t === '네이버' && !SHOP_FAVICON[t] && <span className={`w-3.5 h-3.5 inline-flex items-center justify-center rounded-sm font-black text-[9px] ${isActive ? 'bg-white text-emerald-600' : 'bg-emerald-500 text-white'}`}>N</span>}
+                {t}
+                <span className={`ml-0.5 text-[10px] ${isActive ? 'text-white/80' : 'text-slate-400'}`}>{cnt}</span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          {bizNo && <span>사업자번호: <span className="font-mono text-slate-700">{bizNo}</span></span>}
+          <a href="/cp_guide.pdf" target="_blank" rel="noopener noreferrer" className="px-3 py-1 text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">쿠팡조회가이드</a>
+        </div>
+      </div>
+
+      {/* 조회기간 + 영수증수집 일괄 */}
+      <div className="flex items-center gap-3 flex-wrap bg-slate-50 px-3 py-2 rounded-lg">
+        <span className="text-xs font-bold text-slate-600">조회기간</span>
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-slate-300 rounded px-2 py-1 text-xs bg-white" />
+        <span className="text-xs text-slate-400">~</span>
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-slate-300 rounded px-2 py-1 text-xs bg-white" />
+        <span className="text-xs text-slate-400 ml-2">선택한 쇼핑몰만 수집은 행별 [영수증수집하기] 사용</span>
+      </div>
+
+      {/* 쇼핑몰 계정 테이블 */}
+      <div>
+        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-teal-50 border-b border-orange-200">
+                <th className={TH}>구분</th>
+                <th className={TH}>아이디</th>
+                <th className={TH}>비밀번호</th>
+                <th className={TH}>최근수집</th>
+                <th className={TH}>건수</th>
+                <th className={TH}>상태</th>
+                <th className={TH}>영수증수집</th>
+                <th className={TH}>수집자료보기</th>
+                <th className={TH}>관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr><td colSpan={9} className="text-center py-12 text-slate-400 text-xs">불러오는 중...</td></tr>
+              )}
+              {!loading && errorMsg && (
+                <tr><td colSpan={9} className="text-center py-12 text-red-500 text-xs">{errorMsg}</td></tr>
+              )}
+              {!loading && !errorMsg && filtered.length === 0 && (
+                <tr><td colSpan={9} className="text-center py-12 text-slate-400 text-xs">
+                  {bizNo ? `등록된 쇼핑몰 계정이 없습니다 (사업자번호: ${bizNo}).` : '본인 사업자번호 정보가 없습니다 — 통합e 회원정보를 확인하세요.'}
+                </td></tr>
+              )}
+              {!loading && filtered.map((a, idx) => {
+                const key = `${a.shopType}::${a.shopId}`
+                const d = dataMap[key]
+                const busy = busyShopId === key
+                const scrapable = SCRAPABLE_SHOPS.has(a.shopType)
+                return (
+                  <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="px-3 py-2.5 text-center text-slate-700 font-medium">
+                      <span className="inline-flex items-center gap-1.5">
+                        {SHOP_FAVICON[a.shopType] && <img src={SHOP_FAVICON[a.shopType]} alt="" className="w-3.5 h-3.5" />}
+                        {a.shopType}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-center text-slate-700">{a.shopId}</td>
+                    <td className="px-3 py-2.5 text-center text-slate-400 font-mono">{a.shopPw ? '****' : <span className="text-amber-500">미등록</span>}</td>
+                    <td className="px-3 py-2.5 text-center text-slate-500 text-[11px]">{d?.lastQueryTime || '-'}</td>
+                    <td className="px-3 py-2.5 text-center text-slate-700 font-semibold">{d?.queryCount ?? '-'}</td>
+                    <td className="px-3 py-2.5 text-center">
+                      {d?.accountStatus === '정상' && <span className="text-emerald-600 font-semibold">정상</span>}
+                      {d?.accountStatus === '오류' && (
+                        <span title={d.errorMessage || ''} className="text-red-500 font-semibold cursor-help">오류</span>
+                      )}
+                      {!d?.accountStatus && <span className="text-slate-300">-</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-center">
+                      {busy ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
+                          <span className="inline-block w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />수집중
+                        </span>
+                      ) : (
+                        <button
+                          disabled={!scrapable}
+                          onClick={() => collectOne(a)}
+                          title={!scrapable ? `${a.shopType} 수집은 준비중입니다.` : undefined}
+                          className={`px-3 py-1 text-xs font-bold rounded transition-colors ${
+                            scrapable ? 'text-white bg-green-600 hover:bg-green-700' : 'text-slate-400 bg-slate-100 cursor-not-allowed'
+                          }`}
+                        >영수증수집하기</button>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-center">
+                      <button
+                        disabled={!d?.orders || d.orders.length === 0}
+                        onClick={() => setDetail({ account: a, data: d })}
+                        className={`px-3 py-1 text-xs font-bold rounded transition-colors ${
+                          d?.orders && d.orders.length > 0
+                            ? 'text-white bg-teal-500 hover:bg-orange-600'
+                            : 'text-slate-400 bg-slate-100 cursor-not-allowed'
+                        }`}
+                      >수집자료보기</button>
+                    </td>
+                    <td className="px-3 py-2.5 text-center">
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/admin/shop-account`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="inline-block px-2 py-1 text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded"
+                      >관리</a>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 수집된 거래목록 (현재 탭) */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-bold text-slate-700">수집된 쇼핑몰 거래내역 <span className="text-slate-400 font-normal">{orders.length}건</span></p>
+          <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">쇼핑몰 영수증 자동매칭하기</button>
+        </div>
+        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-teal-50 border-b border-orange-200">
+                <th className={TH}>쇼핑몰</th>
+                <th className={TH}>거래일자</th>
+                <th className={TH}>실결제합계</th>
+                <th className={TH}>가맹점명</th>
+                <th className={TH}>구매상품</th>
+                <th className={TH}>결재</th>
+                <th className={TH}>승인번호</th>
+                <th className={TH}>전표</th>
+                <th className={TH}>매칭</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.length === 0 ? (
+                <tr><td colSpan={9} className="text-center py-12 text-slate-400 text-xs">수집된 쇼핑몰 거래내역이 없습니다.</td></tr>
+              ) : orders.map(({ acct, order: o }, idx) => (
+                <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="px-3 py-2 text-center text-slate-700">
+                    <span className="inline-flex items-center gap-1">
+                      {SHOP_FAVICON[acct.shopType] && <img src={SHOP_FAVICON[acct.shopType]} alt="" className="w-3 h-3" />}
+                      {acct.shopType}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-center text-slate-600">{o.orderDate || '-'}</td>
+                  <td className="px-3 py-2 text-right text-slate-800 font-semibold">{typeof o.totalAmount === 'number' ? o.totalAmount.toLocaleString() : '-'}</td>
+                  <td className="px-3 py-2 text-center text-slate-600">{o.receipt?.sellerName || acct.shopType}</td>
+                  <td className="px-3 py-2 text-left text-slate-700 truncate max-w-xs" title={o.productName}>{o.productName || '-'}</td>
+                  <td className="px-3 py-2 text-center text-slate-600 text-[11px]">{o.receipt?.cardCompany || o.paymentMethod || '-'}</td>
+                  <td className="px-3 py-2 text-center text-slate-500 font-mono text-[11px]">{o.receipt?.approvalNumber || '-'}</td>
+                  <td className="px-3 py-2 text-center"><span className="text-slate-300">-</span></td>
+                  <td className="px-3 py-2 text-center">
+                    <button onClick={() => setDetail({ account: acct, data: dataMap[`${acct.shopType}::${acct.shopId}`] })} className="text-blue-600 hover:underline text-[11px]">상세</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 상세 모달 */}
+      {detail && (
+        <ShoppingDetailModal
+          account={detail.account}
+          data={detail.data}
+          onClose={() => setDetail(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+function ShoppingDetailModal({ account, data, onClose }: {
+  account: ShopAccount
+  data: ShopDataRow | null
+  onClose: () => void
+}) {
+  const [openIdx, setOpenIdx] = useState<number | null>(null)
+  const orders = Array.isArray(data?.orders) ? data!.orders! : []
+  const fmtPrice = (n: any) => typeof n === 'number' ? n.toLocaleString() + '원' : '-'
+
+  return (
+    <div className="fixed inset-0 z-[120] bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 text-xs text-slate-500">
+              {SHOP_FAVICON[account.shopType] && <img src={SHOP_FAVICON[account.shopType]} alt="" className="w-4 h-4 rounded-sm" />}
+              <span className="font-medium">{account.shopType}</span>
+              <span className="text-slate-300">·</span>
+              <span>{account.shopId}</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-800">{account.bizName}</h3>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-slate-500">
+              {account.bizNo && <span>사업자번호: <span className="font-mono text-slate-700">{account.bizNo}</span></span>}
+              {data?.buyerName && <span>구매자: <span className="font-medium text-slate-700">{data.buyerName}</span></span>}
+              {data?.dateRange && <span>기간: <span className="text-slate-700">{data.dateRange}</span></span>}
+              <span>총 <span className="font-semibold text-blue-600">{orders.length}건</span></span>
+            </div>
+          </div>
+          <button onClick={onClose} className="flex-shrink-0 w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="flex-1 overflow-auto p-6">
+          {orders.length === 0 ? (
+            <p className="text-center text-sm text-slate-400 py-12">조회된 주문이 없습니다</p>
+          ) : (
+            <div className="space-y-2">
+              {orders.map((o: any, idx: number) => {
+                const isOpen = openIdx === idx
+                return (
+                  <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setOpenIdx(prev => prev === idx ? null : idx)}
+                      className={`w-full text-left px-4 py-3 flex items-center justify-between gap-3 transition-colors ${isOpen ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5 text-xs">
+                          <span className="text-slate-500">{o.orderDate || '-'}</span>
+                          <span className="text-slate-300">·</span>
+                          <span className="font-mono text-slate-400">{o.orderId || '-'}</span>
+                          {o.status && <span className="ml-1 px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium">{o.status}</span>}
+                        </div>
+                        <p className="text-sm font-medium text-slate-700 truncate">{o.productName || '-'}</p>
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        <p className="text-sm font-bold text-slate-800">{fmtPrice(o.totalAmount)}</p>
+                        {o.paymentMethod && <p className="text-[11px] text-slate-400">{o.paymentMethod}</p>}
+                      </div>
+                      <svg className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    {isOpen && (
+                      <div className="border-t border-slate-200 bg-slate-50/50 p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white rounded-lg border border-slate-200 p-4">
+                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5"><span className="inline-block w-1 h-3 bg-emerald-500 rounded-sm" />KCP 매출전표</h4>
+                          {o.receipt ? (
+                            <dl className="space-y-1.5 text-xs">
+                              <DR k="카드사"     v={o.receipt.cardCompany} />
+                              <DR k="카드번호"    v={o.receipt.cardNumberMasked} mono />
+                              <DR k="승인번호"    v={o.receipt.approvalNumber} mono />
+                              <DR k="할부"       v={o.receipt.installment} />
+                              <DR k="거래일시"    v={o.receipt.transactionAt} />
+                              <DR k="거래금액"    v={fmtPrice(o.receipt.totalAmount)} bold />
+                              <div className="pt-2 mt-2 border-t border-slate-100 space-y-1.5">
+                                <DR k="판매자"     v={o.receipt.sellerName} />
+                                <DR k="대표"       v={o.receipt.ceoName} />
+                                <DR k="사업자번호" v={o.receipt.bizNo} mono />
+                                <DR k="연락처"     v={o.receipt.sellerPhone} />
+                              </div>
+                            </dl>
+                          ) : <p className="text-xs text-slate-400 italic">{o.receiptError || '영수증 정보 없음'}</p>}
+                        </div>
+                        <div className="bg-white rounded-lg border border-slate-200 p-4">
+                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5"><span className="inline-block w-1 h-3 bg-blue-500 rounded-sm" />주문확인서</h4>
+                          {o.confirm ? (
+                            <dl className="space-y-1.5 text-xs">
+                              <DR k="수령인"   v={o.confirm.receiverName} />
+                              <DR k="휴대폰"   v={o.confirm.receiverPhone} />
+                              <DR k="배송지"   v={o.confirm.receiverAddress} />
+                              {Array.isArray(o.confirm.items) && o.confirm.items.length > 0 && (
+                                <div className="pt-2 mt-2 border-t border-slate-100">
+                                  <p className="text-[10px] text-slate-400 uppercase mb-1">상품 ({o.confirm.items.length})</p>
+                                  <ul className="space-y-1">
+                                    {o.confirm.items.slice(0, 8).map((it: any, i: number) => (
+                                      <li key={i} className="flex justify-between gap-2">
+                                        <span className="text-slate-600 truncate">{it.name}{it.qty ? ` × ${it.qty}` : ''}</span>
+                                        {typeof it.price === 'number' && <span className="text-slate-700 font-medium flex-shrink-0">{it.price.toLocaleString()}원</span>}
+                                      </li>
+                                    ))}
+                                    {o.confirm.items.length > 8 && <li className="text-[10px] text-slate-400">… 외 {o.confirm.items.length - 8}건</li>}
+                                  </ul>
+                                </div>
+                              )}
+                              <div className="pt-2 mt-2 border-t border-slate-100 space-y-1.5">
+                                <DR k="상품구매가" v={fmtPrice(o.confirm.totalAmount)} />
+                                <DR k="배송비"     v={fmtPrice(o.confirm.shippingFee)} />
+                                {typeof o.confirm.couponAmount === 'number' && <DR k="쿠폰" v={fmtPrice(o.confirm.couponAmount)} />}
+                                <DR k="합계"       v={fmtPrice(o.confirm.finalAmount ?? o.confirm.totalAmount)} bold />
+                              </div>
+                            </dl>
+                          ) : <p className="text-xs text-slate-400 italic">{o.confirmError || '주문확인서 정보 없음'}</p>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DR({ k, v, mono, bold }: { k: string; v: any; mono?: boolean; bold?: boolean }) {
+  if (v === null || v === undefined || v === '') return null
+  return (
+    <div className="flex justify-between gap-3">
+      <dt className="text-slate-400 flex-shrink-0">{k}</dt>
+      <dd className={`text-right ${bold ? 'font-bold text-slate-800' : 'text-slate-700'} ${mono ? 'font-mono' : ''}`}>{v}</dd>
     </div>
   )
 }
