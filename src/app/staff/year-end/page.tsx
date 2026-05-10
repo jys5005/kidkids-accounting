@@ -1133,31 +1133,51 @@ function RetirementCalcPanel() {
 // ============== 6번째 탭: 근로소득 연말정산계산기 (소득세법 시행규칙 별지 제24호서식(1)) ==============
 type WageCalcInput = {
   rrn: string; name: string
-  totalPay: number       // (16) 급여 + 상여 등 합계
-  nonTaxable: number     // (17) 비과세
-  // 인적공제
+  totalPay: number; nonTaxable: number
+  // 인적공제 (PDF: 본인/배우자/부양 1.5 + 경로 1.0 + 장애 2.0 + 한부모 1.0 + 부녀자 0.5)
   spouse: number; dependents: number; elderly: number; disabled: number
   childTotal: number; childUnder6: number
-  // 연금/보험료
+  singleParent: number     // 한부모 (배우자 없는 자녀양육자, 100만)
+  womanWorker: number      // 부녀자 (종합소득 3천만↓, 50만, 한부모와 중복 시 한부모 우선)
+  // 4대보험
   nationalPension: number; healthInsurance: number; employmentInsurance: number
-  // 신용카드 등 사용액 (단순화 — 합계만)
-  cardTotal: number
-  // 세액공제용
-  insuranceTax: number   // 보장성 보험료
-  medicalTax: number     // 의료비
-  educationTax: number   // 교육비
-  donationTax: number    // 기부금
-  monthlyRent: number    // 월세
-  pensionAccount: number // 연금계좌(퇴직연금+연금저축)
-  // 주택
-  housingLoan: number    // 주택자금 (임차/저당)
+  // 주택자금 (PDF §52)
+  housingLeaseLoan: number   // 주택임차차입금 원리금 (40%, 주택마련저축 합산 400만 한도)
+  housingMortgage: number    // 장기주택저당차입금 이자 (600~2000만 한도)
+  housingSaving: number      // 주택마련저축
+  // 신용카드 등 (PDF: 5종 차등)
+  cardCredit: number        // 신용카드 (15%)
+  cardCash: number          // 현금영수증·체크·직불·선불 (30%)
+  cardBook: number          // 도서공연·미술관·박물관·체육시설 (30%)
+  cardTraditional: number   // 전통시장 (40%)
+  cardTransport: number     // 대중교통 (40%)
+  // 보장성 보험 (분리)
+  insuranceGeneral: number  // 일반 (12%, 100만 한도)
+  insuranceDisabled: number // 장애인전용 (15%, 100만 한도)
+  // 의료비 (PDF: 4종 차등)
+  medicalSelf: number       // 본인/65+/6-/장애/특례 (15%, 한도 없음)
+  medicalGeneral: number    // 일반 부양가족 (15%, 700만 한도, 총급여 3% 초과)
+  medicalInfertility: number // 난임시술 (30%, 한도 없음)
+  medicalPremature: number  // 미숙아·선천성이상아 (20%, 한도 없음)
+  // 교육비 (단순)
+  educationOwn: number      // 본인 (15%, 한도 없음)
+  educationKids: number     // 부양가족 (15%, 1명당 유아초중고 300만/대학 900만 단순화)
+  // 기부금 (PDF: 1천만↓ 15% / ↑ 30%)
+  donationTax: number
+  // 월세
+  monthlyRent: number
+  // 연금계좌 (퇴직연금 + 연금저축)
+  pensionAccount: number       // 일반 (900만 한도 × 15/12%)
+  pensionISA: number           // ISA 만기 전환분 (300만 한도 × 15/12%)
+  // 혼인 (24~26 혼인신고, 50만, 생애 1회)
+  marriedThisYear: number
   // 기납부
   prepaidIncomeTax: number
 }
 const mockWageCalcInputs: WageCalcInput[] = [
-  { rrn: '8503151111111', name: '김교사', totalPay: 36_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 1, elderly: 0, disabled: 0, childTotal: 1, childUnder6: 0, nationalPension: 1_620_000, healthInsurance: 1_290_000, employmentInsurance: 280_000, cardTotal: 18_000_000, insuranceTax: 600_000, medicalTax: 800_000, educationTax: 0, donationTax: 100_000, monthlyRent: 0, pensionAccount: 1_200_000, housingLoan: 0, prepaidIncomeTax: 1_020_000 },
-  { rrn: '9007072222222', name: '이교사', totalPay: 32_400_000, nonTaxable: 1_200_000, spouse: 0, dependents: 0, elderly: 0, disabled: 0, childTotal: 0, childUnder6: 0, nationalPension: 1_460_000, healthInsurance: 1_160_000, employmentInsurance: 250_000, cardTotal: 12_000_000, insuranceTax: 360_000, medicalTax: 200_000, educationTax: 0, donationTax: 0, monthlyRent: 6_000_000, pensionAccount: 0, housingLoan: 0, prepaidIncomeTax: 720_000 },
-  { rrn: '7811214444444', name: '박원장', totalPay: 60_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 2, elderly: 1, disabled: 0, childTotal: 2, childUnder6: 0, nationalPension: 2_700_000, healthInsurance: 2_150_000, employmentInsurance: 470_000, cardTotal: 28_000_000, insuranceTax: 1_000_000, medicalTax: 1_500_000, educationTax: 3_000_000, donationTax: 500_000, monthlyRent: 0, pensionAccount: 4_000_000, housingLoan: 0, prepaidIncomeTax: 3_400_000 },
+  { rrn: '8503151111111', name: '김교사', totalPay: 36_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 1, elderly: 0, disabled: 0, childTotal: 1, childUnder6: 0, singleParent: 0, womanWorker: 0, nationalPension: 1_620_000, healthInsurance: 1_290_000, employmentInsurance: 280_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 12_000_000, cardCash: 4_000_000, cardBook: 800_000, cardTraditional: 600_000, cardTransport: 600_000, insuranceGeneral: 600_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 600_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKids: 0, donationTax: 100_000, monthlyRent: 0, pensionAccount: 1_200_000, pensionISA: 0, marriedThisYear: 0, prepaidIncomeTax: 1_020_000 },
+  { rrn: '9007072222222', name: '이교사', totalPay: 32_400_000, nonTaxable: 1_200_000, spouse: 0, dependents: 0, elderly: 0, disabled: 0, childTotal: 0, childUnder6: 0, singleParent: 0, womanWorker: 1, nationalPension: 1_460_000, healthInsurance: 1_160_000, employmentInsurance: 250_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 8_000_000, cardCash: 3_000_000, cardBook: 200_000, cardTraditional: 400_000, cardTransport: 400_000, insuranceGeneral: 360_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 0, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKids: 0, donationTax: 0, monthlyRent: 6_000_000, pensionAccount: 0, pensionISA: 0, marriedThisYear: 1, prepaidIncomeTax: 720_000 },
+  { rrn: '7811214444444', name: '박원장', totalPay: 60_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 2, elderly: 1, disabled: 0, childTotal: 2, childUnder6: 0, singleParent: 0, womanWorker: 0, nationalPension: 2_700_000, healthInsurance: 2_150_000, employmentInsurance: 470_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 18_000_000, cardCash: 7_000_000, cardBook: 1_200_000, cardTraditional: 800_000, cardTransport: 1_000_000, insuranceGeneral: 1_000_000, insuranceDisabled: 0, medicalSelf: 500_000, medicalGeneral: 1_000_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKids: 3_000_000, donationTax: 500_000, monthlyRent: 0, pensionAccount: 4_000_000, pensionISA: 0, marriedThisYear: 0, prepaidIncomeTax: 3_400_000 },
 ]
 
 function calcWageDeduction(totalPay: number): number {
@@ -1206,9 +1226,10 @@ type WageCalcResult = {
   personalDeduction: number; pensionDeduction: number; specialIncomeDeduction: number
   cardDeduction: number; housingDeduction: number; totalDeductions: number
   taxBase: number; computedTax: number; taxRateText: string
-  wageTaxCredit: number; childTaxCredit: number; pensionTaxCredit: number
-  insuranceCredit: number; medicalCredit: number; educationCredit: number
-  donationCredit: number; rentCredit: number
+  wageTaxCredit: number; childTaxCredit: number; pensionTaxCredit: number; pensionISACredit: number
+  insGeneralCredit: number; insDisabledCredit: number
+  medSelfCredit: number; medGeneralCredit: number; medInfertilityCredit: number; medPrematureCredit: number; medicalCredit: number
+  educationCredit: number; donationCredit: number; rentCredit: number; marriageCredit: number
   specialTaxCredit: number; standardCredit: number; totalTaxCredits: number
   determinedTax: number; finalTax: number
 }
@@ -1217,21 +1238,43 @@ function computeWageCalc(inp: WageCalcInput): WageCalcResult {
   const wageDeduction = calcWageDeduction(inp.totalPay)
   const comprehensiveIncome = Math.max(0, taxablePay - wageDeduction)
 
-  // 인적공제
-  const personalDeduction = 1_500_000 + inp.spouse * 1_500_000 + inp.dependents * 1_500_000 + inp.elderly * 1_000_000 + inp.disabled * 2_000_000
+  // 인적공제 — 한부모(100만) 우선, 부녀자(50만, 종합소득 3천만↓)
+  let extraPersonal = 0
+  if (inp.singleParent) extraPersonal += 1_000_000
+  else if (inp.womanWorker && comprehensiveIncome <= 30_000_000) extraPersonal += 500_000
+  const personalDeduction = 1_500_000 + inp.spouse * 1_500_000 + inp.dependents * 1_500_000
+    + inp.elderly * 1_000_000 + inp.disabled * 2_000_000 + extraPersonal
 
-  // 연금보험료공제 (국민연금 전액)
+  // 연금보험료 + 특별소득공제
   const pensionDeduction = inp.nationalPension
-
-  // 특별소득공제 (건강보험·장기요양 + 고용보험 전액)
   const specialIncomeDeduction = inp.healthInsurance + inp.employmentInsurance
 
-  // 주택자금
-  const housingDeduction = Math.min(4_000_000, inp.housingLoan)
+  // 주택자금 (임차차입금 원리금 40% + 주택마련저축, 합산 400만 한도) + (장기저당 이자 600~2000만 한도, 단순 600만)
+  const housingLeaseAmt = Math.floor(inp.housingLeaseLoan * 0.4)
+  const housingLease = Math.min(4_000_000, housingLeaseAmt + inp.housingSaving)
+  const housingMortgage = Math.min(6_000_000, inp.housingMortgage)  // 단순화: 비거치식 600만 기본
+  const housingDeduction = housingLease + housingMortgage
 
-  // 신용카드 등 (단순화: 총급여 25% 초과분 × 15%, 한도 300만)
+  // 신용카드 등 (PDF: 5종 차등 — 신용 15% / 현금·체크 30% / 도서공연 30% / 전통시장 40% / 대중교통 40%)
+  const cardTotal = inp.cardCredit + inp.cardCash + inp.cardBook + inp.cardTraditional + inp.cardTransport
   const cardThreshold = inp.totalPay * 0.25
-  const cardDeduction = inp.cardTotal > cardThreshold ? Math.min(3_000_000, Math.floor((inp.cardTotal - cardThreshold) * 0.15)) : 0
+  let cardDeduction = 0
+  if (cardTotal > cardThreshold) {
+    const excess = cardTotal - cardThreshold
+    // 사용 비중에 따라 차등 (단순화: 전체 대비 비율)
+    const ratio = excess / cardTotal
+    cardDeduction = Math.floor(
+      inp.cardCredit * ratio * 0.15
+      + inp.cardCash * ratio * 0.30
+      + inp.cardBook * ratio * 0.30
+      + inp.cardTraditional * ratio * 0.40
+      + inp.cardTransport * ratio * 0.40
+    )
+    // 한도 (총급여 7천만↓ 300만 / ↑ 250만, 전통+대중+도서 각 100만 별도 — 단순화)
+    const baseLimit = inp.totalPay <= 70_000_000 ? 3_000_000 : 2_500_000
+    const extraLimit = 1_000_000 * 3  // 전통/대중/도서 각 100만
+    cardDeduction = Math.min(baseLimit + extraLimit, cardDeduction)
+  }
 
   const totalDeductions = personalDeduction + pensionDeduction + specialIncomeDeduction + housingDeduction + cardDeduction
   const taxBase = Math.max(0, comprehensiveIncome - totalDeductions)
@@ -1240,42 +1283,71 @@ function computeWageCalc(inp: WageCalcInput): WageCalcResult {
 
   const wageTaxCredit = calcWageTaxCredit(computedTax, inp.totalPay)
 
-  // 자녀세액공제 (PDF: 1명 25만/2명 55만/3명 이상 55만+초과 1명당 40만, 8세 이상)
+  // 자녀세액공제 (8세 이상)
   const childTaxCredit = inp.childTotal === 0 ? 0 : inp.childTotal === 1 ? 250_000 : inp.childTotal === 2 ? 550_000 : 550_000 + (inp.childTotal - 2) * 400_000
 
-  // 연금계좌 세액공제 (PDF: 입금액 한도 900만 × 5500만↓ 15% / ↑ 12%)
+  // 연금계좌 (900만 한도 × 15/12%) + ISA (300만 한도 추가)
   const pensionRate = inp.totalPay <= 55_000_000 ? 0.15 : 0.12
   const pensionTaxCredit = Math.floor(Math.min(9_000_000, inp.pensionAccount) * pensionRate)
+  const pensionISACredit = Math.floor(Math.min(3_000_000, inp.pensionISA) * pensionRate)
 
-  // 보장성 보험 (PDF: 12%, 일반 100만 한도) — 한도 미적용은 잘못, 100만까지만
-  const insuranceCredit = Math.floor(Math.min(1_000_000, inp.insuranceTax) * 0.12)
+  // 보장성 보험 (일반 12%, 100만 한도 / 장애인전용 15%, 100만 한도, 별도)
+  const insGeneralCredit = Math.floor(Math.min(1_000_000, inp.insuranceGeneral) * 0.12)
+  const insDisabledCredit = Math.floor(Math.min(1_000_000, inp.insuranceDisabled) * 0.15)
 
-  // 의료비 (PDF: 총급여 3% 초과분 × 15%, 일반 700만 한도. 본인/장애인/65+/6-/난임 별도)
+  // 의료비 — 4종 차등
   const medicalThreshold = inp.totalPay * 0.03
-  const medicalEffective = Math.max(0, inp.medicalTax - medicalThreshold)
-  const medicalCredit = Math.floor(Math.min(7_000_000, medicalEffective) * 0.15)
+  // 본인·65+·6-·장애·특례: 한도 없음, 3% 초과분 × 15%
+  // 일반 부양가족: 700만 한도, 3% 초과분 × 15%
+  // 본인계+일반계 합산 후 3% 차감 — 본인부터 차감 (사용자 유리)
+  const medSelfRaw = inp.medicalSelf
+  const medGeneralRaw = Math.min(7_000_000, inp.medicalGeneral)
+  const medSelfEffective = Math.max(0, medSelfRaw - medicalThreshold)
+  const remainThreshold = Math.max(0, medicalThreshold - medSelfRaw)
+  const medGeneralEffective = Math.max(0, medGeneralRaw - remainThreshold)
+  const medSelfCredit = Math.floor(medSelfEffective * 0.15)
+  const medGeneralCredit = Math.floor(medGeneralEffective * 0.15)
+  // 난임 30%, 미숙아 20% (한도 없음, 3% 차감 안 함 — 별도)
+  const medInfertilityCredit = Math.floor(inp.medicalInfertility * 0.30)
+  const medPrematureCredit = Math.floor(inp.medicalPremature * 0.20)
+  const medicalCredit = medSelfCredit + medGeneralCredit + medInfertilityCredit + medPrematureCredit
 
-  // 교육비 (PDF: 15%, 본인 한도 없음/유아·초중고 1명당 300만/대학생 1명당 900만 — 단순화)
-  const educationCredit = Math.floor(inp.educationTax * 0.15)
+  // 교육비 — 본인 + 부양가족 (단순화: 부양가족 1인당 한도 적용 안 함 — 합계 처리)
+  const educationCredit = Math.floor((inp.educationOwn + inp.educationKids) * 0.15)
 
-  // 기부금 (PDF: 1천만 이하 15% / 초과 30% — 단순화 15%)
-  const donationCredit = Math.floor(inp.donationTax * 0.15)
+  // 기부금 — 1천만↓ 15% / ↑ 30%
+  const donationBase = Math.min(10_000_000, inp.donationTax)
+  const donationOver = Math.max(0, inp.donationTax - 10_000_000)
+  const donationCredit = Math.floor(donationBase * 0.15 + donationOver * 0.30)
 
-  // 월세 (PDF: 5500만↓ 17% / ↑ 15%, 임차료 1000만 한도)
+  // 월세
   const rentRate = inp.totalPay <= 55_000_000 ? 0.17 : 0.15
   const rentCredit = Math.floor(Math.min(10_000_000, inp.monthlyRent) * rentRate)
 
-  const specialTaxCredit = insuranceCredit + medicalCredit + educationCredit + donationCredit + rentCredit
+  // 혼인세액공제 (50만, 24~26 혼인신고)
+  const marriageCredit = inp.marriedThisYear ? 500_000 : 0
 
-  // 표준세액공제 (PDF: 특별소득공제+특별세액공제+월세 미신청 시 13만)
-  // 특별 다 0이면 자동 적용
-  const standardCredit = (inp.insuranceTax + inp.medicalTax + inp.educationTax + inp.donationTax + inp.monthlyRent + inp.healthInsurance + inp.employmentInsurance + inp.housingLoan === 0) ? 130_000 : 0
+  const specialTaxCredit = insGeneralCredit + insDisabledCredit + medicalCredit + educationCredit + donationCredit + rentCredit
 
-  const totalTaxCredits = wageTaxCredit + childTaxCredit + pensionTaxCredit + specialTaxCredit + standardCredit
+  // 표준세액공제: 특별 모두 0이면 13만 자동
+  const totalSpecialIncome = inp.healthInsurance + inp.employmentInsurance + inp.housingLeaseLoan + inp.housingMortgage + inp.housingSaving
+  const totalSpecialTax = inp.insuranceGeneral + inp.insuranceDisabled + inp.medicalSelf + inp.medicalGeneral + inp.medicalInfertility + inp.medicalPremature + inp.educationOwn + inp.educationKids + inp.donationTax + inp.monthlyRent
+  const standardCredit = (totalSpecialIncome + totalSpecialTax === 0) ? 130_000 : 0
+
+  const totalTaxCredits = wageTaxCredit + childTaxCredit + pensionTaxCredit + pensionISACredit + specialTaxCredit + marriageCredit + standardCredit
   const determinedTax = Math.max(0, computedTax - totalTaxCredits)
   const finalTax = determinedTax - inp.prepaidIncomeTax
 
-  return { taxablePay, wageDeduction, comprehensiveIncome, personalDeduction, pensionDeduction, specialIncomeDeduction, cardDeduction, housingDeduction, totalDeductions, taxBase, computedTax, taxRateText, wageTaxCredit, childTaxCredit, pensionTaxCredit, insuranceCredit, medicalCredit, educationCredit, donationCredit, rentCredit, specialTaxCredit, standardCredit, totalTaxCredits, determinedTax, finalTax }
+  return {
+    taxablePay, wageDeduction, comprehensiveIncome, personalDeduction,
+    pensionDeduction, specialIncomeDeduction, cardDeduction, housingDeduction, totalDeductions,
+    taxBase, computedTax, taxRateText,
+    wageTaxCredit, childTaxCredit, pensionTaxCredit, pensionISACredit,
+    insGeneralCredit, insDisabledCredit,
+    medSelfCredit, medGeneralCredit, medInfertilityCredit, medPrematureCredit, medicalCredit,
+    educationCredit, donationCredit, rentCredit, marriageCredit,
+    specialTaxCredit, standardCredit, totalTaxCredits, determinedTax, finalTax,
+  }
 }
 
 function WageCalcPanel() {
@@ -1302,7 +1374,7 @@ function WageCalcPanel() {
       <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-700 space-y-1">
         <div><strong>근로소득 원천징수영수증 / 지급명세서</strong> — 소득세법 시행규칙 별지 제24호서식(1) 기준 자동 계산. 입력값 변경 시 즉시 재계산.</div>
         <div className="text-[10px]">📕 출처: 국세청 「2025년 원천징수의무자를 위한 연말정산 신고안내」(2025.12 발간, 26.02.03 수정사항 반영)</div>
-        <div className="text-[10px]">⚖️ 적용 룰: 근로소득세액공제(74/66/50/20만 한도) · 자녀세액공제(25/55만+40만) · 연금계좌(900만 한도×15/12%) · 보험료(100만×12%) · 의료비(총급여 3% 초과분×15%, 700만 한도) · 월세(1000만×17/15%) · 표준세액공제(13만 자동)</div>
+        <div className="text-[10px]">⚖️ 적용 룰: 근로소득세액공제 · 자녀세액공제 · <strong>연금계좌+ISA</strong> · <strong>보장성 일반/장애인 분리</strong> · <strong>의료비 4종 차등(본인·일반·난임 30%·미숙아 20%)</strong> · <strong>신용카드 5종 차등(15/30/30/40/40%)</strong> · <strong>주택자금 3종(임차 40%·저당·마련저축)</strong> · <strong>한부모(100만)/부녀자(50만)</strong> · <strong>혼인세액공제(50만)</strong> · 기부금 누진(15%/30%) · 월세 · 표준세액공제</div>
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -1358,27 +1430,31 @@ function WageCalcPanel() {
 
       {/* III. 인적공제 */}
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">III. 인적공제 (기본 1인 1,500,000원 + 추가)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">III. 인적공제 (본인 150만 / 배우자·부양 150만 / 경로 100만 / 장애 200만 / 한부모 100만 / 부녀자 50만)</div>
         <table className="w-full">
           <tbody>
             <tr>
-              <td className={cls_l + ' w-[140px]'}>본인</td>
-              <td className={cls_v + ' w-[140px]'}>1명 (자동)</td>
-              <td className={cls_l + ' w-[140px]'}>㉓ 배우자</td>
+              <td className={cls_l + ' w-[120px]'}>본인</td>
+              <td className={cls_v + ' w-[120px]'}>1명 (자동)</td>
+              <td className={cls_l + ' w-[120px]'}>배우자</td>
               <td className={cls_i + ' w-[100px]'}><select className={ipt} value={inp.spouse} onChange={e => update({ spouse: Number(e.target.value) })}><option value={0}>0</option><option value={1}>1</option></select></td>
-              <td className={cls_l + ' w-[140px]'}>㉔ 부양가족</td>
+              <td className={cls_l + ' w-[120px]'}>부양가족</td>
               <td className={cls_i}><input type="number" className={iptN} value={inp.dependents} onChange={e => update({ dependents: Number(e.target.value) })} /></td>
             </tr>
             <tr>
-              <td className={cls_l}>㉕ 경로(70세↑)</td>
+              <td className={cls_l}>경로(70세↑)</td>
               <td className={cls_i}><input type="number" className={iptN} value={inp.elderly} onChange={e => update({ elderly: Number(e.target.value) })} /></td>
-              <td className={cls_l}>㉖ 장애인</td>
+              <td className={cls_l}>장애인</td>
               <td className={cls_i}><input type="number" className={iptN} value={inp.disabled} onChange={e => update({ disabled: Number(e.target.value) })} /></td>
-              <td className={cls_l}>자녀 / 6세↓</td>
-              <td className={cls_i}>
-                <input type="number" className={iptN + " mb-0.5"} value={inp.childTotal} onChange={e => update({ childTotal: Number(e.target.value) })} placeholder="자녀" />
-                <input type="number" className={iptN} value={inp.childUnder6} onChange={e => update({ childUnder6: Number(e.target.value) })} placeholder="6세 이하" />
-              </td>
+              <td className={cls_l}>자녀</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.childTotal} onChange={e => update({ childTotal: Number(e.target.value) })} placeholder="자녀(8세↑)" /></td>
+            </tr>
+            <tr>
+              <td className={cls_l}>한부모 (100만)</td>
+              <td className={cls_i}><select className={ipt} value={inp.singleParent} onChange={e => update({ singleParent: Number(e.target.value) })}><option value={0}>0</option><option value={1}>1</option></select></td>
+              <td className={cls_l}>부녀자 (50만)</td>
+              <td className={cls_i}><select className={ipt} value={inp.womanWorker} onChange={e => update({ womanWorker: Number(e.target.value) })}><option value={0}>0</option><option value={1}>1</option></select></td>
+              <td className={cls_l + ' text-[10px] text-slate-500'} colSpan={2}>※ 중복 시 한부모 우선 / 부녀자는 종합소득 3천만↓</td>
             </tr>
             <tr className="bg-emerald-50">
               <td className={cls_l + ' font-bold'} colSpan={5}>㉘ 인적공제 합계</td>
@@ -1411,21 +1487,48 @@ function WageCalcPanel() {
         </table>
       </div>
 
-      {/* V. 그 밖의 소득공제 */}
+      {/* V-1. 주택자금공제 */}
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">V. 그 밖의 소득공제 (주택자금 / 신용카드 등 — 단순화)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">V-1. 주택자금공제 (PDF §52)</div>
         <table className="w-full">
           <tbody>
             <tr>
-              <td className={cls_l + ' w-[200px]'}>㉜ 주택자금 (임차/저당)</td>
-              <td className={cls_i + ' w-[180px]'}><input type="number" className={iptN} value={inp.housingLoan} onChange={e => update({ housingLoan: Number(e.target.value) })} /></td>
-              <td className={cls_l + ' w-[200px]'}>㊵ 신용카드 등 사용액</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.cardTotal} onChange={e => update({ cardTotal: Number(e.target.value) })} placeholder="카드+체크+현금영수증 합계" /></td>
+              <td className={cls_l + ' w-[200px]'}>주택임차차입금 원리금</td>
+              <td className={cls_i + ' w-[180px]'}><input type="number" className={iptN} value={inp.housingLeaseLoan} onChange={e => update({ housingLeaseLoan: Number(e.target.value) })} placeholder="40% 공제" /></td>
+              <td className={cls_l + ' w-[160px]'}>주택마련저축</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.housingSaving} onChange={e => update({ housingSaving: Number(e.target.value) })} placeholder="합산 400만 한도" /></td>
             </tr>
-            <tr className="bg-emerald-50">
+            <tr>
+              <td className={cls_l}>장기주택저당차입금 이자</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.housingMortgage} onChange={e => update({ housingMortgage: Number(e.target.value) })} placeholder="600~2000만 한도" /></td>
               <td className={cls_l + ' font-bold'}>주택자금 공제</td>
               <td className={cls_v + ' font-bold'}>{won(calc.housingDeduction)}</td>
-              <td className={cls_l + ' font-bold'}>신용카드 공제 (총급여 25% 초과 × 15%)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* V-2. 신용카드 등 사용금액 소득공제 (5종 차등) */}
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">V-2. 신용카드 등 (총급여 25% 초과분 × 차등 공제율)</div>
+        <table className="w-full">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[200px]'}>① 신용카드 (15%)</td>
+              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.cardCredit} onChange={e => update({ cardCredit: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' w-[200px]'}>② 현금영수증·체크 (30%)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.cardCash} onChange={e => update({ cardCash: Number(e.target.value) })} /></td>
+            </tr>
+            <tr>
+              <td className={cls_l}>③ 도서·공연·박물관·체육 (30%)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.cardBook} onChange={e => update({ cardBook: Number(e.target.value) })} /></td>
+              <td className={cls_l}>④ 전통시장 (40%)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.cardTraditional} onChange={e => update({ cardTraditional: Number(e.target.value) })} /></td>
+            </tr>
+            <tr>
+              <td className={cls_l}>⑤ 대중교통 (40%)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.cardTransport} onChange={e => update({ cardTransport: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' font-bold'}>신용카드 등 공제</td>
               <td className={cls_v + ' font-bold'}>{won(calc.cardDeduction)}</td>
             </tr>
           </tbody>
@@ -1459,57 +1562,119 @@ function WageCalcPanel() {
 
       {/* VI. 세액공제 */}
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI. 세액공제</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-1. 자동 세액공제 (근로소득·자녀·연금계좌·ISA·혼인)</div>
         <table className="w-full">
           <tbody>
             <tr>
-              <td className={cls_l + ' w-[200px]'}>③ 근로소득세액공제 (한도)</td>
-              <td className={cls_v + ' w-[180px]'}>{won(calc.wageTaxCredit)}</td>
-              <td className={cls_l + ' w-[200px]'}>④ 자녀세액공제 ({inp.childTotal}명)</td>
+              <td className={cls_l + ' w-[220px]'}>③ 근로소득세액공제 (74/66/50/20만 한도)</td>
+              <td className={cls_v + ' w-[160px]'}>{won(calc.wageTaxCredit)}</td>
+              <td className={cls_l + ' w-[180px]'}>④ 자녀세액공제 ({inp.childTotal}명)</td>
               <td className={cls_v}>{won(calc.childTaxCredit)}</td>
             </tr>
             <tr>
-              <td className={cls_l}>⑤ 연금계좌 (퇴직+연금저축)</td>
+              <td className={cls_l}>⑤ 연금계좌 (퇴직+연금저축, 900만 한도)</td>
               <td className={cls_i}><input type="number" className={iptN} value={inp.pensionAccount} onChange={e => update({ pensionAccount: Number(e.target.value) })} /></td>
-              <td className={cls_l}>연금계좌 세액공제</td>
+              <td className={cls_l}>연금계좌 세액공제 ({inp.totalPay <= 55_000_000 ? '15%' : '12%'})</td>
               <td className={cls_v}>{won(calc.pensionTaxCredit)}</td>
             </tr>
             <tr>
-              <td className={cls_l}>⑥ 보장성 보험료</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.insuranceTax} onChange={e => update({ insuranceTax: Number(e.target.value) })} /></td>
-              <td className={cls_l}>보험료 세액공제 (12%, 한도12만)</td>
-              <td className={cls_v}>{won(calc.insuranceCredit)}</td>
+              <td className={cls_l}>⑤-2 ISA 만기 연금계좌 전환 (300만 한도)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.pensionISA} onChange={e => update({ pensionISA: Number(e.target.value) })} /></td>
+              <td className={cls_l}>ISA 추가 세액공제</td>
+              <td className={cls_v}>{won(calc.pensionISACredit)}</td>
             </tr>
             <tr>
-              <td className={cls_l}>⑦ 의료비</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.medicalTax} onChange={e => update({ medicalTax: Number(e.target.value) })} /></td>
-              <td className={cls_l}>의료비 (3% 초과분×15%, 700만↓)</td>
-              <td className={cls_v}>{won(calc.medicalCredit)}</td>
+              <td className={cls_l}>혼인세액공제 (24~26 혼인신고, 50만)</td>
+              <td className={cls_i}><select className={ipt} value={inp.marriedThisYear} onChange={e => update({ marriedThisYear: Number(e.target.value) })}><option value={0}>해당없음</option><option value={1}>혼인신고함</option></select></td>
+              <td className={cls_l}>혼인세액공제</td>
+              <td className={cls_v}>{won(calc.marriageCredit)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-2. 보장성 보험료 (일반 12% / 장애인전용 15%, 각 100만 한도)</div>
+        <table className="w-full">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[200px]'}>일반 보장성 보험</td>
+              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.insuranceGeneral} onChange={e => update({ insuranceGeneral: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' w-[160px]'}>일반 보험 세액공제</td>
+              <td className={cls_v}>{won(calc.insGeneralCredit)}</td>
             </tr>
             <tr>
-              <td className={cls_l}>⑧ 교육비</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.educationTax} onChange={e => update({ educationTax: Number(e.target.value) })} /></td>
+              <td className={cls_l}>장애인전용 보장성 보험</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.insuranceDisabled} onChange={e => update({ insuranceDisabled: Number(e.target.value) })} /></td>
+              <td className={cls_l}>장애인전용 세액공제</td>
+              <td className={cls_v}>{won(calc.insDisabledCredit)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-3. 의료비 (4종 차등 — 본인·65+·장애 한도 없음 / 일반 700만 / 난임 30% / 미숙아 20%, 총급여 3% 초과)</div>
+        <table className="w-full">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[220px]'}>본인·65+·6-·장애·특례 (한도없음, 15%)</td>
+              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.medicalSelf} onChange={e => update({ medicalSelf: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' w-[160px]'}>본인계 세액공제</td>
+              <td className={cls_v}>{won(calc.medSelfCredit)}</td>
+            </tr>
+            <tr>
+              <td className={cls_l}>일반 부양가족 (700만, 15%)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.medicalGeneral} onChange={e => update({ medicalGeneral: Number(e.target.value) })} /></td>
+              <td className={cls_l}>일반 세액공제</td>
+              <td className={cls_v}>{won(calc.medGeneralCredit)}</td>
+            </tr>
+            <tr>
+              <td className={cls_l}>난임시술비 (한도없음, 30%)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.medicalInfertility} onChange={e => update({ medicalInfertility: Number(e.target.value) })} /></td>
+              <td className={cls_l}>난임 세액공제</td>
+              <td className={cls_v}>{won(calc.medInfertilityCredit)}</td>
+            </tr>
+            <tr>
+              <td className={cls_l}>미숙아·선천성이상아 (한도없음, 20%)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.medicalPremature} onChange={e => update({ medicalPremature: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' font-bold'}>의료비 세액공제 합계</td>
+              <td className={cls_v + ' font-bold'}>{won(calc.medicalCredit)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-4. 교육비 / 기부금 / 월세</div>
+        <table className="w-full">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[200px]'}>교육비 본인 (15%, 한도없음)</td>
+              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.educationOwn} onChange={e => update({ educationOwn: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' w-[200px]'}>교육비 부양가족 (단순 합계)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.educationKids} onChange={e => update({ educationKids: Number(e.target.value) })} /></td>
+            </tr>
+            <tr>
               <td className={cls_l}>교육비 세액공제 (15%)</td>
               <td className={cls_v}>{won(calc.educationCredit)}</td>
-            </tr>
-            <tr>
-              <td className={cls_l}>⑨ 기부금</td>
+              <td className={cls_l}>기부금 (1천만↓ 15% / ↑ 30%)</td>
               <td className={cls_i}><input type="number" className={iptN} value={inp.donationTax} onChange={e => update({ donationTax: Number(e.target.value) })} /></td>
-              <td className={cls_l}>기부금 세액공제 (15%)</td>
-              <td className={cls_v}>{won(calc.donationCredit)}</td>
             </tr>
             <tr>
-              <td className={cls_l}>⑩ 월세</td>
+              <td className={cls_l}>기부금 세액공제 (누진)</td>
+              <td className={cls_v}>{won(calc.donationCredit)}</td>
+              <td className={cls_l}>월세 (1000만 한도)</td>
               <td className={cls_i}><input type="number" className={iptN} value={inp.monthlyRent} onChange={e => update({ monthlyRent: Number(e.target.value) })} /></td>
+            </tr>
+            <tr>
               <td className={cls_l}>월세 세액공제 ({inp.totalPay <= 55_000_000 ? '17%' : '15%'})</td>
               <td className={cls_v}>{won(calc.rentCredit)}</td>
-            </tr>
-            <tr>
-              <td className={cls_l}>표준세액공제 (특별 모두 0일 때 자동 13만)</td>
-              <td className={cls_v} colSpan={3}>{won(calc.standardCredit)}</td>
+              <td className={cls_l}>표준세액공제 (특별 0일 때 자동)</td>
+              <td className={cls_v}>{won(calc.standardCredit)}</td>
             </tr>
             <tr className="bg-emerald-50">
-              <td className={cls_l + ' font-bold'} colSpan={3}>세액공제 합계 (③+④+⑤+⑥+⑦+⑧+⑨+⑩+표준)</td>
+              <td className={cls_l + ' font-bold'} colSpan={3}>세액공제 합계 (③+④+⑤+⑤-2+혼인+VI-2~4+표준)</td>
               <td className={cls_v + ' font-bold text-emerald-800'}>{won(calc.totalTaxCredits)}</td>
             </tr>
           </tbody>
