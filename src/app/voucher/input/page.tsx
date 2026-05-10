@@ -43,6 +43,7 @@ export default function VoucherInputPage() {
   const [rows, setRows] = useState<VoucherRow[]>(sampleData)
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string>('')
+  const [loaded, setLoaded] = useState(false)  // ← mount 로드 완료 전엔 자동저장 금지
 
   // mount 시 DB 에서 저장된 전표 로드
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function VoucherInputPage() {
         }
       })
       .catch(() => {})
+      .finally(() => setLoaded(true))
   }, [])
 
   // 저장 (DB 영속) — 저장 버튼 onClick + 행 변경 시 자동 (debounce)
@@ -82,10 +84,11 @@ export default function VoucherInputPage() {
 
   // 행 변경 시 자동 저장 (1.5초 debounce)
   useEffect(() => {
+    if (!loaded) return         // mount 로드 완료 전엔 저장 금지 (빈 배열 덮어쓰기 방지)
     if (rows === sampleData) return  // 초기값 무시
     const t = setTimeout(() => { persistRows(rows) }, 1500)
     return () => clearTimeout(t)
-  }, [rows])
+  }, [rows, loaded])
   const [checked, setChecked] = useState<Set<number>>(new Set())
   const [filterType, setFilterType] = useState<'전체' | '수입' | '지출' | '반납'>('전체')
   const [filterAccountGroup, setFilterAccountGroup] = useState<'전체' | '수입' | '지출'>('전체')
