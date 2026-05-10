@@ -379,7 +379,7 @@ export default function YearEndPage() {
             { id: 'withholding', label: '원천세', spec: 'C103900' },
             { id: 'wage', label: '근로소득지급명세서', spec: '자료구분 20 · 2010byte × 9레코드 (670 항목)' },
             { id: 'biz', label: '사업소득지급명세서', spec: '자료구분 80 · 770byte × 7레코드 (231 항목)' },
-            { id: 'retire', label: '퇴직소득지급명세서 · 세액계산기', spec: '자료구분 25 · 761byte × 4레코드 + 세액 자동계산' },
+            { id: 'retire', label: '퇴직소득지급명세서', spec: '자료구분 25 · 761byte × 4레코드' },
           ] as { id: Tab; label: string; spec: string }[]).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} title={t.spec}
               className={`px-3 py-1.5 text-[12px] font-bold rounded-t border-b-2 ${tab === t.id ? 'border-teal-500 text-teal-700 bg-teal-50' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
@@ -785,7 +785,7 @@ function RetirementStatementPanel() {
   const retireItemCount = Object.values(RETIRE_SPEC).reduce((s, arr) => s + arr.length, 0)
   return (
     <StatementPanelShell
-      spec={{ dataCode: '25', recordLen: RETIRE_LEN, recordTypes: ['A','B','C','D'], specName: '퇴직소득 지급명세서 전산매체 제출요령(2025.08.04) + 세액 자동계산', itemCount: retireItemCount }}
+      spec={{ dataCode: '25', recordLen: RETIRE_LEN, recordTypes: ['A','B','C','D'], specName: '퇴직소득 지급명세서 전산매체 제출요령(2025.08.04)', itemCount: retireItemCount }}
       rows={calcs} year={year} setYear={setYear} buildFn={buildRetireFile as any} fileExt="01"
       totals={[
         { label: '퇴사자', value: `${inputs.length}명`, tone: 'slate' },
