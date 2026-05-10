@@ -10,7 +10,8 @@ const cellCls = "px-3 py-2 text-[12px]"
 const mockEmployer = {
   bizNo: '1234567890',
   name: '미래클어린이집',
-  ceo: '최은주',
+  ceo: '김경미',
+  director: '최은주',
   addr: '인천광역시 미추홀구 ○○로 12',
   taxOffice: '남인천세무서',
   taxOfficeCd: '137',
@@ -244,7 +245,15 @@ function EmployerCard() {
           </tr>
           <tr className="border-b border-slate-100">
             <td className={labelCls}>대표자</td>
-            <td className={cellCls}>{mockEmployer.ceo}</td>
+            <td className={cellCls}>
+              {mockEmployer.ceo}
+              {mockEmployer.director && mockEmployer.director !== mockEmployer.ceo && (
+                <span className="ml-2 text-[11px] text-slate-500">(원장: {mockEmployer.director})</span>
+              )}
+              {mockEmployer.director === mockEmployer.ceo && (
+                <span className="ml-2 text-[11px] text-emerald-600">· 원장 겸임</span>
+              )}
+            </td>
             <td className={labelCls}>관할 세무서</td>
             <td className={cellCls}>{mockEmployer.taxOffice} ({mockEmployer.taxOfficeCd})</td>
           </tr>
