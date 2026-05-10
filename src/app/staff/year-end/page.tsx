@@ -1191,14 +1191,13 @@ function taxRateLabel(taxBase: number): string {
   return '45% (-6,594만)'
 }
 function calcWageTaxCredit(computedTax: number, totalPay: number): number {
-  // 근로소득세액공제 (소득세법 §59)
+  // 근로소득세액공제 (소득세법 §59) — PDF: 130만 이하 55% / 초과 30%, 한도 74/66/50/20만
   const credit = computedTax <= 1_300_000 ? Math.floor(computedTax * 0.55) : Math.floor(715_000 + (computedTax - 1_300_000) * 0.3)
-  // 한도
   let limit = 740_000
   if (totalPay <= 33_000_000) limit = 740_000
   else if (totalPay <= 70_000_000) limit = Math.max(660_000, 740_000 - Math.floor((totalPay - 33_000_000) * 0.008))
-  else if (totalPay <= 120_000_000) limit = Math.max(500_000, 660_000 - Math.floor((totalPay - 70_000_000) / 2 * 0.005 / 5))
-  else limit = Math.max(200_000, 500_000 - Math.floor((totalPay - 120_000_000) * 0.005 / 2))
+  else if (totalPay <= 120_000_000) limit = Math.max(500_000, 660_000 - Math.floor((totalPay - 70_000_000) * 0.5 / 1_000) * 1_000)
+  else limit = Math.max(200_000, 500_000 - Math.floor((totalPay - 120_000_000) * 0.5 / 1_000) * 1_000)
   return Math.min(credit, limit)
 }
 
@@ -1210,7 +1209,7 @@ type WageCalcResult = {
   wageTaxCredit: number; childTaxCredit: number; pensionTaxCredit: number
   insuranceCredit: number; medicalCredit: number; educationCredit: number
   donationCredit: number; rentCredit: number
-  specialTaxCredit: number; totalTaxCredits: number
+  specialTaxCredit: number; standardCredit: number; totalTaxCredits: number
   determinedTax: number; finalTax: number
 }
 function computeWageCalc(inp: WageCalcInput): WageCalcResult {
@@ -1241,27 +1240,42 @@ function computeWageCalc(inp: WageCalcInput): WageCalcResult {
 
   const wageTaxCredit = calcWageTaxCredit(computedTax, inp.totalPay)
 
-  // 자녀세액공제 (만 8세 이상 자녀 단순화)
+  // 자녀세액공제 (PDF: 1명 25만/2명 55만/3명 이상 55만+초과 1명당 40만, 8세 이상)
   const childTaxCredit = inp.childTotal === 0 ? 0 : inp.childTotal === 1 ? 250_000 : inp.childTotal === 2 ? 550_000 : 550_000 + (inp.childTotal - 2) * 400_000
 
-  // 연금계좌 세액공제 (총급여 5,500만 이하 15% / 초과 12%, 한도 900,000)
+  // 연금계좌 세액공제 (PDF: 입금액 한도 900만 × 5500만↓ 15% / ↑ 12%)
   const pensionRate = inp.totalPay <= 55_000_000 ? 0.15 : 0.12
-  const pensionTaxCredit = Math.min(900_000, Math.floor(inp.pensionAccount * pensionRate))
+  const pensionTaxCredit = Math.floor(Math.min(9_000_000, inp.pensionAccount) * pensionRate)
 
-  // 특별세액공제
-  const insuranceCredit = Math.min(120_000, Math.floor(inp.insuranceTax * 0.12))
-  const medicalCredit = Math.floor(inp.medicalTax * 0.15)
+  // 보장성 보험 (PDF: 12%, 일반 100만 한도) — 한도 미적용은 잘못, 100만까지만
+  const insuranceCredit = Math.floor(Math.min(1_000_000, inp.insuranceTax) * 0.12)
+
+  // 의료비 (PDF: 총급여 3% 초과분 × 15%, 일반 700만 한도. 본인/장애인/65+/6-/난임 별도)
+  const medicalThreshold = inp.totalPay * 0.03
+  const medicalEffective = Math.max(0, inp.medicalTax - medicalThreshold)
+  const medicalCredit = Math.floor(Math.min(7_000_000, medicalEffective) * 0.15)
+
+  // 교육비 (PDF: 15%, 본인 한도 없음/유아·초중고 1명당 300만/대학생 1명당 900만 — 단순화)
   const educationCredit = Math.floor(inp.educationTax * 0.15)
+
+  // 기부금 (PDF: 1천만 이하 15% / 초과 30% — 단순화 15%)
   const donationCredit = Math.floor(inp.donationTax * 0.15)
+
+  // 월세 (PDF: 5500만↓ 17% / ↑ 15%, 임차료 1000만 한도)
   const rentRate = inp.totalPay <= 55_000_000 ? 0.17 : 0.15
-  const rentCredit = Math.min(1_020_000, Math.floor(inp.monthlyRent * rentRate))
+  const rentCredit = Math.floor(Math.min(10_000_000, inp.monthlyRent) * rentRate)
+
   const specialTaxCredit = insuranceCredit + medicalCredit + educationCredit + donationCredit + rentCredit
 
-  const totalTaxCredits = wageTaxCredit + childTaxCredit + pensionTaxCredit + specialTaxCredit
+  // 표준세액공제 (PDF: 특별소득공제+특별세액공제+월세 미신청 시 13만)
+  // 특별 다 0이면 자동 적용
+  const standardCredit = (inp.insuranceTax + inp.medicalTax + inp.educationTax + inp.donationTax + inp.monthlyRent + inp.healthInsurance + inp.employmentInsurance + inp.housingLoan === 0) ? 130_000 : 0
+
+  const totalTaxCredits = wageTaxCredit + childTaxCredit + pensionTaxCredit + specialTaxCredit + standardCredit
   const determinedTax = Math.max(0, computedTax - totalTaxCredits)
   const finalTax = determinedTax - inp.prepaidIncomeTax
 
-  return { taxablePay, wageDeduction, comprehensiveIncome, personalDeduction, pensionDeduction, specialIncomeDeduction, cardDeduction, housingDeduction, totalDeductions, taxBase, computedTax, taxRateText, wageTaxCredit, childTaxCredit, pensionTaxCredit, insuranceCredit, medicalCredit, educationCredit, donationCredit, rentCredit, specialTaxCredit, totalTaxCredits, determinedTax, finalTax }
+  return { taxablePay, wageDeduction, comprehensiveIncome, personalDeduction, pensionDeduction, specialIncomeDeduction, cardDeduction, housingDeduction, totalDeductions, taxBase, computedTax, taxRateText, wageTaxCredit, childTaxCredit, pensionTaxCredit, insuranceCredit, medicalCredit, educationCredit, donationCredit, rentCredit, specialTaxCredit, standardCredit, totalTaxCredits, determinedTax, finalTax }
 }
 
 function WageCalcPanel() {
@@ -1285,8 +1299,10 @@ function WageCalcPanel() {
     <div className="space-y-3">
       <EmployerCard />
 
-      <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-700">
-        <strong>근로소득 원천징수영수증 / 지급명세서</strong> — 소득세법 시행규칙 별지 제24호서식(1) 기준 자동 계산. 입력값 변경 시 즉시 재계산. 2025년 귀속 기준 (정밀 명세 단계적 보정).
+      <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-700 space-y-1">
+        <div><strong>근로소득 원천징수영수증 / 지급명세서</strong> — 소득세법 시행규칙 별지 제24호서식(1) 기준 자동 계산. 입력값 변경 시 즉시 재계산.</div>
+        <div className="text-[10px]">📕 출처: 국세청 「2025년 원천징수의무자를 위한 연말정산 신고안내」(2025.12 발간, 26.02.03 수정사항 반영)</div>
+        <div className="text-[10px]">⚖️ 적용 룰: 근로소득세액공제(74/66/50/20만 한도) · 자녀세액공제(25/55만+40만) · 연금계좌(900만 한도×15/12%) · 보험료(100만×12%) · 의료비(총급여 3% 초과분×15%, 700만 한도) · 월세(1000만×17/15%) · 표준세액공제(13만 자동)</div>
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -1467,7 +1483,7 @@ function WageCalcPanel() {
             <tr>
               <td className={cls_l}>⑦ 의료비</td>
               <td className={cls_i}><input type="number" className={iptN} value={inp.medicalTax} onChange={e => update({ medicalTax: Number(e.target.value) })} /></td>
-              <td className={cls_l}>의료비 세액공제 (15%)</td>
+              <td className={cls_l}>의료비 (3% 초과분×15%, 700만↓)</td>
               <td className={cls_v}>{won(calc.medicalCredit)}</td>
             </tr>
             <tr>
@@ -1488,8 +1504,12 @@ function WageCalcPanel() {
               <td className={cls_l}>월세 세액공제 ({inp.totalPay <= 55_000_000 ? '17%' : '15%'})</td>
               <td className={cls_v}>{won(calc.rentCredit)}</td>
             </tr>
+            <tr>
+              <td className={cls_l}>표준세액공제 (특별 모두 0일 때 자동 13만)</td>
+              <td className={cls_v} colSpan={3}>{won(calc.standardCredit)}</td>
+            </tr>
             <tr className="bg-emerald-50">
-              <td className={cls_l + ' font-bold'} colSpan={3}>세액공제 합계 (③+④+⑤+⑥+⑦+⑧+⑨+⑩)</td>
+              <td className={cls_l + ' font-bold'} colSpan={3}>세액공제 합계 (③+④+⑤+⑥+⑦+⑧+⑨+⑩+표준)</td>
               <td className={cls_v + ' font-bold text-emerald-800'}>{won(calc.totalTaxCredits)}</td>
             </tr>
           </tbody>
