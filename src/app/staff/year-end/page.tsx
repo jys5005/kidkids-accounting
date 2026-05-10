@@ -379,7 +379,7 @@ export default function YearEndPage() {
             { id: 'withholding', label: '원천세', spec: 'C103900' },
             { id: 'wage', label: '근로소득지급명세서', spec: '자료구분 20 · 2010byte × 9레코드 (670 항목)' },
             { id: 'biz', label: '사업소득지급명세서', spec: '자료구분 80 · 770byte × 7레코드 (231 항목)' },
-            { id: 'retire', label: '퇴직소득지급명세서', spec: '자료구분 25 · 761byte × 4레코드' },
+            { id: 'retire', label: '퇴직소득 세액계산기', spec: '자료구분 25 · 761byte × 4레코드 + 세액 자동계산' },
           ] as { id: Tab; label: string; spec: string }[]).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} title={t.spec}
               className={`px-3 py-1.5 text-[12px] font-bold rounded-t border-b-2 ${tab === t.id ? 'border-teal-500 text-teal-700 bg-teal-50' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
@@ -785,7 +785,7 @@ function RetirementStatementPanel() {
   const retireItemCount = Object.values(RETIRE_SPEC).reduce((s, arr) => s + arr.length, 0)
   return (
     <StatementPanelShell
-      spec={{ dataCode: '25', recordLen: RETIRE_LEN, recordTypes: ['A','B','C','D'], specName: '퇴직소득 지급명세서 전산매체 제출요령(2025.08.04)', itemCount: retireItemCount }}
+      spec={{ dataCode: '25', recordLen: RETIRE_LEN, recordTypes: ['A','B','C','D'], specName: '퇴직소득 지급명세서 전산매체 제출요령(2025.08.04) + 세액 자동계산 (소득세법 시행규칙 별지 제24호서식(2))', itemCount: retireItemCount }}
       rows={calcs} year={year} setYear={setYear} buildFn={buildRetireFile as any} fileExt="01"
       totals={[
         { label: '퇴사자', value: `${inputs.length}명`, tone: 'slate' },
@@ -795,46 +795,93 @@ function RetirementStatementPanel() {
       ]}
       table={
         <div className="bg-white rounded border border-slate-200 overflow-x-auto">
-          <table className="w-full text-[11px] min-w-[1400px]">
-            <thead><tr className="bg-teal-50 border-b border-slate-300">
-              <th className="px-2 py-2 border-r border-slate-200">성명</th>
-              <th className="px-2 py-2 border-r border-slate-200">주민번호</th>
-              <th className="px-2 py-2 border-r border-slate-200">입사일</th>
-              <th className="px-2 py-2 border-r border-slate-200">퇴사일</th>
-              <th className="px-2 py-2 border-r border-slate-200">사유</th>
-              <th className="px-2 py-2 border-r border-slate-200">근속</th>
-              <th className="px-2 py-2 border-r border-slate-200">(15)퇴직급여</th>
-              <th className="px-2 py-2 border-r border-slate-200">(16)비과세</th>
-              <th className="px-2 py-2 border-r border-slate-200">(28)근속공제</th>
-              <th className="px-2 py-2 border-r border-slate-200">(29)환산급여</th>
-              <th className="px-2 py-2 border-r border-slate-200">(31)과세표준</th>
-              <th className="px-2 py-2 border-r border-slate-200">(33)산출세액</th>
-              <th className="px-2 py-2 border-r border-slate-200">(36)신고대상</th>
-              <th className="px-2 py-2 border-r border-slate-200">이연(40)</th>
-              <th className="px-2 py-2 border-r border-slate-200">소득세(44)</th>
-              <th className="px-2 py-2">지방세</th>
-            </tr></thead>
+          <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600 flex items-center gap-3 flex-wrap">
+            <strong className="text-slate-700">퇴직소득 세액계산기</strong>
+            <span className="text-slate-400">|</span>
+            <span><span className="inline-block w-2 h-2 bg-blue-100 border border-blue-300 rounded-sm align-middle mr-1"></span>입력 (회색=자동)</span>
+            <span><span className="inline-block w-2 h-2 bg-emerald-100 border border-emerald-300 rounded-sm align-middle mr-1"></span>계산 결과</span>
+            <span className="text-slate-500">소득세법 시행규칙 별지 제24호서식(2) 기준</span>
+          </div>
+          <table className="w-full text-[11px] min-w-[2600px]">
+            <thead>
+              <tr className="bg-teal-50 border-b border-slate-300 text-slate-700">
+                <th className="px-2 py-2 border-r border-slate-200" rowSpan={2}>성명</th>
+                <th className="px-2 py-2 border-r border-slate-200" rowSpan={2}>주민번호</th>
+                <th className="px-2 py-2 border-r border-slate-200 bg-blue-50" colSpan={4}>근무 정보 (입력)</th>
+                <th className="px-2 py-2 border-r border-slate-200" rowSpan={2}>(22)근속월수<br/>(26)정산연수</th>
+                <th className="px-2 py-2 border-r border-slate-200 bg-blue-50" colSpan={2}>월수 보정 (입력)</th>
+                <th className="px-2 py-2 border-r border-slate-200 bg-blue-50" colSpan={2}>퇴직급여 (입력)</th>
+                <th className="px-2 py-2 border-r border-slate-200 bg-emerald-50" colSpan={6}>과세표준 계산</th>
+                <th className="px-2 py-2 border-r border-slate-200 bg-emerald-50" colSpan={2}>세액 산출</th>
+                <th className="px-2 py-2 border-r border-slate-200 bg-blue-50" colSpan={3}>공제·기납부·이연 (입력)</th>
+                <th className="px-2 py-2 border-r border-slate-200" rowSpan={2}>(36)신고<br/>대상세액</th>
+                <th className="px-2 py-2 border-r border-slate-200" rowSpan={2}>(40)이연<br/>퇴직소득세</th>
+                <th className="px-2 py-2 border-r border-slate-200 bg-teal-100" rowSpan={2}>(44)소득세<br/>(차감징수)</th>
+                <th className="px-2 py-2 bg-teal-100" rowSpan={2}>지방<br/>소득세</th>
+              </tr>
+              <tr className="bg-teal-50/50 border-b border-slate-300 text-slate-600 text-[10px]">
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">입사일</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">퇴사일</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">지급일</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">사유<br/>임원</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">(23)제외</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">(24)가산</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">(15)퇴직급여</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">(16)비과세</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-emerald-50">(17)/(27)<br/>과세대상</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-emerald-50">(28)근속<br/>공제</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-emerald-50">(29)환산<br/>급여</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-emerald-50">(30)환산<br/>공제</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-emerald-50">(31)과세<br/>표준</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-emerald-50">세율</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-emerald-50">(32)환산<br/>산출세액</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-emerald-50">(33)산출<br/>세액</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">(34)세액<br/>공제</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">(35)기납부</th>
+                <th className="px-1 py-1 border-r border-slate-200 bg-blue-50">(38)연금<br/>계좌입금</th>
+              </tr>
+            </thead>
             <tbody>
-              {calcs.map(({ inp, calc }, i) => (
-                <tr key={i} className="border-b border-slate-100">
-                  <td className="px-2 py-1.5 border-r border-slate-100"><input className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.name} onChange={e => updateInput(i, { name: e.target.value })} /></td>
-                  <td className="px-2 py-1.5 border-r border-slate-100 text-slate-500">{fmtRrn(inp.rrn)}</td>
-                  <td className="px-2 py-1.5 border-r border-slate-100"><input className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.hireDate} onChange={e => updateInput(i, { hireDate: e.target.value })} placeholder="YYYYMMDD" /></td>
-                  <td className="px-2 py-1.5 border-r border-slate-100"><input className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.retireDate} onChange={e => updateInput(i, { retireDate: e.target.value })} placeholder="YYYYMMDD" /></td>
-                  <td className="px-2 py-1.5 border-r border-slate-100"><select className="text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.reason} onChange={e => updateInput(i, { reason: e.target.value as RetireInput['reason'] })}><option>정년퇴직</option><option>정리해고</option><option>자발적 퇴직</option><option>임원퇴직</option><option>중간정산</option><option>기타</option></select></td>
-                  <td className="px-2 py-1.5 border-r border-slate-100 text-center text-slate-500 text-[10px]">{fmtServiceYears(calc.serviceMonths)}<br/>({calc.serviceYears}년)</td>
-                  <td className="px-2 py-1.5 border-r border-slate-100"><input type="number" className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.retirePay} onChange={e => updateInput(i, { retirePay: Number(e.target.value) })} /></td>
-                  <td className="px-2 py-1.5 border-r border-slate-100"><input type="number" className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.nonTaxableRetirePay} onChange={e => updateInput(i, { nonTaxableRetirePay: Number(e.target.value) })} /></td>
-                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.serviceDeduction)}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.convertedPay)}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.taxBase)}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.computedTax)}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.reportTax)}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-500 border-r border-slate-100">{won(calc.deferredTax)}</td>
-                  <td className="px-2 py-1.5 text-right text-teal-700 font-bold border-r border-slate-100">{won(calc.finalIncomeTax)}</td>
-                  <td className="px-2 py-1.5 text-right text-teal-700 font-bold">{won(calc.finalLocalTax)}</td>
-                </tr>
-              ))}
+              {calcs.map(({ inp, calc }, i) => {
+                const taxRate = calc.taxBase <= 14_000_000 ? '6%' : calc.taxBase <= 50_000_000 ? '15%' : calc.taxBase <= 88_000_000 ? '24%' : calc.taxBase <= 150_000_000 ? '35%' : calc.taxBase <= 300_000_000 ? '38%' : calc.taxBase <= 500_000_000 ? '40%' : calc.taxBase <= 1_000_000_000 ? '42%' : '45%'
+                return (
+                  <tr key={i} className="border-b border-slate-100 hover:bg-slate-50/50">
+                    <td className="px-2 py-1.5 border-r border-slate-100"><input className="w-16 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.name} onChange={e => updateInput(i, { name: e.target.value })} /></td>
+                    <td className="px-2 py-1.5 border-r border-slate-100 text-slate-500 text-[10px]">{fmtRrn(inp.rrn)}</td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-center" value={inp.hireDate} onChange={e => updateInput(i, { hireDate: e.target.value })} placeholder="YYYYMMDD" /></td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-center" value={inp.retireDate} onChange={e => updateInput(i, { retireDate: e.target.value })} placeholder="YYYYMMDD" /></td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-center" value={inp.paymentDate} onChange={e => updateInput(i, { paymentDate: e.target.value })} placeholder="YYYYMMDD" /></td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30">
+                      <select className="text-[10px] border border-slate-200 rounded px-1 py-0.5 w-full mb-0.5" value={inp.reason} onChange={e => updateInput(i, { reason: e.target.value as RetireInput['reason'] })}>
+                        <option>정년퇴직</option><option>정리해고</option><option>자발적 퇴직</option><option>임원퇴직</option><option>중간정산</option><option>기타</option>
+                      </select>
+                      <select className="text-[10px] border border-slate-200 rounded px-1 py-0.5 w-full" value={inp.isExecutive} onChange={e => updateInput(i, { isExecutive: e.target.value as 'Y' | 'N' })}>
+                        <option value="N">일반</option><option value="Y">임원</option>
+                      </select>
+                    </td>
+                    <td className="px-2 py-1.5 border-r border-slate-100 text-center text-slate-500 text-[10px]">{fmtServiceYears(calc.serviceMonths)}<br/><strong className="text-slate-700">{calc.serviceYears}년</strong></td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className="w-14 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.excludedMonths} onChange={e => updateInput(i, { excludedMonths: Number(e.target.value) })} /></td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className="w-14 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.addedMonths} onChange={e => updateInput(i, { addedMonths: Number(e.target.value) })} /></td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.retirePay} onChange={e => updateInput(i, { retirePay: Number(e.target.value) })} /></td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.nonTaxableRetirePay} onChange={e => updateInput(i, { nonTaxableRetirePay: Number(e.target.value) })} /></td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100 bg-emerald-50/30">{won(calc.taxableRetirePay)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100 bg-emerald-50/30">{won(calc.serviceDeduction)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100 bg-emerald-50/30">{won(calc.convertedPay)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100 bg-emerald-50/30">{won(calc.convertedDeduction)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100 bg-emerald-50/30">{won(calc.taxBase)}</td>
+                    <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100 bg-emerald-50/30 font-mono">{taxRate}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100 bg-emerald-50/30">{won(calc.convertedTax)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100 bg-emerald-50/30">{won(calc.computedTax)}</td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.taxCredit} onChange={e => updateInput(i, { taxCredit: Number(e.target.value) })} /></td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.prepaidTax} onChange={e => updateInput(i, { prepaidTax: Number(e.target.value) })} /></td>
+                    <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.pensionDeposit} onChange={e => updateInput(i, { pensionDeposit: Number(e.target.value) })} /></td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.reportTax)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-500 border-r border-slate-100">{won(calc.deferredTax)}</td>
+                    <td className="px-2 py-1.5 text-right text-teal-700 font-bold border-r border-slate-100 bg-teal-50/50">{won(calc.finalIncomeTax)}</td>
+                    <td className="px-2 py-1.5 text-right text-teal-700 font-bold bg-teal-50/50">{won(calc.finalLocalTax)}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
