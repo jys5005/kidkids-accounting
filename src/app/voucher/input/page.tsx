@@ -41,6 +41,51 @@ const fmt = (n: number) => n.toLocaleString('ko-KR')
 
 export default function VoucherInputPage() {
   const [rows, setRows] = useState<VoucherRow[]>(sampleData)
+  const [saving, setSaving] = useState(false)
+  const [savedAt, setSavedAt] = useState<string>('')
+
+  // mount 시 DB 에서 저장된 전표 로드
+  useEffect(() => {
+    fetch('/api/voucher/list', { credentials: 'include' })
+      .then(r => r.json())
+      .then(j => {
+        if (j.success && Array.isArray(j.list)) {
+          setRows(j.list as VoucherRow[])
+          if (j.savedAt) setSavedAt(String(j.savedAt))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // 저장 (DB 영속) — 저장 버튼 onClick + 행 변경 시 자동 (debounce)
+  const persistRows = async (next: VoucherRow[]) => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/voucher/list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ list: next }),
+      })
+      const j = await res.json()
+      if (j.success) {
+        setSavedAt(new Date().toISOString())
+      } else {
+        console.error('[voucher save] 실패:', j)
+      }
+    } catch (e) {
+      console.error('[voucher save] 오류:', e)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // 행 변경 시 자동 저장 (1.5초 debounce)
+  useEffect(() => {
+    if (rows === sampleData) return  // 초기값 무시
+    const t = setTimeout(() => { persistRows(rows) }, 1500)
+    return () => clearTimeout(t)
+  }, [rows])
   const [checked, setChecked] = useState<Set<number>>(new Set())
   const [filterType, setFilterType] = useState<'전체' | '수입' | '지출' | '반납'>('전체')
   const [filterAccountGroup, setFilterAccountGroup] = useState<'전체' | '수입' | '지출'>('전체')
@@ -667,7 +712,16 @@ export default function VoucherInputPage() {
             </svg>
             인쇄
           </button>
-          {inputMode !== '건별등록' && inputMode !== '상세등록' && <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-teal-400 rounded bg-teal-500 hover:bg-teal-600 text-white sub-tab-hover">저장</button>}
+          {inputMode !== '건별등록' && inputMode !== '상세등록' && (
+            <button
+              onClick={() => persistRows(rows)}
+              disabled={saving}
+              data-tip={savedAt ? `최근 저장: ${new Date(savedAt).toLocaleString('ko-KR')}` : 'DB 영속 저장'}
+              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-teal-400 rounded bg-teal-500 hover:bg-teal-600 text-white sub-tab-hover disabled:opacity-50"
+            >
+              {saving ? '저장 중...' : '저장'}
+            </button>
+          )}
           {inputMode !== '건별등록' && inputMode !== '상세등록' && <button onClick={deleteRows} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>}
           {inputMode !== '건별등록' && inputMode !== '상세등록' && (
             <button
