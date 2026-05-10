@@ -1769,19 +1769,22 @@ function WageCalcPanel() {
 
       {/* V-1. 주택자금공제 */}
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">V-1. 주택자금공제 (PDF §52) — 공제서류 표 자동 반영</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>V-1. 주택자금공제 (PDF §52)</span>
+          <span className="text-[10px] text-slate-500 font-normal">🔒 자동 산출 — V-0 공제서류 표에 [주택임차차입금/장기저당/주택마련저축] 등록</span>
+        </div>
         <table className="w-full">
           <tbody>
             <tr>
               <td className={cls_l + ' w-[200px]'}>주택임차차입금 원리금</td>
-              <td className={cls_i + ' w-[180px]'}><input type="number" className={iptN} value={inp.housingLeaseLoan} onChange={e => update({ housingLeaseLoan: Number(e.target.value) })} placeholder="40% 공제" /></td>
+              <td className={cls_v + ' w-[180px]'}>{won(inp.housingLeaseLoan)}</td>
               <td className={cls_l + ' w-[160px]'}>주택마련저축</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.housingSaving} onChange={e => update({ housingSaving: Number(e.target.value) })} placeholder="합산 400만 한도" /></td>
+              <td className={cls_v}>{won(inp.housingSaving)}</td>
             </tr>
             <tr>
               <td className={cls_l}>장기주택저당차입금 이자</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.housingMortgage} onChange={e => update({ housingMortgage: Number(e.target.value) })} placeholder="600~2000만 한도" /></td>
-              <td className={cls_l + ' font-bold'}>주택자금 공제</td>
+              <td className={cls_v}>{won(inp.housingMortgage)}</td>
+              <td className={cls_l + ' font-bold'}>주택자금 공제 (40%·합산 400만 / 600~2000만)</td>
               <td className={cls_v + ' font-bold'}>{won(calc.housingDeduction)}</td>
             </tr>
           </tbody>
@@ -1790,24 +1793,27 @@ function WageCalcPanel() {
 
       {/* V-2. 신용카드 등 사용금액 소득공제 (5종 차등) */}
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">V-2. 신용카드 등 (총급여 25% 초과분 × 차등 공제율)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>V-2. 신용카드 등 (총급여 25% 초과분 × 차등 공제율)</span>
+          <span className="text-[10px] text-slate-500 font-normal">🔒 자동 산출 — V-0 공제서류 표에 [신용/현금영수증·체크/도서공연/전통시장/대중교통] 등록</span>
+        </div>
         <table className="w-full">
           <tbody>
             <tr>
               <td className={cls_l + ' w-[200px]'}>① 신용카드 (15%)</td>
-              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.cardCredit} onChange={e => update({ cardCredit: Number(e.target.value) })} /></td>
+              <td className={cls_v + ' w-[160px]'}>{won(inp.cardCredit)}</td>
               <td className={cls_l + ' w-[200px]'}>② 현금영수증·체크 (30%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.cardCash} onChange={e => update({ cardCash: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.cardCash)}</td>
             </tr>
             <tr>
               <td className={cls_l}>③ 도서·공연·박물관·체육 (30%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.cardBook} onChange={e => update({ cardBook: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.cardBook)}</td>
               <td className={cls_l}>④ 전통시장 (40%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.cardTraditional} onChange={e => update({ cardTraditional: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.cardTraditional)}</td>
             </tr>
             <tr>
               <td className={cls_l}>⑤ 대중교통 (40%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.cardTransport} onChange={e => update({ cardTransport: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.cardTransport)}</td>
               <td className={cls_l + ' font-bold'}>신용카드 등 공제</td>
               <td className={cls_v + ' font-bold'}>{won(calc.cardDeduction)}</td>
             </tr>
@@ -1842,7 +1848,10 @@ function WageCalcPanel() {
 
       {/* VI. 세액공제 */}
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-1. 자동 세액공제 (근로소득·자녀·연금계좌·ISA·혼인)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>VI-1. 자동 세액공제</span>
+          <span className="text-[10px] text-slate-500 font-normal">🔒 연금계좌/ISA는 V-0 표 자동 / 혼인은 직접 토글</span>
+        </div>
         <table className="w-full">
           <tbody>
             <tr>
@@ -1853,13 +1862,13 @@ function WageCalcPanel() {
             </tr>
             <tr>
               <td className={cls_l}>⑤ 연금계좌 (퇴직+연금저축, 900만 한도)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.pensionAccount} onChange={e => update({ pensionAccount: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.pensionAccount)}</td>
               <td className={cls_l}>연금계좌 세액공제 ({inp.totalPay <= 55_000_000 ? '15%' : '12%'})</td>
               <td className={cls_v}>{won(calc.pensionTaxCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>⑤-2 ISA 만기 연금계좌 전환 (300만 한도)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.pensionISA} onChange={e => update({ pensionISA: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.pensionISA)}</td>
               <td className={cls_l}>ISA 추가 세액공제</td>
               <td className={cls_v}>{won(calc.pensionISACredit)}</td>
             </tr>
@@ -1874,18 +1883,21 @@ function WageCalcPanel() {
       </div>
 
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-2. 보장성 보험료 (일반 12% / 장애인전용 15%, 각 100만 한도)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>VI-2. 보장성 보험료 (일반 12% / 장애인전용 15%, 각 100만 한도)</span>
+          <span className="text-[10px] text-slate-500 font-normal">🔒 자동 산출 — V-0 표에 [보험료(일반/장애인)] 등록</span>
+        </div>
         <table className="w-full">
           <tbody>
             <tr>
               <td className={cls_l + ' w-[200px]'}>일반 보장성 보험</td>
-              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.insuranceGeneral} onChange={e => update({ insuranceGeneral: Number(e.target.value) })} /></td>
+              <td className={cls_v + ' w-[160px]'}>{won(inp.insuranceGeneral)}</td>
               <td className={cls_l + ' w-[160px]'}>일반 보험 세액공제</td>
               <td className={cls_v}>{won(calc.insGeneralCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>장애인전용 보장성 보험</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.insuranceDisabled} onChange={e => update({ insuranceDisabled: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.insuranceDisabled)}</td>
               <td className={cls_l}>장애인전용 세액공제</td>
               <td className={cls_v}>{won(calc.insDisabledCredit)}</td>
             </tr>
@@ -1894,30 +1906,33 @@ function WageCalcPanel() {
       </div>
 
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-3. 의료비 (4종 차등 — 본인·65+·장애 한도 없음 / 일반 700만 / 난임 30% / 미숙아 20%, 총급여 3% 초과)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>VI-3. 의료비 (4종 차등 — 본인 한도없음 / 일반 700만 / 난임 30% / 미숙아 20%, 총급여 3% 초과)</span>
+          <span className="text-[10px] text-slate-500 font-normal">🔒 자동 산출 — V-0 표에 [의료비 4종] 등록</span>
+        </div>
         <table className="w-full">
           <tbody>
             <tr>
               <td className={cls_l + ' w-[220px]'}>본인·65+·6-·장애·특례 (한도없음, 15%)</td>
-              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.medicalSelf} onChange={e => update({ medicalSelf: Number(e.target.value) })} /></td>
+              <td className={cls_v + ' w-[160px]'}>{won(inp.medicalSelf)}</td>
               <td className={cls_l + ' w-[160px]'}>본인계 세액공제</td>
               <td className={cls_v}>{won(calc.medSelfCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>일반 부양가족 (700만, 15%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.medicalGeneral} onChange={e => update({ medicalGeneral: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.medicalGeneral)}</td>
               <td className={cls_l}>일반 세액공제</td>
               <td className={cls_v}>{won(calc.medGeneralCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>난임시술비 (한도없음, 30%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.medicalInfertility} onChange={e => update({ medicalInfertility: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.medicalInfertility)}</td>
               <td className={cls_l}>난임 세액공제</td>
               <td className={cls_v}>{won(calc.medInfertilityCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>미숙아·선천성이상아 (한도없음, 20%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.medicalPremature} onChange={e => update({ medicalPremature: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.medicalPremature)}</td>
               <td className={cls_l + ' font-bold'}>의료비 세액공제 합계</td>
               <td className={cls_v + ' font-bold'}>{won(calc.medicalCredit)}</td>
             </tr>
@@ -1926,30 +1941,27 @@ function WageCalcPanel() {
       </div>
 
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-4. 교육비 (3종 분리)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>VI-4. 교육비 (3종 분리)</span>
+          <span className="text-[10px] text-slate-500 font-normal">🔒 자동 산출 — V-0 표에 [교육비 본인/유아초중고/대학] 등록 + 부양가족 표 인원 자동</span>
+        </div>
         <table className="w-full">
           <tbody>
             <tr>
               <td className={cls_l + ' w-[200px]'}>본인 (한도없음, 대학원 포함)</td>
-              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.educationOwn} onChange={e => update({ educationOwn: Number(e.target.value) })} /></td>
+              <td className={cls_v + ' w-[160px]'}>{won(inp.educationOwn)}</td>
               <td className={cls_l + ' w-[140px]'}>본인 세액공제 (15%)</td>
               <td className={cls_v}>{won(calc.educationOwnCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>유아·초중고 (1인당 300만)</td>
-              <td className={cls_i}>
-                <input type="number" className={iptN + ' mb-0.5'} value={inp.educationKidsKindergarten} onChange={e => update({ educationKidsKindergarten: Number(e.target.value) })} placeholder="금액" />
-                <input type="number" className={iptN} value={inp.educationKidsKgCount} onChange={e => update({ educationKidsKgCount: Number(e.target.value) })} placeholder="인원" />
-              </td>
+              <td className={cls_v}>{won(inp.educationKidsKindergarten)} <span className="text-[10px] text-slate-400">({inp.educationKidsKgCount}명)</span></td>
               <td className={cls_l}>유아·초중고 세액공제</td>
               <td className={cls_v}>{won(calc.educationKgCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>대학 (1인당 900만)</td>
-              <td className={cls_i}>
-                <input type="number" className={iptN + ' mb-0.5'} value={inp.educationKidsUniversity} onChange={e => update({ educationKidsUniversity: Number(e.target.value) })} placeholder="금액" />
-                <input type="number" className={iptN} value={inp.educationKidsUniCount} onChange={e => update({ educationKidsUniCount: Number(e.target.value) })} placeholder="인원" />
-              </td>
+              <td className={cls_v}>{won(inp.educationKidsUniversity)} <span className="text-[10px] text-slate-400">({inp.educationKidsUniCount}명)</span></td>
               <td className={cls_l + ' font-bold'}>교육비 합계</td>
               <td className={cls_v + ' font-bold'}>{won(calc.educationCredit)}</td>
             </tr>
@@ -1958,30 +1970,33 @@ function WageCalcPanel() {
       </div>
 
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-5. 기부금 (4종 분리)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>VI-5. 기부금 (4종 분리)</span>
+          <span className="text-[10px] text-slate-500 font-normal">🔒 자동 산출 — V-0 표에 [기부금(정치/고향사랑/우리사주/일반)] 등록</span>
+        </div>
         <table className="w-full">
           <tbody>
             <tr>
               <td className={cls_l + ' w-[200px]'}>정치자금 (10만↓ 100/110)</td>
-              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.donationPolitical} onChange={e => update({ donationPolitical: Number(e.target.value) })} /></td>
+              <td className={cls_v + ' w-[160px]'}>{won(inp.donationPolitical)}</td>
               <td className={cls_l + ' w-[160px]'}>정치자금 공제</td>
               <td className={cls_v}>{won(calc.donationPoliticalCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>고향사랑 (10만↓ 100/110, 500만 한도)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.donationHometown} onChange={e => update({ donationHometown: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.donationHometown)}</td>
               <td className={cls_l}>고향사랑 공제</td>
               <td className={cls_v}>{won(calc.donationHometownCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>우리사주조합 (15%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.donationEmployeeStock} onChange={e => update({ donationEmployeeStock: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.donationEmployeeStock)}</td>
               <td className={cls_l}>우리사주 공제</td>
               <td className={cls_v}>{won(calc.donationStockCredit)}</td>
             </tr>
             <tr>
               <td className={cls_l}>일반·지정·법정 (1천만↓ 15% / ↑ 30%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.donationGeneral} onChange={e => update({ donationGeneral: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(inp.donationGeneral)}</td>
               <td className={cls_l + ' font-bold'}>기부금 합계</td>
               <td className={cls_v + ' font-bold'}>{won(calc.donationCredit)}</td>
             </tr>
@@ -1990,12 +2005,15 @@ function WageCalcPanel() {
       </div>
 
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-6. 월세 / 표준세액공제</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>VI-6. 월세 / 표준세액공제</span>
+          <span className="text-[10px] text-slate-500 font-normal">🔒 월세 자동 산출 — V-0 표에 [월세] 등록 / 표준은 자동 판정</span>
+        </div>
         <table className="w-full">
           <tbody>
             <tr>
               <td className={cls_l + ' w-[200px]'}>월세 (1000만 한도)</td>
-              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.monthlyRent} onChange={e => update({ monthlyRent: Number(e.target.value) })} /></td>
+              <td className={cls_v + ' w-[160px]'}>{won(inp.monthlyRent)}</td>
               <td className={cls_l}>월세 세액공제 ({inp.totalPay <= 55_000_000 ? '17%' : '15%'})</td>
               <td className={cls_v}>{won(calc.rentCredit)}</td>
             </tr>
