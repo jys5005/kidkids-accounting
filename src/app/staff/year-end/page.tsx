@@ -1393,15 +1393,142 @@ function computeWageCalc(inp: WageCalcInput): WageCalcResult {
   }
 }
 
+type FamilyMember = {
+  id: string
+  relation: '본인' | '배우자' | '직계존속(부)' | '직계존속(모)' | '직계존속(시부/장인)' | '직계존속(시모/장모)' | '직계비속(자녀)' | '직계비속(손자녀)' | '형제자매' | '입양자' | '위탁아동' | '장애인 직계존비속'
+  name: string
+  rrn: string
+  birthYear: number
+  basicDeduction: boolean        // 기본공제 (연소득 100만↓, 근로 500만↓)
+  isElderly: boolean             // 70세 이상 (직계존속)
+  isDisabled: boolean            // 장애인
+  isChild8plus: boolean          // 자녀세액 대상 (8세 이상)
+  isNewborn: boolean             // 출산·입양 (당해 출생/입양)
+}
+const mockFamily: FamilyMember[] = [
+  { id: 'F1', relation: '본인', name: '김교사', rrn: '8503151111111', birthYear: 1985, basicDeduction: true, isElderly: false, isDisabled: false, isChild8plus: false, isNewborn: false },
+  { id: 'F2', relation: '배우자', name: '김배우', rrn: '8607010000000', birthYear: 1986, basicDeduction: true, isElderly: false, isDisabled: false, isChild8plus: false, isNewborn: false },
+  { id: 'F3', relation: '직계비속(자녀)', name: '김자녀', rrn: '1503010000000', birthYear: 2015, basicDeduction: true, isElderly: false, isDisabled: false, isChild8plus: true, isNewborn: false },
+]
+
+type DocCat = 'medical-self' | 'medical-general' | 'medical-infertility' | 'medical-premature'
+  | 'education-own' | 'education-kg' | 'education-uni'
+  | 'insurance-general' | 'insurance-disabled'
+  | 'donation-political' | 'donation-hometown' | 'donation-stock' | 'donation-general'
+  | 'card-credit' | 'card-cash' | 'card-book' | 'card-traditional' | 'card-transport'
+  | 'rent' | 'pension-account' | 'pension-isa' | 'housing-lease' | 'housing-mortgage' | 'housing-saving'
+const DOC_CAT_LABEL: Record<DocCat, string> = {
+  'medical-self': '의료비(본인·65+·6-·장애·특례)', 'medical-general': '의료비(일반 부양가족)',
+  'medical-infertility': '의료비(난임시술)', 'medical-premature': '의료비(미숙아·선천성)',
+  'education-own': '교육비(본인)', 'education-kg': '교육비(유아·초중고)', 'education-uni': '교육비(대학)',
+  'insurance-general': '보험료(일반 보장성)', 'insurance-disabled': '보험료(장애인전용)',
+  'donation-political': '기부금(정치자금)', 'donation-hometown': '기부금(고향사랑)',
+  'donation-stock': '기부금(우리사주)', 'donation-general': '기부금(일반/지정/법정)',
+  'card-credit': '신용카드', 'card-cash': '현금영수증·체크', 'card-book': '도서·공연·박물관·체육',
+  'card-traditional': '전통시장', 'card-transport': '대중교통',
+  'rent': '월세', 'pension-account': '연금계좌(퇴직+연금저축)', 'pension-isa': 'ISA 만기 연금계좌 전환',
+  'housing-lease': '주택임차차입금 원리금', 'housing-mortgage': '장기주택저당 이자', 'housing-saving': '주택마련저축',
+}
+type Document = {
+  id: string
+  cat: DocCat
+  familyId: string
+  desc: string
+  amount: number
+}
+const mockDocs: Document[] = [
+  { id: 'D1', cat: 'medical-general', familyId: 'F2', desc: '○○병원', amount: 600_000 },
+  { id: 'D2', cat: 'medical-self', familyId: 'F1', desc: '본인 정기검진', amount: 200_000 },
+  { id: 'D3', cat: 'insurance-general', familyId: 'F1', desc: '실손보험', amount: 600_000 },
+  { id: 'D4', cat: 'donation-general', familyId: 'F1', desc: '○○법인', amount: 100_000 },
+  { id: 'D5', cat: 'card-credit', familyId: 'F1', desc: '신용카드 합계', amount: 12_000_000 },
+  { id: 'D6', cat: 'card-cash', familyId: 'F1', desc: '현금영수증·체크 합계', amount: 4_000_000 },
+  { id: 'D7', cat: 'card-book', familyId: 'F1', desc: '도서·공연', amount: 800_000 },
+  { id: 'D8', cat: 'card-traditional', familyId: 'F1', desc: '전통시장', amount: 600_000 },
+  { id: 'D9', cat: 'card-transport', familyId: 'F1', desc: '대중교통', amount: 600_000 },
+  { id: 'D10', cat: 'pension-account', familyId: 'F1', desc: '연금저축', amount: 1_200_000 },
+]
+
 function WageCalcPanel() {
   const [year, setYear] = useState('2025')
   const [list, setList] = useState<WageCalcInput[]>(mockWageCalcInputs)
   const [activeIdx, setActiveIdx] = useState(0)
-  const inp = list[activeIdx]
+  const baseInp = list[activeIdx]
+
+  const [family, setFamily] = useState<FamilyMember[]>(mockFamily)
+  const [docs, setDocs] = useState<Document[]>(mockDocs)
+
+  // 부양가족 자동 인적공제 합계 계산
+  const familyAggregate = useMemo(() => {
+    let spouse = 0, dependents = 0, elderly = 0, disabled = 0, childTotal = 0
+    family.forEach(f => {
+      if (!f.basicDeduction) return
+      if (f.relation === '본인') return  // 본인 자동
+      if (f.relation === '배우자') spouse += 1
+      else if (f.relation === '직계비속(자녀)' || f.relation === '직계비속(손자녀)') {
+        dependents += 1
+        if (f.isChild8plus) childTotal += 1
+      }
+      else dependents += 1
+      if (f.isElderly) elderly += 1
+      if (f.isDisabled) disabled += 1
+    })
+    return { spouse, dependents, elderly, disabled, childTotal }
+  }, [family])
+
+  // 공제서류 자동 합계
+  const docAggregate = useMemo(() => {
+    const sum: Record<DocCat, number> = {} as any
+    docs.forEach(d => { sum[d.cat] = (sum[d.cat] ?? 0) + d.amount })
+    return sum
+  }, [docs])
+
+  // baseInp + 자동 합계 머지 (자동이 우선)
+  const inp: WageCalcInput = useMemo(() => ({
+    ...baseInp,
+    spouse: familyAggregate.spouse,
+    dependents: familyAggregate.dependents,
+    elderly: familyAggregate.elderly,
+    disabled: familyAggregate.disabled,
+    childTotal: familyAggregate.childTotal,
+    medicalSelf: docAggregate['medical-self'] ?? 0,
+    medicalGeneral: docAggregate['medical-general'] ?? 0,
+    medicalInfertility: docAggregate['medical-infertility'] ?? 0,
+    medicalPremature: docAggregate['medical-premature'] ?? 0,
+    educationOwn: docAggregate['education-own'] ?? 0,
+    educationKidsKindergarten: docAggregate['education-kg'] ?? 0,
+    educationKidsUniversity: docAggregate['education-uni'] ?? 0,
+    insuranceGeneral: docAggregate['insurance-general'] ?? 0,
+    insuranceDisabled: docAggregate['insurance-disabled'] ?? 0,
+    donationPolitical: docAggregate['donation-political'] ?? 0,
+    donationHometown: docAggregate['donation-hometown'] ?? 0,
+    donationEmployeeStock: docAggregate['donation-stock'] ?? 0,
+    donationGeneral: docAggregate['donation-general'] ?? 0,
+    cardCredit: docAggregate['card-credit'] ?? 0,
+    cardCash: docAggregate['card-cash'] ?? 0,
+    cardBook: docAggregate['card-book'] ?? 0,
+    cardTraditional: docAggregate['card-traditional'] ?? 0,
+    cardTransport: docAggregate['card-transport'] ?? 0,
+    monthlyRent: docAggregate['rent'] ?? 0,
+    pensionAccount: docAggregate['pension-account'] ?? 0,
+    pensionISA: docAggregate['pension-isa'] ?? 0,
+    housingLeaseLoan: docAggregate['housing-lease'] ?? 0,
+    housingMortgage: docAggregate['housing-mortgage'] ?? 0,
+    housingSaving: docAggregate['housing-saving'] ?? 0,
+  }), [baseInp, familyAggregate, docAggregate])
+
   const calc = useMemo(() => computeWageCalc(inp), [inp])
 
   const update = (patch: Partial<WageCalcInput>) => setList(prev => prev.map((r, i) => i === activeIdx ? { ...r, ...patch } : r))
   const fmtRrn = (rrn: string) => rrn.length === 13 ? `${rrn.slice(0,6)}-${rrn.slice(6,7)}******` : rrn
+
+  const addFamily = () => setFamily(prev => [...prev, { id: 'F' + (prev.length + 1), relation: '직계비속(자녀)', name: '', rrn: '', birthYear: 2020, basicDeduction: true, isElderly: false, isDisabled: false, isChild8plus: false, isNewborn: false }])
+  const updateFamily = (id: string, patch: Partial<FamilyMember>) => setFamily(prev => prev.map(f => f.id === id ? { ...f, ...patch } : f))
+  const removeFamily = (id: string) => setFamily(prev => prev.filter(f => f.id !== id))
+
+  const addDoc = () => setDocs(prev => [...prev, { id: 'D' + (prev.length + 1) + '_' + Date.now(), cat: 'medical-general', familyId: family[0]?.id || '', desc: '', amount: 0 }])
+  const updateDoc = (id: string, patch: Partial<Document>) => setDocs(prev => prev.map(d => d.id === id ? { ...d, ...patch } : d))
+  const removeDoc = (id: string) => setDocs(prev => prev.filter(d => d.id !== id))
 
   const cls_h = "px-2 py-1.5 text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-300 text-center"
   const cls_l = "px-2 py-1.5 text-[11px] font-medium text-slate-700 bg-slate-50 border border-slate-200 whitespace-nowrap"
@@ -1471,9 +1598,64 @@ function WageCalcPanel() {
         </table>
       </div>
 
+      {/* III-0. 부양가족 등록 */}
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>III-0. 부양가족 등록</span>
+          <span className="text-[10px] text-slate-500 font-normal">— 표에 등록한 부양가족이 III. 인적공제에 자동 반영됩니다</span>
+          <button onClick={addFamily} className="ml-auto px-2 py-0.5 text-[11px] bg-teal-500 hover:bg-teal-600 text-white rounded">+ 부양가족 추가</button>
+        </div>
+        <table className="w-full text-[11px]">
+          <thead>
+            <tr>
+              <th className={cls_h + ' w-[40px]'}>No</th>
+              <th className={cls_h}>관계</th>
+              <th className={cls_h}>성명</th>
+              <th className={cls_h}>주민번호</th>
+              <th className={cls_h + ' w-[70px]'}>기본공제</th>
+              <th className={cls_h + ' w-[60px]'}>경로(70+)</th>
+              <th className={cls_h + ' w-[60px]'}>장애</th>
+              <th className={cls_h + ' w-[80px]'}>자녀세액(8+)</th>
+              <th className={cls_h + ' w-[60px]'}>출생·입양</th>
+              <th className={cls_h + ' w-[60px]'}>삭제</th>
+            </tr>
+          </thead>
+          <tbody>
+            {family.map((f, i) => (
+              <tr key={f.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                <td className="px-2 py-1 text-center text-slate-500 border-r border-slate-100">{i+1}</td>
+                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30">
+                  <select className={ipt} value={f.relation} onChange={e => updateFamily(f.id, { relation: e.target.value as FamilyMember['relation'] })} disabled={f.relation === '본인'}>
+                    <option>본인</option><option>배우자</option><option>직계존속(부)</option><option>직계존속(모)</option><option>직계존속(시부/장인)</option><option>직계존속(시모/장모)</option>
+                    <option>직계비속(자녀)</option><option>직계비속(손자녀)</option><option>형제자매</option><option>입양자</option><option>위탁아동</option><option>장애인 직계존비속</option>
+                  </select>
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className={ipt} value={f.name} onChange={e => updateFamily(f.id, { name: e.target.value })} /></td>
+                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className={ipt + ' text-center'} value={f.rrn} onChange={e => updateFamily(f.id, { rrn: e.target.value })} maxLength={13} /></td>
+                <td className="px-1 py-1 text-center border-r border-slate-100 bg-blue-50/30"><input type="checkbox" checked={f.basicDeduction} onChange={e => updateFamily(f.id, { basicDeduction: e.target.checked })} /></td>
+                <td className="px-1 py-1 text-center border-r border-slate-100 bg-blue-50/30"><input type="checkbox" checked={f.isElderly} onChange={e => updateFamily(f.id, { isElderly: e.target.checked })} /></td>
+                <td className="px-1 py-1 text-center border-r border-slate-100 bg-blue-50/30"><input type="checkbox" checked={f.isDisabled} onChange={e => updateFamily(f.id, { isDisabled: e.target.checked })} /></td>
+                <td className="px-1 py-1 text-center border-r border-slate-100 bg-blue-50/30"><input type="checkbox" checked={f.isChild8plus} onChange={e => updateFamily(f.id, { isChild8plus: e.target.checked })} /></td>
+                <td className="px-1 py-1 text-center border-r border-slate-100 bg-blue-50/30"><input type="checkbox" checked={f.isNewborn} onChange={e => updateFamily(f.id, { isNewborn: e.target.checked })} /></td>
+                <td className="px-1 py-1 text-center">
+                  {f.relation !== '본인' && <button onClick={() => removeFamily(f.id)} className="text-red-500 text-[10px] hover:underline">삭제</button>}
+                </td>
+              </tr>
+            ))}
+            <tr className="bg-emerald-50 font-bold">
+              <td className={cls_l + ' text-center'} colSpan={4}>자동 합계</td>
+              <td className={cls_v + ' text-center'} colSpan={2}>배우자 {familyAggregate.spouse} · 부양 {familyAggregate.dependents}명</td>
+              <td className={cls_v + ' text-center'}>경로 {familyAggregate.elderly}</td>
+              <td className={cls_v + ' text-center'}>장애 {familyAggregate.disabled}</td>
+              <td className={cls_v + ' text-center'} colSpan={2}>자녀 {familyAggregate.childTotal}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       {/* III. 인적공제 */}
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">III. 인적공제 (본인 150만 / 배우자·부양 150만 / 경로 100만 / 장애 200만 / 한부모 100만 / 부녀자 50만)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">III. 인적공제 (본인 150만 / 배우자·부양 150만 / 경로 100만 / 장애 200만 / 한부모 100만 / 부녀자 50만) — 부양가족 표 자동 반영</div>
         <table className="w-full">
           <tbody>
             <tr>
@@ -1530,9 +1712,64 @@ function WageCalcPanel() {
         </table>
       </div>
 
+      {/* V-0. 공제서류 등록 */}
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
+          <span>V-0. 공제서류 등록 (영수증 명세)</span>
+          <span className="text-[10px] text-slate-500 font-normal">— 등록한 서류가 V/VI 카드의 합계에 자동 반영. 종류별 합계 → 의료/교육/기부/카드 등 자동 산출</span>
+          <button onClick={addDoc} className="ml-auto px-2 py-0.5 text-[11px] bg-teal-500 hover:bg-teal-600 text-white rounded">+ 서류 추가</button>
+        </div>
+        <table className="w-full text-[11px]">
+          <thead>
+            <tr>
+              <th className={cls_h + ' w-[40px]'}>No</th>
+              <th className={cls_h}>종류</th>
+              <th className={cls_h}>대상자</th>
+              <th className={cls_h}>내용 (의료기관·학교·단체·보험사 등)</th>
+              <th className={cls_h + ' w-[140px]'}>금액</th>
+              <th className={cls_h + ' w-[60px]'}>삭제</th>
+            </tr>
+          </thead>
+          <tbody>
+            {docs.map((d, i) => (
+              <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                <td className="px-2 py-1 text-center text-slate-500 border-r border-slate-100">{i+1}</td>
+                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30">
+                  <select className={ipt + ' text-[10px]'} value={d.cat} onChange={e => updateDoc(d.id, { cat: e.target.value as DocCat })}>
+                    {(Object.keys(DOC_CAT_LABEL) as DocCat[]).map(k => (
+                      <option key={k} value={k}>{DOC_CAT_LABEL[k]}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30">
+                  <select className={ipt + ' text-[10px]'} value={d.familyId} onChange={e => updateDoc(d.id, { familyId: e.target.value })}>
+                    {family.map(f => <option key={f.id} value={f.id}>{f.relation} {f.name}</option>)}
+                  </select>
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className={ipt} value={d.desc} onChange={e => updateDoc(d.id, { desc: e.target.value })} /></td>
+                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className={iptN} value={d.amount} onChange={e => updateDoc(d.id, { amount: Number(e.target.value) })} /></td>
+                <td className="px-1 py-1 text-center"><button onClick={() => removeDoc(d.id)} className="text-red-500 text-[10px] hover:underline">삭제</button></td>
+              </tr>
+            ))}
+            <tr className="bg-emerald-50 font-bold">
+              <td className={cls_l + ' text-center'} colSpan={4}>등록 {docs.length}건 합계</td>
+              <td className={cls_v + ' text-right'}>{won(docs.reduce((s, d) => s + d.amount, 0))}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-600 grid grid-cols-3 md:grid-cols-5 gap-1">
+          {(Object.keys(DOC_CAT_LABEL) as DocCat[]).map(k => {
+            const sum = docAggregate[k] ?? 0
+            if (sum === 0) return null
+            return <div key={k} className="bg-white border border-slate-200 rounded px-1.5 py-0.5"><span className="text-slate-500">{DOC_CAT_LABEL[k]}</span> <strong className="text-teal-700">{won(sum)}</strong></div>
+          })}
+        </div>
+      </div>
+
       {/* V-1. 주택자금공제 */}
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">V-1. 주택자금공제 (PDF §52)</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">V-1. 주택자금공제 (PDF §52) — 공제서류 표 자동 반영</div>
         <table className="w-full">
           <tbody>
             <tr>
