@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react'
 import { WAGE_SPEC, BIZ_SPEC, RETIRE_SPEC, type SpecRecord } from './specs'
 
-type Tab = 'withholding' | 'wage' | 'biz' | 'retire'
+type Tab = 'withholding' | 'wage' | 'biz' | 'retire' | 'retire-calc'
 
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 const labelCls = "text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2 border-r border-slate-200 whitespace-nowrap w-[140px] min-w-[140px]"
@@ -379,7 +379,8 @@ export default function YearEndPage() {
             { id: 'withholding', label: '원천세', spec: 'C103900' },
             { id: 'wage', label: '근로소득지급명세서', spec: '자료구분 20 · 2010byte × 9레코드 (670 항목)' },
             { id: 'biz', label: '사업소득지급명세서', spec: '자료구분 80 · 770byte × 7레코드 (231 항목)' },
-            { id: 'retire', label: '퇴직소득 세액계산기', spec: '자료구분 25 · 761byte × 4레코드 + 세액 자동계산' },
+            { id: 'retire', label: '퇴직소득지급명세서', spec: '자료구분 25 · 761byte × 4레코드 (.01 전자파일)' },
+            { id: 'retire-calc', label: '퇴직소득 세액계산기', spec: '소득세법 시행규칙 별지 제24호서식(2) — xlsx 양식 기반' },
           ] as { id: Tab; label: string; spec: string }[]).map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} title={t.spec}
               className={`px-3 py-1.5 text-[12px] font-bold rounded-t border-b-2 ${tab === t.id ? 'border-teal-500 text-teal-700 bg-teal-50' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
@@ -392,6 +393,7 @@ export default function YearEndPage() {
           {tab === 'wage' && <WageStatementPanel />}
           {tab === 'biz' && <BizStatementPanel />}
           {tab === 'retire' && <RetirementStatementPanel />}
+          {tab === 'retire-calc' && <RetirementCalcPanel />}
         </div>
       </div>
     </div>
@@ -785,7 +787,7 @@ function RetirementStatementPanel() {
   const retireItemCount = Object.values(RETIRE_SPEC).reduce((s, arr) => s + arr.length, 0)
   return (
     <StatementPanelShell
-      spec={{ dataCode: '25', recordLen: RETIRE_LEN, recordTypes: ['A','B','C','D'], specName: '퇴직소득 지급명세서 전산매체 제출요령(2025.08.04) + 세액 자동계산 (소득세법 시행규칙 별지 제24호서식(2))', itemCount: retireItemCount }}
+      spec={{ dataCode: '25', recordLen: RETIRE_LEN, recordTypes: ['A','B','C','D'], specName: '퇴직소득 지급명세서 전산매체 제출요령(2025.08.04) — .01 전자파일 빌드', itemCount: retireItemCount }}
       rows={calcs} year={year} setYear={setYear} buildFn={buildRetireFile as any} fileExt="01"
       totals={[
         { label: '퇴사자', value: `${inputs.length}명`, tone: 'slate' },
@@ -887,5 +889,241 @@ function RetirementStatementPanel() {
         </div>
       }
     />
+  )
+}
+
+// ============== 5번째 탭: 퇴직소득 세액계산기 (xlsx 영수증 양식) ==============
+function RetirementCalcPanel() {
+  const [year, setYear] = useState('2025')
+  const [list, setList] = useState<RetireInput[]>(mockRetireInputs)
+  const [activeIdx, setActiveIdx] = useState(0)
+  const inp = list[activeIdx]
+  const calc = useMemo(() => computeRetire(inp), [inp])
+
+  const update = (patch: Partial<RetireInput>) => setList(prev => prev.map((r, i) => i === activeIdx ? { ...r, ...patch } : r))
+  const fmtRrn = (rrn: string) => rrn.length === 13 ? `${rrn.slice(0,6)}-${rrn.slice(6,7)}******` : rrn
+
+  const taxRate = calc.taxBase <= 14_000_000 ? '6%' : calc.taxBase <= 50_000_000 ? '15% (-126만)' : calc.taxBase <= 88_000_000 ? '24% (-576만)' : calc.taxBase <= 150_000_000 ? '35% (-1,544만)' : calc.taxBase <= 300_000_000 ? '38% (-1,994만)' : calc.taxBase <= 500_000_000 ? '40% (-2,594만)' : calc.taxBase <= 1_000_000_000 ? '42% (-3,594만)' : '45% (-6,594만)'
+
+  const cls_h = "px-2 py-1.5 text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-300 text-center"
+  const cls_l = "px-2 py-1.5 text-[11px] font-medium text-slate-700 bg-slate-50 border border-slate-200 whitespace-nowrap"
+  const cls_v = "px-2 py-1.5 text-[11px] text-right text-slate-800 border border-slate-200 bg-emerald-50/30 font-mono"
+  const cls_i = "px-2 py-1.5 text-[11px] border border-slate-200 bg-blue-50/30"
+  const ipt = "w-full text-[11px] border border-slate-300 rounded px-1.5 py-0.5 focus:outline-none focus:border-teal-500"
+  const iptN = ipt + " text-right"
+
+  return (
+    <div className="space-y-3">
+      <EmployerCard />
+
+      <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-700">
+        <strong>퇴직소득원천징수영수증 / 지급명세서</strong> — 소득세법 시행규칙 별지 제24호서식(2). xlsx "(상반기)2026년 귀속 퇴직소득 세액계산 프로그램_D251229.xlsx" 양식 기반. 입력값 변경 시 (27)~(44) 즉시 재계산.
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-[11px] text-slate-500">퇴사자:</span>
+        {list.map((r, i) => (
+          <button key={i} onClick={() => setActiveIdx(i)} className={`px-3 py-1 text-[11px] font-bold rounded border ${activeIdx === i ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
+            {r.name} ({fmtRrn(r.rrn).slice(0,8)})
+          </button>
+        ))}
+        <span className="ml-auto text-[11px] text-slate-500">자료귀속연도</span>
+        <input className={`${inputCls} w-20`} value={year} onChange={e => setYear(e.target.value)} maxLength={4} />
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">소득자 정보 + 퇴직사유</div>
+        <table className="w-full">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[120px]'}>⑥ 성명</td>
+              <td className={cls_i + ' w-[200px]'}><input className={ipt} value={inp.name} onChange={e => update({ name: e.target.value })} /></td>
+              <td className={cls_l + ' w-[120px]'}>⑦ 주민등록번호</td>
+              <td className={cls_v + ' w-[200px]'}>{fmtRrn(inp.rrn)}</td>
+              <td className={cls_l + ' w-[100px]'}>⑨ 임원여부</td>
+              <td className={cls_i}>
+                <select className={ipt} value={inp.isExecutive} onChange={e => update({ isExecutive: e.target.value as 'Y'|'N' })}>
+                  <option value="N">2 (부)</option><option value="Y">1 (여)</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td className={cls_l}>(12) 퇴직사유</td>
+              <td className={cls_i} colSpan={3}>
+                <select className={ipt} value={inp.reason} onChange={e => update({ reason: e.target.value as RetireInput['reason'] })}>
+                  <option>정년퇴직</option><option>정리해고</option><option>자발적 퇴직</option><option>임원퇴직</option><option>중간정산</option><option>기타</option>
+                </select>
+              </td>
+              <td className={cls_l}>귀속연도</td>
+              <td className={cls_v}>{year}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300 overflow-x-auto">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">근속연수</div>
+        <table className="w-full text-[11px]">
+          <thead>
+            <tr>
+              <th className={cls_h}>구분</th>
+              <th className={cls_h}>(18)입사일</th>
+              <th className={cls_h}>(19)기산일</th>
+              <th className={cls_h}>(20)퇴사일</th>
+              <th className={cls_h}>(21)지급일</th>
+              <th className={cls_h}>(22)근속월수</th>
+              <th className={cls_h}>(23)제외월수</th>
+              <th className={cls_h}>(24)가산월수</th>
+              <th className={cls_h}>(25)중복월수</th>
+              <th className={cls_h}>(26)근속연수</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className={cls_l + ' text-center'}>최종</td>
+              <td className={cls_i}><input className={ipt + ' text-center'} value={inp.hireDate} onChange={e => update({ hireDate: e.target.value })} placeholder="YYYYMMDD" /></td>
+              <td className={cls_i}><input className={ipt + ' text-center'} value={inp.hireDate} onChange={e => update({ hireDate: e.target.value })} placeholder="YYYYMMDD" /></td>
+              <td className={cls_i}><input className={ipt + ' text-center'} value={inp.retireDate} onChange={e => update({ retireDate: e.target.value })} placeholder="YYYYMMDD" /></td>
+              <td className={cls_i}><input className={ipt + ' text-center'} value={inp.paymentDate} onChange={e => update({ paymentDate: e.target.value })} placeholder="YYYYMMDD" /></td>
+              <td className={cls_v + ' text-center'}>{calc.serviceMonths}</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.excludedMonths} onChange={e => update({ excludedMonths: Number(e.target.value) })} /></td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.addedMonths} onChange={e => update({ addedMonths: Number(e.target.value) })} /></td>
+              <td className={cls_v + ' text-center'}>0</td>
+              <td className={cls_v + ' text-center font-bold'}>{calc.serviceYears}년</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">퇴직급여 현황</div>
+        <table className="w-full text-[11px]">
+          <thead>
+            <tr>
+              <th className={cls_h}>구분</th>
+              <th className={cls_h}>(15) 퇴직급여</th>
+              <th className={cls_h}>(16) 비과세 퇴직급여</th>
+              <th className={cls_h}>(17) 과세대상 (15-16)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className={cls_l + ' text-center'}>최종</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.retirePay} onChange={e => update({ retirePay: Number(e.target.value) })} /></td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.nonTaxableRetirePay} onChange={e => update({ nonTaxableRetirePay: Number(e.target.value) })} /></td>
+              <td className={cls_v}>{won(calc.taxableRetirePay)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">과세표준 계산</div>
+        <table className="w-full text-[11px]">
+          <tbody>
+            <tr><td className={cls_l + ' w-[260px]'}>(27) 퇴직소득 (=17)</td><td className={cls_v}>{won(calc.taxableRetirePay)}</td></tr>
+            <tr><td className={cls_l}>(28) 근속연수공제 (5/10/20년 누진)</td><td className={cls_v}>{won(calc.serviceDeduction)}</td></tr>
+            <tr><td className={cls_l}>(29) 환산급여 [(27-28) × 12 / 정산근속연수]</td><td className={cls_v}>{won(calc.convertedPay)}</td></tr>
+            <tr><td className={cls_l}>(30) 환산급여별 공제</td><td className={cls_v}>{won(calc.convertedDeduction)}</td></tr>
+            <tr className="bg-emerald-50">
+              <td className={cls_l + ' font-bold'}>(31) 퇴직소득과세표준 (29-30)</td>
+              <td className={cls_v + ' font-bold text-emerald-800'}>{won(calc.taxBase)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">퇴직소득세액 계산</div>
+        <table className="w-full text-[11px]">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[260px]'}>(32) 환산산출세액 (31 × 세율)</td>
+              <td className={cls_v + ' w-[180px]'}>{won(calc.convertedTax)}</td>
+              <td className={cls_l + ' w-[100px]'}>적용 세율</td>
+              <td className={cls_v}>{taxRate}</td>
+            </tr>
+            <tr>
+              <td className={cls_l + ' font-bold'}>(33) 퇴직소득 산출세액 (32 / 12 × 정산근속연수)</td>
+              <td className={cls_v + ' font-bold'} colSpan={3}>{won(calc.computedTax)}</td>
+            </tr>
+            <tr>
+              <td className={cls_l}>(34) 세액공제</td>
+              <td className={cls_i} colSpan={3}><input type="number" className={iptN} value={inp.taxCredit} onChange={e => update({ taxCredit: Number(e.target.value) })} /></td>
+            </tr>
+            <tr>
+              <td className={cls_l}>(35) 기납부(또는 기과세이연) 세액</td>
+              <td className={cls_i} colSpan={3}><input type="number" className={iptN} value={inp.prepaidTax} onChange={e => update({ prepaidTax: Number(e.target.value) })} /></td>
+            </tr>
+            <tr className="bg-emerald-50">
+              <td className={cls_l + ' font-bold'}>(36) 신고대상세액 (33 - 34 - 35)</td>
+              <td className={cls_v + ' font-bold text-emerald-800'} colSpan={3}>{won(calc.reportTax)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">이연퇴직소득세액 계산</div>
+        <table className="w-full text-[11px]">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[200px]'}>(37) 신고대상세액 (=36)</td>
+              <td className={cls_v + ' w-[180px]'}>{won(calc.reportTax)}</td>
+              <td className={cls_l + ' w-[180px]'}>(38) 연금계좌 입금금액</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.pensionDeposit} onChange={e => update({ pensionDeposit: Number(e.target.value) })} /></td>
+            </tr>
+            <tr>
+              <td className={cls_l}>(39) 퇴직급여 (=17)</td>
+              <td className={cls_v}>{won(calc.taxableRetirePay)}</td>
+              <td className={cls_l + ' font-bold'}>(40) 이연퇴직소득세 (37 × 38 / 39)</td>
+              <td className={cls_v + ' font-bold text-amber-700'}>{won(calc.deferredTax)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border-2 border-teal-400">
+        <div className="px-3 py-2 bg-teal-100 border-b border-teal-300 text-[12px] font-bold text-teal-800">납부명세 — 차감원천징수세액 (10원 절사)</div>
+        <table className="w-full text-[11px]">
+          <thead>
+            <tr>
+              <th className={cls_h + ' w-[200px]'}>구분</th>
+              <th className={cls_h}>소득세</th>
+              <th className={cls_h}>지방소득세 (소득세/10)</th>
+              <th className={cls_h}>농어촌특별세</th>
+              <th className={cls_h}>계</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className={cls_l}>(42) 신고대상세액 (=36)</td>
+              <td className={cls_v}>{won(calc.reportTax)}</td>
+              <td className={cls_v}>{won(Math.floor(calc.reportTax / 10))}</td>
+              <td className={cls_v}>0</td>
+              <td className={cls_v}>{won(calc.reportTax + Math.floor(calc.reportTax / 10))}</td>
+            </tr>
+            <tr>
+              <td className={cls_l}>(43) 이연퇴직소득세 (=40)</td>
+              <td className={cls_v}>{won(calc.deferredTax)}</td>
+              <td className={cls_v}>{won(Math.floor(calc.deferredTax / 10))}</td>
+              <td className={cls_v}>0</td>
+              <td className={cls_v}>{won(calc.deferredTax + Math.floor(calc.deferredTax / 10))}</td>
+            </tr>
+            <tr className="bg-teal-50 border-t-2 border-teal-400">
+              <td className={cls_l + ' font-bold text-teal-800'}>(44) 차감원천징수세액 (42-43)</td>
+              <td className={cls_v + ' font-bold text-teal-800 text-base'}>{won(calc.finalIncomeTax)}</td>
+              <td className={cls_v + ' font-bold text-teal-800 text-base'}>{won(calc.finalLocalTax)}</td>
+              <td className={cls_v}>0</td>
+              <td className={cls_v + ' font-bold text-teal-800 text-base'}>{won(calc.finalIncomeTax + calc.finalLocalTax)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="text-[11px] text-slate-500 text-right">
+        ※ 위의 원천징수세액(퇴직소득)을 정히 영수(지급)합니다 — {mockEmployer.name} (대표자: {mockEmployer.ceo})
+      </div>
+    </div>
   )
 }
