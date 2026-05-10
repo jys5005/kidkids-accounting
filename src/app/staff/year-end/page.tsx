@@ -1,7 +1,7 @@
 'use client'
 import React, { useMemo, useState } from 'react'
 
-type Tab = 'withholding' | 'wage-statement' | 'retirement-statement'
+type Tab = 'withholding' | 'wage' | 'biz' | 'retire'
 
 const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500"
 const labelCls = "text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2 border-r border-slate-200 whitespace-nowrap w-[140px] min-w-[140px]"
@@ -17,6 +17,8 @@ const mockEmployer = {
   taxOfficeCd: '137',
   phone: '032-584-9019',
   email: '',
+  corpRrn: '1234567890123',  // B8 주민/법인등록번호 (개인이면 13자리 주민번호)
+  contact: { dept: '회계담당', name: '홍길동', phone: '01011111111' },
 }
 
 // ===================== 공통 헬퍼 =====================
@@ -27,51 +29,80 @@ const wonShort = (n: number) => {
   return n.toLocaleString('ko-KR')
 }
 const stamp = () => new Date().toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+const yyyymmdd = (d = new Date()) => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`
 
-// cp949 byte length 기준 (한글 2byte / ASCII 1byte)
+// cp949 byte length (한글 2byte / ASCII 1byte)
 function byteLen(s: string): number {
   let n = 0
   for (const ch of s) n += ((ch.codePointAt(0) ?? 0) < 128) ? 1 : 2
   return n
 }
-function padByte(s: string, len: number, ch = ' ', right = false): string {
-  s = s ?? ''
+function padX(s: string | number | undefined | null, len: number): string {
+  // X(N): 좌측부터 수록, 우측 공란 (cp949 byte 단위)
+  let str = String(s ?? '')
   let out = ''
   let n = 0
-  for (const c of s) {
+  for (const c of str) {
     const w = ((c.codePointAt(0) ?? 0) < 128) ? 1 : 2
     if (n + w > len) break
     out += c
     n += w
   }
-  while (n < len) { out = right ? ch + out : out + ch; n += 1 }
+  while (n < len) { out += ' '; n += 1 }
   return out
 }
-function padNum(n: number, len: number): string {
-  const v = Math.trunc(n)
-  if (v < 0) return '-' + String(-v).padStart(len - 1, '0')
-  return String(v).padStart(len, '0')
+function padN(n: number | string, len: number, signed = false): string {
+  // 9(N): 우측 정렬, 0 padding (양수만; 음수는 ‘-’ 부호 포함 → signed=true 일 때)
+  const num = typeof n === 'string' ? parseInt(n || '0', 10) : Math.trunc(n)
+  if (Number.isNaN(num)) return '0'.repeat(len)
+  if (signed && num < 0) return '-' + String(-num).padStart(len - 1, '0')
+  return String(Math.abs(num)).padStart(len, '0')
 }
-const yyyymmdd = (d = new Date()) => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`
+function spaces(n: number): string { return ' '.repeat(n) }
 
-// ===================== 원천세 본표 =====================
+// 빌드 결과 byte length 검증 (개발 편의)
+function verifyLen(line: string, expected: number, tag: string): string {
+  const cur = byteLen(line)
+  if (cur === expected) return line
+  // 부족하면 SPACE로 채움, 초과하면 자르기 (cp949 byte 기준)
+  if (cur < expected) return line + spaces(expected - cur)
+  let out = ''
+  let n = 0
+  for (const c of line) {
+    const w = ((c.codePointAt(0) ?? 0) < 128) ? 1 : 2
+    if (n + w > expected) break
+    out += c
+    n += w
+  }
+  while (n < expected) { out += ' '; n += 1 }
+  return out
+}
+
+async function downloadCp949(content: string, filename: string) {
+  const res = await fetch('/api/withholding/file', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, filename }),
+  })
+  if (!res.ok) { alert('파일 변환 실패: ' + res.status); return }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+// ============ 원천세 본표 ============
 type WhCode = 'A01' | 'A02' | 'A03' | 'A10' | 'A20' | 'A99'
 const WH_LABELS: Record<WhCode, string> = {
   A01: '근로소득 간이세액', A02: '근로소득 중도퇴사', A03: '근로소득 일용근로',
   A10: '근로소득 가감계', A20: '퇴직소득', A99: '총합계',
 }
 type WhRow = {
-  code: WhCode
-  count: number
-  payAmt: number
-  incomeTax: number      // 음수 가능: A02/A20 등
-  ruralTax: number
-  penalty: number
-  monthlyRefund: number
-  payIncomeTax: number
-  payRuralTax: number
+  code: WhCode; count: number; payAmt: number; incomeTax: number
+  ruralTax: number; penalty: number; monthlyRefund: number
+  payIncomeTax: number; payRuralTax: number
 }
-
 function makeMonthly(year: string): Record<string, WhRow[]> {
   const r: Record<string, WhRow[]> = {}
   for (let i = 1; i <= 12; i++) {
@@ -83,158 +114,77 @@ function makeMonthly(year: string): Record<string, WhRow[]> {
       : { code: 'A02', count: 0, payAmt: 0, incomeTax: 0, ruralTax: 0, penalty: 0, monthlyRefund: 0, payIncomeTax: 0, payRuralTax: 0 }
     const a03: WhRow = { code: 'A03', count: 0, payAmt: 0, incomeTax: 0, ruralTax: 0, penalty: 0, monthlyRefund: 0, payIncomeTax: 0, payRuralTax: 0 }
     const a10: WhRow = {
-      code: 'A10',
-      count: a01.count + a02.count + a03.count,
-      payAmt: a01.payAmt + a02.payAmt + a03.payAmt,
-      incomeTax: a01.incomeTax + a02.incomeTax + a03.incomeTax,
-      ruralTax: a01.ruralTax + a02.ruralTax + a03.ruralTax,
-      penalty: 0,
+      code: 'A10', count: a01.count + a02.count + a03.count, payAmt: a01.payAmt + a02.payAmt + a03.payAmt,
+      incomeTax: a01.incomeTax + a02.incomeTax + a03.incomeTax, ruralTax: 0, penalty: 0,
       monthlyRefund: a01.monthlyRefund + a02.monthlyRefund + a03.monthlyRefund,
       payIncomeTax: Math.max(0, a01.incomeTax + a02.incomeTax + a03.incomeTax - (a01.monthlyRefund + a02.monthlyRefund + a03.monthlyRefund)),
       payRuralTax: 0,
     }
     const a20: WhRow = { code: 'A20', count: 0, payAmt: 0, incomeTax: 0, ruralTax: 0, penalty: 0, monthlyRefund: 0, payIncomeTax: 0, payRuralTax: 0 }
     const a99: WhRow = {
-      code: 'A99',
-      count: a10.count + a20.count,
-      payAmt: a10.payAmt + a20.payAmt,
-      incomeTax: a10.incomeTax + a20.incomeTax,
-      ruralTax: a10.ruralTax + a20.ruralTax,
-      penalty: 0,
+      code: 'A99', count: a10.count + a20.count, payAmt: a10.payAmt + a20.payAmt,
+      incomeTax: a10.incomeTax + a20.incomeTax, ruralTax: 0, penalty: 0,
       monthlyRefund: a10.monthlyRefund + a20.monthlyRefund,
-      payIncomeTax: a10.payIncomeTax + a20.payIncomeTax,
-      payRuralTax: 0,
+      payIncomeTax: a10.payIncomeTax + a20.payIncomeTax, payRuralTax: 0,
     }
     r[m] = [a01, a02, a03, a10, a20, a99]
   }
   return r
 }
-
-function sumWh(rows: WhRow[]) {
-  // A99(총합계)만 떼서 사용
+function sumWh(rows: WhRow[]): WhRow {
   const tot = rows.find(r => r.code === 'A99')
-  return tot ?? { count: 0, payAmt: 0, incomeTax: 0, ruralTax: 0, penalty: 0, monthlyRefund: 0, payIncomeTax: 0, payRuralTax: 0 } as WhRow
+  return tot ?? { code: 'A99', count: 0, payAmt: 0, incomeTax: 0, ruralTax: 0, penalty: 0, monthlyRefund: 0, payIncomeTax: 0, payRuralTax: 0 }
 }
 
-// ===================== 진짜 .01 빌드 함수 =====================
-type FiscalCode = '01' | '02' | '03'  // 정기 / 수정 / 기한후
-
+// ============ 원천세 .01 빌드 (C103900) ============
+type FiscalCode = '01' | '02' | '03'
 type Header21Opts = {
-  bizNo: string; name: string; ceo: string; addr: string; phone: string; email: string;
-  ym: string         // 귀속연월 YYYYMM
-  payYm: string      // 지급연월 YYYYMM
-  submitYm: string   // 제출연월 YYYYMM
-  fiscalCode: FiscalCode  // 신고구분상세
-  userId: string     // 홈택스 사용자ID
-  refundYn: 'Y' | 'N'
-  annualYn: 'Y' | 'N'
-  monthlyOrSemi: '01' | '02'  // 매월/반기
+  bizNo: string; name: string; ceo: string; addr: string; phone: string; email: string
+  ym: string; payYm: string; submitYm: string; fiscalCode: FiscalCode
+  userId: string; refundYn: 'Y'|'N'; annualYn: 'Y'|'N'; monthlyOrSemi: '01'|'02'
 }
-
 function buildHeader21(o: Header21Opts): string {
-  const parts: string[] = []
-  parts.push(padByte('21', 2))                // 1. 자료구분
-  parts.push(padByte('C103900', 7))           // 2. 서식코드
-  parts.push(padByte(o.bizNo, 13))            // 3. 납세자ID
-  parts.push(padByte('14', 2))                // 4. 세목코드
-  parts.push(padByte('01', 2))                // 5. 신고구분코드 (정기)
-  parts.push(padByte(o.fiscalCode, 2))        // 6. 신고구분상세
-  parts.push(padByte('F01', 3))               // 7. 신고서종류코드
-  parts.push(padByte(o.ym, 6))                // 8. 귀속연월
-  parts.push(padByte(o.payYm, 6))             // 9. 지급연월
-  parts.push(padByte(o.submitYm, 6))          // 10. 제출연월
-  parts.push(padByte(o.userId, 20))           // 11. 사용자ID
-  parts.push(padByte(o.fiscalCode === '02' ? 'FF101' : 'FF001', 5))  // 12. 민원종류
-  parts.push(padByte('', 10))                 // 13. 세무대리인 사업자번호
-  parts.push(padByte('', 30))                 // 14. 세무대리인 성명
-  parts.push(padByte('', 6))                  // 15. 세무대리인 관리번호
-  parts.push(padByte('', 14))                 // 16. 세무대리인 전화번호
-  parts.push(padByte(o.name, 30))             // 17. 법인명(상호)
-  parts.push(padByte(o.addr, 70))             // 18. 사업장 소재지
-  parts.push(padByte(o.phone, 14))            // 19. 사업장 전화번호
-  parts.push(padByte(o.email, 50))            // 20. 전자메일
-  parts.push(padByte(o.ceo, 30))              // 21. 성명(대표자)
-  parts.push(padByte(o.monthlyOrSemi, 2))     // 22. 원천신고구분 (01 매월/02 반기)
-  parts.push(padByte(o.annualYn, 1))          // 23. 연말정산여부
-  parts.push(padByte('N', 1))                 // 24. 소득처분여부
-  parts.push(padByte(o.refundYn, 1))          // 25. 환급신청여부
-  parts.push(padByte('N', 1))                 // 26. 일괄납부여부
-  parts.push(padByte('N', 1))                 // 27. 사업자단위과세
-  parts.push(padByte('N', 1))                 // 28. 신고서부표여부
-  parts.push(padByte('N', 1))                 // 29. 차월이월 승계명세
-  parts.push(padByte('N', 1))                 // 30. 기납부세액명세서 제출
-  parts.push(padByte('', 3))                  // 31. 예입처(은행코드)
-  parts.push(padByte('', 20))                 // 32. 계좌번호
-  parts.push(padByte(yyyymmdd(), 8))          // 33. 작성일자
-  parts.push(padByte('9000', 4))              // 34. 세무프로그램코드
-  parts.push(padByte('', 27))                 // 35. 공란
-  const line = parts.join('')
-  // 검증: byte length 400
-  return line
+  const p: string[] = []
+  p.push(padX('21', 2)); p.push(padX('C103900', 7)); p.push(padX(o.bizNo, 13)); p.push(padX('14', 2))
+  p.push(padX('01', 2)); p.push(padX(o.fiscalCode, 2)); p.push(padX('F01', 3))
+  p.push(padX(o.ym, 6)); p.push(padX(o.payYm, 6)); p.push(padX(o.submitYm, 6))
+  p.push(padX(o.userId, 20)); p.push(padX(o.fiscalCode === '02' ? 'FF101' : 'FF001', 5))
+  p.push(padX('', 10)); p.push(padX('', 30)); p.push(padX('', 6)); p.push(padX('', 14))
+  p.push(padX(o.name, 30)); p.push(padX(o.addr, 70)); p.push(padX(o.phone, 14)); p.push(padX(o.email, 50))
+  p.push(padX(o.ceo, 30)); p.push(padX(o.monthlyOrSemi, 2)); p.push(padX(o.annualYn, 1))
+  p.push(padX('N', 1)); p.push(padX(o.refundYn, 1)); p.push(padX('N', 1)); p.push(padX('N', 1))
+  p.push(padX('N', 1)); p.push(padX('N', 1)); p.push(padX('N', 1))
+  p.push(padX('', 3)); p.push(padX('', 20)); p.push(padX(yyyymmdd(), 8)); p.push(padX('9000', 4))
+  p.push(padX('', 27))
+  return verifyLen(p.join(''), 400, 'WH-21')
 }
-
 function buildRefund22(): string {
-  // 환급세액 조정 — 미사용 시 모두 0
-  const parts: string[] = []
-  parts.push(padByte('22', 2))
-  parts.push(padByte('C103900', 7))
-  for (let i = 0; i < 12; i++) parts.push(padNum(0, 15))  // (12)~(21) + 승계대상 = 12개 NUMBER 15
-  parts.push(padByte('', 11))  // 공란
-  return parts.join('')
+  const p: string[] = []
+  p.push(padX('22', 2)); p.push(padX('C103900', 7))
+  for (let i = 0; i < 12; i++) p.push(padN(0, 15, true))
+  p.push(padX('', 11))
+  return verifyLen(p.join(''), 200, 'WH-22')
 }
-
 function buildDetail23(row: WhRow): string {
-  const parts: string[] = []
-  parts.push(padByte('23', 2))
-  parts.push(padByte('C103900', 7))
-  parts.push(padByte(row.code, 3))
-  parts.push(padNum(row.count, 15))
-  parts.push(padNum(row.payAmt, 15))
-  parts.push(padNum(row.incomeTax, 15))
-  parts.push(padNum(row.ruralTax, 15))
-  parts.push(padNum(row.penalty, 15))
-  parts.push(padNum(row.monthlyRefund, 15))
-  parts.push(padNum(row.payIncomeTax, 15))
-  parts.push(padNum(row.payRuralTax, 15))
-  parts.push(padByte('', 18))
-  return parts.join('')
+  const p: string[] = []
+  p.push(padX('23', 2)); p.push(padX('C103900', 7)); p.push(padX(row.code, 3))
+  p.push(padN(row.count, 15)); p.push(padN(row.payAmt, 15))
+  p.push(padN(row.incomeTax, 15, true)); p.push(padN(row.ruralTax, 15, true))
+  p.push(padN(row.penalty, 15)); p.push(padN(row.monthlyRefund, 15, true))
+  p.push(padN(row.payIncomeTax, 15)); p.push(padN(row.payRuralTax, 15))
+  p.push(padX('', 18))
+  return verifyLen(p.join(''), 150, 'WH-23')
 }
-
 function buildWithholdingFile(opts: { headerOpts: Header21Opts; rows: WhRow[] }): string {
   const lines: string[] = []
   lines.push(buildHeader21(opts.headerOpts))
   lines.push(buildRefund22())
-  // 모든 코드(A01~A99)를 명세 23 로 출력
   for (const r of opts.rows) lines.push(buildDetail23(r))
   return lines.join('\r\n')
 }
 
-async function downloadCp949(content: string, filename: string) {
-  const res = await fetch('/api/withholding/file', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content, filename }),
-  })
-  if (!res.ok) {
-    alert('파일 변환 실패: ' + res.status)
-    return
-  }
-  const blob = await res.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url; a.download = filename; a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-function downloadText(name: string, body: string) {
-  const blob = new Blob([body], { type: 'text/plain;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url; a.download = name; a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-// ===================== 지급명세서(근로소득) =====================
+// ============ 근로소득 지급명세서 (자료구분 20, 9개 레코드 × 2010byte) ============
+const WAGE_LEN = 2010
 type WageEmp = {
   rrn: string; name: string; hireDate: string; leaveDate: string
   totalPay: number; nonTaxable: number; taxable: number
@@ -245,61 +195,197 @@ const mockWageStatements: WageEmp[] = [
   { rrn: '9007072222222', name: '이교사', hireDate: '20230315', leaveDate: '', totalPay: 32_400_000, nonTaxable: 1_200_000, taxable: 31_200_000, determinedTax:   612_000, prepaidTax:   720_000 },
   { rrn: '7811214444444', name: '박원장', hireDate: '20180101', leaveDate: '', totalPay: 60_000_000, nonTaxable: 1_200_000, taxable: 58_800_000, determinedTax: 3_240_000, prepaidTax: 3_400_000 },
 ]
-const padOld = (s: string | number, len: number, ch = ' ', right = false) => {
-  const v = String(s ?? '')
-  if (v.length >= len) return v.slice(0, len)
-  return right ? v.padStart(len, ch) : v.padEnd(len, ch)
+
+type WageHeaderOpts = { year: string; submitDate: string; hometaxId: string; submitterType: '1'|'2'|'3' }
+
+// A 레코드: 제출자 — 17개 항목, 누적 2010
+function buildWageA(o: WageHeaderOpts, bCount: number): string {
+  const p: string[] = []
+  p.push(padX('A', 1))                 // A1 레코드구분
+  p.push(padX('20', 2))                // A2 자료구분
+  p.push(padX(mockEmployer.taxOfficeCd, 3))   // A3 세무서코드
+  p.push(padX(o.submitDate, 8))        // A4 제출연월일
+  p.push(padX(o.submitterType, 1))     // A5 제출자구분
+  p.push(padX('', 6))                  // A6 세무대리인 관리번호
+  p.push(padX(o.hometaxId, 20))        // A7 홈택스ID
+  p.push(padX('9000', 4))              // A8 세무프로그램코드
+  p.push(padX(mockEmployer.bizNo, 10)) // A9 사업자등록번호
+  p.push(padX(mockEmployer.name, 60))  // A10 법인명(상호)
+  p.push(padX(mockEmployer.contact.dept, 30))  // A11 담당자 부서
+  p.push(padX(mockEmployer.contact.name, 30))  // A12 담당자 성명
+  p.push(padX(mockEmployer.contact.phone, 15)) // A13 담당자 전화번호
+  p.push(padX(o.year, 4))              // A14 귀속연도
+  p.push(padN(bCount, 5))              // A15 신고의무자수
+  p.push(padN(101, 3))                 // A16 사용한글코드 = 101
+  p.push(padX('', 1808))               // A17 공란
+  return verifyLen(p.join(''), WAGE_LEN, 'WAGE-A')
 }
-const padNOld = (n: number, len: number) => padOld(Math.max(0, Math.trunc(n)), len, '0', true)
-function buildWageStatementFile(year: string, rows: WageEmp[]): string {
+
+// B 레코드: 원천징수의무자별 집계 — 골자 + 나머지 공란
+function buildWageB(o: WageHeaderOpts, seq: number, cCount: number, totals: { totalPay: number; determinedTax: number; prepaidTax: number }): string {
+  const p: string[] = []
+  p.push(padX('B', 1))
+  p.push(padX('20', 2))
+  p.push(padX(mockEmployer.taxOfficeCd, 3))
+  p.push(padN(seq, 6))                 // B4 일련번호
+  p.push(padX(mockEmployer.bizNo, 10)) // B5 사업자등록번호
+  p.push(padX(mockEmployer.name, 60))  // B6 법인명(상호)
+  p.push(padX(mockEmployer.ceo, 30))   // B7 대표자
+  p.push(padX(mockEmployer.corpRrn, 13)) // B8 주민/법인등록번호
+  p.push(padX(o.year, 4))              // B9 귀속연도
+  p.push(padN(cCount, 7))              // B10 주(현)근무처(C레코드) 수
+  p.push(padN(0, 7))                   // B11 종(전)근무처(D레코드) 수
+  // 나머지 항목들은 공란 채움 (총급여/세액 등 진짜 매핑은 단계적)
+  const head = byteLen(p.join(''))
+  p.push(padX('', WAGE_LEN - head))
+  return verifyLen(p.join(''), WAGE_LEN, 'WAGE-B')
+}
+
+// C 레코드: 주(현)근무처 — 골자 (성명/주민번호/입퇴사/총급여/결정세액 등) + 나머지 공란
+function buildWageC(o: WageHeaderOpts, seq: number, emp: WageEmp): string {
+  const p: string[] = []
+  p.push(padX('C', 1))
+  p.push(padX('20', 2))
+  p.push(padX(mockEmployer.taxOfficeCd, 3))
+  p.push(padN(seq, 7))                 // C4 근로소득자 일련번호
+  p.push(padX(mockEmployer.bizNo, 10)) // C5 원천징수의무자 사업자번호
+  p.push(padN(0, 5))                   // C6 종(전)근무처 수
+  p.push(padX('1', 1))                 // C7 거주자구분(1 거주/2 비거주)
+  p.push(padX('1', 1))                 // 내외국인(1 내/9 외)
+  p.push(padX('', 2))                  // 거주지국 코드
+  p.push(padX(emp.rrn, 13))            // 주민번호
+  p.push(padX(emp.name, 30))           // 성명
+  p.push(padX(emp.hireDate, 8))        // 입사일
+  p.push(padX(emp.leaveDate || '', 8)) // 퇴사일
+  p.push(padX(o.year + '0101', 8))     // 귀속기간 시작
+  p.push(padX(emp.leaveDate || (o.year + '1231'), 8))  // 귀속기간 종료
+  p.push(padN(emp.totalPay, 13))       // 총급여
+  p.push(padN(emp.nonTaxable, 13))     // 비과세
+  p.push(padN(emp.taxable, 13))        // 과세대상
+  p.push(padN(emp.determinedTax, 13))  // 결정세액 (소득세)
+  p.push(padN(0, 13))                  // 결정세액 농특세
+  p.push(padN(0, 13))                  // 결정세액 지방소득세
+  p.push(padN(emp.prepaidTax, 13))     // 기납부세액
+  const refund = emp.prepaidTax - emp.determinedTax
+  p.push(padN(refund, 13, true))       // 차감징수세액
+  // 나머지 SPACE 패딩
+  const head = byteLen(p.join(''))
+  p.push(padX('', WAGE_LEN - head))
+  return verifyLen(p.join(''), WAGE_LEN, 'WAGE-C')
+}
+
+function buildWageFile(opts: WageHeaderOpts, rows: WageEmp[]): string {
+  const totals = rows.reduce((s, r) => ({
+    totalPay: s.totalPay + r.totalPay,
+    determinedTax: s.determinedTax + r.determinedTax,
+    prepaidTax: s.prepaidTax + r.prepaidTax,
+  }), { totalPay: 0, determinedTax: 0, prepaidTax: 0 })
   const lines: string[] = []
-  lines.push('A' + padOld(year, 4) + padOld(mockEmployer.bizNo, 10) + padOld(mockEmployer.name, 40) + padOld(mockEmployer.ceo, 20) + padOld(mockEmployer.taxOfficeCd, 3) + padNOld(rows.length, 6))
-  rows.forEach((r, i) => {
-    const refund = r.prepaidTax - r.determinedTax
-    lines.push('B' + padOld(i+1, 5, '0', true) + padOld(r.rrn, 13) + padOld(r.name, 20) + padOld(r.hireDate, 8) + padOld(r.leaveDate || '00000000', 8) + padNOld(r.totalPay, 14) + padNOld(r.nonTaxable, 14) + padNOld(r.taxable, 14) + padNOld(r.determinedTax, 12) + padNOld(r.prepaidTax, 12) + (refund < 0 ? '-' : '+') + padNOld(Math.abs(refund), 11))
-  })
+  lines.push(buildWageA(opts, 1))
+  lines.push(buildWageB(opts, 1, rows.length, totals))
+  rows.forEach((r, i) => lines.push(buildWageC(opts, i+1, r)))
   return lines.join('\r\n')
 }
 
-// ===================== 퇴직소득 (xlsx 계산식 이식) =====================
-type RetireInput = {
-  rrn: string
-  name: string
-  isExecutive: 'Y' | 'N'           // 임원여부
-  hireDate: string                  // YYYYMMDD
-  retireDate: string                // YYYYMMDD
-  paymentDate: string               // YYYYMMDD 지급일
-  reason: '정년퇴직' | '정리해고' | '자발적 퇴직' | '임원퇴직' | '중간정산' | '기타'
-  retirePay: number                 // (15)
-  nonTaxableRetirePay: number       // (16)
-  excludedMonths: number            // (23) 제외월수
-  addedMonths: number               // (24) 가산월수
-  taxCredit: number                 // (34) 세액공제
-  prepaidTax: number                // (35) 기납부세액
-  pensionDeposit: number            // (38) 연금계좌 입금금액 (이연)
+// ============ 사업소득 지급명세서 (자료구분 80, 7개 레코드 × 770byte) ============
+const BIZ_LEN = 770
+type BizEmp = {
+  rrn: string; name: string; startDate: string; endDate: string
+  income: number; necessary: number; netIncome: number
+  determinedTax: number; prepaidTax: number
+}
+const mockBizStatements: BizEmp[] = [
+  { rrn: '8801014444444', name: '강프리', startDate: '20250101', endDate: '20251231', income: 24_000_000, necessary: 18_000_000, netIncome: 6_000_000, determinedTax: 360_000, prepaidTax: 720_000 },
+]
+
+function buildBizA(o: WageHeaderOpts, bCount: number): string {
+  const p: string[] = []
+  p.push(padX('A', 1))
+  p.push(padX('80', 2))                                    // 자료구분 80
+  p.push(padX(mockEmployer.taxOfficeCd, 3))
+  p.push(padX(o.submitDate, 8))
+  p.push(padX(o.submitterType, 1))
+  p.push(padX('', 6))
+  p.push(padX(o.hometaxId, 20))
+  p.push(padX('9000', 4))
+  p.push(padX(mockEmployer.bizNo, 10))
+  p.push(padX(mockEmployer.name, 60))
+  p.push(padX(mockEmployer.contact.dept, 30))
+  p.push(padX(mockEmployer.contact.name, 30))
+  p.push(padX(mockEmployer.contact.phone, 15))
+  p.push(padX(o.year, 4))
+  p.push(padN(bCount, 5))
+  p.push(padN(101, 3))
+  // 사업소득 770 - (현재까지 byte) = 공란
+  const head = byteLen(p.join(''))
+  p.push(padX('', BIZ_LEN - head))
+  return verifyLen(p.join(''), BIZ_LEN, 'BIZ-A')
+}
+function buildBizB(o: WageHeaderOpts, seq: number, cCount: number): string {
+  const p: string[] = []
+  p.push(padX('B', 1))
+  p.push(padX('80', 2))
+  p.push(padX(mockEmployer.taxOfficeCd, 3))
+  p.push(padN(seq, 6))
+  p.push(padX(mockEmployer.bizNo, 10))
+  p.push(padX(mockEmployer.name, 60))
+  p.push(padX(mockEmployer.ceo, 30))
+  p.push(padX(mockEmployer.corpRrn, 13))
+  p.push(padX(o.year, 4))
+  p.push(padN(cCount, 7))
+  const head = byteLen(p.join(''))
+  p.push(padX('', BIZ_LEN - head))
+  return verifyLen(p.join(''), BIZ_LEN, 'BIZ-B')
+}
+function buildBizC(o: WageHeaderOpts, seq: number, emp: BizEmp): string {
+  const p: string[] = []
+  p.push(padX('C', 1))
+  p.push(padX('80', 2))
+  p.push(padX(mockEmployer.taxOfficeCd, 3))
+  p.push(padN(seq, 7))
+  p.push(padX(mockEmployer.bizNo, 10))
+  p.push(padX(emp.rrn, 13))
+  p.push(padX(emp.name, 30))
+  p.push(padX(emp.startDate, 8))
+  p.push(padX(emp.endDate, 8))
+  p.push(padN(emp.income, 13))
+  p.push(padN(emp.necessary, 13))
+  p.push(padN(emp.netIncome, 13))
+  p.push(padN(emp.determinedTax, 13))
+  p.push(padN(emp.prepaidTax, 13))
+  const head = byteLen(p.join(''))
+  p.push(padX('', BIZ_LEN - head))
+  return verifyLen(p.join(''), BIZ_LEN, 'BIZ-C')
+}
+function buildBizFile(opts: WageHeaderOpts, rows: BizEmp[]): string {
+  const lines: string[] = []
+  lines.push(buildBizA(opts, 1))
+  lines.push(buildBizB(opts, 1, rows.length))
+  rows.forEach((r, i) => lines.push(buildBizC(opts, i+1, r)))
+  return lines.join('\r\n')
 }
 
+// ============ 퇴직소득 지급명세서 (자료구분 25, 4개 레코드 × 761byte) ============
+const RETIRE_LEN = 761
+type RetireInput = {
+  rrn: string; name: string; isExecutive: 'Y'|'N'
+  hireDate: string; retireDate: string; paymentDate: string
+  reason: '정년퇴직' | '정리해고' | '자발적 퇴직' | '임원퇴직' | '중간정산' | '기타'
+  retirePay: number; nonTaxableRetirePay: number
+  excludedMonths: number; addedMonths: number
+  taxCredit: number; prepaidTax: number; pensionDeposit: number
+}
 const mockRetireInputs: RetireInput[] = [
   { rrn: '7506203333333', name: '정교사', isExecutive: 'N', hireDate: '20150401', retireDate: '20250228', paymentDate: '20250307', reason: '자발적 퇴직', retirePay: 28_500_000, nonTaxableRetirePay: 0, excludedMonths: 0, addedMonths: 0, taxCredit: 0, prepaidTax: 0, pensionDeposit: 0 },
   { rrn: '8211095555555', name: '한교사', isExecutive: 'N', hireDate: '20191001', retireDate: '20251130', paymentDate: '20251210', reason: '정리해고', retirePay: 14_200_000, nonTaxableRetirePay: 0, excludedMonths: 0, addedMonths: 0, taxCredit: 0, prepaidTax: 0, pensionDeposit: 0 },
 ]
-
 type RetireCalc = {
-  serviceMonths: number       // (22)
-  serviceYears: number        // (26) 정산근속연수 (ceil)
-  taxableRetirePay: number    // (27) = (15)-(16)
-  serviceDeduction: number    // (28) 근속연수공제
-  convertedPay: number        // (29) 환산급여
-  convertedDeduction: number  // (30) 환산급여별 공제
-  taxBase: number             // (31) 과세표준
-  convertedTax: number        // (32) 환산산출세액
-  computedTax: number         // (33) 산출세액
-  reportTax: number           // (36) 신고대상세액
-  deferredTax: number         // (40) 이연퇴직소득세
-  finalIncomeTax: number      // (44) 차감원천징수 소득세
-  finalLocalTax: number       // 지방소득세
+  serviceMonths: number; serviceYears: number; taxableRetirePay: number
+  serviceDeduction: number; convertedPay: number; convertedDeduction: number
+  taxBase: number; convertedTax: number; computedTax: number
+  reportTax: number; deferredTax: number
+  finalIncomeTax: number; finalLocalTax: number
 }
-
 function diffMonthsInclusive(start: string, end: string): number {
   if (!start || !end || start.length !== 8 || end.length !== 8) return 0
   const s = new Date(`${start.slice(0,4)}-${start.slice(4,6)}-${start.slice(6,8)}`)
@@ -307,14 +393,11 @@ function diffMonthsInclusive(start: string, end: string): number {
   if (isNaN(s.getTime()) || isNaN(e.getTime())) return 0
   return (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) + 1
 }
-
 function computeRetire(inp: RetireInput): RetireCalc {
   const serviceMonths = diffMonthsInclusive(inp.hireDate, inp.retireDate)
   const adjMonths = serviceMonths - inp.excludedMonths + inp.addedMonths
   const serviceYears = adjMonths > 0 ? Math.ceil(adjMonths / 12) : 0
   const taxableRetirePay = Math.max(0, inp.retirePay - inp.nonTaxableRetirePay)
-
-  // (28) 근속연수공제
   let svcDeduction = 0
   const y = serviceYears
   if (y <= 5) svcDeduction = y * 1_000_000
@@ -322,11 +405,7 @@ function computeRetire(inp: RetireInput): RetireCalc {
   else if (y <= 20) svcDeduction = (y - 10) * 2_500_000 + 15_000_000
   else svcDeduction = (y - 20) * 3_000_000 + 40_000_000
   if (svcDeduction > taxableRetirePay) svcDeduction = taxableRetirePay
-
-  // (29) 환산급여
   const convertedPay = serviceYears > 0 ? Math.floor((taxableRetirePay - svcDeduction) * 12 / serviceYears) : 0
-
-  // (30) 환산급여별 공제
   let convertedDed = 0
   const cp = convertedPay
   if (cp <= 8_000_000) convertedDed = cp
@@ -335,11 +414,7 @@ function computeRetire(inp: RetireInput): RetireCalc {
   else if (cp <= 300_000_000) convertedDed = (cp - 100_000_000) * 0.45 + 61_700_000
   else convertedDed = (cp - 300_000_000) * 0.35 + 151_700_000
   convertedDed = Math.floor(convertedDed)
-
-  // (31) 과세표준
   const taxBase = Math.max(0, convertedPay - convertedDed)
-
-  // (32) 환산산출세액 — 종합소득세 누진율
   let convertedTax = 0
   const tb = taxBase
   if (tb <= 14_000_000) convertedTax = tb * 0.06
@@ -351,60 +426,112 @@ function computeRetire(inp: RetireInput): RetireCalc {
   else if (tb <= 1_000_000_000) convertedTax = tb * 0.42 - 35_940_000
   else convertedTax = tb * 0.45 - 65_940_000
   convertedTax = Math.floor(Math.max(0, convertedTax))
-
-  // (33) 산출세액 = (32) / 12 × 정산근속연수
   const computedTax = Math.floor(convertedTax / 12 * serviceYears)
-
-  // (36) 신고대상세액
   const reportTax = computedTax - inp.taxCredit - inp.prepaidTax
-
-  // (40) 이연퇴직소득세 = (37 신고대상) × (38 입금) / (39 퇴직급여 = (17))
   const deferredTax = (taxableRetirePay > 0 && inp.pensionDeposit > 0)
-    ? Math.max(0, Math.floor(reportTax * inp.pensionDeposit / taxableRetirePay))
-    : 0
-
-  // (44) 차감원천징수세액 (10원 단위 절사)
+    ? Math.max(0, Math.floor(reportTax * inp.pensionDeposit / taxableRetirePay)) : 0
   const baseTax = reportTax - deferredTax
   const finalIncomeTax = Math.floor(baseTax / 10) * 10
-  const finalLocalTax = Math.floor(finalIncomeTax / 100) * 10  // 소득세 / 10, 10원 단위
-
-  return {
-    serviceMonths, serviceYears, taxableRetirePay,
-    serviceDeduction: svcDeduction, convertedPay,
-    convertedDeduction: convertedDed, taxBase,
-    convertedTax, computedTax, reportTax, deferredTax,
-    finalIncomeTax, finalLocalTax,
-  }
+  const finalLocalTax = Math.floor(finalIncomeTax / 100) * 10
+  return { serviceMonths, serviceYears, taxableRetirePay, serviceDeduction: svcDeduction, convertedPay, convertedDeduction: convertedDed, taxBase, convertedTax, computedTax, reportTax, deferredTax, finalIncomeTax, finalLocalTax }
 }
 
-function buildRetirementStatementFile(year: string, rows: { inp: RetireInput; calc: RetireCalc }[]): string {
+function buildRetireA(o: WageHeaderOpts, bCount: number): string {
+  const p: string[] = []
+  p.push(padX('A', 1)); p.push(padX('25', 2))
+  p.push(padX(mockEmployer.taxOfficeCd, 3))
+  p.push(padX(o.submitDate, 8))
+  p.push(padX(o.submitterType, 1))
+  p.push(padX('', 6))
+  p.push(padX(o.hometaxId, 20))
+  p.push(padX('9000', 4))
+  p.push(padX(mockEmployer.bizNo, 10))
+  p.push(padX(mockEmployer.name, 60))
+  p.push(padX(mockEmployer.contact.dept, 30))
+  p.push(padX(mockEmployer.contact.name, 30))
+  p.push(padX(mockEmployer.contact.phone, 15))
+  p.push(padX(o.year, 4))
+  p.push(padN(bCount, 5))
+  p.push(padN(101, 3))
+  const head = byteLen(p.join(''))
+  p.push(padX('', RETIRE_LEN - head))
+  return verifyLen(p.join(''), RETIRE_LEN, 'RTR-A')
+}
+function buildRetireB(o: WageHeaderOpts, seq: number, cCount: number): string {
+  const p: string[] = []
+  p.push(padX('B', 1)); p.push(padX('25', 2))
+  p.push(padX(mockEmployer.taxOfficeCd, 3))
+  p.push(padN(seq, 6))
+  p.push(padX(mockEmployer.bizNo, 10))
+  p.push(padX(mockEmployer.name, 60))
+  p.push(padX(mockEmployer.ceo, 30))
+  p.push(padX(mockEmployer.corpRrn, 13))
+  p.push(padX(o.year, 4))
+  p.push(padN(cCount, 7))
+  const head = byteLen(p.join(''))
+  p.push(padX('', RETIRE_LEN - head))
+  return verifyLen(p.join(''), RETIRE_LEN, 'RTR-B')
+}
+function buildRetireC(o: WageHeaderOpts, seq: number, inp: RetireInput, calc: RetireCalc): string {
+  const p: string[] = []
+  p.push(padX('C', 1)); p.push(padX('25', 2))
+  p.push(padX(mockEmployer.taxOfficeCd, 3))
+  p.push(padN(seq, 7))
+  p.push(padX(mockEmployer.bizNo, 10))
+  p.push(padX(inp.rrn, 13))
+  p.push(padX(inp.name, 30))
+  p.push(padX(inp.hireDate, 8))
+  p.push(padX(inp.retireDate, 8))
+  p.push(padX(inp.paymentDate, 8))
+  p.push(padX(inp.isExecutive, 1))
+  p.push(padN(calc.serviceMonths, 4))
+  p.push(padN(calc.serviceYears, 3))
+  p.push(padN(inp.retirePay, 14))
+  p.push(padN(inp.nonTaxableRetirePay, 14))
+  p.push(padN(calc.taxableRetirePay, 14))
+  p.push(padN(calc.serviceDeduction, 14))
+  p.push(padN(calc.convertedPay, 14))
+  p.push(padN(calc.convertedDeduction, 14))
+  p.push(padN(calc.taxBase, 14))
+  p.push(padN(calc.computedTax, 14))
+  p.push(padN(inp.taxCredit, 14))
+  p.push(padN(inp.prepaidTax, 14))
+  p.push(padN(calc.reportTax, 14, true))
+  p.push(padN(calc.deferredTax, 14))
+  p.push(padN(calc.finalIncomeTax, 14, true))
+  p.push(padN(calc.finalLocalTax, 14, true))
+  const head = byteLen(p.join(''))
+  p.push(padX('', RETIRE_LEN - head))
+  return verifyLen(p.join(''), RETIRE_LEN, 'RTR-C')
+}
+function buildRetireFile(opts: WageHeaderOpts, rows: { inp: RetireInput; calc: RetireCalc }[]): string {
   const lines: string[] = []
-  lines.push('A' + padOld(year, 4) + padOld(mockEmployer.bizNo, 10) + padOld(mockEmployer.name, 40) + padOld(mockEmployer.ceo, 20) + padOld(mockEmployer.taxOfficeCd, 3) + padNOld(rows.length, 6))
-  rows.forEach((r, i) => {
-    lines.push('B' + padOld(i+1, 5, '0', true) + padOld(r.inp.rrn, 13) + padOld(r.inp.name, 20) + padOld(r.inp.hireDate, 8) + padOld(r.inp.retireDate, 8) + padOld(r.inp.reason, 8) + padNOld(r.calc.serviceMonths, 4) + padNOld(r.inp.retirePay, 14) + padNOld(r.inp.nonTaxableRetirePay, 14) + padNOld(r.calc.taxableRetirePay, 14) + padNOld(r.calc.finalIncomeTax, 12) + padNOld(r.calc.finalLocalTax, 12))
-  })
+  lines.push(buildRetireA(opts, 1))
+  lines.push(buildRetireB(opts, 1, rows.length))
+  rows.forEach((r, i) => lines.push(buildRetireC(opts, i+1, r.inp, r.calc)))
   return lines.join('\r\n')
 }
 
-// ===================== 페이지 본체 =====================
+// ============ 페이지 ============
 export default function YearEndPage() {
   const [tab, setTab] = useState<Tab>('withholding')
 
   return (
     <div className="p-3 space-y-3">
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
-        <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2">
+        <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2 flex-wrap">
           <span className="text-sm font-bold text-slate-700">연말정산 · 원천세</span>
-          <span className="text-xs text-slate-400">홈택스 신고용 전자파일을 생성합니다.</span>
-          <span className="ml-auto text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">원천세: 진짜 명세 기반 (KSC-5601, C103900)</span>
+          <span className="text-xs text-slate-400">홈택스 신고용 전자파일 (KSC-5601 cp949)</span>
+          <span className="ml-auto text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">진짜 명세서 기반 (2025귀속)</span>
         </div>
-        <div className="px-3 pt-2 flex gap-1">
+        <div className="px-3 pt-2 flex gap-1 flex-wrap">
           {([
-            { id: 'withholding', label: '원천세' },
-            { id: 'wage-statement', label: '지급명세(근로소득세)' },
-            { id: 'retirement-statement', label: '지급명세서(퇴직소득)' },
-          ] as { id: Tab; label: string }[]).map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
+            { id: 'withholding', label: '원천세', spec: 'C103900' },
+            { id: 'wage', label: '근로소득지급명세서', spec: '자료구분 20 · 2010byte × 9레코드' },
+            { id: 'biz', label: '사업소득지급명세서', spec: '자료구분 80 · 770byte × 7레코드' },
+            { id: 'retire', label: '퇴직소득지급명세서', spec: '자료구분 25 · 761byte × 4레코드' },
+          ] as { id: Tab; label: string; spec: string }[]).map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} title={t.spec}
               className={`px-3 py-1.5 text-[12px] font-bold rounded-t border-b-2 ${tab === t.id ? 'border-teal-500 text-teal-700 bg-teal-50' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
               {t.label}
             </button>
@@ -412,8 +539,9 @@ export default function YearEndPage() {
         </div>
         <div className="p-4">
           {tab === 'withholding' && <WithholdingPanel />}
-          {tab === 'wage-statement' && <WageStatementPanel />}
-          {tab === 'retirement-statement' && <RetirementStatementPanel />}
+          {tab === 'wage' && <WageStatementPanel />}
+          {tab === 'biz' && <BizStatementPanel />}
+          {tab === 'retire' && <RetirementStatementPanel />}
         </div>
       </div>
     </div>
@@ -436,12 +564,8 @@ function EmployerCard() {
             <td className={labelCls}>대표자</td>
             <td className={cellCls}>
               {mockEmployer.ceo}
-              {mockEmployer.director && mockEmployer.director !== mockEmployer.ceo && (
-                <span className="ml-2 text-[11px] text-slate-500">(원장: {mockEmployer.director})</span>
-              )}
-              {mockEmployer.director === mockEmployer.ceo && (
-                <span className="ml-2 text-[11px] text-emerald-600">· 원장 겸임</span>
-              )}
+              {mockEmployer.director && mockEmployer.director !== mockEmployer.ceo && <span className="ml-2 text-[11px] text-slate-500">(원장: {mockEmployer.director})</span>}
+              {mockEmployer.director === mockEmployer.ceo && <span className="ml-2 text-[11px] text-emerald-600">· 원장 겸임</span>}
             </td>
             <td className={labelCls}>관할 세무서</td>
             <td className={cellCls}>{mockEmployer.taxOffice} ({mockEmployer.taxOfficeCd})</td>
@@ -456,13 +580,8 @@ function EmployerCard() {
   )
 }
 
-function StatCard({ label, value, tone }: { label: string; value: string; tone: 'slate' | 'teal' | 'emerald' | 'amber' }) {
-  const toneCls = {
-    slate: 'border-slate-200 bg-white text-slate-700',
-    teal: 'border-teal-300 bg-teal-50 text-teal-800',
-    emerald: 'border-emerald-300 bg-emerald-50 text-emerald-800',
-    amber: 'border-amber-300 bg-amber-50 text-amber-800',
-  }[tone]
+function StatCard({ label, value, tone }: { label: string; value: string; tone: 'slate'|'teal'|'emerald'|'amber' }) {
+  const toneCls = { slate: 'border-slate-200 bg-white text-slate-700', teal: 'border-teal-300 bg-teal-50 text-teal-800', emerald: 'border-emerald-300 bg-emerald-50 text-emerald-800', amber: 'border-amber-300 bg-amber-50 text-amber-800' }[tone]
   return (
     <div className={`rounded border ${toneCls} p-2.5`}>
       <div className="text-[10px] opacity-70 mb-0.5">{label}</div>
@@ -471,6 +590,7 @@ function StatCard({ label, value, tone }: { label: string; value: string; tone: 
   )
 }
 
+// ============== 원천세 패널 ==============
 function WithholdingPanel() {
   const [year, setYear] = useState('2025')
   const [month, setMonth] = useState('12')
@@ -478,7 +598,6 @@ function WithholdingPanel() {
   const [userId, setUserId] = useState('')
   const monthly = useMemo(() => makeMonthly(year), [year])
   const rows = monthly[month] ?? []
-  const tot = sumWh(rows)
 
   const [generated, setGenerated] = useState<Set<string>>(new Set())
   const [downloaded, setDownloaded] = useState<Set<string>>(new Set())
@@ -487,59 +606,28 @@ function WithholdingPanel() {
   const [preview, setPreview] = useState('')
 
   const ym = `${year}${month}`
-  const payYm = ym
-  const submitYm = (() => {
-    // 정기: 다음달 (예: 12월 신고분 → 다음달 1월)
-    const y = parseInt(year, 10), m = parseInt(month, 10)
-    const ny = m === 12 ? y + 1 : y
-    const nm = m === 12 ? 1 : m + 1
-    return `${ny}${String(nm).padStart(2, '0')}`
-  })()
-
-  const headerOpts: Header21Opts = {
-    bizNo: mockEmployer.bizNo, name: mockEmployer.name, ceo: mockEmployer.ceo,
-    addr: mockEmployer.addr, phone: mockEmployer.phone, email: mockEmployer.email,
-    ym, payYm, submitYm, fiscalCode, userId,
-    refundYn: 'N', annualYn: 'N', monthlyOrSemi: '01',
-  }
+  const submitYm = (() => { const y = parseInt(year,10), m = parseInt(month,10); const ny = m === 12 ? y+1 : y; const nm = m === 12 ? 1 : m+1; return `${ny}${String(nm).padStart(2,'0')}` })()
+  const headerOpts: Header21Opts = { bizNo: mockEmployer.bizNo, name: mockEmployer.name, ceo: mockEmployer.ceo, addr: mockEmployer.addr, phone: mockEmployer.phone, email: mockEmployer.email, ym, payYm: ym, submitYm, fiscalCode, userId, refundYn: 'N', annualYn: 'N', monthlyOrSemi: '01' }
 
   const markGen = (k: string) => { setGenerated(p => new Set(p).add(k)); setGeneratedAt(p => ({ ...p, [k]: stamp() })) }
   const markDl = (k: string) => { setDownloaded(p => new Set(p).add(k)); setDownloadedAt(p => ({ ...p, [k]: stamp() })) }
-
-  const handleBuild = () => {
-    setPreview(buildWithholdingFile({ headerOpts, rows }))
-    markGen(ym)
-  }
-  const handleDownload = async () => {
-    const content = buildWithholdingFile({ headerOpts, rows })
-    const filename = `${yyyymmdd()}C103900.${fiscalCode}`
-    await downloadCp949(content, filename)
-    markGen(ym); markDl(ym)
-  }
+  const handleBuild = () => { setPreview(buildWithholdingFile({ headerOpts, rows })); markGen(ym) }
+  const handleDownload = async () => { const c = buildWithholdingFile({ headerOpts, rows }); await downloadCp949(c, `${yyyymmdd()}C103900.${fiscalCode}`); markGen(ym); markDl(ym) }
   const handleJson = () => setPreview(JSON.stringify({ headerOpts, rows }, null, 2))
   const handleBatchAll = async () => {
     for (const m of Object.keys(monthly)) {
       const k = `${year}${m}`
-      const submitYm2 = (() => {
-        const y = parseInt(year,10), mm = parseInt(m,10)
-        return `${mm===12?y+1:y}${String(mm===12?1:mm+1).padStart(2,'0')}`
-      })()
-      const ho: Header21Opts = { ...headerOpts, ym: k, payYm: k, submitYm: submitYm2 }
-      const content = buildWithholdingFile({ headerOpts: ho, rows: monthly[m] })
-      const filename = `${yyyymmdd()}C103900.${fiscalCode}_${k}`
-      await downloadCp949(content, filename)
+      const sm = (() => { const y = parseInt(year,10), mm = parseInt(m,10); return `${mm===12?y+1:y}${String(mm===12?1:mm+1).padStart(2,'0')}` })()
+      const ho: Header21Opts = { ...headerOpts, ym: k, payYm: k, submitYm: sm }
+      const c = buildWithholdingFile({ headerOpts: ho, rows: monthly[m] })
+      await downloadCp949(c, `${yyyymmdd()}C103900.${fiscalCode}_${k}`)
       markGen(k); markDl(k)
       await new Promise(r => setTimeout(r, 250))
     }
   }
-
   const overall = useMemo(() => {
-    const months = Object.keys(monthly)
-    let totIncome = 0, totPay = 0, totHead = 0
-    months.forEach(m => {
-      const t = sumWh(monthly[m])
-      totIncome += t.incomeTax; totPay += t.payAmt; totHead += t.count
-    })
+    const months = Object.keys(monthly); let totIncome = 0, totPay = 0, totHead = 0
+    months.forEach(m => { const t = sumWh(monthly[m]); totIncome += t.incomeTax; totPay += t.payAmt; totHead += t.count })
     const genCnt = months.filter(m => generated.has(`${year}${m}`)).length
     const dlCnt = months.filter(m => downloaded.has(`${year}${m}`)).length
     return { totIncome, totPay, totHead, genCnt, dlCnt, total: months.length }
@@ -548,7 +636,6 @@ function WithholdingPanel() {
   return (
     <div className="space-y-3">
       <EmployerCard />
-
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         <StatCard label="연 인원(연인원)" value={`${overall.totHead}명`} tone="slate" />
         <StatCard label="연 총지급액" value={won(overall.totPay) + '원'} tone="slate" />
@@ -556,7 +643,6 @@ function WithholdingPanel() {
         <StatCard label="전자파일 생성" value={`${overall.genCnt} / ${overall.total}월`} tone={overall.genCnt === overall.total ? 'emerald' : 'amber'} />
         <StatCard label="다운로드 완료" value={`${overall.dlCnt} / ${overall.total}월`} tone={overall.dlCnt === overall.total ? 'emerald' : 'amber'} />
       </div>
-
       <div className="bg-white rounded border border-slate-200 overflow-hidden">
         <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center gap-2 flex-wrap">
           <span className="text-[12px] font-bold text-slate-700">월별 신고 상황판 ({year}년)</span>
@@ -564,9 +650,7 @@ function WithholdingPanel() {
           <span className="ml-auto flex items-center gap-2">
             <label className="text-[11px] text-slate-500">신고구분</label>
             <select className={`${inputCls} w-24`} value={fiscalCode} onChange={e => setFiscalCode(e.target.value as FiscalCode)}>
-              <option value="01">정기</option>
-              <option value="02">수정</option>
-              <option value="03">기한후</option>
+              <option value="01">정기</option><option value="02">수정</option><option value="03">기한후</option>
             </select>
             <label className="text-[11px] text-slate-500">사용자ID</label>
             <input className={`${inputCls} w-32`} placeholder="홈택스 ID" value={userId} onChange={e => setUserId(e.target.value)} />
@@ -576,10 +660,8 @@ function WithholdingPanel() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 p-2">
           {Object.keys(monthly).map(m => {
-            const k = `${year}${m}`
-            const s = sumWh(monthly[m])
-            const isGen = generated.has(k); const isDl = downloaded.has(k)
-            const active = month === m
+            const k = `${year}${m}`; const s = sumWh(monthly[m])
+            const isGen = generated.has(k); const isDl = downloaded.has(k); const active = month === m
             return (
               <button key={m} onClick={() => setMonth(m)}
                 className={`text-left p-2 rounded border transition-all ${active ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-200' : 'border-slate-200 bg-white hover:border-teal-300 hover:bg-teal-50/30'}`}>
@@ -606,10 +688,9 @@ function WithholdingPanel() {
           })}
         </div>
       </div>
-
       <div className="flex items-end gap-3 flex-wrap">
         <div>
-          <div className="text-[11px] text-slate-500 mb-1">선택 월 (귀속={ym}, 지급={payYm}, 제출={submitYm})</div>
+          <div className="text-[11px] text-slate-500 mb-1">선택 월 (귀속={ym}, 지급={ym}, 제출={submitYm})</div>
           <div className="text-[14px] font-bold text-teal-700 px-3 py-1.5 bg-teal-50 border border-teal-300 rounded">{year}년 {Number(month)}월</div>
         </div>
         <div className="ml-auto flex gap-2">
@@ -618,23 +699,20 @@ function WithholdingPanel() {
           <button onClick={handleDownload} className="px-3 py-1.5 text-[12px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">전자파일 다운로드 (cp949)</button>
         </div>
       </div>
-
       <div className="bg-white rounded border border-slate-200 overflow-hidden">
         <table className="w-full text-[11px]">
-          <thead>
-            <tr className="bg-teal-50 border-b border-slate-300">
-              <th className="px-2 py-2 border-r border-slate-200 w-[60px]">코드</th>
-              <th className="px-2 py-2 border-r border-slate-200">소득구분</th>
-              <th className="px-2 py-2 border-r border-slate-200 w-[70px]">인원(4)</th>
-              <th className="px-2 py-2 border-r border-slate-200">총지급액(5)</th>
-              <th className="px-2 py-2 border-r border-slate-200">소득세(6)</th>
-              <th className="px-2 py-2 border-r border-slate-200">농특세(7)</th>
-              <th className="px-2 py-2 border-r border-slate-200">가산세(8)</th>
-              <th className="px-2 py-2 border-r border-slate-200">조정환급(9)</th>
-              <th className="px-2 py-2 border-r border-slate-200">납부소득세(10)</th>
-              <th className="px-2 py-2">납부농특세(11)</th>
-            </tr>
-          </thead>
+          <thead><tr className="bg-teal-50 border-b border-slate-300">
+            <th className="px-2 py-2 border-r border-slate-200 w-[60px]">코드</th>
+            <th className="px-2 py-2 border-r border-slate-200">소득구분</th>
+            <th className="px-2 py-2 border-r border-slate-200 w-[70px]">인원(4)</th>
+            <th className="px-2 py-2 border-r border-slate-200">총지급액(5)</th>
+            <th className="px-2 py-2 border-r border-slate-200">소득세(6)</th>
+            <th className="px-2 py-2 border-r border-slate-200">농특세(7)</th>
+            <th className="px-2 py-2 border-r border-slate-200">가산세(8)</th>
+            <th className="px-2 py-2 border-r border-slate-200">조정환급(9)</th>
+            <th className="px-2 py-2 border-r border-slate-200">납부소득세(10)</th>
+            <th className="px-2 py-2">납부농특세(11)</th>
+          </tr></thead>
           <tbody>
             {rows.map((r, i) => (
               <tr key={i} className={`border-b border-slate-100 ${r.code === 'A99' ? 'bg-teal-50/30 font-bold' : r.code === 'A10' ? 'bg-slate-50/50 font-medium' : ''}`}>
@@ -653,11 +731,88 @@ function WithholdingPanel() {
           </tbody>
         </table>
       </div>
+      {preview && (
+        <div className="bg-slate-900 rounded p-3 overflow-auto">
+          <div className="text-[11px] text-slate-400 mb-2">byte 검증 — Header(21) {byteLen(preview.split('\r\n')[0] || '')}/400, 환급(22) {byteLen(preview.split('\r\n')[1] || '')}/200, 명세(23) {byteLen(preview.split('\r\n')[2] || '')}/150</div>
+          <pre className="text-[11px] text-emerald-200 font-mono whitespace-pre">{preview}</pre>
+        </div>
+      )}
+    </div>
+  )
+}
 
+// ============== 공통: 지급명세서 패널 베이스 ==============
+function StatementPanelShell<T>(props: {
+  spec: { dataCode: string; recordLen: number; recordTypes: string[]; specName: string }
+  rows: T[]; year: string; setYear: (y: string) => void
+  buildFn: (opts: WageHeaderOpts, rows: T[]) => string
+  fileExt: string
+  totals: { label: string; value: string; tone: 'slate'|'teal'|'emerald'|'amber' }[]
+  table: React.ReactNode
+}) {
+  const [submitDate, setSubmitDate] = useState(yyyymmdd())
+  const [hometaxId, setHometaxId] = useState('')
+  const [submitterType, setSubmitterType] = useState<'1'|'2'|'3'>('3')
+  const [preview, setPreview] = useState('')
+  const [generated, setGenerated] = useState(false)
+  const [downloaded, setDownloaded] = useState(false)
+  const [generatedAt, setGeneratedAt] = useState('')
+  const [downloadedAt, setDownloadedAt] = useState('')
+  const opts: WageHeaderOpts = { year: props.year, submitDate, hometaxId, submitterType }
+
+  const handleBuild = () => { setPreview(props.buildFn(opts, props.rows)); setGenerated(true); setGeneratedAt(stamp()) }
+  const handleDownload = async () => {
+    const c = props.buildFn(opts, props.rows)
+    const filename = `${yyyymmdd()}_${props.spec.dataCode}_${mockEmployer.bizNo}.${props.fileExt}`
+    await downloadCp949(c, filename)
+    setGenerated(true); setGeneratedAt(stamp()); setDownloaded(true); setDownloadedAt(stamp())
+  }
+  const handleJson = () => setPreview(JSON.stringify({ opts, employer: mockEmployer, rows: props.rows }, null, 2))
+
+  return (
+    <div className="space-y-3">
+      <EmployerCard />
+      <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-700">
+        진짜 명세서 기반 — {props.spec.specName} (자료구분 <strong>{props.spec.dataCode}</strong>, 각 레코드 <strong>{props.spec.recordLen}byte</strong>, 레코드 종류: {props.spec.recordTypes.join('/')})
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        {props.totals.map((t, i) => <StatCard key={i} {...t} />)}
+        <StatCard label="신고 진행" value={generated ? (downloaded ? '다운로드 완료' : '파일 생성됨') : '미생성'} tone={downloaded ? 'emerald' : generated ? 'amber' : 'slate'} />
+      </div>
+      <div className="flex items-end gap-3 flex-wrap">
+        <div>
+          <div className="text-[11px] text-slate-500 mb-1">자료귀속연도 (A14)</div>
+          <input className={`${inputCls} w-24`} value={props.year} onChange={e => props.setYear(e.target.value)} maxLength={4} />
+        </div>
+        <div>
+          <div className="text-[11px] text-slate-500 mb-1">제출연월일 (A4)</div>
+          <input className={`${inputCls} w-28`} value={submitDate} onChange={e => setSubmitDate(e.target.value)} maxLength={8} />
+        </div>
+        <div>
+          <div className="text-[11px] text-slate-500 mb-1">제출자구분 (A5)</div>
+          <select className={`${inputCls} w-32`} value={submitterType} onChange={e => setSubmitterType(e.target.value as '1'|'2'|'3')}>
+            <option value="1">1 세무대리인</option><option value="2">2 법인</option><option value="3">3 개인</option>
+          </select>
+        </div>
+        <div>
+          <div className="text-[11px] text-slate-500 mb-1">홈택스 ID (A7)</div>
+          <input className={`${inputCls} w-40`} value={hometaxId} onChange={e => setHometaxId(e.target.value)} maxLength={20} placeholder="(전자신고시 필수)" />
+        </div>
+        <div className="text-[11px] text-slate-500 self-end pb-1 space-y-0.5">
+          {generatedAt && <div>마지막 생성 {generatedAt}</div>}
+          {downloadedAt && <div>마지막 다운 {downloadedAt}</div>}
+        </div>
+        <div className="ml-auto flex gap-2">
+          <button onClick={handleJson} className="px-3 py-1.5 text-[12px] font-bold text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50">JSON 미리보기</button>
+          <button onClick={handleBuild} className="px-3 py-1.5 text-[12px] font-bold text-teal-700 bg-teal-50 border border-teal-300 rounded hover:bg-teal-100">전자파일 미리보기</button>
+          <button onClick={handleDownload} className="px-3 py-1.5 text-[12px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">전자파일 다운로드 (cp949)</button>
+        </div>
+      </div>
+      {props.table}
       {preview && (
         <div className="bg-slate-900 rounded p-3 overflow-auto">
           <div className="text-[11px] text-slate-400 mb-2">
-            byte 길이 검증 — Header(21) {byteLen(preview.split('\r\n')[0] || '')}/400, 환급(22) {byteLen(preview.split('\r\n')[1] || '')}/200, 명세(23) 각 {byteLen(preview.split('\r\n')[2] || '')}/150
+            byte 검증 — {preview.split('\r\n').map((l, i) => `L${i+1}=${byteLen(l)}/${props.spec.recordLen}`).slice(0, 6).join(', ')}
           </div>
           <pre className="text-[11px] text-emerald-200 font-mono whitespace-pre">{preview}</pre>
         </div>
@@ -666,162 +821,156 @@ function WithholdingPanel() {
   )
 }
 
+// ============== 근로소득 패널 ==============
 function WageStatementPanel() {
   const [year, setYear] = useState('2025')
   const [rows] = useState<WageEmp[]>(mockWageStatements)
-  const [preview, setPreview] = useState('')
-  const [generated, setGenerated] = useState(false)
-  const [downloaded, setDownloaded] = useState(false)
-  const [generatedAt, setGeneratedAt] = useState('')
-  const [downloadedAt, setDownloadedAt] = useState('')
-
   const totals = useMemo(() => rows.reduce(
     (s, r) => ({ totalPay: s.totalPay + r.totalPay, nonTaxable: s.nonTaxable + r.nonTaxable, taxable: s.taxable + r.taxable, determinedTax: s.determinedTax + r.determinedTax, prepaidTax: s.prepaidTax + r.prepaidTax }),
     { totalPay: 0, nonTaxable: 0, taxable: 0, determinedTax: 0, prepaidTax: 0 },
   ), [rows])
-
-  const handleBuild = () => { setPreview(buildWageStatementFile(year, rows)); setGenerated(true); setGeneratedAt(stamp()) }
-  const handleDownload = () => { const body = buildWageStatementFile(year, rows); downloadText(`wage_${year}_${mockEmployer.bizNo}.01`, body); setGenerated(true); setGeneratedAt(stamp()); setDownloaded(true); setDownloadedAt(stamp()) }
-  const handleJson = () => setPreview(JSON.stringify({ year, employer: mockEmployer, rows, totals }, null, 2))
   const fmtRrn = (rrn: string) => rrn.length === 13 ? `${rrn.slice(0,6)}-${rrn.slice(6,7)}******` : rrn
   const fmtDate = (d: string) => d ? `${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6,8)}` : '-'
 
   return (
-    <div className="space-y-3">
-      <EmployerCard />
-      <div className="px-3 py-2 bg-amber-50 border border-amber-200 rounded text-[11px] text-amber-700">샘플 포맷 — 국세청 정식 명세서 입수 후 buildWageStatementFile 함수 교체 필요</div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <StatCard label="근로자" value={`${rows.length}명`} tone="slate" />
-        <StatCard label="총급여 합계" value={won(totals.totalPay) + '원'} tone="slate" />
-        <StatCard label="결정세액 합계" value={won(totals.determinedTax) + '원'} tone="teal" />
-        <StatCard label="신고 진행" value={generated ? (downloaded ? '다운로드 완료' : '파일 생성됨') : '미생성'} tone={downloaded ? 'emerald' : generated ? 'amber' : 'slate'} />
-      </div>
-      <div className="flex items-end gap-3 flex-wrap">
-        <div>
-          <div className="text-[11px] text-slate-500 mb-1">자료귀속연도</div>
-          <input className={`${inputCls} w-24`} value={year} onChange={e => setYear(e.target.value)} maxLength={4} />
+    <StatementPanelShell
+      spec={{ dataCode: '20', recordLen: WAGE_LEN, recordTypes: ['A 제출자','B 원천징수의무자','C 주(현)근무처','D 종(전)근무처','E 소득세액공제','F 연금저축','G 월세','H 기부금조정','I 기부명세','K 출산지원금'], specName: '근로소득 지급명세서 전산매체 제출요령(2026.03.26)' }}
+      rows={rows} year={year} setYear={setYear} buildFn={buildWageFile as any} fileExt="01"
+      totals={[
+        { label: '근로자', value: `${rows.length}명`, tone: 'slate' },
+        { label: '총급여 합계', value: won(totals.totalPay) + '원', tone: 'slate' },
+        { label: '결정세액 합계', value: won(totals.determinedTax) + '원', tone: 'teal' },
+        { label: '기납부세액 합계', value: won(totals.prepaidTax) + '원', tone: 'slate' },
+      ]}
+      table={
+        <div className="bg-white rounded border border-slate-200 overflow-hidden">
+          <table className="w-full text-[11px]">
+            <thead><tr className="bg-teal-50 border-b border-slate-300">
+              <th className="px-2 py-2 border-r border-slate-200 w-[40px]">No</th>
+              <th className="px-2 py-2 border-r border-slate-200">성명</th>
+              <th className="px-2 py-2 border-r border-slate-200">주민번호</th>
+              <th className="px-2 py-2 border-r border-slate-200">입사</th>
+              <th className="px-2 py-2 border-r border-slate-200">퇴사</th>
+              <th className="px-2 py-2 border-r border-slate-200">총급여</th>
+              <th className="px-2 py-2 border-r border-slate-200">비과세</th>
+              <th className="px-2 py-2 border-r border-slate-200">과세대상</th>
+              <th className="px-2 py-2 border-r border-slate-200">결정세액</th>
+              <th className="px-2 py-2 border-r border-slate-200">기납부</th>
+              <th className="px-2 py-2">차감징수</th>
+            </tr></thead>
+            <tbody>
+              {rows.map((r, i) => {
+                const refund = r.prepaidTax - r.determinedTax
+                return (
+                  <tr key={i} className="border-b border-slate-100">
+                    <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{i+1}</td>
+                    <td className="px-2 py-1.5 text-slate-700 font-medium border-r border-slate-100">{r.name}</td>
+                    <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{fmtRrn(r.rrn)}</td>
+                    <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{fmtDate(r.hireDate)}</td>
+                    <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{fmtDate(r.leaveDate)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.totalPay)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.nonTaxable)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.taxable)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.determinedTax)}</td>
+                    <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.prepaidTax)}</td>
+                    <td className={`px-2 py-1.5 text-right ${refund < 0 ? 'text-red-600' : 'text-blue-600'}`}>{refund < 0 ? '+' : '-'}{won(Math.abs(refund))}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
-        <div className="text-[11px] text-slate-500 self-end pb-1 space-y-0.5">
-          {generatedAt && <div>마지막 생성 {generatedAt}</div>}
-          {downloadedAt && <div>마지막 다운 {downloadedAt}</div>}
-        </div>
-        <div className="ml-auto flex gap-2">
-          <button onClick={handleJson} className="px-3 py-1.5 text-[12px] font-bold text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50">JSON 미리보기</button>
-          <button onClick={handleBuild} className="px-3 py-1.5 text-[12px] font-bold text-teal-700 bg-teal-50 border border-teal-300 rounded hover:bg-teal-100">전자파일 미리보기</button>
-          <button onClick={handleDownload} className="px-3 py-1.5 text-[12px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">전자파일 다운로드</button>
-        </div>
-      </div>
-      <div className="bg-white rounded border border-slate-200 overflow-hidden">
-        <table className="w-full text-[11px]">
-          <thead><tr className="bg-teal-50 border-b border-slate-300">
-            <th className="px-2 py-2 border-r border-slate-200 w-[40px]">No</th>
-            <th className="px-2 py-2 border-r border-slate-200">성명</th>
-            <th className="px-2 py-2 border-r border-slate-200">주민번호</th>
-            <th className="px-2 py-2 border-r border-slate-200">입사일</th>
-            <th className="px-2 py-2 border-r border-slate-200">퇴사일</th>
-            <th className="px-2 py-2 border-r border-slate-200">총급여</th>
-            <th className="px-2 py-2 border-r border-slate-200">비과세</th>
-            <th className="px-2 py-2 border-r border-slate-200">과세대상</th>
-            <th className="px-2 py-2 border-r border-slate-200">결정세액</th>
-            <th className="px-2 py-2 border-r border-slate-200">기납부세액</th>
-            <th className="px-2 py-2">차감징수</th>
-          </tr></thead>
-          <tbody>
-            {rows.map((r, i) => {
-              const refund = r.prepaidTax - r.determinedTax
-              return (
+      }
+    />
+  )
+}
+
+// ============== 사업소득 패널 ==============
+function BizStatementPanel() {
+  const [year, setYear] = useState('2025')
+  const [rows] = useState<BizEmp[]>(mockBizStatements)
+  const totals = useMemo(() => rows.reduce(
+    (s, r) => ({ income: s.income + r.income, necessary: s.necessary + r.necessary, netIncome: s.netIncome + r.netIncome, determinedTax: s.determinedTax + r.determinedTax, prepaidTax: s.prepaidTax + r.prepaidTax }),
+    { income: 0, necessary: 0, netIncome: 0, determinedTax: 0, prepaidTax: 0 },
+  ), [rows])
+  const fmtRrn = (rrn: string) => rrn.length === 13 ? `${rrn.slice(0,6)}-${rrn.slice(6,7)}******` : rrn
+  const fmtDate = (d: string) => d ? `${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6,8)}` : '-'
+
+  return (
+    <StatementPanelShell
+      spec={{ dataCode: '80', recordLen: BIZ_LEN, recordTypes: ['A 제출자','B 원천징수의무자','C 주(현)소득발생처','D 종(전)소득발생처','E 부양가족공제','F 기부금조정','G 기부명세'], specName: '사업소득 지급명세서(연말정산용) 전산매체 제출요령(2025.7.29)' }}
+      rows={rows} year={year} setYear={setYear} buildFn={buildBizFile as any} fileExt="01"
+      totals={[
+        { label: '사업소득자', value: `${rows.length}명`, tone: 'slate' },
+        { label: '수입금액 합계', value: won(totals.income) + '원', tone: 'slate' },
+        { label: '소득금액 합계', value: won(totals.netIncome) + '원', tone: 'slate' },
+        { label: '결정세액 합계', value: won(totals.determinedTax) + '원', tone: 'teal' },
+      ]}
+      table={
+        <div className="bg-white rounded border border-slate-200 overflow-hidden">
+          <table className="w-full text-[11px]">
+            <thead><tr className="bg-teal-50 border-b border-slate-300">
+              <th className="px-2 py-2 border-r border-slate-200 w-[40px]">No</th>
+              <th className="px-2 py-2 border-r border-slate-200">성명</th>
+              <th className="px-2 py-2 border-r border-slate-200">주민번호</th>
+              <th className="px-2 py-2 border-r border-slate-200">시작</th>
+              <th className="px-2 py-2 border-r border-slate-200">종료</th>
+              <th className="px-2 py-2 border-r border-slate-200">수입금액</th>
+              <th className="px-2 py-2 border-r border-slate-200">필요경비</th>
+              <th className="px-2 py-2 border-r border-slate-200">소득금액</th>
+              <th className="px-2 py-2 border-r border-slate-200">결정세액</th>
+              <th className="px-2 py-2">기납부</th>
+            </tr></thead>
+            <tbody>
+              {rows.map((r, i) => (
                 <tr key={i} className="border-b border-slate-100">
                   <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{i+1}</td>
                   <td className="px-2 py-1.5 text-slate-700 font-medium border-r border-slate-100">{r.name}</td>
                   <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{fmtRrn(r.rrn)}</td>
-                  <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{fmtDate(r.hireDate)}</td>
-                  <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{fmtDate(r.leaveDate)}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.totalPay)}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.nonTaxable)}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.taxable)}</td>
+                  <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{fmtDate(r.startDate)}</td>
+                  <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{fmtDate(r.endDate)}</td>
+                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.income)}</td>
+                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.necessary)}</td>
+                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.netIncome)}</td>
                   <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.determinedTax)}</td>
-                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(r.prepaidTax)}</td>
-                  <td className={`px-2 py-1.5 text-right ${refund < 0 ? 'text-red-600' : 'text-blue-600'}`}>{refund < 0 ? '+' : '-'}{won(Math.abs(refund))}</td>
+                  <td className="px-2 py-1.5 text-right text-slate-700">{won(r.prepaidTax)}</td>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-      {preview && <div className="bg-slate-900 rounded p-3 overflow-auto"><pre className="text-[11px] text-emerald-200 font-mono whitespace-pre">{preview}</pre></div>}
-    </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      }
+    />
   )
 }
 
+// ============== 퇴직소득 패널 ==============
 function RetirementStatementPanel() {
   const [year, setYear] = useState('2025')
   const [inputs, setInputs] = useState<RetireInput[]>(mockRetireInputs)
-  const [preview, setPreview] = useState('')
-  const [generated, setGenerated] = useState(false)
-  const [downloaded, setDownloaded] = useState(false)
-  const [generatedAt, setGeneratedAt] = useState('')
-  const [downloadedAt, setDownloadedAt] = useState('')
-
   const calcs = useMemo(() => inputs.map(inp => ({ inp, calc: computeRetire(inp) })), [inputs])
   const totals = useMemo(() => calcs.reduce(
-    (s, x) => ({
-      retirePay: s.retirePay + x.inp.retirePay,
-      taxableRetirePay: s.taxableRetirePay + x.calc.taxableRetirePay,
-      reportTax: s.reportTax + x.calc.reportTax,
-      finalIncomeTax: s.finalIncomeTax + x.calc.finalIncomeTax,
-      finalLocalTax: s.finalLocalTax + x.calc.finalLocalTax,
-    }),
+    (s, x) => ({ retirePay: s.retirePay + x.inp.retirePay, taxableRetirePay: s.taxableRetirePay + x.calc.taxableRetirePay, reportTax: s.reportTax + x.calc.reportTax, finalIncomeTax: s.finalIncomeTax + x.calc.finalIncomeTax, finalLocalTax: s.finalLocalTax + x.calc.finalLocalTax }),
     { retirePay: 0, taxableRetirePay: 0, reportTax: 0, finalIncomeTax: 0, finalLocalTax: 0 },
   ), [calcs])
-
-  const handleBuild = () => { setPreview(buildRetirementStatementFile(year, calcs)); setGenerated(true); setGeneratedAt(stamp()) }
-  const handleDownload = () => { const body = buildRetirementStatementFile(year, calcs); downloadText(`retirement_${year}_${mockEmployer.bizNo}.01`, body); setGenerated(true); setGeneratedAt(stamp()); setDownloaded(true); setDownloadedAt(stamp()) }
-  const handleJson = () => setPreview(JSON.stringify({ year, employer: mockEmployer, rows: calcs }, null, 2))
-
   const fmtRrn = (rrn: string) => rrn.length === 13 ? `${rrn.slice(0,6)}-${rrn.slice(6,7)}******` : rrn
-  const fmtDate = (d: string) => d ? `${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6,8)}` : '-'
   const fmtServiceYears = (m: number) => `${Math.floor(m/12)}년 ${m%12}개월`
-
-  const updateInput = (idx: number, patch: Partial<RetireInput>) => {
-    setInputs(prev => prev.map((r, i) => i === idx ? { ...r, ...patch } : r))
-  }
+  const updateInput = (idx: number, patch: Partial<RetireInput>) => { setInputs(prev => prev.map((r, i) => i === idx ? { ...r, ...patch } : r)) }
 
   return (
-    <div className="space-y-3">
-      <EmployerCard />
-      <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-700">
-        퇴직소득 계산식 이식 완료 (소득세법 시행규칙 별지 제24호서식(2) 기준) — 근속연수공제, 환산급여, 환산급여별공제, 환산산출세액, 산출세액(누진율 6~45%), 신고대상세액, 이연퇴직소득세, 차감원천징수세액 자동 계산
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        <StatCard label="퇴사자" value={`${inputs.length}명`} tone="slate" />
-        <StatCard label="퇴직급여 합계" value={won(totals.retirePay) + '원'} tone="slate" />
-        <StatCard label="신고대상세액" value={won(totals.reportTax) + '원'} tone="teal" />
-        <StatCard label="차감원천징수 소득세" value={won(totals.finalIncomeTax) + '원'} tone="teal" />
-        <StatCard label="신고 진행" value={generated ? (downloaded ? '다운로드 완료' : '파일 생성됨') : '미생성'} tone={downloaded ? 'emerald' : generated ? 'amber' : 'slate'} />
-      </div>
-
-      <div className="flex items-end gap-3 flex-wrap">
-        <div>
-          <div className="text-[11px] text-slate-500 mb-1">자료귀속연도</div>
-          <input className={`${inputCls} w-24`} value={year} onChange={e => setYear(e.target.value)} maxLength={4} />
-        </div>
-        <div className="text-[11px] text-slate-500 self-end pb-1 space-y-0.5">
-          {generatedAt && <div>마지막 생성 {generatedAt}</div>}
-          {downloadedAt && <div>마지막 다운 {downloadedAt}</div>}
-        </div>
-        <div className="ml-auto flex gap-2">
-          <button onClick={handleJson} className="px-3 py-1.5 text-[12px] font-bold text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50">JSON 미리보기</button>
-          <button onClick={handleBuild} className="px-3 py-1.5 text-[12px] font-bold text-teal-700 bg-teal-50 border border-teal-300 rounded hover:bg-teal-100">전자파일 미리보기</button>
-          <button onClick={handleDownload} className="px-3 py-1.5 text-[12px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">전자파일 다운로드</button>
-        </div>
-      </div>
-
-      {/* 입력 + 계산 결과 한 줄에 */}
-      <div className="bg-white rounded border border-slate-200 overflow-x-auto">
-        <table className="w-full text-[11px] min-w-[1400px]">
-          <thead>
-            <tr className="bg-teal-50 border-b border-slate-300">
+    <StatementPanelShell
+      spec={{ dataCode: '25', recordLen: RETIRE_LEN, recordTypes: ['A 제출자','B 원천징수의무자','C 퇴직소득자','D 연금계좌 입금명세'], specName: '퇴직소득 지급명세서 전산매체 제출요령(2025.08.04)' }}
+      rows={calcs} year={year} setYear={setYear} buildFn={buildRetireFile as any} fileExt="01"
+      totals={[
+        { label: '퇴사자', value: `${inputs.length}명`, tone: 'slate' },
+        { label: '퇴직급여 합계', value: won(totals.retirePay) + '원', tone: 'slate' },
+        { label: '신고대상세액', value: won(totals.reportTax) + '원', tone: 'teal' },
+        { label: '차감원천징수 소득세', value: won(totals.finalIncomeTax) + '원', tone: 'teal' },
+      ]}
+      table={
+        <div className="bg-white rounded border border-slate-200 overflow-x-auto">
+          <table className="w-full text-[11px] min-w-[1400px]">
+            <thead><tr className="bg-teal-50 border-b border-slate-300">
               <th className="px-2 py-2 border-r border-slate-200">성명</th>
               <th className="px-2 py-2 border-r border-slate-200">주민번호</th>
               <th className="px-2 py-2 border-r border-slate-200">입사일</th>
@@ -838,61 +987,32 @@ function RetirementStatementPanel() {
               <th className="px-2 py-2 border-r border-slate-200">이연(40)</th>
               <th className="px-2 py-2 border-r border-slate-200">소득세(44)</th>
               <th className="px-2 py-2">지방세</th>
-            </tr>
-          </thead>
-          <tbody>
-            {calcs.map(({ inp, calc }, i) => (
-              <tr key={i} className="border-b border-slate-100">
-                <td className="px-2 py-1.5 border-r border-slate-100">
-                  <input className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.name} onChange={e => updateInput(i, { name: e.target.value })} />
-                </td>
-                <td className="px-2 py-1.5 border-r border-slate-100 text-slate-500">{fmtRrn(inp.rrn)}</td>
-                <td className="px-2 py-1.5 border-r border-slate-100">
-                  <input className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.hireDate} onChange={e => updateInput(i, { hireDate: e.target.value })} placeholder="YYYYMMDD" />
-                </td>
-                <td className="px-2 py-1.5 border-r border-slate-100">
-                  <input className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.retireDate} onChange={e => updateInput(i, { retireDate: e.target.value })} placeholder="YYYYMMDD" />
-                </td>
-                <td className="px-2 py-1.5 border-r border-slate-100">
-                  <select className="text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.reason} onChange={e => updateInput(i, { reason: e.target.value as RetireInput['reason'] })}>
-                    <option>정년퇴직</option><option>정리해고</option><option>자발적 퇴직</option><option>임원퇴직</option><option>중간정산</option><option>기타</option>
-                  </select>
-                </td>
-                <td className="px-2 py-1.5 border-r border-slate-100 text-center text-slate-500 text-[10px]">{fmtServiceYears(calc.serviceMonths)}<br/>({calc.serviceYears}년)</td>
-                <td className="px-2 py-1.5 border-r border-slate-100">
-                  <input type="number" className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.retirePay} onChange={e => updateInput(i, { retirePay: Number(e.target.value) })} />
-                </td>
-                <td className="px-2 py-1.5 border-r border-slate-100">
-                  <input type="number" className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.nonTaxableRetirePay} onChange={e => updateInput(i, { nonTaxableRetirePay: Number(e.target.value) })} />
-                </td>
-                <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.serviceDeduction)}</td>
-                <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.convertedPay)}</td>
-                <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.taxBase)}</td>
-                <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.computedTax)}</td>
-                <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.reportTax)}</td>
-                <td className="px-2 py-1.5 text-right text-slate-500 border-r border-slate-100">{won(calc.deferredTax)}</td>
-                <td className="px-2 py-1.5 text-right text-teal-700 font-bold border-r border-slate-100">{won(calc.finalIncomeTax)}</td>
-                <td className="px-2 py-1.5 text-right text-teal-700 font-bold">{won(calc.finalLocalTax)}</td>
-              </tr>
-            ))}
-            <tr className="bg-slate-50 font-bold border-t border-slate-300">
-              <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100" colSpan={6}>합계</td>
-              <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(totals.retirePay)}</td>
-              <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">-</td>
-              <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">-</td>
-              <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">-</td>
-              <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">-</td>
-              <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">-</td>
-              <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(totals.reportTax)}</td>
-              <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">-</td>
-              <td className="px-2 py-1.5 text-right text-teal-700 border-r border-slate-100">{won(totals.finalIncomeTax)}</td>
-              <td className="px-2 py-1.5 text-right text-teal-700">{won(totals.finalLocalTax)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {preview && <div className="bg-slate-900 rounded p-3 overflow-auto"><pre className="text-[11px] text-emerald-200 font-mono whitespace-pre">{preview}</pre></div>}
-    </div>
+            </tr></thead>
+            <tbody>
+              {calcs.map(({ inp, calc }, i) => (
+                <tr key={i} className="border-b border-slate-100">
+                  <td className="px-2 py-1.5 border-r border-slate-100"><input className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.name} onChange={e => updateInput(i, { name: e.target.value })} /></td>
+                  <td className="px-2 py-1.5 border-r border-slate-100 text-slate-500">{fmtRrn(inp.rrn)}</td>
+                  <td className="px-2 py-1.5 border-r border-slate-100"><input className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.hireDate} onChange={e => updateInput(i, { hireDate: e.target.value })} placeholder="YYYYMMDD" /></td>
+                  <td className="px-2 py-1.5 border-r border-slate-100"><input className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.retireDate} onChange={e => updateInput(i, { retireDate: e.target.value })} placeholder="YYYYMMDD" /></td>
+                  <td className="px-2 py-1.5 border-r border-slate-100"><select className="text-[11px] border border-slate-200 rounded px-1 py-0.5" value={inp.reason} onChange={e => updateInput(i, { reason: e.target.value as RetireInput['reason'] })}><option>정년퇴직</option><option>정리해고</option><option>자발적 퇴직</option><option>임원퇴직</option><option>중간정산</option><option>기타</option></select></td>
+                  <td className="px-2 py-1.5 border-r border-slate-100 text-center text-slate-500 text-[10px]">{fmtServiceYears(calc.serviceMonths)}<br/>({calc.serviceYears}년)</td>
+                  <td className="px-2 py-1.5 border-r border-slate-100"><input type="number" className="w-24 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.retirePay} onChange={e => updateInput(i, { retirePay: Number(e.target.value) })} /></td>
+                  <td className="px-2 py-1.5 border-r border-slate-100"><input type="number" className="w-20 text-[11px] border border-slate-200 rounded px-1 py-0.5 text-right" value={inp.nonTaxableRetirePay} onChange={e => updateInput(i, { nonTaxableRetirePay: Number(e.target.value) })} /></td>
+                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.serviceDeduction)}</td>
+                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.convertedPay)}</td>
+                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.taxBase)}</td>
+                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.computedTax)}</td>
+                  <td className="px-2 py-1.5 text-right text-slate-700 border-r border-slate-100">{won(calc.reportTax)}</td>
+                  <td className="px-2 py-1.5 text-right text-slate-500 border-r border-slate-100">{won(calc.deferredTax)}</td>
+                  <td className="px-2 py-1.5 text-right text-teal-700 font-bold border-r border-slate-100">{won(calc.finalIncomeTax)}</td>
+                  <td className="px-2 py-1.5 text-right text-teal-700 font-bold">{won(calc.finalLocalTax)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      }
+    />
   )
 }
