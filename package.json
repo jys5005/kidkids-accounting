@@ -16,6 +16,7 @@
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^25.3.5",
     "@types/react": "^19.2.14",
+    "iconv-lite": "^0.7.2",
     "next": "^16.1.6",
     "postcss": "^8.5.8",
     "puppeteer": "^24.38.0",
