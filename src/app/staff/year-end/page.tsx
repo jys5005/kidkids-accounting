@@ -1,5 +1,5 @@
 'use client'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { WAGE_SPEC, BIZ_SPEC, RETIRE_SPEC, type SpecRecord } from './specs'
 
 type Tab = 'withholding' | 'wage' | 'wage-calc' | 'biz' | 'retire' | 'retire-calc'
@@ -1137,6 +1137,7 @@ type WageCalcInput = {
   // 인적공제 (PDF: 본인/배우자/부양 1.5 + 경로 1.0 + 장애 2.0 + 한부모 1.0 + 부녀자 0.5)
   spouse: number; dependents: number; elderly: number; disabled: number
   childTotal: number; childUnder6: number
+  newbornCount: number     // 출생·입양 자녀 수 (당해, 첫째 30/둘째 50/셋째↑ 70만)
   singleParent: number     // 한부모 (배우자 없는 자녀양육자, 100만)
   womanWorker: number      // 부녀자 (종합소득 3천만↓, 50만, 한부모와 중복 시 한부모 우선)
   // 4대보험
@@ -1186,9 +1187,9 @@ type WageCalcInput = {
   prepaidIncomeTax: number
 }
 const mockWageCalcInputs: WageCalcInput[] = [
-  { rrn: '8503151111111', name: '김교사', totalPay: 36_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 1, elderly: 0, disabled: 0, childTotal: 1, childUnder6: 0, singleParent: 0, womanWorker: 0, nationalPension: 1_620_000, healthInsurance: 1_290_000, employmentInsurance: 280_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 12_000_000, cardCash: 4_000_000, cardBook: 800_000, cardTraditional: 600_000, cardTransport: 600_000, insuranceGeneral: 600_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 600_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKidsKindergarten: 0, educationKidsUniversity: 0, educationKidsKgCount: 0, educationKidsUniCount: 0, donationPolitical: 0, donationHometown: 0, donationEmployeeStock: 0, donationGeneral: 100_000, monthlyRent: 0, pensionAccount: 1_200_000, pensionISA: 0, marriedThisYear: 0, smeQualified: 0, smeYouth: 0, foreignTaxPaid: 0, prepaidIncomeTax: 1_020_000 },
-  { rrn: '9007072222222', name: '이교사', totalPay: 32_400_000, nonTaxable: 1_200_000, spouse: 0, dependents: 0, elderly: 0, disabled: 0, childTotal: 0, childUnder6: 0, singleParent: 0, womanWorker: 1, nationalPension: 1_460_000, healthInsurance: 1_160_000, employmentInsurance: 250_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 8_000_000, cardCash: 3_000_000, cardBook: 200_000, cardTraditional: 400_000, cardTransport: 400_000, insuranceGeneral: 360_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 0, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKidsKindergarten: 0, educationKidsUniversity: 0, educationKidsKgCount: 0, educationKidsUniCount: 0, donationPolitical: 0, donationHometown: 0, donationEmployeeStock: 0, donationGeneral: 0, monthlyRent: 6_000_000, pensionAccount: 0, pensionISA: 0, marriedThisYear: 1, smeQualified: 1, smeYouth: 1, foreignTaxPaid: 0, prepaidIncomeTax: 720_000 },
-  { rrn: '7811214444444', name: '박원장', totalPay: 60_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 2, elderly: 1, disabled: 0, childTotal: 2, childUnder6: 0, singleParent: 0, womanWorker: 0, nationalPension: 2_700_000, healthInsurance: 2_150_000, employmentInsurance: 470_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 18_000_000, cardCash: 7_000_000, cardBook: 1_200_000, cardTraditional: 800_000, cardTransport: 1_000_000, insuranceGeneral: 1_000_000, insuranceDisabled: 0, medicalSelf: 500_000, medicalGeneral: 1_000_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKidsKindergarten: 3_000_000, educationKidsUniversity: 0, educationKidsKgCount: 2, educationKidsUniCount: 0, donationPolitical: 0, donationHometown: 100_000, donationEmployeeStock: 0, donationGeneral: 400_000, monthlyRent: 0, pensionAccount: 4_000_000, pensionISA: 0, marriedThisYear: 0, smeQualified: 0, smeYouth: 0, foreignTaxPaid: 0, prepaidIncomeTax: 3_400_000 },
+  { rrn: '8503151111111', name: '김교사', totalPay: 36_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 1, elderly: 0, disabled: 0, childTotal: 1, childUnder6: 0, newbornCount: 0, singleParent: 0, womanWorker: 0, nationalPension: 1_620_000, healthInsurance: 1_290_000, employmentInsurance: 280_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 12_000_000, cardCash: 4_000_000, cardBook: 800_000, cardTraditional: 600_000, cardTransport: 600_000, insuranceGeneral: 600_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 600_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKidsKindergarten: 0, educationKidsUniversity: 0, educationKidsKgCount: 0, educationKidsUniCount: 0, donationPolitical: 0, donationHometown: 0, donationEmployeeStock: 0, donationGeneral: 100_000, monthlyRent: 0, pensionAccount: 1_200_000, pensionISA: 0, marriedThisYear: 0, smeQualified: 0, smeYouth: 0, foreignTaxPaid: 0, prepaidIncomeTax: 1_020_000 },
+  { rrn: '9007072222222', name: '이교사', totalPay: 32_400_000, nonTaxable: 1_200_000, spouse: 0, dependents: 0, elderly: 0, disabled: 0, childTotal: 0, childUnder6: 0, newbornCount: 0, singleParent: 0, womanWorker: 1, nationalPension: 1_460_000, healthInsurance: 1_160_000, employmentInsurance: 250_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 8_000_000, cardCash: 3_000_000, cardBook: 200_000, cardTraditional: 400_000, cardTransport: 400_000, insuranceGeneral: 360_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 0, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKidsKindergarten: 0, educationKidsUniversity: 0, educationKidsKgCount: 0, educationKidsUniCount: 0, donationPolitical: 0, donationHometown: 0, donationEmployeeStock: 0, donationGeneral: 0, monthlyRent: 6_000_000, pensionAccount: 0, pensionISA: 0, marriedThisYear: 1, smeQualified: 1, smeYouth: 1, foreignTaxPaid: 0, prepaidIncomeTax: 720_000 },
+  { rrn: '7811214444444', name: '박원장', totalPay: 60_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 2, elderly: 1, disabled: 0, childTotal: 2, childUnder6: 0, newbornCount: 0, singleParent: 0, womanWorker: 0, nationalPension: 2_700_000, healthInsurance: 2_150_000, employmentInsurance: 470_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 18_000_000, cardCash: 7_000_000, cardBook: 1_200_000, cardTraditional: 800_000, cardTransport: 1_000_000, insuranceGeneral: 1_000_000, insuranceDisabled: 0, medicalSelf: 500_000, medicalGeneral: 1_000_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKidsKindergarten: 3_000_000, educationKidsUniversity: 0, educationKidsKgCount: 2, educationKidsUniCount: 0, donationPolitical: 0, donationHometown: 100_000, donationEmployeeStock: 0, donationGeneral: 400_000, monthlyRent: 0, pensionAccount: 4_000_000, pensionISA: 0, marriedThisYear: 0, smeQualified: 0, smeYouth: 0, foreignTaxPaid: 0, prepaidIncomeTax: 3_400_000 },
 ]
 
 function calcWageDeduction(totalPay: number): number {
@@ -1297,8 +1298,13 @@ function computeWageCalc(inp: WageCalcInput): WageCalcResult {
 
   const wageTaxCredit = calcWageTaxCredit(computedTax, inp.totalPay)
 
-  // 자녀세액공제 (8세 이상)
-  const childTaxCredit = inp.childTotal === 0 ? 0 : inp.childTotal === 1 ? 250_000 : inp.childTotal === 2 ? 550_000 : 550_000 + (inp.childTotal - 2) * 400_000
+  // 자녀세액공제 (8세 이상) + 출산·입양 추가공제 (당해 첫째 30/둘째 50/셋째↑ 70만)
+  const childBase = inp.childTotal === 0 ? 0 : inp.childTotal === 1 ? 250_000 : inp.childTotal === 2 ? 550_000 : 550_000 + (inp.childTotal - 2) * 400_000
+  let newbornAdd = 0
+  if (inp.newbornCount === 1) newbornAdd = 300_000
+  else if (inp.newbornCount === 2) newbornAdd = 800_000   // 30 + 50
+  else if (inp.newbornCount >= 3) newbornAdd = 800_000 + (inp.newbornCount - 2) * 700_000  // 30 + 50 + (N-2)*70
+  const childTaxCredit = childBase + newbornAdd
 
   // 연금계좌 (900만 한도 × 15/12%) + ISA (300만 한도 추가)
   const pensionRate = inp.totalPay <= 55_000_000 ? 0.15 : 0.12
@@ -1458,22 +1464,28 @@ function WageCalcPanel() {
   const [family, setFamily] = useState<FamilyMember[]>(mockFamily)
   const [docs, setDocs] = useState<Document[]>(mockDocs)
 
+  // 근로자 선택 변경 시 부양가족 표의 '본인' 자동 동기화
+  useEffect(() => {
+    setFamily(prev => prev.map(f => f.relation === '본인' ? { ...f, name: baseInp.name, rrn: baseInp.rrn } : f))
+  }, [baseInp.rrn, baseInp.name])
+
   // 부양가족 자동 인적공제 합계 계산
   const familyAggregate = useMemo(() => {
-    let spouse = 0, dependents = 0, elderly = 0, disabled = 0, childTotal = 0
+    let spouse = 0, dependents = 0, elderly = 0, disabled = 0, childTotal = 0, newbornCount = 0
     family.forEach(f => {
       if (!f.basicDeduction) return
-      if (f.relation === '본인') return  // 본인 자동
+      if (f.relation === '본인') return
       if (f.relation === '배우자') spouse += 1
       else if (f.relation === '직계비속(자녀)' || f.relation === '직계비속(손자녀)') {
         dependents += 1
         if (f.isChild8plus) childTotal += 1
+        if (f.isNewborn) newbornCount += 1
       }
       else dependents += 1
       if (f.isElderly) elderly += 1
       if (f.isDisabled) disabled += 1
     })
-    return { spouse, dependents, elderly, disabled, childTotal }
+    return { spouse, dependents, elderly, disabled, childTotal, newbornCount }
   }, [family])
 
   // 공제서류 자동 합계
@@ -1491,6 +1503,7 @@ function WageCalcPanel() {
     elderly: familyAggregate.elderly,
     disabled: familyAggregate.disabled,
     childTotal: familyAggregate.childTotal,
+    newbornCount: familyAggregate.newbornCount,
     medicalSelf: docAggregate['medical-self'] ?? 0,
     medicalGeneral: docAggregate['medical-general'] ?? 0,
     medicalInfertility: docAggregate['medical-infertility'] ?? 0,
@@ -1644,10 +1657,11 @@ function WageCalcPanel() {
             ))}
             <tr className="bg-emerald-50 font-bold">
               <td className={cls_l + ' text-center'} colSpan={4}>자동 합계</td>
-              <td className={cls_v + ' text-center'} colSpan={2}>배우자 {familyAggregate.spouse} · 부양 {familyAggregate.dependents}명</td>
+              <td className={cls_v + ' text-center'} colSpan={2}>배우자 {familyAggregate.spouse} · 부양 {familyAggregate.dependents}</td>
               <td className={cls_v + ' text-center'}>경로 {familyAggregate.elderly}</td>
               <td className={cls_v + ' text-center'}>장애 {familyAggregate.disabled}</td>
-              <td className={cls_v + ' text-center'} colSpan={2}>자녀 {familyAggregate.childTotal}</td>
+              <td className={cls_v + ' text-center'}>자녀 {familyAggregate.childTotal}</td>
+              <td className={cls_v + ' text-center'}>출생·입양 {familyAggregate.newbornCount}</td>
             </tr>
           </tbody>
         </table>
@@ -1857,7 +1871,7 @@ function WageCalcPanel() {
             <tr>
               <td className={cls_l + ' w-[220px]'}>③ 근로소득세액공제 (74/66/50/20만 한도)</td>
               <td className={cls_v + ' w-[160px]'}>{won(calc.wageTaxCredit)}</td>
-              <td className={cls_l + ' w-[180px]'}>④ 자녀세액공제 ({inp.childTotal}명)</td>
+              <td className={cls_l + ' w-[180px]'}>④ 자녀세액공제 ({inp.childTotal}명{inp.newbornCount > 0 ? ` + 출산·입양 ${inp.newbornCount}명` : ''})</td>
               <td className={cls_v}>{won(calc.childTaxCredit)}</td>
             </tr>
             <tr>
