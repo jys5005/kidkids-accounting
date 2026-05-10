@@ -669,6 +669,45 @@ export default function VoucherInputPage() {
           </button>
           {inputMode !== '건별등록' && inputMode !== '상세등록' && <button className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-teal-400 rounded bg-teal-500 hover:bg-teal-600 text-white sub-tab-hover">저장</button>}
           {inputMode !== '건별등록' && inputMode !== '상세등록' && <button onClick={deleteRows} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>}
+          {inputMode !== '건별등록' && inputMode !== '상세등록' && (
+            <button
+              data-tip="선택된 전표 또는 화면의 전체 전표를 인천시 시스템(전표관리 - 수기입력) 으로 자동 등록"
+              onClick={async () => {
+                const targets = checked.size > 0 ? rows.filter(r => checked.has(r.id)) : filtered
+                if (targets.length === 0) { alert('전송할 전표가 없습니다.'); return }
+                if (!confirm(`인천시 시스템에 ${targets.length}건 전송 (수기입력 + 저장)?\n본인 PC 에이전트가 Puppeteer 로 자동 진행합니다.`)) return
+                const vouchers = targets.map(r => ({
+                  date:        r.date.replace(/[^0-9]/g, ''),
+                  summary:     r.summary || '',
+                  amount:      Number(r.amount) || 0,
+                  inOut:       (r.type === '지출' ? 'O' : 'I') as 'I' | 'O',
+                  accountCode: r.accountCode,
+                  accountName: r.subAccount || r.account,
+                  memo:        r.note,
+                }))
+                try {
+                  const res = await fetch('/api/incheon/add-voucher', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ vouchers }),
+                  })
+                  const j = await res.json()
+                  if (j.success) {
+                    alert(`인천시 전송 완료 — ${j.ok}/${j.total}건 성공\n실패 건은 콘솔(F12)에서 확인`)
+                    console.log('[인천시 전송 결과]', j.results)
+                  } else {
+                    alert(`전송 실패: ${j.error || j.errMsg || '알 수 없음'}`)
+                  }
+                } catch (e) {
+                  alert('전송 오류: ' + (e instanceof Error ? e.message : String(e)))
+                }
+              }}
+              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-blue-400 rounded bg-blue-500 hover:bg-blue-600 text-white sub-tab-hover"
+            >
+              인천시 전송
+            </button>
+          )}
         </div>
         )}
         </div>
