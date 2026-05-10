@@ -1476,6 +1476,8 @@ function WageCalcPanel() {
 
   const [family, setFamily] = useState<FamilyMember[]>(mockFamily)
   const [docs, setDocs] = useState<Document[]>(mockDocs)
+  // 매트릭스 셀 클릭 시 영수증 명세 모달
+  const [activeCell, setActiveCell] = useState<{ cat: DocCat; familyId: string } | null>(null)
 
   // 근로자 선택 변경 시 부양가족 표의 '본인' 자동 동기화
   useEffect(() => {
@@ -1739,62 +1741,124 @@ function WageCalcPanel() {
         </table>
       </div>
 
-      {/* V-0. 공제서류 등록 */}
+      {/* V-0. 공제서류 등록 — 매트릭스 그룹핑 */}
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700 flex items-center gap-2">
-          <span>V-0. 공제서류 등록 (영수증 명세)</span>
-          <span className="text-[10px] text-slate-500 font-normal">— 등록한 서류가 V/VI 카드의 합계에 자동 반영. 종류별 합계 → 의료/교육/기부/카드 등 자동 산출</span>
-          <button onClick={addDoc} className="ml-auto px-2 py-0.5 text-[11px] bg-teal-500 hover:bg-teal-600 text-white rounded">+ 서류 추가</button>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">
+          V-0. 공제서류 등록 (매트릭스: 종류 × 부양가족, 셀 클릭 → 영수증 명세 입력)
         </div>
-        <table className="w-full text-[11px]">
-          <thead>
-            <tr>
-              <th className={cls_h + ' w-[40px]'}>No</th>
-              <th className={cls_h}>종류</th>
-              <th className={cls_h}>대상자</th>
-              <th className={cls_h}>내용 (의료기관·학교·단체·보험사 등)</th>
-              <th className={cls_h + ' w-[140px]'}>금액</th>
-              <th className={cls_h + ' w-[60px]'}>삭제</th>
-            </tr>
-          </thead>
-          <tbody>
-            {docs.map((d, i) => (
-              <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                <td className="px-2 py-1 text-center text-slate-500 border-r border-slate-100">{i+1}</td>
-                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30">
-                  <select className={ipt + ' text-[10px]'} value={d.cat} onChange={e => updateDoc(d.id, { cat: e.target.value as DocCat })}>
-                    {DOC_GROUPS.map(g => (
-                      <optgroup key={g.group} label={g.group}>
-                        {g.cats.map(k => <option key={k} value={k}>{DOC_CAT_LABEL[k]}</option>)}
-                      </optgroup>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30">
-                  <select className={ipt + ' text-[10px]'} value={d.familyId} onChange={e => updateDoc(d.id, { familyId: e.target.value })}>
-                    {family.map(f => <option key={f.id} value={f.id}>{f.relation} · {f.name || '(이름 미입력)'}</option>)}
-                  </select>
-                </td>
-                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className={ipt} value={d.desc} onChange={e => updateDoc(d.id, { desc: e.target.value })} placeholder={docCatPlaceholder(d.cat)} /></td>
-                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className={iptN} value={d.amount} onChange={e => updateDoc(d.id, { amount: Number(e.target.value) })} /></td>
-                <td className="px-1 py-1 text-center"><button onClick={() => removeDoc(d.id)} className="text-red-500 text-[10px] hover:underline">삭제</button></td>
-              </tr>
-            ))}
-            <tr className="bg-emerald-50 font-bold">
-              <td className={cls_l + ' text-center'} colSpan={4}>등록 {docs.length}건 합계</td>
-              <td className={cls_v + ' text-right'}>{won(docs.reduce((s, d) => s + d.amount, 0))}</td>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
-        <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-600 grid grid-cols-3 md:grid-cols-5 gap-1">
-          {(Object.keys(DOC_CAT_LABEL) as DocCat[]).map(k => {
-            const sum = docAggregate[k] ?? 0
-            if (sum === 0) return null
-            return <div key={k} className="bg-white border border-slate-200 rounded px-1.5 py-0.5"><span className="text-slate-500">{DOC_CAT_LABEL[k]}</span> <strong className="text-teal-700">{won(sum)}</strong></div>
+        <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+          {DOC_GROUPS.map(g => {
+            // 그룹별 매트릭스: 행=세부cat, 열=부양가족 + 합계
+            const groupTotal = g.cats.reduce((s, c) => s + (docAggregate[c] ?? 0), 0)
+            return (
+              <div key={g.group} className="bg-white border border-slate-200 rounded overflow-hidden">
+                <div className="px-2 py-1.5 bg-teal-50 border-b border-slate-200 text-[11px] font-bold text-teal-700 flex items-center">
+                  <span>{g.group}</span>
+                  <span className="ml-auto text-[10px] text-slate-600">합계 <strong className="text-teal-800">{won(groupTotal)}</strong></span>
+                </div>
+                <table className="w-full text-[10px]">
+                  <thead>
+                    <tr>
+                      <th className="px-1.5 py-1 text-left bg-slate-50 border-b border-r border-slate-200 font-bold text-slate-600">세부 종류</th>
+                      {family.map(f => (
+                        <th key={f.id} className="px-1 py-1 text-center bg-slate-50 border-b border-r border-slate-200 font-bold text-slate-600 last:border-r-0" title={`${f.relation} ${f.name}`}>
+                          {f.name || f.relation}
+                        </th>
+                      ))}
+                      <th className="px-1 py-1 text-center bg-slate-50 border-b border-slate-200 font-bold text-slate-700 w-[70px]">행계</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {g.cats.map(cat => {
+                      const rowTotal = docs.filter(d => d.cat === cat).reduce((s, d) => s + d.amount, 0)
+                      return (
+                        <tr key={cat} className="border-b border-slate-100 last:border-b-0">
+                          <td className="px-1.5 py-1 border-r border-slate-100 text-slate-700">{DOC_CAT_LABEL[cat]}</td>
+                          {family.map(f => {
+                            const cellDocs = docs.filter(d => d.cat === cat && d.familyId === f.id)
+                            const cellTotal = cellDocs.reduce((s, d) => s + d.amount, 0)
+                            const cnt = cellDocs.length
+                            return (
+                              <td key={f.id} className="border-r border-slate-100 last:border-r-0 p-0">
+                                <button
+                                  onClick={() => setActiveCell({ cat, familyId: f.id })}
+                                  className={`w-full px-1 py-1 text-right hover:bg-teal-50 cursor-pointer transition-colors ${cellTotal > 0 ? 'bg-emerald-50/40 text-slate-800 font-mono' : 'text-slate-400'}`}>
+                                  {cellTotal > 0 ? `${won(cellTotal)}${cnt > 1 ? ` (${cnt})` : ''}` : '+'}
+                                </button>
+                              </td>
+                            )
+                          })}
+                          <td className="px-1 py-1 text-right text-slate-700 font-bold bg-slate-50/50">{rowTotal > 0 ? won(rowTotal) : '-'}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )
           })}
         </div>
+        <div className="px-3 py-2 bg-emerald-50 border-t border-emerald-200 text-[11px] text-emerald-800 flex items-center">
+          <span>등록 영수증 <strong>{docs.length}</strong>건 · 총 합계</span>
+          <span className="ml-auto font-bold">{won(docs.reduce((s, d) => s + d.amount, 0))}</span>
+        </div>
       </div>
+
+      {/* 영수증 명세 모달 */}
+      {activeCell && (() => {
+        const cell = activeCell
+        const cellFamily = family.find(f => f.id === cell.familyId)
+        const cellDocs = docs.filter(d => d.cat === cell.cat && d.familyId === cell.familyId)
+        const groupName = DOC_GROUPS.find(g => g.cats.includes(cell.cat))?.group ?? ''
+        const cellTotal = cellDocs.reduce((s, d) => s + d.amount, 0)
+        const addReceipt = () => setDocs(prev => [...prev, { id: 'D' + Date.now(), cat: cell.cat, familyId: cell.familyId, desc: '', amount: 0 }])
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50" onClick={() => setActiveCell(null)}>
+            <div className="bg-white rounded-lg shadow-xl w-[760px] max-h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+              <div className="px-4 py-3 bg-teal-50 border-b border-teal-300 flex items-center gap-2">
+                <span className="text-[13px] font-bold text-teal-800">{groupName} · {DOC_CAT_LABEL[cell.cat]}</span>
+                <span className="text-[11px] text-slate-600">— {cellFamily?.relation} {cellFamily?.name || '(이름 미입력)'}</span>
+                <button onClick={() => setActiveCell(null)} className="ml-auto text-slate-500 hover:text-slate-800 text-[14px]">✕</button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3">
+                <table className="w-full text-[11px]">
+                  <thead>
+                    <tr>
+                      <th className={cls_h + ' w-[40px]'}>No</th>
+                      <th className={cls_h}>내용 (기관·단체·상품 등)</th>
+                      <th className={cls_h + ' w-[140px]'}>금액</th>
+                      <th className={cls_h + ' w-[60px]'}>삭제</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cellDocs.map((d, i) => (
+                      <tr key={d.id} className="border-b border-slate-100">
+                        <td className="px-2 py-1 text-center text-slate-500 border-r border-slate-100">{i+1}</td>
+                        <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className={ipt} value={d.desc} onChange={e => updateDoc(d.id, { desc: e.target.value })} placeholder={docCatPlaceholder(d.cat)} /></td>
+                        <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className={iptN} value={d.amount} onChange={e => updateDoc(d.id, { amount: Number(e.target.value) })} /></td>
+                        <td className="px-1 py-1 text-center"><button onClick={() => removeDoc(d.id)} className="text-red-500 text-[10px] hover:underline">삭제</button></td>
+                      </tr>
+                    ))}
+                    {cellDocs.length === 0 && (
+                      <tr><td colSpan={4} className="px-3 py-6 text-center text-slate-400 text-[11px]">등록된 영수증이 없습니다. [+ 영수증 추가] 버튼을 눌러 입력하세요.</td></tr>
+                    )}
+                    <tr className="bg-emerald-50 font-bold">
+                      <td className={cls_l + ' text-center'} colSpan={2}>합계 ({cellDocs.length}건)</td>
+                      <td className={cls_v + ' text-right'}>{won(cellTotal)}</td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center gap-2">
+                <button onClick={addReceipt} className="px-3 py-1 text-[12px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">+ 영수증 추가</button>
+                <span className="ml-auto text-[10px] text-slate-500">소계가 V/VI 카드 자동 합계에 반영됩니다</span>
+                <button onClick={() => setActiveCell(null)} className="px-3 py-1 text-[12px] font-bold text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50">닫기</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* V-1. 주택자금공제 */}
       <div className="bg-white rounded border border-slate-300">
