@@ -1159,25 +1159,36 @@ type WageCalcInput = {
   medicalGeneral: number    // 일반 부양가족 (15%, 700만 한도, 총급여 3% 초과)
   medicalInfertility: number // 난임시술 (30%, 한도 없음)
   medicalPremature: number  // 미숙아·선천성이상아 (20%, 한도 없음)
-  // 교육비 (단순)
-  educationOwn: number      // 본인 (15%, 한도 없음)
-  educationKids: number     // 부양가족 (15%, 1명당 유아초중고 300만/대학 900만 단순화)
-  // 기부금 (PDF: 1천만↓ 15% / ↑ 30%)
-  donationTax: number
+  // 교육비 — 3종 분리
+  educationOwn: number              // 본인 (15%, 한도없음, 대학원 포함)
+  educationKidsKindergarten: number // 유아·초중고 부양가족 (1인당 300만)
+  educationKidsUniversity: number   // 대학 부양가족 (1인당 900만)
+  educationKidsKgCount: number      // 유아·초중고 인원
+  educationKidsUniCount: number     // 대학 인원
+  // 기부금 — 4종 분리 (정치/고향사랑/우리사주/일반)
+  donationPolitical: number         // 정치자금 (10만↓ 100/110, ↑ 15%)
+  donationHometown: number          // 고향사랑 (10만↓ 100/110, ↑ 15%, 한도 5,000,000)
+  donationEmployeeStock: number     // 우리사주조합 (15%)
+  donationGeneral: number           // 일반/지정/법정 (1천만↓ 15% / ↑ 30%)
   // 월세
   monthlyRent: number
-  // 연금계좌 (퇴직연금 + 연금저축)
-  pensionAccount: number       // 일반 (900만 한도 × 15/12%)
-  pensionISA: number           // ISA 만기 전환분 (300만 한도 × 15/12%)
-  // 혼인 (24~26 혼인신고, 50만, 생애 1회)
+  // 연금계좌
+  pensionAccount: number            // 900만 한도 × 15/12%
+  pensionISA: number                // ISA 만기 전환 (300만 한도)
+  // 혼인 (24~26)
   marriedThisYear: number
+  // 중소기업 취업자 감면 (조특법 §30)
+  smeQualified: number              // 0/1 (감면 대상자)
+  smeYouth: number                  // 0/1 (청년=90% / 일반=70%)
+  // 외국납부세액공제
+  foreignTaxPaid: number
   // 기납부
   prepaidIncomeTax: number
 }
 const mockWageCalcInputs: WageCalcInput[] = [
-  { rrn: '8503151111111', name: '김교사', totalPay: 36_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 1, elderly: 0, disabled: 0, childTotal: 1, childUnder6: 0, singleParent: 0, womanWorker: 0, nationalPension: 1_620_000, healthInsurance: 1_290_000, employmentInsurance: 280_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 12_000_000, cardCash: 4_000_000, cardBook: 800_000, cardTraditional: 600_000, cardTransport: 600_000, insuranceGeneral: 600_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 600_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKids: 0, donationTax: 100_000, monthlyRent: 0, pensionAccount: 1_200_000, pensionISA: 0, marriedThisYear: 0, prepaidIncomeTax: 1_020_000 },
-  { rrn: '9007072222222', name: '이교사', totalPay: 32_400_000, nonTaxable: 1_200_000, spouse: 0, dependents: 0, elderly: 0, disabled: 0, childTotal: 0, childUnder6: 0, singleParent: 0, womanWorker: 1, nationalPension: 1_460_000, healthInsurance: 1_160_000, employmentInsurance: 250_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 8_000_000, cardCash: 3_000_000, cardBook: 200_000, cardTraditional: 400_000, cardTransport: 400_000, insuranceGeneral: 360_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 0, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKids: 0, donationTax: 0, monthlyRent: 6_000_000, pensionAccount: 0, pensionISA: 0, marriedThisYear: 1, prepaidIncomeTax: 720_000 },
-  { rrn: '7811214444444', name: '박원장', totalPay: 60_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 2, elderly: 1, disabled: 0, childTotal: 2, childUnder6: 0, singleParent: 0, womanWorker: 0, nationalPension: 2_700_000, healthInsurance: 2_150_000, employmentInsurance: 470_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 18_000_000, cardCash: 7_000_000, cardBook: 1_200_000, cardTraditional: 800_000, cardTransport: 1_000_000, insuranceGeneral: 1_000_000, insuranceDisabled: 0, medicalSelf: 500_000, medicalGeneral: 1_000_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKids: 3_000_000, donationTax: 500_000, monthlyRent: 0, pensionAccount: 4_000_000, pensionISA: 0, marriedThisYear: 0, prepaidIncomeTax: 3_400_000 },
+  { rrn: '8503151111111', name: '김교사', totalPay: 36_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 1, elderly: 0, disabled: 0, childTotal: 1, childUnder6: 0, singleParent: 0, womanWorker: 0, nationalPension: 1_620_000, healthInsurance: 1_290_000, employmentInsurance: 280_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 12_000_000, cardCash: 4_000_000, cardBook: 800_000, cardTraditional: 600_000, cardTransport: 600_000, insuranceGeneral: 600_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 600_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKidsKindergarten: 0, educationKidsUniversity: 0, educationKidsKgCount: 0, educationKidsUniCount: 0, donationPolitical: 0, donationHometown: 0, donationEmployeeStock: 0, donationGeneral: 100_000, monthlyRent: 0, pensionAccount: 1_200_000, pensionISA: 0, marriedThisYear: 0, smeQualified: 0, smeYouth: 0, foreignTaxPaid: 0, prepaidIncomeTax: 1_020_000 },
+  { rrn: '9007072222222', name: '이교사', totalPay: 32_400_000, nonTaxable: 1_200_000, spouse: 0, dependents: 0, elderly: 0, disabled: 0, childTotal: 0, childUnder6: 0, singleParent: 0, womanWorker: 1, nationalPension: 1_460_000, healthInsurance: 1_160_000, employmentInsurance: 250_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 8_000_000, cardCash: 3_000_000, cardBook: 200_000, cardTraditional: 400_000, cardTransport: 400_000, insuranceGeneral: 360_000, insuranceDisabled: 0, medicalSelf: 200_000, medicalGeneral: 0, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKidsKindergarten: 0, educationKidsUniversity: 0, educationKidsKgCount: 0, educationKidsUniCount: 0, donationPolitical: 0, donationHometown: 0, donationEmployeeStock: 0, donationGeneral: 0, monthlyRent: 6_000_000, pensionAccount: 0, pensionISA: 0, marriedThisYear: 1, smeQualified: 1, smeYouth: 1, foreignTaxPaid: 0, prepaidIncomeTax: 720_000 },
+  { rrn: '7811214444444', name: '박원장', totalPay: 60_000_000, nonTaxable: 1_200_000, spouse: 1, dependents: 2, elderly: 1, disabled: 0, childTotal: 2, childUnder6: 0, singleParent: 0, womanWorker: 0, nationalPension: 2_700_000, healthInsurance: 2_150_000, employmentInsurance: 470_000, housingLeaseLoan: 0, housingMortgage: 0, housingSaving: 0, cardCredit: 18_000_000, cardCash: 7_000_000, cardBook: 1_200_000, cardTraditional: 800_000, cardTransport: 1_000_000, insuranceGeneral: 1_000_000, insuranceDisabled: 0, medicalSelf: 500_000, medicalGeneral: 1_000_000, medicalInfertility: 0, medicalPremature: 0, educationOwn: 0, educationKidsKindergarten: 3_000_000, educationKidsUniversity: 0, educationKidsKgCount: 2, educationKidsUniCount: 0, donationPolitical: 0, donationHometown: 100_000, donationEmployeeStock: 0, donationGeneral: 400_000, monthlyRent: 0, pensionAccount: 4_000_000, pensionISA: 0, marriedThisYear: 0, smeQualified: 0, smeYouth: 0, foreignTaxPaid: 0, prepaidIncomeTax: 3_400_000 },
 ]
 
 function calcWageDeduction(totalPay: number): number {
@@ -1229,7 +1240,10 @@ type WageCalcResult = {
   wageTaxCredit: number; childTaxCredit: number; pensionTaxCredit: number; pensionISACredit: number
   insGeneralCredit: number; insDisabledCredit: number
   medSelfCredit: number; medGeneralCredit: number; medInfertilityCredit: number; medPrematureCredit: number; medicalCredit: number
-  educationCredit: number; donationCredit: number; rentCredit: number; marriageCredit: number
+  educationOwnCredit: number; educationKgCredit: number; educationUniCredit: number; educationCredit: number
+  donationPoliticalCredit: number; donationHometownCredit: number; donationStockCredit: number; donationGeneralCredit: number; donationCredit: number
+  rentCredit: number; marriageCredit: number
+  smeReduction: number; foreignTaxCredit: number
   specialTaxCredit: number; standardCredit: number; totalTaxCredits: number
   determinedTax: number; finalTax: number
 }
@@ -1312,13 +1326,31 @@ function computeWageCalc(inp: WageCalcInput): WageCalcResult {
   const medPrematureCredit = Math.floor(inp.medicalPremature * 0.20)
   const medicalCredit = medSelfCredit + medGeneralCredit + medInfertilityCredit + medPrematureCredit
 
-  // 교육비 — 본인 + 부양가족 (단순화: 부양가족 1인당 한도 적용 안 함 — 합계 처리)
-  const educationCredit = Math.floor((inp.educationOwn + inp.educationKids) * 0.15)
+  // 교육비 — 3종 분리 (본인 한도없음 / 유아초중고 1인당 300만 / 대학 1인당 900만, 모두 15%)
+  const educationOwnCredit = Math.floor(inp.educationOwn * 0.15)
+  const eduKgLimit = inp.educationKidsKgCount * 3_000_000
+  const educationKgCredit = Math.floor(Math.min(eduKgLimit, inp.educationKidsKindergarten) * 0.15)
+  const eduUniLimit = inp.educationKidsUniCount * 9_000_000
+  const educationUniCredit = Math.floor(Math.min(eduUniLimit, inp.educationKidsUniversity) * 0.15)
+  const educationCredit = educationOwnCredit + educationKgCredit + educationUniCredit
 
-  // 기부금 — 1천만↓ 15% / ↑ 30%
-  const donationBase = Math.min(10_000_000, inp.donationTax)
-  const donationOver = Math.max(0, inp.donationTax - 10_000_000)
-  const donationCredit = Math.floor(donationBase * 0.15 + donationOver * 0.30)
+  // 기부금 — 4종 분리
+  // 정치자금 (10만↓ 100/110, 초과 15%)
+  const polBase = Math.min(100_000, inp.donationPolitical)
+  const polOver = Math.max(0, inp.donationPolitical - 100_000)
+  const donationPoliticalCredit = Math.floor(polBase * 100 / 110 + polOver * 0.15)
+  // 고향사랑 (10만↓ 100/110, 초과 15%, 한도 5,000,000)
+  const hometownAmt = Math.min(5_000_000, inp.donationHometown)
+  const hometownBase = Math.min(100_000, hometownAmt)
+  const hometownOver = Math.max(0, hometownAmt - 100_000)
+  const donationHometownCredit = Math.floor(hometownBase * 100 / 110 + hometownOver * 0.15)
+  // 우리사주조합 (15%)
+  const donationStockCredit = Math.floor(inp.donationEmployeeStock * 0.15)
+  // 일반/지정/법정 (1천만↓ 15% / ↑ 30%)
+  const genBase = Math.min(10_000_000, inp.donationGeneral)
+  const genOver = Math.max(0, inp.donationGeneral - 10_000_000)
+  const donationGeneralCredit = Math.floor(genBase * 0.15 + genOver * 0.30)
+  const donationCredit = donationPoliticalCredit + donationHometownCredit + donationStockCredit + donationGeneralCredit
 
   // 월세
   const rentRate = inp.totalPay <= 55_000_000 ? 0.17 : 0.15
@@ -1331,10 +1363,18 @@ function computeWageCalc(inp: WageCalcInput): WageCalcResult {
 
   // 표준세액공제: 특별 모두 0이면 13만 자동
   const totalSpecialIncome = inp.healthInsurance + inp.employmentInsurance + inp.housingLeaseLoan + inp.housingMortgage + inp.housingSaving
-  const totalSpecialTax = inp.insuranceGeneral + inp.insuranceDisabled + inp.medicalSelf + inp.medicalGeneral + inp.medicalInfertility + inp.medicalPremature + inp.educationOwn + inp.educationKids + inp.donationTax + inp.monthlyRent
+  const totalSpecialTax = inp.insuranceGeneral + inp.insuranceDisabled + inp.medicalSelf + inp.medicalGeneral + inp.medicalInfertility + inp.medicalPremature + inp.educationOwn + inp.educationKidsKindergarten + inp.educationKidsUniversity + inp.donationPolitical + inp.donationHometown + inp.donationEmployeeStock + inp.donationGeneral + inp.monthlyRent
   const standardCredit = (totalSpecialIncome + totalSpecialTax === 0) ? 130_000 : 0
 
-  const totalTaxCredits = wageTaxCredit + childTaxCredit + pensionTaxCredit + pensionISACredit + specialTaxCredit + marriageCredit + standardCredit
+  // 중소기업 취업자 감면 (조특법 §30) — 청년 90% / 일반 70%, 연 200만 한도
+  // 산출세액 × 감면율로 단순화 (실제는 근로소득 산출세액 비례)
+  const smeRate = inp.smeYouth ? 0.90 : 0.70
+  const smeReduction = inp.smeQualified ? Math.min(2_000_000, Math.floor(computedTax * smeRate)) : 0
+
+  // 외국납부세액공제 (국내 산출세액 한도 단순화)
+  const foreignTaxCredit = Math.min(computedTax, inp.foreignTaxPaid)
+
+  const totalTaxCredits = wageTaxCredit + childTaxCredit + pensionTaxCredit + pensionISACredit + specialTaxCredit + marriageCredit + standardCredit + smeReduction + foreignTaxCredit
   const determinedTax = Math.max(0, computedTax - totalTaxCredits)
   const finalTax = determinedTax - inp.prepaidIncomeTax
 
@@ -1345,7 +1385,10 @@ function computeWageCalc(inp: WageCalcInput): WageCalcResult {
     wageTaxCredit, childTaxCredit, pensionTaxCredit, pensionISACredit,
     insGeneralCredit, insDisabledCredit,
     medSelfCredit, medGeneralCredit, medInfertilityCredit, medPrematureCredit, medicalCredit,
-    educationCredit, donationCredit, rentCredit, marriageCredit,
+    educationOwnCredit, educationKgCredit, educationUniCredit, educationCredit,
+    donationPoliticalCredit, donationHometownCredit, donationStockCredit, donationGeneralCredit, donationCredit,
+    rentCredit, marriageCredit,
+    smeReduction, foreignTaxCredit,
     specialTaxCredit, standardCredit, totalTaxCredits, determinedTax, finalTax,
   }
 }
@@ -1374,7 +1417,7 @@ function WageCalcPanel() {
       <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-700 space-y-1">
         <div><strong>근로소득 원천징수영수증 / 지급명세서</strong> — 소득세법 시행규칙 별지 제24호서식(1) 기준 자동 계산. 입력값 변경 시 즉시 재계산.</div>
         <div className="text-[10px]">📕 출처: 국세청 「2025년 원천징수의무자를 위한 연말정산 신고안내」(2025.12 발간, 26.02.03 수정사항 반영)</div>
-        <div className="text-[10px]">⚖️ 적용 룰: 근로소득세액공제 · 자녀세액공제 · <strong>연금계좌+ISA</strong> · <strong>보장성 일반/장애인 분리</strong> · <strong>의료비 4종 차등(본인·일반·난임 30%·미숙아 20%)</strong> · <strong>신용카드 5종 차등(15/30/30/40/40%)</strong> · <strong>주택자금 3종(임차 40%·저당·마련저축)</strong> · <strong>한부모(100만)/부녀자(50만)</strong> · <strong>혼인세액공제(50만)</strong> · 기부금 누진(15%/30%) · 월세 · 표준세액공제</div>
+        <div className="text-[10px]">⚖️ 풀스택 룰: 근로소득세액공제 · 자녀세액공제 · <strong>연금계좌+ISA</strong> · <strong>보장성 일반/장애인 분리</strong> · <strong>의료비 4종 차등(15%/15%/30%/20%)</strong> · <strong>교육비 3종(본인·유아초중고 300만/명·대학 900만/명)</strong> · <strong>기부금 4종(정치·고향사랑 10만↓ 100/110·우리사주·일반 누진 15/30%)</strong> · <strong>신용카드 5종 차등(15/30/30/40/40%)</strong> · <strong>주택자금 3종(임차 40%·저당·마련저축)</strong> · <strong>한부모(100만)/부녀자(50만)</strong> · <strong>혼인(50만)</strong> · <strong>중소기업 감면(70/90%, 200만 한도)</strong> · <strong>외국납부세액공제</strong> · 월세 · 표준세액공제</div>
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -1646,35 +1689,109 @@ function WageCalcPanel() {
       </div>
 
       <div className="bg-white rounded border border-slate-300">
-        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-4. 교육비 / 기부금 / 월세</div>
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-4. 교육비 (3종 분리)</div>
         <table className="w-full">
           <tbody>
             <tr>
-              <td className={cls_l + ' w-[200px]'}>교육비 본인 (15%, 한도없음)</td>
+              <td className={cls_l + ' w-[200px]'}>본인 (한도없음, 대학원 포함)</td>
               <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.educationOwn} onChange={e => update({ educationOwn: Number(e.target.value) })} /></td>
-              <td className={cls_l + ' w-[200px]'}>교육비 부양가족 (단순 합계)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.educationKids} onChange={e => update({ educationKids: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' w-[140px]'}>본인 세액공제 (15%)</td>
+              <td className={cls_v}>{won(calc.educationOwnCredit)}</td>
             </tr>
             <tr>
-              <td className={cls_l}>교육비 세액공제 (15%)</td>
-              <td className={cls_v}>{won(calc.educationCredit)}</td>
-              <td className={cls_l}>기부금 (1천만↓ 15% / ↑ 30%)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.donationTax} onChange={e => update({ donationTax: Number(e.target.value) })} /></td>
+              <td className={cls_l}>유아·초중고 (1인당 300만)</td>
+              <td className={cls_i}>
+                <input type="number" className={iptN + ' mb-0.5'} value={inp.educationKidsKindergarten} onChange={e => update({ educationKidsKindergarten: Number(e.target.value) })} placeholder="금액" />
+                <input type="number" className={iptN} value={inp.educationKidsKgCount} onChange={e => update({ educationKidsKgCount: Number(e.target.value) })} placeholder="인원" />
+              </td>
+              <td className={cls_l}>유아·초중고 세액공제</td>
+              <td className={cls_v}>{won(calc.educationKgCredit)}</td>
             </tr>
             <tr>
-              <td className={cls_l}>기부금 세액공제 (누진)</td>
-              <td className={cls_v}>{won(calc.donationCredit)}</td>
-              <td className={cls_l}>월세 (1000만 한도)</td>
-              <td className={cls_i}><input type="number" className={iptN} value={inp.monthlyRent} onChange={e => update({ monthlyRent: Number(e.target.value) })} /></td>
+              <td className={cls_l}>대학 (1인당 900만)</td>
+              <td className={cls_i}>
+                <input type="number" className={iptN + ' mb-0.5'} value={inp.educationKidsUniversity} onChange={e => update({ educationKidsUniversity: Number(e.target.value) })} placeholder="금액" />
+                <input type="number" className={iptN} value={inp.educationKidsUniCount} onChange={e => update({ educationKidsUniCount: Number(e.target.value) })} placeholder="인원" />
+              </td>
+              <td className={cls_l + ' font-bold'}>교육비 합계</td>
+              <td className={cls_v + ' font-bold'}>{won(calc.educationCredit)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-5. 기부금 (4종 분리)</div>
+        <table className="w-full">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[200px]'}>정치자금 (10만↓ 100/110)</td>
+              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.donationPolitical} onChange={e => update({ donationPolitical: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' w-[160px]'}>정치자금 공제</td>
+              <td className={cls_v}>{won(calc.donationPoliticalCredit)}</td>
             </tr>
             <tr>
+              <td className={cls_l}>고향사랑 (10만↓ 100/110, 500만 한도)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.donationHometown} onChange={e => update({ donationHometown: Number(e.target.value) })} /></td>
+              <td className={cls_l}>고향사랑 공제</td>
+              <td className={cls_v}>{won(calc.donationHometownCredit)}</td>
+            </tr>
+            <tr>
+              <td className={cls_l}>우리사주조합 (15%)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.donationEmployeeStock} onChange={e => update({ donationEmployeeStock: Number(e.target.value) })} /></td>
+              <td className={cls_l}>우리사주 공제</td>
+              <td className={cls_v}>{won(calc.donationStockCredit)}</td>
+            </tr>
+            <tr>
+              <td className={cls_l}>일반·지정·법정 (1천만↓ 15% / ↑ 30%)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.donationGeneral} onChange={e => update({ donationGeneral: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' font-bold'}>기부금 합계</td>
+              <td className={cls_v + ' font-bold'}>{won(calc.donationCredit)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-6. 월세 / 표준세액공제</div>
+        <table className="w-full">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[200px]'}>월세 (1000만 한도)</td>
+              <td className={cls_i + ' w-[160px]'}><input type="number" className={iptN} value={inp.monthlyRent} onChange={e => update({ monthlyRent: Number(e.target.value) })} /></td>
               <td className={cls_l}>월세 세액공제 ({inp.totalPay <= 55_000_000 ? '17%' : '15%'})</td>
               <td className={cls_v}>{won(calc.rentCredit)}</td>
-              <td className={cls_l}>표준세액공제 (특별 0일 때 자동)</td>
-              <td className={cls_v}>{won(calc.standardCredit)}</td>
+            </tr>
+            <tr>
+              <td className={cls_l}>표준세액공제 (특별 0일 때 자동 13만)</td>
+              <td className={cls_v} colSpan={3}>{won(calc.standardCredit)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="bg-white rounded border border-slate-300">
+        <div className="px-3 py-2 bg-slate-100 border-b border-slate-300 text-[12px] font-bold text-slate-700">VI-7. 중소기업 취업자 감면 / 외국납부세액공제</div>
+        <table className="w-full">
+          <tbody>
+            <tr>
+              <td className={cls_l + ' w-[200px]'}>중소기업 감면 대상 (조특법 §30)</td>
+              <td className={cls_i + ' w-[160px]'}><select className={ipt} value={inp.smeQualified} onChange={e => update({ smeQualified: Number(e.target.value) })}><option value={0}>해당없음</option><option value={1}>해당</option></select></td>
+              <td className={cls_l}>청년(15~34세) 여부</td>
+              <td className={cls_i}><select className={ipt} value={inp.smeYouth} onChange={e => update({ smeYouth: Number(e.target.value) })}><option value={0}>일반(70%)</option><option value={1}>청년(90%)</option></select></td>
+            </tr>
+            <tr>
+              <td className={cls_l + ' font-bold'}>중소기업 감면액 (산출세액 × {inp.smeYouth ? '90%' : '70%'}, 200만 한도)</td>
+              <td className={cls_v + ' font-bold'} colSpan={3}>{won(calc.smeReduction)}</td>
+            </tr>
+            <tr>
+              <td className={cls_l}>외국납부세액 (소법 §57)</td>
+              <td className={cls_i}><input type="number" className={iptN} value={inp.foreignTaxPaid} onChange={e => update({ foreignTaxPaid: Number(e.target.value) })} /></td>
+              <td className={cls_l + ' font-bold'}>외국납부세액공제</td>
+              <td className={cls_v + ' font-bold'}>{won(calc.foreignTaxCredit)}</td>
             </tr>
             <tr className="bg-emerald-50">
-              <td className={cls_l + ' font-bold'} colSpan={3}>세액공제 합계 (③+④+⑤+⑤-2+혼인+VI-2~4+표준)</td>
+              <td className={cls_l + ' font-bold'} colSpan={3}>세액공제 총합계 (③④⑤+⑤-2+혼인+보험·의료·교육·기부·월세·표준+중소기업감면+외국납부)</td>
               <td className={cls_v + ' font-bold text-emerald-800'}>{won(calc.totalTaxCredits)}</td>
             </tr>
           </tbody>
