@@ -1424,16 +1424,29 @@ type DocCat = 'medical-self' | 'medical-general' | 'medical-infertility' | 'medi
   | 'card-credit' | 'card-cash' | 'card-book' | 'card-traditional' | 'card-transport'
   | 'rent' | 'pension-account' | 'pension-isa' | 'housing-lease' | 'housing-mortgage' | 'housing-saving'
 const DOC_CAT_LABEL: Record<DocCat, string> = {
-  'medical-self': '의료비(본인·65+·6-·장애·특례)', 'medical-general': '의료비(일반 부양가족)',
-  'medical-infertility': '의료비(난임시술)', 'medical-premature': '의료비(미숙아·선천성)',
-  'education-own': '교육비(본인)', 'education-kg': '교육비(유아·초중고)', 'education-uni': '교육비(대학)',
-  'insurance-general': '보험료(일반 보장성)', 'insurance-disabled': '보험료(장애인전용)',
-  'donation-political': '기부금(정치자금)', 'donation-hometown': '기부금(고향사랑)',
-  'donation-stock': '기부금(우리사주)', 'donation-general': '기부금(일반/지정/법정)',
+  'medical-self': '본인·65+·6-·장애·특례', 'medical-general': '일반 부양가족',
+  'medical-infertility': '난임시술', 'medical-premature': '미숙아·선천성',
+  'education-own': '본인', 'education-kg': '유아·초중고', 'education-uni': '대학',
+  'insurance-general': '일반 보장성', 'insurance-disabled': '장애인전용',
+  'donation-political': '정치자금', 'donation-hometown': '고향사랑',
+  'donation-stock': '우리사주조합', 'donation-general': '일반/지정/법정',
   'card-credit': '신용카드', 'card-cash': '현금영수증·체크', 'card-book': '도서·공연·박물관·체육',
   'card-traditional': '전통시장', 'card-transport': '대중교통',
   'rent': '월세', 'pension-account': '연금계좌(퇴직+연금저축)', 'pension-isa': 'ISA 만기 연금계좌 전환',
   'housing-lease': '주택임차차입금 원리금', 'housing-mortgage': '장기주택저당 이자', 'housing-saving': '주택마련저축',
+}
+const DOC_GROUPS: { group: string; cats: DocCat[]; placeholder: string }[] = [
+  { group: '의료비', cats: ['medical-self', 'medical-general', 'medical-infertility', 'medical-premature'], placeholder: '병원·약국명 (예: ○○병원)' },
+  { group: '교육비', cats: ['education-own', 'education-kg', 'education-uni'], placeholder: '학교·학원명 (예: ○○대학교)' },
+  { group: '보험료', cats: ['insurance-general', 'insurance-disabled'], placeholder: '보험사·상품명 (예: ○○생명 실손보험)' },
+  { group: '기부금', cats: ['donation-political', 'donation-hometown', 'donation-stock', 'donation-general'], placeholder: '단체명 (예: ○○재단)' },
+  { group: '신용카드 등', cats: ['card-credit', 'card-cash', 'card-book', 'card-traditional', 'card-transport'], placeholder: '카드사·합계 (예: 신한카드 합계)' },
+  { group: '주택자금', cats: ['housing-lease', 'housing-mortgage', 'housing-saving'], placeholder: '은행·상품명 (예: 국민은행 주택임차자금)' },
+  { group: '연금·월세', cats: ['rent', 'pension-account', 'pension-isa'], placeholder: '임대인·금융기관 (예: ○○ 임대인)' },
+]
+function docCatPlaceholder(cat: DocCat): string {
+  const g = DOC_GROUPS.find(g => g.cats.includes(cat))
+  return g?.placeholder ?? ''
 }
 type Document = {
   id: string
@@ -1750,17 +1763,19 @@ function WageCalcPanel() {
                 <td className="px-2 py-1 text-center text-slate-500 border-r border-slate-100">{i+1}</td>
                 <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30">
                   <select className={ipt + ' text-[10px]'} value={d.cat} onChange={e => updateDoc(d.id, { cat: e.target.value as DocCat })}>
-                    {(Object.keys(DOC_CAT_LABEL) as DocCat[]).map(k => (
-                      <option key={k} value={k}>{DOC_CAT_LABEL[k]}</option>
+                    {DOC_GROUPS.map(g => (
+                      <optgroup key={g.group} label={g.group}>
+                        {g.cats.map(k => <option key={k} value={k}>{DOC_CAT_LABEL[k]}</option>)}
+                      </optgroup>
                     ))}
                   </select>
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30">
                   <select className={ipt + ' text-[10px]'} value={d.familyId} onChange={e => updateDoc(d.id, { familyId: e.target.value })}>
-                    {family.map(f => <option key={f.id} value={f.id}>{f.relation} {f.name}</option>)}
+                    {family.map(f => <option key={f.id} value={f.id}>{f.relation} · {f.name || '(이름 미입력)'}</option>)}
                   </select>
                 </td>
-                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className={ipt} value={d.desc} onChange={e => updateDoc(d.id, { desc: e.target.value })} /></td>
+                <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input className={ipt} value={d.desc} onChange={e => updateDoc(d.id, { desc: e.target.value })} placeholder={docCatPlaceholder(d.cat)} /></td>
                 <td className="px-1 py-1 border-r border-slate-100 bg-blue-50/30"><input type="number" className={iptN} value={d.amount} onChange={e => updateDoc(d.id, { amount: Number(e.target.value) })} /></td>
                 <td className="px-1 py-1 text-center"><button onClick={() => removeDoc(d.id)} className="text-red-500 text-[10px] hover:underline">삭제</button></td>
               </tr>
