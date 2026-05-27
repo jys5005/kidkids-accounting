@@ -1,10 +1,20 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
+import * as XLSX from 'xlsx'
 import DraggableModal from '@/components/DraggableModal'
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const inputCls = "border border-amber-300 rounded px-2 py-1 text-[11px] text-right focus:outline-none focus:border-amber-500 w-[70px]"
 
-type ChildRow = { id: number; name: string; className: string; residentNo: string; status?: string }
+type ChildRow = {
+  id: number; name: string; className: string; residentNo: string; status?: string
+  enterDate?: string; leaveDate?: string
+}
+
+// 회계연도(3월~다음해2월) 상반기(3~8월) / 하반기(9~익년2월) 라벨
+const HALF_LABELS: { half: 'H1' | 'H2'; label: string; months: number[] }[] = [
+  { half: 'H1', label: '상반기(3~8월)',   months: [3, 4, 5, 6, 7, 8] },
+  { half: 'H2', label: '하반기(9~익년2월)', months: [9, 10, 11, 12, 1, 2] },
+]
 
 type Step = 'select' | 'confirm' | 'edit'
 
@@ -21,6 +31,11 @@ export default function ExpensePage() {
   const [childrenList, setChildrenList] = useState<ChildRow[]>([])
   const [syncing, setSyncing] = useState(false)
   const [lastSynced, setLastSynced] = useState<string | null>(null)
+  const excelInputRef = useRef<HTMLInputElement>(null)
+  // 회계연도 (3월 시작). 1~2월은 전년도 회계연도
+  const _curFY = (() => { const t = new Date(); return t.getMonth() + 1 <= 2 ? t.getFullYear() - 1 : t.getFullYear() })()
+  const [fiscalYear, setFiscalYear] = useState<number>(_curFY)
+  const [half, setHalf] = useState<'H1' | 'H2'>('H1')
 
   // 통합e 동기화 — 회계앱 server proxy → 통합e page_data (child-cur + child-leave)
   const handleSyncFromPlatform = async () => {
@@ -31,8 +46,9 @@ export default function ExpensePage() {
       if (r.status === 401) { alert('통합e 로그인이 필요합니다.'); return }
       const j = await r.json()
       if (!j.success) { alert(j.error || '동기화 실패'); return }
-      const list: ChildRow[] = (j.children || []).map((c: { id: number; name: string; className: string; residentNo: string; status: string }) => ({
+      const list: ChildRow[] = (j.children || []).map((c: { id: number; name: string; className: string; residentNo: string; status: string; enterDate?: string; leaveDate?: string }) => ({
         id: c.id, name: c.name, className: c.className, residentNo: c.residentNo, status: c.status,
+        enterDate: c.enterDate, leaveDate: c.leaveDate,
       }))
       setChildrenList(list)
       setLastSynced(new Date().toLocaleString('ko-KR'))
@@ -43,6 +59,45 @@ export default function ExpensePage() {
     } finally {
       setSyncing(false)
     }
+  }
+
+  // 엑셀 등록 — .xlsx/.xls 업로드 → 원아명단으로 파싱
+  // 컬럼 키: 이름/반/주민번호/입소일/퇴소일 (없으면 빈 값)
+  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = new Uint8Array(ev.target?.result as ArrayBuffer)
+        const wb = XLSX.read(data, { type: 'array' })
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const json = XLSX.utils.sheet_to_json<any>(ws)
+        const parsed: ChildRow[] = json
+          .filter((r: Record<string, unknown>) => String(r['이름'] ?? r['성명'] ?? r['원아명'] ?? '').trim())
+          .map((r: Record<string, unknown>, idx: number) => ({
+            id: idx + 1,
+            name: String(r['이름'] ?? r['성명'] ?? r['원아명'] ?? '').trim(),
+            className: String(r['반'] ?? r['반명'] ?? r['클래스'] ?? '').trim(),
+            residentNo: String(r['주민번호'] ?? r['주민등록번호'] ?? '').trim(),
+            enterDate: String(r['입소일'] ?? r['입학일'] ?? r['등원일'] ?? '').trim(),
+            leaveDate: String(r['퇴소일'] ?? r['퇴원일'] ?? '').trim(),
+            status: String(r['상태'] ?? '현원').trim(),
+          }))
+        if (parsed.length === 0) {
+          alert('파싱된 행이 없습니다.\n엑셀 첫 행에 [이름] 컬럼이 있는지 확인해주세요.\n지원 컬럼: 이름·반·주민번호·입소일·퇴소일')
+          return
+        }
+        setChildrenList(parsed)
+        alert(`✅ 엑셀 등록 완료\n\n총 ${parsed.length}명 (${file.name})`)
+      } catch (err) {
+        alert('엑셀 파싱 실패: ' + (err instanceof Error ? err.message : String(err)))
+      } finally {
+        if (excelInputRef.current) excelInputRef.current.value = ''
+      }
+    }
+    reader.readAsArrayBuffer(file)
   }
 
   // 분리적용 편집 데이터
@@ -93,8 +148,54 @@ export default function ExpensePage() {
     return (
       <div className="p-3 space-y-3">
         <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
-          <div className="px-4 py-3 border-b border-teal-400/20">
-            <span className="text-sm font-bold text-slate-700">기타필요경비 분리적용</span>
+          <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-bold text-slate-700">필요경비요율정산서</span>
+            <div className="flex items-center gap-1.5 ml-2">
+              <span className="text-[11px] font-bold text-slate-600">회계연도</span>
+              <select
+                value={fiscalYear}
+                onChange={e => setFiscalYear(Number(e.target.value))}
+                className="border border-teal-300 rounded px-2 py-1 text-[12px] font-bold"
+              >
+                {Array.from({ length: 6 }, (_, i) => _curFY - 4 + i).map(y => (
+                  <option key={y} value={y}>{y}년</option>
+                ))}
+              </select>
+              <span className="text-[11px] text-slate-500">→</span>
+              <div className="inline-flex rounded overflow-hidden border border-teal-300">
+                {HALF_LABELS.map(h => (
+                  <button
+                    key={h.half}
+                    onClick={() => setHalf(h.half)}
+                    className={`px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                      half === h.half ? 'bg-teal-600 text-white' : 'bg-white text-slate-600 hover:bg-teal-50'
+                    }`}
+                  >
+                    {h.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 상반기/하반기 실제 사용 요율 — 데이터 연결 전 영역 */}
+        <div className="bg-gradient-to-r from-amber-50 to-pink-50 border border-amber-200 rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[12px] font-bold text-amber-800">
+              📊 {fiscalYear}년 {HALF_LABELS.find(h => h.half === half)?.label} 실제 사용 요율
+            </span>
+            <span className="text-[10px] text-slate-500">
+              해당 반기 회계보고(sub-acct) 기준 — 항목별 합계
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+            {['기타필요경비', '입학준비금', '현장학습비', '차량운행비', '행사비', '조석식비', '특성화비', '특별활동비'].map(label => (
+              <div key={label} className="bg-white rounded px-2 py-1.5 border border-slate-200">
+                <div className="text-[9px] text-slate-500">{label}</div>
+                <div className="text-[12px] font-bold text-slate-700 text-right">- 원</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -126,6 +227,20 @@ export default function ExpensePage() {
             <button className="px-3 py-1 text-[11px] font-bold text-white bg-blue-600 rounded">검색</button>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <input
+              ref={excelInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleExcelUpload}
+            />
+            <button
+              onClick={() => excelInputRef.current?.click()}
+              className="flex items-center gap-1 px-3 py-1 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded transition-colors"
+              title=".xlsx/.xls 파일에서 원아명단을 불러옵니다 (이름·반·주민번호·입소일·퇴소일)"
+            >
+              📊 엑셀등록
+            </button>
             <button
               onClick={handleSyncFromPlatform}
               disabled={syncing}
@@ -176,6 +291,7 @@ export default function ExpensePage() {
                 <th className="px-1 py-2 border-r border-slate-200 w-[30px]"><input type="checkbox" checked={checked.size === filtered.length && filtered.length > 0} onChange={toggleAll} /></th>
                 <th className="px-2 py-2 font-bold text-slate-600 border-r border-slate-200">이름</th>
                 <th className="px-2 py-2 font-bold text-slate-600 border-r border-slate-200">반</th>
+                <th className="px-2 py-2 font-bold text-slate-600 border-r border-slate-200">입소일</th>
                 <th className="px-2 py-2 font-bold text-slate-600 border-r border-slate-200">퇴소일</th>
                 <th className="px-2 py-2 font-bold text-slate-600 border-r border-slate-200">주민번호</th>
                 <th className="px-2 py-2 font-bold text-slate-600 border-r border-slate-200">기타<br/>필요경비</th>
@@ -196,7 +312,8 @@ export default function ExpensePage() {
                   <td className="px-1 py-1.5 text-center border-r border-slate-100"><input type="checkbox" checked={checked.has(c.id)} onChange={() => toggleCheck(c.id)} /></td>
                   <td className="px-2 py-1.5 border-r border-slate-100 whitespace-nowrap">{c.name}</td>
                   <td className="px-2 py-1.5 border-r border-slate-100 text-[10px]">{c.className}</td>
-                  <td className="px-2 py-1.5 text-center text-slate-400 border-r border-slate-100">-</td>
+                  <td className={`px-2 py-1.5 text-center border-r border-slate-100 ${c.enterDate ? 'text-sky-600' : 'text-slate-300'}`}>{c.enterDate || '-'}</td>
+                  <td className={`px-2 py-1.5 text-center border-r border-slate-100 ${c.leaveDate ? 'text-pink-600 font-medium' : 'text-slate-300'}`}>{c.leaveDate || '-'}</td>
                   <td className="px-2 py-1.5 text-center border-r border-slate-100">{c.residentNo}</td>
                   <td className="px-2 py-1.5 text-center border-r border-slate-100">0</td>
                   <td className="px-2 py-1.5 text-center border-r border-slate-100 text-green-600">0</td>
@@ -242,7 +359,8 @@ export default function ExpensePage() {
     <div className="p-3 space-y-3">
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 border-b border-teal-400/20">
-          <span className="text-sm font-bold text-slate-700">기타필요경비 분리적용</span>
+          <span className="text-sm font-bold text-slate-700">필요경비요율정산서</span>
+          <span className="ml-2 text-[11px] text-slate-500">— {fiscalYear}년 {HALF_LABELS.find(h => h.half === half)?.label}</span>
         </div>
       </div>
 
