@@ -4,7 +4,7 @@ import DraggableModal from '@/components/DraggableModal'
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const inputCls = "border border-amber-300 rounded px-2 py-1 text-[11px] text-right focus:outline-none focus:border-amber-500 w-[70px]"
 
-const sampleChildren: { id: number; name: string; className: string; residentNo: string }[] = []
+type ChildRow = { id: number; name: string; className: string; residentNo: string; status?: string }
 
 type Step = 'select' | 'confirm' | 'edit'
 
@@ -18,12 +18,38 @@ export default function ExpensePage() {
   const [searchName, setSearchName] = useState('')
   const [filterClass, setFilterClass] = useState('선택')
   const [showConfirm, setShowConfirm] = useState(false)
+  const [childrenList, setChildrenList] = useState<ChildRow[]>([])
+  const [syncing, setSyncing] = useState(false)
+  const [lastSynced, setLastSynced] = useState<string | null>(null)
+
+  // 통합e 동기화 — 회계앱 server proxy → 통합e page_data (child-cur + child-leave)
+  const handleSyncFromPlatform = async () => {
+    if (syncing) return
+    setSyncing(true)
+    try {
+      const r = await fetch('/api/sync/children', { cache: 'no-store' })
+      if (r.status === 401) { alert('통합e 로그인이 필요합니다.'); return }
+      const j = await r.json()
+      if (!j.success) { alert(j.error || '동기화 실패'); return }
+      const list: ChildRow[] = (j.children || []).map((c: { id: number; name: string; className: string; residentNo: string; status: string }) => ({
+        id: c.id, name: c.name, className: c.className, residentNo: c.residentNo, status: c.status,
+      }))
+      setChildrenList(list)
+      setLastSynced(new Date().toLocaleString('ko-KR'))
+      const src = j.source || {}
+      alert(`✅ 통합e 동기화 완료\n\n총 ${j.count}명 (현원 ${src['child-cur'] ?? 0} / 퇴소 ${src['child-leave'] ?? 0})`)
+    } catch (e) {
+      alert('동기화 실패: ' + (e instanceof Error ? e.message : String(e)))
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   // 분리적용 편집 데이터
   const [editRows, setEditRows] = useState<{ id: number; name: string; className: string; etcFee: number; entrance: number; fieldTrip: number; vehicle: number; event: number; mealFee: number; special: number; specialAct: number; applyMonth: string; amount: number }[]>([])
 
-  const classes = [...new Set(sampleChildren.map(c => c.className))]
-  const filtered = sampleChildren.filter(c =>
+  const classes = [...new Set(childrenList.map(c => c.className).filter(Boolean))]
+  const filtered = childrenList.filter(c =>
     (filterClass === '선택' || c.className === filterClass) &&
     (searchName === '' || c.name.includes(searchName))
   )
@@ -45,7 +71,7 @@ export default function ExpensePage() {
 
   const handleConfirm = () => {
     setShowConfirm(false)
-    const selected = sampleChildren.filter(c => checked.has(c.id))
+    const selected = childrenList.filter(c => checked.has(c.id))
     const perChild = splitType === 'equal' ? Math.floor(splitAmount / selected.length) : 0
     setEditRows(selected.map(c => ({
       id: c.id, name: c.name, className: c.className,
@@ -98,6 +124,27 @@ export default function ExpensePage() {
             <span className="text-[12px] font-bold text-slate-700">원아명/반</span>
             <input value={searchName} onChange={e => setSearchName(e.target.value)} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-28" />
             <button className="px-3 py-1 text-[11px] font-bold text-white bg-blue-600 rounded">검색</button>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={handleSyncFromPlatform}
+              disabled={syncing}
+              className="flex items-center gap-1 px-3 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-500 hover:to-pink-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="통합e의 원아명단(CIS E0003 현원+퇴소)을 불러옵니다"
+            >
+              {syncing ? (
+                <>
+                  <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  동기화 중…
+                </>
+              ) : (
+                <>🔄 통합e 동기화</>
+              )}
+            </button>
+            {lastSynced && <span className="text-[10px] text-slate-400">최근: {lastSynced}</span>}
           </div>
         </div>
 

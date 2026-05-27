@@ -10,6 +10,7 @@ interface MappedChild {
   name: string
   birth: string
   age: string
+  residentNo: string  // YYMMDD-N****** (앞6 + 뒷1자리만, 나머지 마스킹)
   className: string
   enterDate: string
   leaveDate: string
@@ -50,6 +51,13 @@ function ageLabel(childOrder: unknown): string {
   return `만${n}세`
 }
 
+function maskResident(front: string, back: string): string {
+  if (!front || front.length < 6) return ''
+  const f6 = front.slice(0, 6)
+  if (!back) return `${f6}-*******`
+  return `${f6}-${back[0]}******`
+}
+
 function mapChild(raw: RawChild, statFallback: '현원' | '퇴소', idx: number): MappedChild {
   const childStatus = s(raw.childStatus)
   const status: '현원' | '퇴소' =
@@ -65,6 +73,7 @@ function mapChild(raw: RawChild, statFallback: '현원' | '퇴소', idx: number)
     name,
     birth,
     age: ageLabel(raw.childOrder),
+    residentNo: maskResident(front, back),
     className: s(raw.generalClassId ?? raw.classNm),
     enterDate: enterDateRaw,
     leaveDate: leaveDateRaw,
