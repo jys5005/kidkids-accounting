@@ -160,14 +160,42 @@ function ChildDetailModal({ child, onClose }: { child: any; onClose: () => void 
   )
 }
 
-const sampleChildren: { id: number; name: string; birth: string; age: string; className: string; enterDate: string; guardian: string; phone: string; leaveDate: string; status: string }[] = []
+type ChildRow = {
+  id: number; name: string; birth: string; age: string; className: string;
+  enterDate: string; guardian: string; phone: string; leaveDate: string; status: string;
+  guardianRelation?: string;
+}
 
 export default function ChildrenStatusPage() {
   const [search, setSearch] = useState('')
   const [filterAge, setFilterAge] = useState('전체')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedChild, setSelectedChild] = useState<any>(null)
-  const filtered = sampleChildren.filter(c =>
+  const [children, setChildren] = useState<ChildRow[]>([])
+  const [syncing, setSyncing] = useState(false)
+  const [lastSynced, setLastSynced] = useState<string | null>(null)
+
+  // 통합e 동기화 — 회계앱 server proxy → 통합e page_data (child-cur + child-leave) read
+  const handleSyncFromPlatform = async () => {
+    if (syncing) return
+    setSyncing(true)
+    try {
+      const r = await fetch('/api/sync/children', { cache: 'no-store' })
+      if (r.status === 401) { alert('통합e 로그인이 필요합니다. 통합e에서 다시 로그인해주세요.'); return }
+      const j = await r.json()
+      if (!j.success) { alert(j.error || '동기화 실패'); return }
+      setChildren(j.children || [])
+      setLastSynced(new Date().toLocaleString('ko-KR'))
+      const src = j.source || {}
+      alert(`✅ 통합e 동기화 완료\n\n총 ${j.count}명 (현원 ${src['child-cur'] ?? 0} / 퇴소 ${src['child-leave'] ?? 0})`)
+    } catch (e) {
+      alert('동기화 실패: ' + (e instanceof Error ? e.message : String(e)))
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const filtered = children.filter(c =>
     (filterAge === '전체' || c.age === filterAge) &&
     (search === '' || c.name.includes(search) || c.guardian.includes(search))
   )
@@ -190,6 +218,25 @@ export default function ChildrenStatusPage() {
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="이름/보호자 검색" className="border border-teal-300 rounded px-2 py-1.5 text-xs w-40" />
           <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
           <div className="ml-auto flex items-center gap-1.5">
+            <button
+              onClick={handleSyncFromPlatform}
+              disabled={syncing}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-500 hover:to-pink-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="통합e의 원아명단(CIS E0003 현원+퇴소)을 불러와 표를 채웁니다"
+            >
+              {syncing ? (
+                <>
+                  <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  동기화 중…
+                </>
+              ) : (
+                <>🔄 통합e 동기화</>
+              )}
+            </button>
+            {lastSynced && <span className="text-[10px] text-slate-400 ml-1">최근: {lastSynced}</span>}
             <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">신규등록</button>
             <button className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 rounded text-xs text-slate-600 transition-colors">
               <svg className="w-3.5 h-3.5 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M14.2 1H5.8C4.81 1 4 1.81 4 2.8v18.4c0 .99.81 1.8 1.8 1.8h12.4c.99 0 1.8-.81 1.8-1.8V6.8L14.2 1zM15.8 19.3l-2.1-3.5-2.1 3.5H9.8l3.2-5-2.9-4.7h1.8l2.1 3.3 2-3.3h1.8l-2.9 4.7 3.2 5h-2.3z" /></svg>
