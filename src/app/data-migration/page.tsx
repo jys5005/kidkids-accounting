@@ -358,6 +358,11 @@ export default function DataMigrationPage() {
 
   // 출발지에서 데이터 가져오기
   const handleFetch = async () => {
+    // 준비중 출발지(백엔드 미구현) — 조회 시도 시 404 HTML → JSON 파싱 에러 방지
+    if (currentSource.features.length === 0) {
+      setError(`${currentSource.label}은(는) 아직 준비 중인 출발지입니다. 현재 지원: 보육나라 · 장부나라 · 키즈홈 · 인천시어린이집관리시스템 · 아이프렌즈`)
+      return
+    }
     // 등록된 인증 정보가 없고, 직접 입력도 없는 경우
     if (!programAuth) {
       if (currentSource.authType === 'cert') {
@@ -390,7 +395,17 @@ export default function DataMigrationPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      const json = await res.json()
+      const raw = await res.text()
+      let json: { error?: string; [k: string]: unknown }
+      try {
+        json = JSON.parse(raw)
+      } catch {
+        throw new Error(
+          res.ok
+            ? '조회 서버가 예상치 못한 응답을 반환했습니다. (준비 중 출발지이거나 서버 오류)'
+            : `조회 실패 (HTTP ${res.status}) — 해당 출발지 조회 기능이 없거나 서버 오류입니다.`,
+        )
+      }
 
       if (!res.ok) throw new Error(json.error || '조회 실패')
 
@@ -462,11 +477,11 @@ export default function DataMigrationPage() {
       }
 
       if (mode === 'single') {
-        const mapped = autoMap([json as CashLedgerResult])
+        const mapped = autoMap([json as unknown as CashLedgerResult])
         setData(mapped[0])
         setTransferResult(`조회 완료: 1개월, ${mapped[0].rows.length}건 (${new Date().toISOString().substring(0, 16)})`)
       } else {
-        const mapped = autoMap(json as CashLedgerResult[])
+        const mapped = autoMap(json as unknown as CashLedgerResult[])
         setMultiData(mapped)
         const total = mapped.reduce((s, r) => s + r.rows.length, 0)
         setTransferResult(`조회 완료: ${mapped.length}개월, ${total}건 (${new Date().toISOString().substring(0, 16)})`)
