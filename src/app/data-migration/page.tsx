@@ -360,7 +360,7 @@ export default function DataMigrationPage() {
       .catch(() => {})
   }, [source])
 
-  // 업체별 인증정보 저장
+  // 업체별 인증정보 저장 (출발지)
   const saveMigrationAuth = async () => {
     if (!sourceId || !sourcePw) { setAuthSaveMsg('아이디/비밀번호를 입력하세요.'); return }
     setAuthSaving(true); setAuthSaveMsg('')
@@ -374,6 +374,40 @@ export default function DataMigrationPage() {
       else setAuthSaveMsg(json.error || '저장 실패')
     } catch { setAuthSaveMsg('저장 실패') }
     finally { setAuthSaving(false) }
+  }
+
+  // 목적지(수전자장부) 저장 인증정보 — 업체별
+  const [sunoteSavedAt, setSunoteSavedAt] = useState('')
+  const [sunoteSaving, setSunoteSaving] = useState(false)
+  const [sunoteSaveMsg, setSunoteSaveMsg] = useState('')
+
+  // 목적지 저장 인증정보 자동 입력 (1회)
+  useEffect(() => {
+    fetch('/api/migration-auth?source=sunote-target')
+      .then(res => res.json())
+      .then(json => {
+        if (json.saved) {
+          if (json.userId) setSunoteId(json.userId)
+          if (json.password) setSunotePw(json.password)
+          setSunoteSavedAt(json.savedAt || '')
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const saveSunoteAuth = async () => {
+    if (!sunoteId || !sunotePw) { setSunoteSaveMsg('아이디/비밀번호를 입력하세요.'); return }
+    setSunoteSaving(true); setSunoteSaveMsg('')
+    try {
+      const res = await fetch('/api/migration-auth', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'sunote-target', userId: sunoteId, password: sunotePw }),
+      })
+      const json = await res.json()
+      if (json.success) { setSunoteSavedAt(new Date().toISOString()); setSunoteSaveMsg('저장됨 ✓') }
+      else setSunoteSaveMsg(json.error || '저장 실패')
+    } catch { setSunoteSaveMsg('저장 실패') }
+    finally { setSunoteSaving(false) }
   }
 
   // 월 옵션 생성
@@ -1096,6 +1130,22 @@ export default function DataMigrationPage() {
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
                 placeholder="비밀번호"
               />
+            </div>
+
+            {/* 목적지(수전자장부) 로그인정보 업체별 저장 */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={saveSunoteAuth}
+                disabled={sunoteSaving}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
+              >
+                {sunoteSaving ? '저장 중…' : '💾 이 업체 로그인정보 저장'}
+              </button>
+              {sunoteSavedAt && (
+                <span className="text-xs text-emerald-600">저장됨 · {new Date(sunoteSavedAt).toLocaleDateString('ko-KR')}</span>
+              )}
+              {sunoteSaveMsg && <span className="text-xs text-slate-500">{sunoteSaveMsg}</span>}
             </div>
 
             {/* 에러 알림 */}
