@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import * as XLSX from 'xlsx'
 
 interface CashLedgerRow {
@@ -289,6 +289,21 @@ function fmtAmt(n: number): string {
 export default function DataMigrationPage() {
   // 출발지
   const [source, setSource] = useState<SourceType>('by24')
+  const autoSelectedRef = useRef(false)
+  // 화면 열 때: 이 업체가 저장해둔 출발지가 있으면 그 출발지로 자동 선택 (PC↔모바일 동기화 체감)
+  useEffect(() => {
+    if (autoSelectedRef.current) return
+    autoSelectedRef.current = true
+    fetch('/api/migration-auth?list=1')
+      .then(res => res.json())
+      .then(json => {
+        const saved: string[] = json.sources || []
+        if (saved.length > 0 && !saved.includes('by24') && SOURCE_OPTIONS.some(o => o.value === saved[0])) {
+          setSource(saved[0] as SourceType)
+        }
+      })
+      .catch(() => {})
+  }, [])
   const [sourceId, setSourceId] = useState('')
   const [sourcePw, setSourcePw] = useState('')
   const [yearMonth, setYearMonth] = useState(() => {

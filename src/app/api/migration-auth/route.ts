@@ -31,9 +31,20 @@ function loginUser(req: NextRequest): string | null {
 export async function GET(req: NextRequest) {
   const uid = loginUser(req)
   if (!uid) return NextResponse.json({ saved: false, error: '로그인 필요' }, { status: 401 })
-  const source = new URL(req.url).searchParams.get('source') || ''
+  const sp = new URL(req.url).searchParams
+  const store = read()
+  // ?list=1 → 이 업체가 저장한 출발지 목록 (자동 선택용). sunote-target 은 제외.
+  if (sp.get('list')) {
+    const prefix = `${uid}::`
+    const sources = Object.keys(store)
+      .filter(k => k.startsWith(prefix))
+      .map(k => k.slice(prefix.length))
+      .filter(s => s !== 'sunote-target')
+    return NextResponse.json({ sources })
+  }
+  const source = sp.get('source') || ''
   if (!source) return NextResponse.json({ saved: false })
-  const e = read()[`${uid}::${source}`]
+  const e = store[`${uid}::${source}`]
   if (!e) return NextResponse.json({ saved: false })
   // 데이터이관은 즉시 자동입력이 목적이므로 비밀번호도 반환 (본인 업체 것만)
   return NextResponse.json({ saved: true, userId: e.userId, password: e.password, savedAt: e.savedAt })
@@ -45,8 +56,8 @@ export async function POST(req: NextRequest) {
   if (!uid) return NextResponse.json({ success: false, error: '로그인 필요' }, { status: 401 })
   let body: Record<string, unknown> = {}
   try { body = await req.json() } catch { /* ignore */ }
-  const source = String(body.source ?? '')
-  const userId = String(body.userId ?? '')
+  const source = String(body.source ?? '').trim()
+  const userId = String(body.userId ?? '').trim()
   const password = String(body.password ?? '')
   if (!source || !userId || !password) {
     return NextResponse.json({ success: false, error: '출발지·아이디·비밀번호가 모두 필요합니다.' }, { status: 400 })
