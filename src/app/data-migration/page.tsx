@@ -410,6 +410,39 @@ export default function DataMigrationPage() {
     finally { setSunoteSaving(false) }
   }
 
+  // 계정코드 커스텀 매핑 — 업체+출발지별 저장/복원
+  const [mapSaving, setMapSaving] = useState(false)
+  const [mapSaveMsg, setMapSaveMsg] = useState('')
+  const [mapSavedAt, setMapSavedAt] = useState('')
+
+  // 출발지 변경 시 저장된 매핑 자동 로드
+  useEffect(() => {
+    setMapSaveMsg(''); setMapSavedAt('')
+    fetch(`/api/migration-mapping?source=${source}`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.mappings && Object.keys(json.mappings).length > 0) {
+          setCustomMappings(json.mappings)
+          setMapSavedAt(json.savedAt || '')
+        }
+      })
+      .catch(() => {})
+  }, [source])
+
+  const saveMappings = async () => {
+    setMapSaving(true); setMapSaveMsg('')
+    try {
+      const res = await fetch('/api/migration-mapping', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source, mappings: customMappings }),
+      })
+      const json = await res.json()
+      if (json.success) { setMapSavedAt(new Date().toISOString()); setMapSaveMsg('저장됨 ✓') }
+      else setMapSaveMsg(json.error || '저장 실패')
+    } catch { setMapSaveMsg('저장 실패') }
+    finally { setMapSaving(false) }
+  }
+
   // 월 옵션 생성
   const monthOptions = (() => {
     const opts: { value: string; label: string }[] = []
@@ -1232,6 +1265,19 @@ export default function DataMigrationPage() {
                         ))}
                       </tbody>
                     </table>
+                    <div className="flex items-center gap-2 px-2 py-2 bg-teal-50/50 border-t border-teal-100">
+                      <button
+                        type="button"
+                        onClick={saveMappings}
+                        disabled={mapSaving}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
+                      >
+                        {mapSaving ? '저장 중…' : '💾 이 업체 매핑 저장'}
+                      </button>
+                      {mapSavedAt && <span className="text-xs text-emerald-600">저장됨 · {new Date(mapSavedAt).toLocaleDateString('ko-KR')}</span>}
+                      {mapSaveMsg && <span className="text-xs text-slate-500">{mapSaveMsg}</span>}
+                      <span className="ml-auto text-[11px] text-slate-400">저장하면 다음에 이 업체·출발지로 열 때 자동 적용</span>
+                    </div>
                   </div>
                 )}
               </div>
