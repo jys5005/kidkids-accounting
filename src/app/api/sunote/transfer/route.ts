@@ -8,9 +8,14 @@ export const maxDuration = 60
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    const cookie = req.headers.get('cookie')
     const res = await fetch(`${PLATFORM_URL}/api/sunote/transfer`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        // 통합e 이관 라우트는 auth_session 쿠키로 로그인 사용자를 확인 → 반드시 전달
+        ...(cookie ? { Cookie: cookie } : {}),
+      },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(10 * 60 * 1000),
     })

@@ -8,9 +8,13 @@ export const maxDuration = 60
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    const cookie = req.headers.get('cookie')
     const res = await fetch(`${PLATFORM_URL}/api/sunote/delete`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(cookie ? { Cookie: cookie } : {}),
+      },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(10 * 60 * 1000),
     })
