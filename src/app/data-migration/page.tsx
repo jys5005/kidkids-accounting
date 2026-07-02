@@ -325,6 +325,10 @@ export default function DataMigrationPage() {
   // 프로그램 인증 정보 (등록된 정보 자동 로드)
   const [programAuth, setProgramAuth] = useState<{ authType: string; hasUserId?: boolean; hasUserPw?: boolean; certName?: string; hasCertPw?: boolean; savedAt?: string } | null>(null)
   const [authLoading, setAuthLoading] = useState(false)
+  // 업체(로그인)별 저장 인증정보
+  const [savedAuthAt, setSavedAuthAt] = useState('')       // 저장 시각 (있으면 "저장됨" 표시)
+  const [authSaving, setAuthSaving] = useState(false)
+  const [authSaveMsg, setAuthSaveMsg] = useState('')
 
   // 소스 변경 시 등록된 인증 정보 자동 로드
   useEffect(() => {
@@ -340,6 +344,37 @@ export default function DataMigrationPage() {
       .catch(() => {})
       .finally(() => setAuthLoading(false))
   }, [source])
+
+  // 소스 변경 시 업체별 저장 인증정보 자동 입력
+  useEffect(() => {
+    setSavedAuthAt(''); setAuthSaveMsg('')
+    fetch(`/api/migration-auth?source=${source}`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.saved) {
+          if (json.userId) setSourceId(json.userId)
+          if (json.password) setSourcePw(json.password)
+          setSavedAuthAt(json.savedAt || '')
+        }
+      })
+      .catch(() => {})
+  }, [source])
+
+  // 업체별 인증정보 저장
+  const saveMigrationAuth = async () => {
+    if (!sourceId || !sourcePw) { setAuthSaveMsg('아이디/비밀번호를 입력하세요.'); return }
+    setAuthSaving(true); setAuthSaveMsg('')
+    try {
+      const res = await fetch('/api/migration-auth', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source, userId: sourceId, password: sourcePw }),
+      })
+      const json = await res.json()
+      if (json.success) { setSavedAuthAt(new Date().toISOString()); setAuthSaveMsg('저장됨 ✓') }
+      else setAuthSaveMsg(json.error || '저장 실패')
+    } catch { setAuthSaveMsg('저장 실패') }
+    finally { setAuthSaving(false) }
+  }
 
   // 월 옵션 생성
   const monthOptions = (() => {
@@ -839,11 +874,25 @@ export default function DataMigrationPage() {
                     placeholder="비밀번호"
                   />
                 </div>
-                <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="text-xs text-blue-500 hover:text-blue-700">
-                  통합e에 인증정보 등록하면 자동 사용됩니다
-                </a>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={saveMigrationAuth}
+                    disabled={authSaving}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
+                  >
+                    {authSaving ? '저장 중…' : '💾 이 업체 로그인정보 저장'}
+                  </button>
+                  {savedAuthAt && (
+                    <span className="text-xs text-emerald-600">
+                      저장됨 · {new Date(savedAuthAt).toLocaleDateString('ko-KR')}
+                    </span>
+                  )}
+                  {authSaveMsg && <span className="text-xs text-slate-500">{authSaveMsg}</span>}
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  이 업체 계정으로 로그인한 상태에서 저장하면, 다음에 이 화면 열 때 자동으로 채워집니다. (업체별로 따로 저장)
+                </p>
               </>
             )}
 
