@@ -37,19 +37,21 @@ async function downscaleImage(file: File, maxEdge = 1568, quality = 0.85): Promi
   } catch { return file }
 }
 
-/** 영수증 사진 → OCR → 결과 확인/수정 → [적용] 시 onApply 호출 */
+/** 영수증 사진 → OCR → 결과 확인/수정 → [적용] 시 onApply 호출. onAttach 는 분석 없이 사진만 첨부 */
 export default function ReceiptOcrModal({
-  open, onClose, onApply, accountOptions = DEFAULT_ACCOUNTS, subAccountMap = DEFAULT_SUB_MAP,
+  open, onClose, onApply, onAttach, accountOptions = DEFAULT_ACCOUNTS, subAccountMap = DEFAULT_SUB_MAP,
 }: {
   open: boolean
   onClose: () => void
   onApply: (r: ReceiptOcrResult) => void
+  onAttach?: (imageUrl: string) => void
   accountOptions?: string[]
   subAccountMap?: Record<string, string[]>
 }) {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState('')
   const [loading, setLoading] = useState(false)
+  const [attaching, setAttaching] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<ReceiptOcrResult | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -98,9 +100,29 @@ export default function ReceiptOcrModal({
 
   const close = () => { reset(); onClose() }
 
+  // 분석 없이 사진만 첨부 (OCR 미사용 — 401 등으로 분석 안 될 때도 증빙 보관 가능)
+  const attachOnly = async () => {
+    if (!file) { setError('영수증 사진을 먼저 선택하세요'); return }
+    setAttaching(true); setError('')
+    try {
+      const small = await downscaleImage(file)
+      const fd = new FormData()
+      fd.append('file', small)
+      const res = await fetch('/api/receipt-upload', { method: 'POST', body: fd })
+      const j = await res.json()
+      if (!j.success) throw new Error(j.error || '첨부에 실패했습니다')
+      onAttach?.(j.url)
+      close()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setAttaching(false)
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-2 sm:p-4" onClick={close}>
-      <div className="bg-white rounded-xl shadow-xl w-[92vw] max-w-md max-h-[88vh] overflow-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4" onClick={close}>
+      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full sm:w-[92vw] sm:max-w-md max-h-[92vh] sm:max-h-[88vh] overflow-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-bold text-slate-800">📷 영수증 사진으로 자동입력</h3>
           <button onClick={close} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">×</button>
@@ -118,11 +140,21 @@ export default function ReceiptOcrModal({
           {preview && <img src={preview} alt="영수증 미리보기" className="max-h-56 mx-auto rounded border" />}
 
           {!result && (
-            <button onClick={analyze} disabled={loading || !file}
-              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading && <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
-              {loading ? '분석 중…' : '🔍 분석하기'}
-            </button>
+            <div className="space-y-1.5">
+              <div className="flex gap-2">
+                <button onClick={analyze} disabled={loading || attaching || !file}
+                  className="flex-[2] py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                  {loading && <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+                  {loading ? '분석 중…' : '🔍 분석하기'}
+                </button>
+                <button onClick={attachOnly} disabled={loading || attaching || !file}
+                  className="flex-1 py-2.5 border border-slate-300 text-slate-600 rounded-lg font-medium hover:bg-slate-50 disabled:opacity-50 flex items-center justify-center gap-1.5">
+                  {attaching && <span className="inline-block w-4 h-4 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" />}
+                  {attaching ? '첨부 중…' : '📎 그냥 첨부'}
+                </button>
+              </div>
+              <div className="text-[11px] text-slate-400 text-center">분석이 안 되면 [📎 그냥 첨부]로 사진만 붙일 수 있어요</div>
+            </div>
           )}
 
           {error && <div className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded p-2">{error}</div>}

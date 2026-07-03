@@ -20,6 +20,7 @@ interface VoucherRow {
   copySelected?: boolean
   inputMethod?: '은행' | '수기' | '일괄' | '엑셀' | '분리' | '합산'
   accountCode?: string
+  receiptImage?: string  // 첨부한 영수증 사진 URL (/api/receipt-file/…)
 }
 
 const sampleData: VoucherRow[] = []
@@ -315,6 +316,11 @@ export default function VoucherInputPage() {
     }))
   }
 
+  // 분석 없이 사진만 첨부한 경우 — 해당 행에 이미지 URL 저장
+  const applyReceiptImageToRow = (rowId: number, url: string) => {
+    setRows(prev => prev.map(row => row.id === rowId ? { ...row, receiptImage: url } : row))
+  }
+
   // ── 모바일 전용 (폰) ── 넓은 PC 표 대신 카드형 + 영수증 촬영 중심
   const [mobileEditId, setMobileEditId] = useState<number | null>(null)
   const mobileNewRow = (openReceipt: boolean) => {
@@ -336,7 +342,7 @@ export default function VoucherInputPage() {
 
   return (
     <div className="space-y-4">
-      <ReceiptOcrModal open={receiptRowId !== null} onClose={() => setReceiptRowId(null)} accountOptions={accountOptions} subAccountMap={subAccountMap} onApply={r => { if (receiptRowId !== null) applyReceiptToRow(receiptRowId, r) }} />
+      <ReceiptOcrModal open={receiptRowId !== null} onClose={() => setReceiptRowId(null)} accountOptions={accountOptions} subAccountMap={subAccountMap} onApply={r => { if (receiptRowId !== null) applyReceiptToRow(receiptRowId, r) }} onAttach={url => { if (receiptRowId !== null) applyReceiptImageToRow(receiptRowId, url) }} />
 
       {/* ═══ 모바일(폰) 전용 화면 — 카드형 + 영수증 촬영 중심 ═══ */}
       <div className="sm:hidden space-y-3">
@@ -394,6 +400,11 @@ export default function VoucherInputPage() {
                   <span>{row.date.slice(5)}</span>
                   <span>·</span>
                   <span className="truncate">{row.account}{row.subAccount ? ` / ${row.subAccount}` : ''}</span>
+                  {row.receiptImage && (
+                    <a href={row.receiptImage} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="ml-auto shrink-0" title="첨부 영수증 보기">
+                      <img src={row.receiptImage} alt="영수증" className="w-8 h-8 object-cover rounded border" />
+                    </a>
+                  )}
                 </div>
                 {isEdit && (
                   <div className="px-3 pb-3 pt-1 border-t border-slate-100 space-y-2">
@@ -439,6 +450,15 @@ export default function VoucherInputPage() {
                         </select>
                       </label>
                     </div>
+                    {row.receiptImage && (
+                      <div className="flex items-center gap-2 bg-slate-50 border rounded-lg p-2">
+                        <a href={row.receiptImage} target="_blank" rel="noreferrer" className="shrink-0">
+                          <img src={row.receiptImage} alt="첨부 영수증" className="w-12 h-12 object-cover rounded border" />
+                        </a>
+                        <span className="text-xs text-slate-500 flex-1">📎 영수증 첨부됨</span>
+                        <button onClick={() => updateRow(row.id, 'receiptImage', '')} className="text-xs text-rose-500 hover:underline">제거</button>
+                      </div>
+                    )}
                     <div className="flex gap-2 pt-1">
                       <button onClick={() => setReceiptRowId(row.id)} className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">📷 영수증</button>
                       <button onClick={() => mobileDeleteRow(row.id)} className="px-4 py-2 border border-rose-200 text-rose-500 rounded-lg text-sm hover:bg-rose-50">삭제</button>
