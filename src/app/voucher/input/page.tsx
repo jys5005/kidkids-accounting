@@ -308,14 +308,156 @@ export default function VoucherInputPage() {
       if (row.id !== rowId) return row
       const account = r.account || row.account
       const subAccount = r.subAccount || row.subAccount
-      const code = (subAccount && subAccountCodeMap[subAccount]) || accountCodeMap[account] || row.accountCode || ''
-      return { ...row, type: '지출', summary: r.store || row.summary, amount: r.total || row.amount, account, subAccount, accountCode: code }
+      const code = (subAccountCodeMap[subAccount]) || accountCodeMap[account] || row.accountCode || ''
+      // 영수증 날짜는 같은 년-월일 때만 반영 (다른 월이면 현재 조회월 필터에서 행이 사라짐)
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(r.date) && r.date.slice(0, 7) === row.date.slice(0, 7) ? r.date : row.date
+      return { ...row, type: '지출', date, summary: r.store || row.summary, amount: r.total || row.amount, account, subAccount, accountCode: code }
     }))
+  }
+
+  // ── 모바일 전용 (폰) ── 넓은 PC 표 대신 카드형 + 영수증 촬영 중심
+  const [mobileEditId, setMobileEditId] = useState<number | null>(null)
+  const mobileNewRow = (openReceipt: boolean) => {
+    const nowYmd = new Date().toISOString().slice(0, 10)
+    const day = nowYmd.slice(0, 7) === filterYearMonth ? nowYmd.slice(8, 10) : '01'
+    const newRow: VoucherRow = {
+      id: nextId(), date: `${filterYearMonth}-${day}`, type: '지출',
+      account: '운영비', subAccount: '소모품비', summary: '', amount: 0,
+      counterpart: '', note: '', approved: false,
+    }
+    setRows(prev => [...prev, newRow])
+    if (openReceipt) setReceiptRowId(newRow.id)
+    else setMobileEditId(newRow.id)
+  }
+  const mobileDeleteRow = (id: number) => {
+    setRows(prev => prev.filter(r => r.id !== id))
+    if (mobileEditId === id) setMobileEditId(null)
   }
 
   return (
     <div className="space-y-4">
-      <ReceiptOcrModal open={receiptRowId !== null} onClose={() => setReceiptRowId(null)} onApply={r => { if (receiptRowId !== null) applyReceiptToRow(receiptRowId, r) }} />
+      <ReceiptOcrModal open={receiptRowId !== null} onClose={() => setReceiptRowId(null)} accountOptions={accountOptions} subAccountMap={subAccountMap} onApply={r => { if (receiptRowId !== null) applyReceiptToRow(receiptRowId, r) }} />
+
+      {/* ═══ 모바일(폰) 전용 화면 — 카드형 + 영수증 촬영 중심 ═══ */}
+      <div className="sm:hidden space-y-3">
+        <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-slate-700 shrink-0">전표입력</span>
+            <select value={filterYearMonth}
+              onChange={e => { setFilterYearMonth(e.target.value); setFilterDayFrom(0); setFilterDayTo(0) }}
+              className="ml-auto text-sm border rounded-lg px-2 py-1.5 bg-white">
+              {yearMonthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <div className="flex gap-2 mt-2 text-xs">
+            <div className="flex-1 bg-blue-50 rounded-lg px-2 py-1.5 text-center">
+              <div className="text-slate-500">수입</div><div className="font-bold text-blue-600">{fmt(totalIncome)}</div>
+            </div>
+            <div className="flex-1 bg-rose-50 rounded-lg px-2 py-1.5 text-center">
+              <div className="text-slate-500">지출</div><div className="font-bold text-rose-600">{fmt(totalExpense)}</div>
+            </div>
+          </div>
+        </div>
+
+        <button onClick={() => mobileNewRow(true)}
+          className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-base shadow-sm hover:bg-blue-700 flex items-center justify-center gap-2">
+          📷 영수증 촬영으로 입력
+        </button>
+
+        <div className="space-y-2">
+          {filtered.length === 0 && (
+            <div className="text-center text-sm text-slate-400 py-10 bg-white rounded-xl border border-slate-100">
+              {filterYearMonth} 전표가 없습니다.<br />위 버튼으로 영수증을 촬영해 입력하세요.
+            </div>
+          )}
+          {filtered.map((row, idx) => {
+            const subs = subAccountMap[row.account] || []
+            const isEdit = mobileEditId === row.id
+            const commitField = (field: keyof VoucherRow, value: string | number) => {
+              updateRow(row.id, field, value)
+              if (field === 'account' || field === 'subAccount') {
+                const acc = field === 'account' ? String(value) : row.account
+                const sub = field === 'subAccount' ? String(value) : (field === 'account' ? (subAccountMap[String(value)]?.[0] || '') : row.subAccount)
+                const code = subAccountCodeMap[sub] || accountCodeMap[acc] || ''
+                updateRow(row.id, 'accountCode', code)
+              }
+            }
+            return (
+              <div key={row.id} className={`bg-white rounded-xl border ${isEdit ? 'border-blue-300 ring-1 ring-blue-200' : 'border-slate-100'} shadow-sm`}>
+                <button onClick={() => setMobileEditId(isEdit ? null : row.id)} className="w-full text-left px-3 py-2.5 flex items-center gap-2">
+                  <span className="text-xs text-slate-400 w-8 shrink-0">{idx + 1}</span>
+                  <span className={`text-xs font-bold shrink-0 px-1.5 py-0.5 rounded ${row.type === '수입' ? 'bg-blue-50 text-blue-600' : row.type === '반납' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'}`}>{row.type}</span>
+                  <span className="flex-1 min-w-0 truncate text-sm text-slate-700">{row.summary || <span className="text-slate-300">(적요 없음)</span>}</span>
+                  <span className={`text-sm font-bold shrink-0 ${row.type === '수입' ? 'text-blue-600' : 'text-rose-600'}`}>{fmt(row.amount)}</span>
+                </button>
+                <div className="px-3 pb-1.5 flex items-center gap-2 text-xs text-slate-400">
+                  <span>{row.date.slice(5)}</span>
+                  <span>·</span>
+                  <span className="truncate">{row.account}{row.subAccount ? ` / ${row.subAccount}` : ''}</span>
+                </div>
+                {isEdit && (
+                  <div className="px-3 pb-3 pt-1 border-t border-slate-100 space-y-2">
+                    <label className="block">
+                      <span className="text-xs text-slate-500">적요</span>
+                      <input value={row.summary} onChange={e => updateRow(row.id, 'summary', e.target.value)}
+                        className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white text-sm" />
+                    </label>
+                    <div className="flex gap-2">
+                      <label className="block flex-1">
+                        <span className="text-xs text-slate-500">일자</span>
+                        <input type="date" value={row.date} onChange={e => { const v = e.target.value; if (v.slice(0, 7) === filterYearMonth) updateRow(row.id, 'date', v) }}
+                          className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white text-sm" />
+                      </label>
+                      <label className="block flex-1">
+                        <span className="text-xs text-slate-500">금액</span>
+                        <input inputMode="numeric" value={row.amount ? fmt(row.amount) : ''} placeholder="0"
+                          onChange={e => updateRow(row.id, 'amount', Number(e.target.value.replace(/[^0-9]/g, '')) || 0)}
+                          className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white text-sm text-right font-medium" />
+                      </label>
+                    </div>
+                    <div className="flex gap-2">
+                      <label className="block flex-1">
+                        <span className="text-xs text-slate-500">구분</span>
+                        <select value={row.type} onChange={e => updateRow(row.id, 'type', e.target.value)}
+                          className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white text-sm">
+                          {['수입', '지출', '반납'].map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </label>
+                      <label className="block flex-1">
+                        <span className="text-xs text-slate-500">계정</span>
+                        <select value={row.account} onChange={e => commitField('account', e.target.value)}
+                          className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white text-sm">
+                          {accountOptions.map(a => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                      </label>
+                      <label className="block flex-1">
+                        <span className="text-xs text-slate-500">세목</span>
+                        <select value={row.subAccount} onChange={e => commitField('subAccount', e.target.value)}
+                          className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white text-sm">
+                          <option value="">(선택)</option>
+                          {subs.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button onClick={() => setReceiptRowId(row.id)} className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">📷 영수증</button>
+                      <button onClick={() => mobileDeleteRow(row.id)} className="px-4 py-2 border border-rose-200 text-rose-500 rounded-lg text-sm hover:bg-rose-50">삭제</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <button onClick={() => mobileNewRow(false)}
+          className="w-full py-2.5 border border-slate-300 text-slate-500 rounded-xl text-sm hover:bg-slate-50">
+          + 직접 추가
+        </button>
+      </div>
+
+      {/* ═══ PC(데스크톱) 전용 — 기존 넓은 표 화면 ═══ */}
+      <div className="hidden sm:block space-y-4">
       {/* 상단 조건부 */}
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2">
@@ -1912,6 +2054,7 @@ export default function VoucherInputPage() {
           <span className="text-xs text-slate-400">셀 클릭으로 개별 편집</span>
         </div>
       </div>}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 export interface ReceiptOcrResult {
   store: string
@@ -9,6 +9,12 @@ export interface ReceiptOcrResult {
   items: { name: string; price: number }[]
   account: string
   subAccount: string
+}
+
+// 계정과목/세목 옵션 (전표입력 subAccountMap 과 동일) — 미전달 시 운영비 세목 기본값
+const DEFAULT_ACCOUNTS = ['보육료', '보조금', '인건비', '4대보험', '운영비', '기타수입', '전입금', '차입금']
+const DEFAULT_SUB_MAP: Record<string, string[]> = {
+  '운영비': ['급간식비', '소모품비', '공공요금', '여비교통비', '수용비', '차량유지비'],
 }
 
 /** 업로드 전 이미지 축소 (긴 변 1568px, JPEG 압축) — 502/속도/토큰 절감. 실패 시 원본 반환 */
@@ -31,13 +37,15 @@ async function downscaleImage(file: File, maxEdge = 1568, quality = 0.85): Promi
   } catch { return file }
 }
 
-/** 영수증 사진 → OCR → 결과 확인 → [적용] 시 onApply 호출 */
+/** 영수증 사진 → OCR → 결과 확인/수정 → [적용] 시 onApply 호출 */
 export default function ReceiptOcrModal({
-  open, onClose, onApply,
+  open, onClose, onApply, accountOptions = DEFAULT_ACCOUNTS, subAccountMap = DEFAULT_SUB_MAP,
 }: {
   open: boolean
   onClose: () => void
   onApply: (r: ReceiptOcrResult) => void
+  accountOptions?: string[]
+  subAccountMap?: Record<string, string[]>
 }) {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState('')
@@ -45,6 +53,9 @@ export default function ReceiptOcrModal({
   const [error, setError] = useState('')
   const [result, setResult] = useState<ReceiptOcrResult | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // 미리보기 objectURL 해제 (메모리 누수 방지)
+  useEffect(() => { return () => { if (preview) URL.revokeObjectURL(preview) } }, [preview])
 
   if (!open) return null
 
@@ -58,6 +69,14 @@ export default function ReceiptOcrModal({
     setFile(f)
     setPreview(URL.createObjectURL(f))
   }
+
+  // 결과 필드 편집 (상호/날짜/총액/계정/세목)
+  const patch = (p: Partial<ReceiptOcrResult>) => setResult(prev => (prev ? { ...prev, ...p } : prev))
+  const onAccountChange = (account: string) => {
+    const subs = subAccountMap[account] || []
+    patch({ account, subAccount: result && subs.includes(result.subAccount) ? result.subAccount : '' })
+  }
+  const subOptions = result ? (subAccountMap[result.account] || []) : []
 
   const analyze = async () => {
     if (!file) { setError('영수증 사진을 먼저 선택하세요'); return }
@@ -100,7 +119,8 @@ export default function ReceiptOcrModal({
 
           {!result && (
             <button onClick={analyze} disabled={loading || !file}
-              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50">
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+              {loading && <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
               {loading ? '분석 중…' : '🔍 분석하기'}
             </button>
           )}
@@ -109,14 +129,48 @@ export default function ReceiptOcrModal({
 
           {result && (
             <div className="space-y-2">
-              <div className="bg-slate-50 border rounded-lg p-3 text-sm space-y-1">
-                <div><span className="text-slate-500 mr-2">상호</span><b>{result.store || '(인식 안됨)'}</b></div>
-                <div><span className="text-slate-500 mr-2">날짜</span>{result.date || '-'}</div>
-                <div><span className="text-slate-500 mr-2">총액</span><b className="text-rose-600">{fmt(result.total)}원</b></div>
-                <div><span className="text-slate-500 mr-2">계정과목</span>{result.account}{result.subAccount ? ` / ${result.subAccount}` : ' (세목 직접 선택)'}</div>
+              <div className="text-xs text-slate-400 flex items-center gap-1">✏️ 인식 결과를 확인·수정한 뒤 적용하세요</div>
+              <div className="bg-slate-50 border rounded-lg p-3 text-sm space-y-2">
+                <label className="block">
+                  <span className="text-slate-500 text-xs">상호 (적요)</span>
+                  <input value={result.store} onChange={e => patch({ store: e.target.value })}
+                    placeholder="(인식 안됨)"
+                    className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white focus:border-blue-400 outline-none" />
+                </label>
+                <div className="flex gap-2">
+                  <label className="block flex-1">
+                    <span className="text-slate-500 text-xs">날짜</span>
+                    <input type="date" value={result.date} onChange={e => patch({ date: e.target.value })}
+                      className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white focus:border-blue-400 outline-none" />
+                  </label>
+                  <label className="block flex-1">
+                    <span className="text-slate-500 text-xs">총액</span>
+                    <input inputMode="numeric" value={result.total ? fmt(result.total) : ''}
+                      onChange={e => patch({ total: Number(e.target.value.replace(/[^0-9]/g, '')) || 0 })}
+                      placeholder="0"
+                      className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white text-right font-medium text-rose-600 focus:border-blue-400 outline-none" />
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <label className="block flex-1">
+                    <span className="text-slate-500 text-xs">계정과목</span>
+                    <select value={result.account} onChange={e => onAccountChange(e.target.value)}
+                      className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white focus:border-blue-400 outline-none">
+                      {accountOptions.map(a => <option key={a} value={a}>{a}</option>)}
+                    </select>
+                  </label>
+                  <label className="block flex-1">
+                    <span className="text-slate-500 text-xs">세목</span>
+                    <select value={result.subAccount} onChange={e => patch({ subAccount: e.target.value })}
+                      className="mt-0.5 w-full px-2 py-1.5 border rounded bg-white focus:border-blue-400 outline-none">
+                      <option value="">(선택)</option>
+                      {subOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </label>
+                </div>
                 {result.items.length > 0 && (
                   <div className="pt-1 mt-1 border-t">
-                    <div className="text-slate-500 mb-0.5">품목 {result.items.length}건</div>
+                    <div className="text-slate-500 mb-0.5 text-xs">품목 {result.items.length}건</div>
                     <ul className="max-h-24 overflow-auto text-xs text-slate-600 space-y-0.5">
                       {result.items.map((it, i) => <li key={i}>· {it.name}{it.price ? ` ${fmt(it.price)}원` : ''}</li>)}
                     </ul>
