@@ -11,6 +11,26 @@ export interface ReceiptOcrResult {
   subAccount: string
 }
 
+/** 업로드 전 이미지 축소 (긴 변 1568px, JPEG 압축) — 502/속도/토큰 절감. 실패 시 원본 반환 */
+async function downscaleImage(file: File, maxEdge = 1568, quality = 0.85): Promise<File> {
+  try {
+    const dataUrl: string = await new Promise((res, rej) => {
+      const fr = new FileReader(); fr.onload = () => res(fr.result as string); fr.onerror = rej; fr.readAsDataURL(file)
+    })
+    const img: HTMLImageElement = await new Promise((res, rej) => {
+      const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = dataUrl
+    })
+    const scale = Math.min(1, maxEdge / Math.max(img.width, img.height))
+    if (scale >= 1 && file.size < 1_200_000) return file // 이미 충분히 작음
+    const w = Math.round(img.width * scale), h = Math.round(img.height * scale)
+    const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h
+    const ctx = canvas.getContext('2d'); if (!ctx) return file
+    ctx.drawImage(img, 0, 0, w, h)
+    const blob: Blob | null = await new Promise(res => canvas.toBlob(res, 'image/jpeg', quality))
+    return blob ? new File([blob], 'receipt.jpg', { type: 'image/jpeg' }) : file
+  } catch { return file }
+}
+
 /** 영수증 사진 → OCR → 결과 확인 → [적용] 시 onApply 호출 */
 export default function ReceiptOcrModal({
   open, onClose, onApply,
@@ -43,8 +63,9 @@ export default function ReceiptOcrModal({
     if (!file) { setError('영수증 사진을 먼저 선택하세요'); return }
     setLoading(true); setError('')
     try {
+      const small = await downscaleImage(file)
       const fd = new FormData()
-      fd.append('file', file)
+      fd.append('file', small)
       const res = await fetch('/api/receipt-ocr', { method: 'POST', body: fd })
       const j = await res.json()
       if (!j.success) throw new Error(j.error || '분석에 실패했습니다')
@@ -59,8 +80,8 @@ export default function ReceiptOcrModal({
   const close = () => { reset(); onClose() }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4" onClick={close}>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-2 sm:p-4" onClick={close}>
+      <div className="bg-white rounded-xl shadow-xl w-[92vw] max-w-md max-h-[88vh] overflow-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-bold text-slate-800">📷 영수증 사진으로 자동입력</h3>
           <button onClick={close} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">×</button>

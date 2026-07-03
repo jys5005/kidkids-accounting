@@ -55,12 +55,21 @@ async function ocrClaude(base64: string, mediaType: string): Promise<Omit<Receip
       ],
     }],
   }
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw new Error(`Claude API 오류 ${res.status}: ${(await res.text()).slice(0, 300)}`)
+  // 5xx(게이트웨이/일시 오류)는 최대 3회 재시도
+  let res: Response | null = null
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify(body),
+    })
+    if (res.ok || res.status < 500 || attempt === 2) break
+    await new Promise(r => setTimeout(r, 800 * (attempt + 1)))
+  }
+  if (!res || !res.ok) {
+    const status = res?.status ?? 0
+    throw new Error(`Claude API 오류 ${status}${status >= 500 ? ' (일시 오류 — 사진을 더 작게 하거나 잠시 후 재시도)' : ''}`)
+  }
   const data = await res.json()
   const text = data?.content?.[0]?.type === 'text' ? data.content[0].text : ''
   const m = text.match(/\{[\s\S]*\}/)
