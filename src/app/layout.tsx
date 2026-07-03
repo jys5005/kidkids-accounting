@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  // maximumScale 제거 — 데스크톱용 넓은 표를 폰에서 핀치줌으로 확대해 볼 수 있게 허용
 }
 
 export const metadata: Metadata = {
