@@ -198,6 +198,32 @@ const categories: MenuCategory[] = [
 
 export { categories }
 
+// ── 기관 유형별 CIS·회계검증 게이팅 ──
+// 어린이집만 CIS(보육통합) 연동·회계검증 사용. 아이사랑꿈터·연합회 등은 숨김.
+export const CIS_GATED_HREFS = new Set<string>([
+  '/budget/cis-accounting-report', // CIS예산보고
+  '/voucher/receipt',              // 영수증(CIS)연동
+  '/monthly-report/verify',        // 전표검증(회계검증)
+  '/settlement/cis',               // CIS결산보고
+  '/settings/cis-auth',            // 보육통합인증키
+])
+
+export function isCisEnabled(institutionType?: string | null): boolean {
+  // 값 없음(기존 계정) = 어린이집으로 간주 → CIS 노출
+  return !institutionType || institutionType === 'childcare'
+}
+
+/** 기관 유형에 맞는 메뉴만 반환. CIS 미사용 유형이면 CIS/검증 항목 제거 + 빈 메뉴 정리. */
+export function visibleCategories(institutionType?: string | null): MenuCategory[] {
+  if (isCisEnabled(institutionType)) return categories
+  return categories.map(cat => ({
+    ...cat,
+    menus: cat.menus
+      .map(m => (m.children ? { ...m, children: m.children.filter(c => !CIS_GATED_HREFS.has(c.href)) } : m))
+      .filter(m => !m.children || m.children.length > 0), // 자식이 전부 제거된 메뉴는 숨김
+  }))
+}
+
 export default function Sidebar() {
   const pathname = usePathname()
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})

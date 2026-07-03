@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { categories } from './Sidebar'
+import { visibleCategories, isCisEnabled } from './Sidebar'
 
 const TIMEOUT_SEC = 30 * 60
 
@@ -74,6 +74,7 @@ export default function Header() {
   const [centerInfoTab, setCenterInfoTab] = useState<'basic' | 'accounting' | 'stamp'>('basic')
   const [profileData, setProfileData] = useState({ centerName: '', displayName: '', phone: '', email: '' })
   const [institutionLabel, setInstitutionLabel] = useState('')
+  const [institutionType, setInstitutionType] = useState<string>('childcare')
   const [editData, setEditData] = useState({ phone: '', email: '' })
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -93,6 +94,7 @@ export default function Header() {
           })
           const itype = (data.institutionType as string) || (p.institutionType as string) || 'childcare'
           const ITYPE_LABEL: Record<string, string> = { childcare: '어린이집', ilovechild: '아이사랑꿈터', federation: '연합회', 'community-child': '지역아동센터', 'together-care': '다함께돌봄센터', kindergarten: '유치원' }
+          setInstitutionType(itype)
           setInstitutionLabel(ITYPE_LABEL[itype] || '어린이집')
           setEditData({ phone, email })
         }
@@ -108,14 +110,18 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [profileOpen])
 
-  const activeKey = categories.find((cat) =>
+  // 기관 유형에 맞는 메뉴만 (아이사랑꿈터·연합회 등은 CIS/검증 제거)
+  const cats = visibleCategories(institutionType)
+  const cisEnabled = isCisEnabled(institutionType)
+
+  const activeKey = cats.find((cat) =>
     cat.menus.some((m) =>
       (m.href && pathname?.startsWith(m.href)) ||
       m.children?.some((c) => pathname?.startsWith(c.href))
     )
   )?.key || 'accounting'
 
-  const currentCategory = categories.find((c) => c.key === activeKey) || categories[0]
+  const currentCategory = cats.find((c) => c.key === activeKey) || cats[0]
 
   const activeMenu = currentCategory.menus.find((m) =>
     m.children?.some((c) => pathname === c.href || pathname?.startsWith(c.href + '/'))
@@ -141,6 +147,7 @@ export default function Header() {
             <span className="text-slate-800 font-bold text-sm whitespace-nowrap">통합e</span>
           </Link>
           <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
+            {cisEnabled && (
             <a
               href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard`}
               target="_blank"
@@ -153,7 +160,8 @@ export default function Header() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </a>
-            {categories.map((cat) => {
+            )}
+            {cats.map((cat) => {
               const isActive = activeKey === cat.key
               return (
                 <Link
