@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, codeToAccount, type AccItem } from '@/lib/accounts'
+import ReceiptOcrModal, { type ReceiptOcrResult } from '@/components/ReceiptOcrModal'
 
 interface VoucherRow {
   id: number
@@ -299,8 +300,22 @@ export default function VoucherInputPage() {
     }))
   }
 
+  // 영수증 사진 OCR 모달 대상 행 id
+  const [receiptRowId, setReceiptRowId] = useState<number | null>(null)
+  // OCR 결과를 해당 전표 행에 반영 (구분/적요/금액/계정과목 한 번에)
+  const applyReceiptToRow = (rowId: number, r: ReceiptOcrResult) => {
+    setRows(prev => prev.map(row => {
+      if (row.id !== rowId) return row
+      const account = r.account || row.account
+      const subAccount = r.subAccount || row.subAccount
+      const code = (subAccount && subAccountCodeMap[subAccount]) || accountCodeMap[account] || row.accountCode || ''
+      return { ...row, type: '지출', summary: r.store || row.summary, amount: r.total || row.amount, account, subAccount, accountCode: code }
+    }))
+  }
+
   return (
     <div className="space-y-4">
+      <ReceiptOcrModal open={receiptRowId !== null} onClose={() => setReceiptRowId(null)} onApply={r => { if (receiptRowId !== null) applyReceiptToRow(receiptRowId, r) }} />
       {/* 상단 조건부 */}
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2">
@@ -1546,7 +1561,7 @@ export default function VoucherInputPage() {
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                                 </button>
                               </>) : (
-                                <button onClick={e => e.stopPropagation()} className="text-slate-300 hover:text-slate-500 transition-colors">
+                                <button onClick={e => { e.stopPropagation(); setReceiptRowId(row.id) }} data-tip="영수증 사진으로 자동입력" className="text-slate-300 hover:text-blue-600 transition-colors">
                                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
                                 </button>
                               )}
