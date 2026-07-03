@@ -73,7 +73,6 @@ export default function Header() {
   const [centerInfoOpen, setCenterInfoOpen] = useState(false)
   const [centerInfoTab, setCenterInfoTab] = useState<'basic' | 'accounting' | 'stamp'>('basic')
   const [profileData, setProfileData] = useState({ centerName: '', displayName: '', phone: '', email: '' })
-  const [institutionLabel, setInstitutionLabel] = useState('')
   const [institutionType, setInstitutionType] = useState<string>('childcare')
   const [editData, setEditData] = useState({ phone: '', email: '' })
   const profileRef = useRef<HTMLDivElement>(null)
@@ -93,9 +92,7 @@ export default function Header() {
             email,
           })
           const itype = (data.institutionType as string) || (p.institutionType as string) || 'childcare'
-          const ITYPE_LABEL: Record<string, string> = { childcare: '어린이집', ilovechild: '아이사랑꿈터', federation: '연합회', 'community-child': '지역아동센터', 'together-care': '다함께돌봄센터', kindergarten: '유치원' }
           setInstitutionType(itype)
-          setInstitutionLabel(ITYPE_LABEL[itype] || '어린이집')
           setEditData({ phone, email })
         }
       })
@@ -201,9 +198,6 @@ export default function Header() {
                 onClick={() => setProfileOpen(v => !v)}
                 className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                {institutionLabel && (
-                  <span className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-200 rounded px-1.5 py-0.5" title="가입 시 지정된 기관 유형 (변경 불가)">{institutionLabel}</span>
-                )}
                 <span className="text-[12px] font-semibold text-slate-700">{profileData.centerName || '...'}</span>
                 <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
