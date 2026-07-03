@@ -92,7 +92,7 @@ export default function Header() {
             email,
           })
           const itype = (data.institutionType as string) || (p.institutionType as string) || 'childcare'
-          const ITYPE_LABEL: Record<string, string> = { childcare: '어린이집', ilovechild: '아이사랑꿈터', 'community-child': '지역아동센터', 'together-care': '다함께돌봄센터', kindergarten: '유치원' }
+          const ITYPE_LABEL: Record<string, string> = { childcare: '어린이집', ilovechild: '아이사랑꿈터', federation: '연합회', 'community-child': '지역아동센터', 'together-care': '다함께돌봄센터', kindergarten: '유치원' }
           setInstitutionLabel(ITYPE_LABEL[itype] || '어린이집')
           setEditData({ phone, email })
         }
