@@ -94,9 +94,12 @@ function calcItemTotal(it: BasisItem): number {
 function newBasisItem(): BasisItem {
   return { name: '', unitPrice: 0, qty: 0, qtyUnit: '명', months: 0, monthsUnit: '회', extras: Array.from({ length: EXTRA_COUNT }, () => ({ num: 1, unit: '식' })), total: 0 }
 }
-/** 저장본/구형 아이템에 단위·extras 채움(합계는 보존 — 편집 시 재계산) */
+/** 저장본/구형 아이템에 단위·extras 채움(합계는 보존 — 편집 시 재계산). 빈 단위는 기본값으로 노출 */
 function normItem(it: BasisItem): BasisItem {
-  const extras = Array.from({ length: EXTRA_COUNT }, (_, i) => it.extras?.[i] ?? { num: 1, unit: '식' })
+  const extras = Array.from({ length: EXTRA_COUNT }, (_, i) => {
+    const e = it.extras?.[i]
+    return { num: e?.num ?? 1, unit: e?.unit || '식' }
+  })
   return { ...it, qtyUnit: it.qtyUnit || '명', monthsUnit: it.monthsUnit || '회', extras }
 }
 
@@ -849,7 +852,7 @@ export default function BudgetCreatePage() {
         const locked = budgetStatus === '작성완료'
         const VE = showAll7 ? EXTRA_COUNT : 3           // 표시할 항목 개수
         const numCls = 'w-14 px-1 py-1 border border-teal-300 rounded text-[11px] text-right bg-teal-50 focus:outline-none focus:border-blue-400 disabled:bg-slate-50'
-        const selCls = 'px-0.5 py-1 border border-slate-200 rounded text-[11px] bg-white focus:outline-none focus:border-blue-400 disabled:bg-slate-50 cursor-pointer'
+        const selCls = 'min-w-[40px] px-0.5 py-1 border border-slate-200 rounded text-[11px] bg-white focus:outline-none focus:border-blue-400 disabled:bg-slate-50 cursor-pointer'
         const num = (v: string) => Number(String(v).replace(/[^0-9.]/g, '')) || 0
         const opts = (list: string[], cur?: string) => [...new Set(['', ...list, cur || ''])]
         const tbtn = 'px-2.5 py-1 text-[11px] font-bold border rounded transition-colors'
@@ -911,7 +914,7 @@ export default function BudgetCreatePage() {
                             <td key={k} className="px-0.5 py-1 border border-slate-200">
                               <div className="flex items-center gap-0.5">
                                 <input disabled={locked} value={ex.num ?? ''} onChange={e => patchModalExtra(i, k, { num: num(e.target.value) })} className="w-9 px-1 py-1 border border-teal-300 rounded text-[11px] text-right bg-teal-50 focus:outline-none focus:border-blue-400 disabled:bg-slate-50" />
-                                <select disabled={locked} value={ex.unit} onChange={e => patchModalExtra(i, k, { unit: e.target.value })} className={selCls}>{opts(EXTRA_UNIT_OPTS, ex.unit).map(u => <option key={u} value={u}>{u}</option>)}</select>
+                                <select disabled={locked} value={ex.unit || '식'} onChange={e => patchModalExtra(i, k, { unit: e.target.value })} className={selCls}>{opts(EXTRA_UNIT_OPTS, ex.unit || '식').map(u => <option key={u} value={u}>{u}</option>)}</select>
                               </div>
                             </td>
                           )
