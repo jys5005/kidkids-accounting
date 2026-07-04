@@ -144,6 +144,29 @@ export default function CoaSettingsPage() {
       setTimeout(() => setMsg(''), 4000)
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
+  // 걸음마 관항목 전체 — 3개 장부(보육정보센터/꿈터/이용료) × 24·25·26년 한 번에 가져와 저장
+  const importAllGwin = async () => {
+    if (!confirm('걸음마 계정과목을 3개 장부(보육정보센터·꿈터·이용료) × 24·25·26년에 전부 가져와 저장합니다.\n기존 저장분은 덮어써집니다. 진행할까요?')) return
+    setLoading(true); setMsg('')
+    try {
+      const tasks: Promise<{ success?: boolean }>[] = []
+      for (const [bk, chart] of Object.entries(GWIN_CHARTS)) {
+        if (!(chart as Gwan[]).length) continue
+        for (const y of SAVE_YEARS) {
+          tasks.push(fetch('/api/coa', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            body: JSON.stringify({ book: bk, year: y, list: chart }),
+          }).then(r => r.json()).catch(() => ({ success: false })))
+        }
+      }
+      const results = await Promise.all(tasks)
+      const ok = results.every(r => r.success)
+      setMsg(ok ? `✅ 걸음마 관항목 전체 가져옴 (3개 장부 × 24·25·26년 · ${results.length}건)` : '⚠ 일부 저장 실패')
+      load(tab, year)
+      setTimeout(() => setMsg(''), 4500)
+    } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
+  }
+
   // 걸음마에서 받아둔 기본 계정과목 다시 불러오기 (HAR 시딩본)
   const loadGwinDefault = () => {
     const gwin = GWIN_CHARTS[tab] as Gwan[] | undefined
@@ -198,6 +221,7 @@ export default function CoaSettingsPage() {
           ))}
         </div>
         <button onClick={addGwan} className="text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 rounded-lg px-3 py-1.5 hover:bg-purple-100">+ 관 추가</button>
+        <button onClick={importAllGwin} disabled={loading} className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-300 rounded-lg px-3 py-1.5 hover:bg-amber-100 disabled:opacity-50">🐤 관항목 전체 가져오기</button>
         {msg && <span className="text-xs font-semibold text-slate-600">{msg}</span>}
         <div className="ml-auto flex items-center gap-2">
           <button onClick={openImport} disabled={loading} className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">📥 계정 불러오기</button>
