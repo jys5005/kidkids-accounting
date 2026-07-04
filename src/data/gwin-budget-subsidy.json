@@ -1,0 +1,2369 @@
+{
+"312": [
+{
+"name": "시보조금",
+"unitPrice": 50730000,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 50730000
+}
+],
+"313": [
+{
+"name": "구보조금",
+"unitPrice": 50730000,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 50730000
+}
+],
+"711": [
+{
+"name": "2025년 보조금 잔액",
+"unitPrice": 1142336,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1142336
+},
+{
+"name": "2025년 예금이자(보조금)",
+"unitPrice": 12645,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 12645
+},
+{
+"name": "2025년 예금이자(예수금)",
+"unitPrice": 191,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 191
+},
+{
+"name": "2025년 기타잡수입(2024년 집행액 반환금)",
+"unitPrice": 0,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 0
+}
+],
+"812": [
+{
+"name": "2026년 예금이자",
+"unitPrice": 15000,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 15000
+}
+],
+"E111": [
+{
+"name": "전문인력",
+"unitPrice": 2843430,
+"qty": 1,
+"months": 11,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 31277730
+},
+{
+"name": "전문인력",
+"unitPrice": 2928530,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 2928530
+},
+{
+"name": "지원인력",
+"unitPrice": 1139000,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 13668000
+}
+],
+"E112": [
+{
+"name": "명절휴가비(전문인력)",
+"unitPrice": 1706060,
+"qty": 1,
+"months": 2,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 3412120
+},
+{
+"name": "정액급량비(전문인력)",
+"unitPrice": 140000,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1680000
+},
+{
+"name": "관리업무수당(전문인력)",
+"unitPrice": 100000,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1200000
+},
+{
+"name": "명절휴가비(지원인력)",
+"unitPrice": 50000,
+"qty": 1,
+"months": 2,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 100000
+},
+{
+"name": "시간외근무수당(지원인력)",
+"unitPrice": 16390,
+"qty": 1,
+"months": 80,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1311200
+}
+],
+"E115": [
+{
+"name": "전문인력",
+"unitPrice": 281239,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 3374868
+},
+{
+"name": "지원인력",
+"unitPrice": 104717,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1256604
+}
+],
+"E116": [
+{
+"name": "국민연금 전문인력",
+"unitPrice": 122710,
+"qty": 1,
+"months": 6,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 736260
+},
+{
+"name": "국민연금 전문인력",
+"unitPrice": 153656,
+"qty": 1,
+"months": 6,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 921936
+},
+{
+"name": "국민연금 지원인력",
+"unitPrice": 49500,
+"qty": 1,
+"months": 6,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 297000
+},
+{
+"name": "국민연금 지원인력",
+"unitPrice": 59698,
+"qty": 1,
+"months": 6,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 358188
+},
+{
+"name": "건강보험 전문인력",
+"unitPrice": 116293,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1395516
+},
+{
+"name": "건강보험 지원인력",
+"unitPrice": 45175,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 542100
+},
+{
+"name": "요양보험 전문인력",
+"unitPrice": 15282,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 183384
+},
+{
+"name": "요양보험 지원인력",
+"unitPrice": 5936,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 71232
+},
+{
+"name": "고용보험 전문인력",
+"unitPrice": 37185,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 446220
+},
+{
+"name": "고용보험 지원인력",
+"unitPrice": 14445,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 173340
+},
+{
+"name": "산재보험 전문인력",
+"unitPrice": 22644,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 271728
+},
+{
+"name": "산재보험 지원인력",
+"unitPrice": 8796,
+"qty": 1,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 105552
+}
+],
+"E121": [
+{
+"name": "기관운영비",
+"unitPrice": 50000,
+"qty": 12,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 600000
+}
+],
+"E131": [
+{
+"name": "교육, 출장 여비",
+"unitPrice": 10000,
+"qty": 2,
+"months": 15,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 300000
+}
+],
+"E132": [
+{
+"name": "장난감소독",
+"unitPrice": 120000,
+"qty": 2,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 240000
+},
+{
+"name": "실외청소",
+"unitPrice": 418000,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 418000
+},
+{
+"name": "정수기 필터",
+"unitPrice": 60000,
+"qty": 2,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 120000
+},
+{
+"name": "렌탈비(cctv, 카드단말기, 근태기 등)",
+"unitPrice": 200000,
+"qty": 12,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 2400000
+},
+{
+"name": "걸음마윈",
+"unitPrice": 9900,
+"qty": 12,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 118800
+},
+{
+"name": "두레이비용",
+"unitPrice": 6600,
+"qty": 2,
+"months": 12,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 158400
+},
+{
+"name": "소모성 장난감",
+"unitPrice": 50000,
+"qty": 6,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 300000
+},
+{
+"name": "소모성 청소용품",
+"unitPrice": 553292,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 553292
+}
+],
+"E133": [
+{
+"name": "관리비(상하수도, 전기료 등)",
+"unitPrice": 300000,
+"qty": 12,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 3600000
+},
+{
+"name": "통신요금",
+"unitPrice": 40000,
+"qty": 12,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 480000
+}
+],
+"E134": [
+{
+"name": "보험료",
+"unitPrice": 500000,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 500000
+}
+],
+"E137": [
+{
+"name": "임차료",
+"unitPrice": 680000,
+"qty": 12,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 8160000
+},
+{
+"name": "특근매식비",
+"unitPrice": 9000,
+"qty": 2,
+"months": 10,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 180000
+}
+],
+"E212": [
+{
+"name": "비품구입비",
+"unitPrice": 800000,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 800000
+},
+{
+"name": "교재,교구구입비",
+"unitPrice": 200000,
+"qty": 4,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 800000
+}
+],
+"E213": [
+{
+"name": "시설장비유지비",
+"unitPrice": 500000,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 500000
+}
+],
+"E311": [
+{
+"name": "아츠맘뮤직테라피",
+"unitPrice": 160000,
+"qty": 1,
+"months": 11,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1760000
+},
+{
+"name": "세모영어",
+"unitPrice": 200000,
+"qty": 1,
+"months": 11,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 2200000
+},
+{
+"name": "엘빈오감",
+"unitPrice": 160000,
+"qty": 1,
+"months": 11,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1760000
+},
+{
+"name": "미술 아트놀이터",
+"unitPrice": 70000,
+"qty": 1,
+"months": 11,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 770000
+},
+{
+"name": "자조모임",
+"unitPrice": 110000,
+"qty": 3,
+"months": 11,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 3630000
+},
+{
+"name": "부모교육",
+"unitPrice": 25000,
+"qty": 4,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 100000
+},
+{
+"name": "자체부모자녀체험프로그램",
+"unitPrice": 200000,
+"qty": 6,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1200000
+},
+{
+"name": "키즈비테마체험대여료",
+"unitPrice": 300000,
+"qty": 5,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1500000
+},
+{
+"name": "자체 행사",
+"unitPrice": 100000,
+"qty": 10,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1000000
+},
+{
+"name": "컬러데이 환경구성 재료 구입",
+"unitPrice": 100000,
+"qty": 6,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 600000
+},
+{
+"name": "홍보비",
+"unitPrice": 200000,
+"qty": 5,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1000000
+}
+],
+"E712": [
+{
+"name": "2025년 보조금 잔액",
+"unitPrice": 1142336,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 1142336
+},
+{
+"name": "2025년 예금이자(보조금)",
+"unitPrice": 12645,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 12645
+},
+{
+"name": "2025년 예금이자(예수금)",
+"unitPrice": 191,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 191
+},
+{
+"name": "2025년 기타잡수입(2024년 집행액 반환금)",
+"unitPrice": 0,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 0
+},
+{
+"name": "2026년 예금이자",
+"unitPrice": 15000,
+"qty": 1,
+"months": 1,
+"extras": [
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+},
+{
+"num": 1,
+"unit": "식"
+}
+],
+"total": 15000
+}
+]
+}
