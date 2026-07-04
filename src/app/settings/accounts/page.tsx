@@ -23,7 +23,9 @@ export default function CoaSettingsPage() {
   const [rows, setRows] = useState<CoaItem[]>([])
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
-  const [importYear, setImportYear] = useState('2025')
+  const [showImport, setShowImport] = useState(false)
+  const [importCounts, setImportCounts] = useState<Record<string, number>>({})
+  const [importLoading, setImportLoading] = useState(false)
 
   const load = useCallback(async (bk: string, yr: string) => {
     setLoading(true); setMsg('')
@@ -52,15 +54,27 @@ export default function CoaSettingsPage() {
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
 
-  // 이전(다른) 연도 저장분 불러오기 → 현재 화면으로 복사 (저장은 사용자가 [저장] 클릭)
-  const importPrev = async () => {
-    if (importYear === year) { setMsg('같은 연도입니다'); return }
-    setLoading(true); setMsg('')
+  // [이전 계정 불러오기] 팝업 열기 — 다른 연도별 저장 건수 조회해서 노출
+  const openImport = async () => {
+    setShowImport(true); setImportLoading(true); setImportCounts({})
+    const others = YEARS.filter(y => y !== year)
     try {
-      const j = await fetch(`/api/coa?book=${tab}&year=${importYear}`, { credentials: 'include' }).then(r => r.json())
+      const results = await Promise.all(others.map(async y => {
+        const j = await fetch(`/api/coa?book=${tab}&year=${y}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({}))
+        return [y, j.success && Array.isArray(j.list) ? j.list.length : 0] as [string, number]
+      }))
+      setImportCounts(Object.fromEntries(results))
+    } catch { /* ignore */ } finally { setImportLoading(false) }
+  }
+
+  // 팝업에서 연도 선택 → 그 연도 계정을 현재 화면으로 복사 (저장은 사용자가 [저장])
+  const importFromYear = async (fromYear: string) => {
+    setShowImport(false); setLoading(true); setMsg('')
+    try {
+      const j = await fetch(`/api/coa?book=${tab}&year=${fromYear}`, { credentials: 'include' }).then(r => r.json())
       const list = j.success && Array.isArray(j.list) ? (j.list as CoaItem[]) : []
-      if (!list.length) { setMsg(`${importYear}년 저장된 계정이 없습니다`) }
-      else { setRows(list); setMsg(`📥 ${importYear}년 계정 ${list.length}건 불러옴 — [저장] 눌러 ${year}년에 반영`) }
+      setRows(list)
+      setMsg(`📥 ${fromYear}년 계정 ${list.length}건 불러옴 — [저장] 눌러 ${year}년에 반영`)
       setTimeout(() => setMsg(''), 4000)
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
@@ -107,13 +121,10 @@ export default function CoaSettingsPage() {
 
       {/* 도구 줄: 이전 연도 불러오기 + (헤더탭) 3장부 적용 + 저장 */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
-          <span className="text-xs text-slate-500">이전 계정 불러오기</span>
-          <select value={importYear} onChange={e => setImportYear(e.target.value)} className="text-sm border rounded px-1.5 py-0.5 bg-white">
-            {YEARS.map(y => <option key={y} value={y}>{y}년</option>)}
-          </select>
-          <button onClick={importPrev} disabled={loading} className="text-xs font-bold text-blue-600 hover:underline disabled:opacity-50">📥 불러오기</button>
-        </div>
+        <button onClick={openImport} disabled={loading}
+          className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">
+          📥 이전 계정 불러오기
+        </button>
         {tab === 'template' && (
           <button onClick={applyToBooks} disabled={loading} className="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-lg px-3 py-1.5 disabled:opacity-50">
             헤더 → 3개 장부 일괄 적용
@@ -164,6 +175,37 @@ export default function CoaSettingsPage() {
       </div>
 
       <button onClick={addRow} className="w-full py-2.5 border border-dashed border-slate-300 text-slate-500 rounded-lg text-sm hover:bg-slate-50">+ 행 추가</button>
+
+      {/* 이전 계정 불러오기 팝업 — 연도별 저장 건수 표시 */}
+      {showImport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowImport(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h3 className="font-bold text-slate-800">이전 계정 불러오기</h3>
+              <button onClick={() => setShowImport(false)} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">×</button>
+            </div>
+            <div className="p-4 space-y-2">
+              <p className="text-xs text-slate-500">불러올 연도를 선택하세요. 현재 <b>{TABS.find(t => t.code === tab)?.label}</b> 장부 · <b>{year}년</b>으로 복사됩니다.</p>
+              {importLoading ? (
+                <div className="text-center text-sm text-slate-400 py-8">저장 건수 확인 중…</div>
+              ) : (
+                YEARS.filter(y => y !== year).map(y => {
+                  const cnt = importCounts[y] ?? 0
+                  return (
+                    <button key={y} onClick={() => cnt > 0 && importFromYear(y)} disabled={cnt === 0}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${
+                        cnt > 0 ? 'border-blue-200 hover:bg-blue-50 text-slate-700' : 'border-slate-100 text-slate-300 cursor-not-allowed'
+                      }`}>
+                      <span className="font-bold">{y}년</span>
+                      <span>{cnt > 0 ? `계정 ${cnt}건` : '저장 없음'}</span>
+                    </button>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
