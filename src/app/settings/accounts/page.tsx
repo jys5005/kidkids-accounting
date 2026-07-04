@@ -14,6 +14,10 @@ const TABS = ILOVECHILD_BOOKS
 const YEARS = ['2024', '2025', '2026', '2027', '2028']
 const onlyNum = (v: string, len: number) => v.replace(/[^0-9]/g, '').slice(0, len)
 
+// 기본 세팅 — 관 01~09 미리 (빈 장부/연도 시작 시)
+const defaultTree = (): Gwan[] =>
+  Array.from({ length: 9 }, (_, i): Gwan => ({ gubun: '세출', code: String(i + 1).padStart(2, '0'), name: '', hangs: [] }))
+
 export default function CoaSettingsPage() {
   const [year, setYear] = useState('2026')
   const [tab, setTab] = useState(ILOVECHILD_BOOKS[0].code)
@@ -28,8 +32,9 @@ export default function CoaSettingsPage() {
     setLoading(true); setMsg('')
     try {
       const j = await fetch(`/api/coa?book=${bk}&year=${yr}`, { credentials: 'include' }).then(r => r.json())
-      setTree(j.success && Array.isArray(j.list) ? (j.list as Gwan[]) : [])
-    } catch { setTree([]) } finally { setLoading(false) }
+      const list = j.success && Array.isArray(j.list) ? (j.list as Gwan[]) : []
+      setTree(list.length ? list : defaultTree())  // 저장본 없으면 관 01~09 기본
+    } catch { setTree(defaultTree()) } finally { setLoading(false) }
   }, [])
   useEffect(() => { load(tab, year) }, [tab, year, load])
 
@@ -138,9 +143,10 @@ export default function CoaSettingsPage() {
             {/* 관 */}
             <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 border-b border-purple-100">
               <span className="text-[10px] font-bold text-white bg-purple-500 rounded px-1.5 py-0.5 shrink-0">관</span>
-              <select value={g.gubun} onChange={e => patchGwan(gi, 'gubun', e.target.value)} className="text-xs px-1.5 py-1 border border-slate-200 rounded bg-white shrink-0">
-                <option value="세입">세입</option><option value="세출">세출</option>
-              </select>
+              <div className="inline-flex rounded-md overflow-hidden border border-slate-200 shrink-0 text-xs font-bold">
+                <button onClick={() => patchGwan(gi, 'gubun', '세입')} className={`px-2.5 py-1 ${g.gubun === '세입' ? 'bg-sky-500 text-white' : 'bg-white text-slate-400 hover:bg-slate-50'}`}>세입</button>
+                <button onClick={() => patchGwan(gi, 'gubun', '세출')} className={`px-2.5 py-1 border-l border-slate-200 ${g.gubun === '세출' ? 'bg-rose-500 text-white' : 'bg-white text-slate-400 hover:bg-slate-50'}`}>세출</button>
+              </div>
               <input value={g.code} onChange={e => patchGwan(gi, 'code', onlyNum(e.target.value, 2))} placeholder="04" className={codeCls} />
               <input value={g.name} onChange={e => patchGwan(gi, 'name', e.target.value)} placeholder="관 명칭" className={nameCls} />
               <button onClick={() => addHang(gi)} className={`${addBtn} text-blue-600 border-blue-300 hover:bg-blue-50`}>+ 항</button>
