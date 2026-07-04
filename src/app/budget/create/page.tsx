@@ -47,8 +47,10 @@ interface BasisExtra { num: number; unit: string }
 interface BasisItem {
   name: string
   unitPrice: number        // 단가
-  qty: number              // 수량(명)
-  months: number           // 개월(회)
+  qty: number              // 수량
+  qtyUnit?: string         // 수량 단위 (기본 명)
+  months: number           // 개월
+  monthsUnit?: string      // 개월 단위 (기본 회)
   extras?: BasisExtra[]     // 항목1~7 (숫자 × 단위)
   total: number
   formula?: string          // (legacy, 미사용)
@@ -63,19 +65,39 @@ interface BasisData {
 
 // ── 걸음마식 산출기초: 단가 × 수량 × 개월 × 항목1~7 = 합계 ──
 const EXTRA_COUNT = 7
-const EXTRA_UNIT_OPTS = ['', '식', '명', '일', '회', '개월', '건', '월', '%']
+// 수량/개월 단위 선택지
+const QM_UNIT_OPTS = ['명', '개월', '일', '회', '분기', '시간', '%', '식', '반']
+// 항목1~7 단위 선택지 (항목 모두 동일)
+const EXTRA_UNIT_OPTS = ['식', '%', '개월', '시간', '일', '1/12', '1/10', '1/6', '1/4', '1/2', '반']
+// 단위별 배수: '식'=계산안함(×1), 분수·%·반은 해당 배율, 그 외는 숫자 그대로
+function unitMult(num: number, unit?: string): number {
+  const n = Number(num) || 0
+  switch (unit) {
+    case '식': return 1
+    case '반': return 0.5
+    case '%': return n / 100
+    case '1/12': return 1 / 12
+    case '1/10': return 1 / 10
+    case '1/6': return 1 / 6
+    case '1/4': return 1 / 4
+    case '1/2': return 1 / 2
+    default: return n
+  }
+}
 function calcItemTotal(it: BasisItem): number {
-  const base = (it.unitPrice || 0) * (it.qty || 0) * (it.months || 0)
-  const ex = (it.extras || []).reduce((p, e) => p * (e.num || 1), 1)
-  return Math.round(base * ex)
+  let m = it.unitPrice || 0
+  m *= unitMult(it.qty, it.qtyUnit || '명')
+  m *= unitMult(it.months, it.monthsUnit || '회')
+  for (const e of it.extras || []) m *= unitMult(e.num, e.unit || '식')
+  return Math.round(m)
 }
 function newBasisItem(): BasisItem {
-  return { name: '', unitPrice: 0, qty: 0, months: 0, extras: Array.from({ length: EXTRA_COUNT }, () => ({ num: 1, unit: '' })), total: 0 }
+  return { name: '', unitPrice: 0, qty: 0, qtyUnit: '명', months: 0, monthsUnit: '회', extras: Array.from({ length: EXTRA_COUNT }, () => ({ num: 1, unit: '식' })), total: 0 }
 }
-/** 저장본/구형 아이템에 extras 만 채움(합계는 보존 — 편집 시 재계산) */
+/** 저장본/구형 아이템에 단위·extras 채움(합계는 보존 — 편집 시 재계산) */
 function normItem(it: BasisItem): BasisItem {
-  const extras = Array.from({ length: EXTRA_COUNT }, (_, i) => it.extras?.[i] ?? { num: 1, unit: '' })
-  return { ...it, extras }
+  const extras = Array.from({ length: EXTRA_COUNT }, (_, i) => it.extras?.[i] ?? { num: 1, unit: '식' })
+  return { ...it, qtyUnit: it.qtyUnit || '명', monthsUnit: it.monthsUnit || '회', extras }
 }
 
 const basisDetails: Record<string, BasisData> = {
@@ -395,9 +417,11 @@ export default function BudgetCreatePage() {
     return () => clearTimeout(t)
   }, [allBasisState, isIlovechild, book, year])
 
-  // 산출기초 입력 모달 (걸음마식) — 어떤 목이 열려있는지 + 행 체크
+  // 산출기초 입력 모달 (걸음마식) — 어떤 목이 열려있는지 + 행 체크 + 클립보드 + 항목7개 토글
   const [basisModalCode, setBasisModalCode] = useState<string | null>(null)
   const [basisChecked, setBasisChecked] = useState<Set<number>>(new Set())
+  const [basisClipboard, setBasisClipboard] = useState<BasisItem[]>([])
+  const [showAll7, setShowAll7] = useState(true)
 
   const basisState = allBasisState[budgetType] || {}
   const setBasisState = (updater: (prev: Record<string, BasisItem[]>) => Record<string, BasisItem[]>) => {
@@ -448,6 +472,16 @@ export default function BudgetCreatePage() {
     }))
   const addModalRow = () => setModalItems(its => [...its, newBasisItem()])
   const removeModalChecked = () => { setModalItems(its => its.filter((_, i) => !basisChecked.has(i))); setBasisChecked(new Set()) }
+  const copyModalRows = () => {
+    if (!basisModalCode) return
+    const src = basisState[basisModalCode] || []
+    const rows = [...basisChecked].sort((a, b) => a - b).map(i => src[i]).filter(Boolean)
+    if (rows.length) setBasisClipboard(rows.map(r => ({ ...r, extras: r.extras?.map(e => ({ ...e })) })))
+  }
+  const pasteModalRows = () => {
+    if (!basisClipboard.length) return
+    setModalItems(its => [...its, ...basisClipboard.map(r => normItem({ ...r, extras: r.extras?.map(e => ({ ...e })) }))])
+  }
   const moveModalRows = (dir: -1 | 1) => setModalItems(its => {
     const arr = [...its]; const idxs = [...basisChecked].sort((a, b) => dir === -1 ? a - b : b - a)
     const moved = new Set<number>()
@@ -813,11 +847,15 @@ export default function BudgetCreatePage() {
         const mitems = basisState[code] || []
         const grand = mitems.reduce((s, it) => s + (it.total || 0), 0)
         const locked = budgetStatus === '작성완료'
-        const numCls = 'w-16 px-1 py-1 border border-teal-300 rounded text-[11px] text-right bg-teal-50 focus:outline-none focus:border-blue-400 disabled:bg-slate-50'
+        const VE = showAll7 ? EXTRA_COUNT : 3           // 표시할 항목 개수
+        const numCls = 'w-14 px-1 py-1 border border-teal-300 rounded text-[11px] text-right bg-teal-50 focus:outline-none focus:border-blue-400 disabled:bg-slate-50'
+        const selCls = 'px-0.5 py-1 border border-slate-200 rounded text-[11px] bg-white focus:outline-none focus:border-blue-400 disabled:bg-slate-50 cursor-pointer'
         const num = (v: string) => Number(String(v).replace(/[^0-9.]/g, '')) || 0
+        const opts = (list: string[], cur?: string) => [...new Set(['', ...list, cur || ''])]
+        const tbtn = 'px-2.5 py-1 text-[11px] font-bold border rounded transition-colors'
         return (
           <div className="fixed inset-0 z-[9999] bg-black/40 flex items-start justify-center pt-8 overflow-auto" onClick={() => setBasisModalCode(null)}>
-            <div className="bg-white rounded-lg shadow-2xl w-[96vw] max-w-[1120px] mb-10" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-lg shadow-2xl w-[97vw] max-w-[1180px] mb-10" onClick={e => e.stopPropagation()}>
               {/* 헤더 */}
               <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-200 flex-wrap">
                 <h3 className="text-base font-bold text-slate-800">산출기초 입력</h3>
@@ -825,17 +863,22 @@ export default function BudgetCreatePage() {
                 <span className="ml-3 text-xs text-slate-500">전년도 예산액</span>
                 <span className="px-3 py-1.5 border border-slate-200 rounded text-xs text-right text-slate-600 min-w-[100px]">{fmt(meta?.prevAmount || 0)}</span>
                 <span className="text-xs text-slate-400">원</span>
-                <button onClick={() => setBasisModalCode(null)} className="ml-auto px-5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">저장</button>
+                <button onClick={() => setBasisModalCode(null)} className="ml-auto px-6 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded shadow-sm">저장</button>
                 <button onClick={() => setBasisModalCode(null)} className="w-7 h-7 flex items-center justify-center rounded hover:bg-slate-100 text-slate-400">✕</button>
               </div>
-              {/* 툴바 */}
+              {/* 툴바 — 오른쪽 정렬 */}
               {!locked && (
-                <div className="flex items-center gap-1.5 px-5 py-2 border-b border-slate-100">
-                  <button onClick={addModalRow} className="px-2.5 py-1 text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 rounded hover:bg-green-100">+ 행추가</button>
-                  <button onClick={removeModalChecked} className="px-2.5 py-1 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100">− 행삭제</button>
-                  <button onClick={() => moveModalRows(-1)} className="px-2.5 py-1 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded hover:bg-slate-100">위로</button>
-                  <button onClick={() => moveModalRows(1)} className="px-2.5 py-1 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded hover:bg-slate-100">아래로</button>
-                  <span className="ml-auto text-[11px] text-slate-400">단가 × 수량 × 개월 × 항목1~7 = 합계</span>
+                <div className="flex items-center gap-1.5 px-5 py-2 border-b border-slate-100 flex-wrap">
+                  <span className="text-[11px] text-slate-400">단가 × 수량 × 개월 × 항목1~7 = 합계 <span className="text-slate-300">(단위 &lsquo;식&rsquo;은 계산 제외)</span></span>
+                  <label className="ml-auto flex items-center gap-1 text-[11px] font-bold text-slate-600 cursor-pointer select-none">
+                    <input type="checkbox" checked={showAll7} onChange={e => setShowAll7(e.target.checked)} className="w-3.5 h-3.5 accent-blue-600" />항목 7개 적용
+                  </label>
+                  <button onClick={addModalRow} className={`${tbtn} text-green-700 bg-green-50 border-green-200 hover:bg-green-100`}>+ 행추가</button>
+                  <button onClick={removeModalChecked} className={`${tbtn} text-red-600 bg-red-50 border-red-200 hover:bg-red-100`}>− 행삭제</button>
+                  <button onClick={() => moveModalRows(-1)} className={`${tbtn} text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100`}>위로</button>
+                  <button onClick={() => moveModalRows(1)} className={`${tbtn} text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100`}>아래로</button>
+                  <button onClick={copyModalRows} className={`${tbtn} text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100`}>복사</button>
+                  <button onClick={pasteModalRows} className={`${tbtn} text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100 disabled:opacity-40`} disabled={basisClipboard.length === 0}>붙여넣기{basisClipboard.length ? ` (${basisClipboard.length})` : ''}</button>
                 </div>
               )}
               {/* 표 */}
@@ -848,7 +891,7 @@ export default function BudgetCreatePage() {
                       <th className="px-2 py-1.5 border border-slate-200">단가</th>
                       <th className="px-2 py-1.5 border border-slate-200">수량(명)</th>
                       <th className="px-2 py-1.5 border border-slate-200">개월(회)</th>
-                      {Array.from({ length: EXTRA_COUNT }, (_, k) => <th key={k} className="px-1 py-1.5 border border-slate-200">항목{k + 1}</th>)}
+                      {Array.from({ length: VE }, (_, k) => <th key={k} className="px-1 py-1.5 border border-slate-200">항목{k + 1}</th>)}
                       <th className="px-2 py-1.5 border border-slate-200 text-right min-w-[90px]">합계</th>
                     </tr>
                   </thead>
@@ -860,15 +903,15 @@ export default function BudgetCreatePage() {
                         </td>
                         <td className="px-1 py-1 border border-slate-200"><input disabled={locked} value={it.name} onChange={e => patchModalItem(i, { name: e.target.value })} placeholder="산출기초명" className="w-full px-1.5 py-1 border border-slate-200 rounded text-[11px] focus:outline-none focus:border-blue-400" /></td>
                         <td className="px-1 py-1 border border-slate-200 text-right"><input disabled={locked} value={it.unitPrice ? fmt(it.unitPrice) : ''} onChange={e => patchModalItem(i, { unitPrice: num(e.target.value) })} className={numCls} /></td>
-                        <td className="px-1 py-1 border border-slate-200"><div className="flex items-center gap-0.5 justify-end"><input disabled={locked} value={it.qty || ''} onChange={e => patchModalItem(i, { qty: num(e.target.value) })} className={numCls} /><span className="text-[10px] text-slate-400">명</span></div></td>
-                        <td className="px-1 py-1 border border-slate-200"><div className="flex items-center gap-0.5 justify-end"><input disabled={locked} value={it.months || ''} onChange={e => patchModalItem(i, { months: num(e.target.value) })} className={numCls} /><span className="text-[10px] text-slate-400">회</span></div></td>
-                        {Array.from({ length: EXTRA_COUNT }, (_, k) => {
-                          const ex = it.extras?.[k] ?? { num: 1, unit: '' }
+                        <td className="px-1 py-1 border border-slate-200"><div className="flex items-center gap-0.5 justify-end"><input disabled={locked} value={it.qty || ''} onChange={e => patchModalItem(i, { qty: num(e.target.value) })} className={numCls} /><select disabled={locked} value={it.qtyUnit || '명'} onChange={e => patchModalItem(i, { qtyUnit: e.target.value })} className={selCls}>{opts(QM_UNIT_OPTS, it.qtyUnit).map(u => <option key={u} value={u}>{u}</option>)}</select></div></td>
+                        <td className="px-1 py-1 border border-slate-200"><div className="flex items-center gap-0.5 justify-end"><input disabled={locked} value={it.months || ''} onChange={e => patchModalItem(i, { months: num(e.target.value) })} className={numCls} /><select disabled={locked} value={it.monthsUnit || '회'} onChange={e => patchModalItem(i, { monthsUnit: e.target.value })} className={selCls}>{opts(QM_UNIT_OPTS, it.monthsUnit).map(u => <option key={u} value={u}>{u}</option>)}</select></div></td>
+                        {Array.from({ length: VE }, (_, k) => {
+                          const ex = it.extras?.[k] ?? { num: 1, unit: '식' }
                           return (
                             <td key={k} className="px-0.5 py-1 border border-slate-200">
                               <div className="flex items-center gap-0.5">
                                 <input disabled={locked} value={ex.num ?? ''} onChange={e => patchModalExtra(i, k, { num: num(e.target.value) })} className="w-9 px-1 py-1 border border-teal-300 rounded text-[11px] text-right bg-teal-50 focus:outline-none focus:border-blue-400 disabled:bg-slate-50" />
-                                <input disabled={locked} list="basis-units" value={ex.unit} onChange={e => patchModalExtra(i, k, { unit: e.target.value })} className="w-9 px-0.5 py-1 border border-slate-200 rounded text-[11px] text-center focus:outline-none focus:border-blue-400" />
+                                <select disabled={locked} value={ex.unit} onChange={e => patchModalExtra(i, k, { unit: e.target.value })} className={selCls}>{opts(EXTRA_UNIT_OPTS, ex.unit).map(u => <option key={u} value={u}>{u}</option>)}</select>
                               </div>
                             </td>
                           )
@@ -877,17 +920,23 @@ export default function BudgetCreatePage() {
                       </tr>
                     ))}
                     {mitems.length === 0 && (
-                      <tr><td colSpan={6 + EXTRA_COUNT} className="px-2 py-6 text-center text-slate-400">[+ 행추가]로 산출기초를 입력하세요.</td></tr>
+                      <tr><td colSpan={6 + VE} className="px-2 py-6 text-center text-slate-400">[+ 행추가]로 산출기초를 입력하세요.</td></tr>
                     )}
                   </tbody>
                   <tfoot>
                     <tr className="bg-yellow-50 font-bold">
-                      <td colSpan={5 + EXTRA_COUNT} className="px-2 py-2 border border-slate-200 text-right text-slate-600">총 합계</td>
+                      <td colSpan={5 + VE} className="px-2 py-2 border border-slate-200 text-right text-slate-600">총 합계</td>
                       <td className="px-2 py-2 border border-slate-200 text-right text-blue-700">{fmt(grand)}</td>
                     </tr>
                   </tfoot>
                 </table>
-                <datalist id="basis-units">{EXTRA_UNIT_OPTS.filter(Boolean).map(u => <option key={u} value={u} />)}</datalist>
+                {/* 참고사항 */}
+                <div className="mt-3 text-[11px] text-slate-400 leading-relaxed">
+                  <p className="font-bold text-slate-500">ⓘ 참고사항</p>
+                  <p>1) 단위가 &lsquo;식&rsquo;인 경우에는 계산하지 않습니다.</p>
+                  <p>2) 복사를 할 경우에는 먼저 복사하려는 행을 체크하고 복사 버튼을 클릭해 주세요.</p>
+                  <p>3) 단가가 &lsquo;0&rsquo;인 경우 산출기초명만 표시됩니다.</p>
+                </div>
               </div>
             </div>
           </div>

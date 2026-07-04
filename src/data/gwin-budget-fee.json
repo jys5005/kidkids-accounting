@@ -4,7 +4,9 @@
 "name": "이용료 수입",
 "unitPrice": 1000,
 "qty": 2,
+"qtyUnit": "명",
 "months": 3,
+"monthsUnit": "회",
 "extras": [
 {
 "num": 20,
@@ -41,7 +43,9 @@
 "name": "프로그램이용 수입",
 "unitPrice": 2000,
 "qty": 3,
+"qtyUnit": "명",
 "months": 9,
+"monthsUnit": "회",
 "extras": [
 {
 "num": 12,
@@ -80,7 +84,9 @@
 "name": "2025년 이용료 잔액",
 "unitPrice": 1914345,
 "qty": 1,
+"qtyUnit": "식",
 "months": 1,
+"monthsUnit": "식",
 "extras": [
 {
 "num": 1,
@@ -117,7 +123,9 @@
 "name": "2025년 이용료 이자",
 "unitPrice": 1429,
 "qty": 1,
+"qtyUnit": "식",
 "months": 1,
+"monthsUnit": "식",
 "extras": [
 {
 "num": 1,
@@ -156,7 +164,9 @@
 "name": "2026년 예금이자",
 "unitPrice": 3000,
 "qty": 1,
+"qtyUnit": "식",
 "months": 1,
+"monthsUnit": "식",
 "extras": [
 {
 "num": 1,
@@ -195,7 +205,9 @@
 "name": "수용비 및 수수료",
 "unitPrice": 1058774,
 "qty": 1,
+"qtyUnit": "식",
 "months": 1,
+"monthsUnit": "식",
 "extras": [
 {
 "num": 1,
@@ -234,7 +246,9 @@
 "name": "공공요금",
 "unitPrice": 400000,
 "qty": 1,
+"qtyUnit": "식",
 "months": 1,
+"monthsUnit": "식",
 "extras": [
 {
 "num": 1,
@@ -273,7 +287,9 @@
 "name": "제세공과금",
 "unitPrice": 300000,
 "qty": 1,
+"qtyUnit": "식",
 "months": 1,
+"monthsUnit": "식",
 "extras": [
 {
 "num": 1,
@@ -312,7 +328,9 @@
 "name": "기타운영비",
 "unitPrice": 9000,
 "qty": 1,
+"qtyUnit": "명",
 "months": 12,
+"monthsUnit": "개월",
 "extras": [
 {
 "num": 1,
@@ -351,7 +369,9 @@
 "name": "육아사업비",
 "unitPrice": 2000000,
 "qty": 1,
+"qtyUnit": "식",
 "months": 1,
+"monthsUnit": "식",
 "extras": [
 {
 "num": 1,
@@ -388,7 +408,9 @@
 "name": "홍보비",
 "unitPrice": 140000,
 "qty": 1,
+"qtyUnit": "식",
 "months": 1,
+"monthsUnit": "식",
 "extras": [
 {
 "num": 1,
