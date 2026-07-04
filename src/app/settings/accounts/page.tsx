@@ -3,19 +3,23 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
 
-// 계정과목 1행 — 목(4자리)+세목(5자리) 코드+명칭 + 구분
+// 계정과목 1행 — 관/항/목/세목 4단계 코드+명칭 + 구분(세입/세출)
 interface CoaItem {
   gubun: '세입' | '세출'
-  mokCode: string
+  gwanCode: string  // 관(款)
+  gwanName: string
+  hangCode: string  // 항(項)
+  hangName: string
+  mokCode: string   // 목(目) 4자리
   mokName: string
-  subCode: string
+  subCode: string   // 세목 5자리
   subName: string
 }
 
 // 탭: 헤더(공통 템플릿) + 3개 장부
 const TABS = [{ code: 'template', label: '헤더(공통)' }, ...ILOVECHILD_BOOKS]
 const YEARS = ['2024', '2025', '2026', '2027', '2028']
-const emptyRow = (): CoaItem => ({ gubun: '세출', mokCode: '', mokName: '', subCode: '', subName: '' })
+const emptyRow = (): CoaItem => ({ gubun: '세출', gwanCode: '', gwanName: '', hangCode: '', hangName: '', mokCode: '', mokName: '', subCode: '', subName: '' })
 
 export default function CoaSettingsPage() {
   const [year, setYear] = useState('2026')
@@ -136,16 +140,20 @@ export default function CoaSettingsPage() {
         </button>
       </div>
 
-      {/* 계정과목 표 */}
-      <div className="border border-slate-200 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
+      {/* 계정과목 표 — 관/항/목/세목 */}
+      <div className="border border-slate-200 rounded-lg overflow-x-auto">
+        <table className="w-full text-sm" style={{ minWidth: '1000px' }}>
           <thead className="bg-slate-50 text-slate-600">
             <tr>
               <th className="px-2 py-2 w-10 font-normal">No</th>
-              <th className="px-2 py-2 w-24 font-normal">구분</th>
-              <th className="px-2 py-2 w-28 font-normal">목코드(4)</th>
+              <th className="px-2 py-2 w-20 font-normal">구분</th>
+              <th className="px-2 py-2 w-20 font-normal">관코드</th>
+              <th className="px-2 py-2 font-normal">관명</th>
+              <th className="px-2 py-2 w-20 font-normal">항코드</th>
+              <th className="px-2 py-2 font-normal">항명</th>
+              <th className="px-2 py-2 w-24 font-normal">목코드(4)</th>
               <th className="px-2 py-2 font-normal">목명</th>
-              <th className="px-2 py-2 w-28 font-normal">세목코드(5)</th>
+              <th className="px-2 py-2 w-24 font-normal">세목코드(5)</th>
               <th className="px-2 py-2 font-normal">세목명</th>
               <th className="px-2 py-2 w-12 font-normal"></th>
             </tr>
@@ -160,6 +168,10 @@ export default function CoaSettingsPage() {
                     <option value="세출">세출</option>
                   </select>
                 </td>
+                <td className="px-2 py-1"><input value={r.gwanCode} onChange={e => patch(i, 'gwanCode', e.target.value.replace(/[^0-9]/g, ''))} placeholder="관" className={inputCls} /></td>
+                <td className="px-2 py-1"><input value={r.gwanName} onChange={e => patch(i, 'gwanName', e.target.value)} placeholder="관 명칭" className={inputCls} /></td>
+                <td className="px-2 py-1"><input value={r.hangCode} onChange={e => patch(i, 'hangCode', e.target.value.replace(/[^0-9]/g, ''))} placeholder="항" className={inputCls} /></td>
+                <td className="px-2 py-1"><input value={r.hangName} onChange={e => patch(i, 'hangName', e.target.value)} placeholder="항 명칭" className={inputCls} /></td>
                 <td className="px-2 py-1"><input value={r.mokCode} onChange={e => patch(i, 'mokCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 4))} placeholder="0000" className={inputCls} /></td>
                 <td className="px-2 py-1"><input value={r.mokName} onChange={e => patch(i, 'mokName', e.target.value)} placeholder="목 명칭" className={inputCls} /></td>
                 <td className="px-2 py-1"><input value={r.subCode} onChange={e => patch(i, 'subCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 5))} placeholder="00000" className={inputCls} /></td>
@@ -168,7 +180,7 @@ export default function CoaSettingsPage() {
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={7} className="px-2 py-10 text-center text-slate-400 text-sm">{loading ? '불러오는 중…' : '계정이 없습니다. [+ 행 추가] 또는 [이전 계정 불러오기]로 시작하세요.'}</td></tr>
+              <tr><td colSpan={11} className="px-2 py-10 text-center text-slate-400 text-sm">{loading ? '불러오는 중…' : '계정이 없습니다. [+ 행 추가] 또는 [이전 계정 불러오기]로 시작하세요.'}</td></tr>
             )}
           </tbody>
         </table>
