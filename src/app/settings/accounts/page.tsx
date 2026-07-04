@@ -16,14 +16,14 @@ interface CoaItem {
   subName: string
 }
 
-// 탭: 헤더(공통 템플릿) + 3개 장부
-const TABS = [{ code: 'template', label: '헤더(공통)' }, ...ILOVECHILD_BOOKS]
+// 탭: 3개 장부 (헤더/공통 탭 제거 — 직접 세팅 후 [3개 장부 공통 적용]으로 복사)
+const TABS = ILOVECHILD_BOOKS
 const YEARS = ['2024', '2025', '2026', '2027', '2028']
 const emptyRow = (): CoaItem => ({ gubun: '세출', gwanCode: '', gwanName: '', hangCode: '', hangName: '', mokCode: '', mokName: '', subCode: '', subName: '' })
 
 export default function CoaSettingsPage() {
   const [year, setYear] = useState('2026')
-  const [tab, setTab] = useState('template')
+  const [tab, setTab] = useState(ILOVECHILD_BOOKS[0].code)
   const [rows, setRows] = useState<CoaItem[]>([])
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
@@ -83,9 +83,9 @@ export default function CoaSettingsPage() {
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
 
-  // 헤더(공통) → 3개 장부에 일괄 적용
+  // 현재 화면의 계정을 3개 장부에 공통 적용 (초기 세팅 후 복사용)
   const applyToBooks = async () => {
-    if (!confirm(`헤더(공통) 계정 ${rows.length}건을 보조금·이용료·보육정보센터 3개 장부(${year}년)에 적용할까요?\n각 장부의 ${year}년 계정이 덮어써집니다.`)) return
+    if (!confirm(`현재 계정 ${rows.length}건을 보육정보센터·보조금·이용료 3개 장부(${year}년)에 공통 적용할까요?\n각 장부의 ${year}년 계정이 덮어써집니다.`)) return
     setLoading(true); setMsg('')
     try {
       for (const b of ILOVECHILD_BOOKS) {
@@ -105,10 +105,7 @@ export default function CoaSettingsPage() {
     <div className="p-5 space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-lg font-bold text-slate-800">회계계정관리</h1>
-        <span className="text-xs text-slate-400">장부·연도별 계정과목(목/세목)을 설정합니다. 예산서·전표관리에 적용됩니다.</span>
-        <select value={year} onChange={e => setYear(e.target.value)} className="ml-auto text-sm border rounded-lg px-2 py-1.5 bg-white">
-          {YEARS.map(y => <option key={y} value={y}>{y}년</option>)}
-        </select>
+        <span className="text-xs text-slate-400">장부별 계정과목(관·항·목·세목)을 설정합니다. 예산서·전표관리에 적용됩니다.</span>
       </div>
 
       {/* 탭: 헤더 + 3개 장부 */}
@@ -129,15 +126,18 @@ export default function CoaSettingsPage() {
           className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">
           📥 이전 계정 불러오기
         </button>
-        {tab === 'template' && (
-          <button onClick={applyToBooks} disabled={loading} className="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-lg px-3 py-1.5 disabled:opacity-50">
-            헤더 → 3개 장부 일괄 적용
-          </button>
-        )}
-        {msg && <span className="text-xs font-semibold text-slate-600">{msg}</span>}
-        <button onClick={save} disabled={loading} className="ml-auto text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-1.5 disabled:opacity-50">
-          💾 저장
+        <button onClick={applyToBooks} disabled={loading} className="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-lg px-3 py-1.5 disabled:opacity-50">
+          현재 계정 → 3개 장부 공통 적용
         </button>
+        {msg && <span className="text-xs font-semibold text-slate-600">{msg}</span>}
+        <div className="ml-auto flex items-center gap-2">
+          <select value={year} onChange={e => setYear(e.target.value)} className="text-sm border rounded-lg px-2 py-1.5 bg-white">
+            {YEARS.map(y => <option key={y} value={y}>{y}년</option>)}
+          </select>
+          <button onClick={save} disabled={loading} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-1.5 disabled:opacity-50">
+            💾 저장
+          </button>
+        </div>
       </div>
 
       {/* 계정과목 표 — 관/항/목/세목 */}
