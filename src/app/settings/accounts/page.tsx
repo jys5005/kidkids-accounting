@@ -139,6 +139,15 @@ export default function CoaSettingsPage() {
       setTimeout(() => setMsg(''), 4000)
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
+  // 걸음마에서 받아둔 기본 계정과목 다시 불러오기 (HAR 시딩본)
+  const loadGwinDefault = () => {
+    const gwin = GWIN_CHARTS[tab] as Gwan[] | undefined
+    if (!gwin || !gwin.length) { setMsg('이 장부는 걸음마 기본 계정이 없습니다'); setTimeout(() => setMsg(''), 3000); return }
+    setShowImport(false)
+    setTree(resequence(JSON.parse(JSON.stringify(gwin)) as Gwan[]))
+    setMsg('🐤 걸음마 기본 계정 불러옴 — [저장] 눌러 반영')
+    setTimeout(() => setMsg(''), 4000)
+  }
 
   const roCode = 'w-16 px-1.5 py-1 text-[13px] leading-5 text-center font-medium text-slate-500 bg-slate-100 border border-slate-100 rounded shrink-0'
   const nameCls = 'flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-[13px] leading-5 focus:outline-none focus:border-blue-400'
@@ -186,7 +195,7 @@ export default function CoaSettingsPage() {
         <button onClick={addGwan} className="text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 rounded-lg px-3 py-1.5 hover:bg-purple-100">+ 관 추가</button>
         {msg && <span className="text-xs font-semibold text-slate-600">{msg}</span>}
         <div className="ml-auto flex items-center gap-2">
-          <button onClick={openImport} disabled={loading} className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">📥 이전 계정 불러오기</button>
+          <button onClick={openImport} disabled={loading} className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">📥 계정 불러오기</button>
           <select value={year} onChange={e => setYear(e.target.value)} className="text-sm border rounded-lg px-2 py-1.5 bg-white">
             {YEARS.map(y => <option key={y} value={y}>{y}년</option>)}
           </select>
@@ -264,10 +273,19 @@ export default function CoaSettingsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowImport(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 border-b">
-              <h3 className="font-bold text-slate-800">이전 계정 불러오기</h3>
+              <h3 className="font-bold text-slate-800">계정 불러오기</h3>
               <button onClick={() => setShowImport(false)} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">×</button>
             </div>
             <div className="p-4 space-y-2">
+              {((GWIN_CHARTS[tab] as Gwan[] | undefined)?.length ?? 0) > 0 && (
+                <>
+                  <button onClick={loadGwinDefault}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 text-sm font-bold text-amber-700">
+                    <span>🐤 걸음마 기본 계정</span><span>불러오기</span>
+                  </button>
+                  <div className="text-[11px] text-slate-400 text-center py-1">— 또는 다른 연도에서 복사 —</div>
+                </>
+              )}
               <p className="text-xs text-slate-500">불러올 연도를 선택하세요. 현재 <b>{TABS.find(t => t.code === tab)?.label}</b> 장부 · <b>{year}년</b>으로 복사됩니다.</p>
               {importLoading ? (
                 <div className="text-center text-sm text-slate-400 py-8">저장 건수 확인 중…</div>
