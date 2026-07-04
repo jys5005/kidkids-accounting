@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import DraggableModal from '@/components/DraggableModal'
 import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
 
@@ -328,8 +328,7 @@ export default function BudgetCreatePage() {
         const { income, expense } = coaToBudgetRows(tree)
         setIncomeRows(income)
         setExpenseRows(expense)
-        // 장부/연도가 바뀌면 산출기초(입력값)도 초기화 (아직 B 영속 미구현)
-        setAllBasisState({ '본예산': {} })
+        // 예산 입력값(산출기초)은 아래 예산 로드 effect가 처리
         setBudgetType('본예산')
         setAmendments([])
       })
@@ -345,6 +344,36 @@ export default function BudgetCreatePage() {
   const [allBasisState, setAllBasisState] = useState<Record<string, Record<string, BasisItem[]>>>(() => ({
     '본예산': initBasis(),
   }))
+
+  // 장부·연도별 저장된 예산 입력값 로드 + 자동저장 (아이사랑꿈터만)
+  const budgetLoadedRef = useRef(false)
+  useEffect(() => {
+    if (!isIlovechild || !book || !year) return
+    budgetLoadedRef.current = false
+    let alive = true
+    fetch(`/api/budget?book=${encodeURIComponent(book)}&year=${year}`)
+      .then(r => r.json())
+      .then(bd => {
+        if (!alive) return
+        const saved = (Array.isArray(bd?.list) && bd.list[0] && (bd.list[0] as { basisByMok?: Record<string, BasisItem[]> }).basisByMok) || {}
+        setAllBasisState({ '본예산': saved })
+      })
+      .catch(() => { if (alive) setAllBasisState({ '본예산': {} }) })
+      .finally(() => { if (alive) budgetLoadedRef.current = true })
+    return () => { alive = false }
+  }, [isIlovechild, book, year])
+
+  useEffect(() => {
+    if (!isIlovechild || !book || !year || !budgetLoadedRef.current) return
+    const payload = allBasisState['본예산'] || {}
+    const t = setTimeout(() => {
+      fetch('/api/budget', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book, year, basisByMok: payload }),
+      }).catch(() => {})
+    }, 1200)
+    return () => clearTimeout(t)
+  }, [allBasisState, isIlovechild, book, year])
 
   const basisState = allBasisState[budgetType] || {}
   const setBasisState = (updater: (prev: Record<string, BasisItem[]>) => Record<string, BasisItem[]>) => {
