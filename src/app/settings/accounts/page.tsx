@@ -3,23 +3,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
 
-// 계정과목 1행 — 관/항/목/세목 4단계 코드+명칭 + 구분(세입/세출)
+// 계정과목 1행 — 관/항/목 3단계 코드+명칭 + 구분(세입/세출)
+// 코드 체계: 관 2자리[03] / 항 2자리[31] / 목 3자리[312] (알콩이회계 기준). 세목 미사용.
 interface CoaItem {
   gubun: '세입' | '세출'
-  gwanCode: string  // 관(款)
+  gwanCode: string  // 관(款) 2
   gwanName: string
-  hangCode: string  // 항(項)
+  hangCode: string  // 항(項) 2
   hangName: string
-  mokCode: string   // 목(目) 4자리
+  mokCode: string   // 목(目) 3
   mokName: string
-  subCode: string   // 세목 5자리
-  subName: string
 }
 
 // 탭: 3개 장부 (헤더/공통 탭 제거 — 직접 세팅 후 [3개 장부 공통 적용]으로 복사)
 const TABS = ILOVECHILD_BOOKS
 const YEARS = ['2024', '2025', '2026', '2027', '2028']
-const emptyRow = (): CoaItem => ({ gubun: '세출', gwanCode: '', gwanName: '', hangCode: '', hangName: '', mokCode: '', mokName: '', subCode: '', subName: '' })
+const emptyRow = (): CoaItem => ({ gubun: '세출', gwanCode: '', gwanName: '', hangCode: '', hangName: '', mokCode: '', mokName: '' })
 
 export default function CoaSettingsPage() {
   const [year, setYear] = useState('2026')
@@ -105,7 +104,7 @@ export default function CoaSettingsPage() {
     <div className="p-5 space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-lg font-bold text-slate-800">회계계정관리</h1>
-        <span className="text-xs text-slate-400">장부별 계정과목(관·항·목·세목)을 설정합니다. 예산서·전표관리에 적용됩니다.</span>
+        <span className="text-xs text-slate-400">장부별 계정과목(관·항·목)을 설정합니다. 예산서·전표관리에 적용됩니다.</span>
       </div>
 
       {/* 탭: 헤더 + 3개 장부 */}
@@ -140,9 +139,9 @@ export default function CoaSettingsPage() {
         </div>
       </div>
 
-      {/* 계정과목 표 — 관/항/목/세목 */}
+      {/* 계정과목 표 — 관(2)/항(2)/목(3) */}
       <div className="border border-slate-200 rounded-lg overflow-x-auto">
-        <table className="w-full text-sm" style={{ minWidth: '1000px' }}>
+        <table className="w-full text-sm" style={{ minWidth: '760px' }}>
           <thead className="bg-slate-50 text-slate-600">
             <tr>
               <th className="px-2 py-2 w-10 font-normal">No</th>
@@ -151,10 +150,8 @@ export default function CoaSettingsPage() {
               <th className="px-2 py-2 font-normal">관명</th>
               <th className="px-2 py-2 w-20 font-normal">항코드</th>
               <th className="px-2 py-2 font-normal">항명</th>
-              <th className="px-2 py-2 w-24 font-normal">목코드(4)</th>
+              <th className="px-2 py-2 w-20 font-normal">목코드</th>
               <th className="px-2 py-2 font-normal">목명</th>
-              <th className="px-2 py-2 w-24 font-normal">세목코드(5)</th>
-              <th className="px-2 py-2 font-normal">세목명</th>
               <th className="px-2 py-2 w-12 font-normal"></th>
             </tr>
           </thead>
@@ -168,19 +165,17 @@ export default function CoaSettingsPage() {
                     <option value="세출">세출</option>
                   </select>
                 </td>
-                <td className="px-2 py-1"><input value={r.gwanCode} onChange={e => patch(i, 'gwanCode', e.target.value.replace(/[^0-9]/g, ''))} placeholder="관" className={inputCls} /></td>
+                <td className="px-2 py-1"><input value={r.gwanCode} onChange={e => patch(i, 'gwanCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 2))} placeholder="00" className={inputCls} /></td>
                 <td className="px-2 py-1"><input value={r.gwanName} onChange={e => patch(i, 'gwanName', e.target.value)} placeholder="관 명칭" className={inputCls} /></td>
-                <td className="px-2 py-1"><input value={r.hangCode} onChange={e => patch(i, 'hangCode', e.target.value.replace(/[^0-9]/g, ''))} placeholder="항" className={inputCls} /></td>
+                <td className="px-2 py-1"><input value={r.hangCode} onChange={e => patch(i, 'hangCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 2))} placeholder="00" className={inputCls} /></td>
                 <td className="px-2 py-1"><input value={r.hangName} onChange={e => patch(i, 'hangName', e.target.value)} placeholder="항 명칭" className={inputCls} /></td>
-                <td className="px-2 py-1"><input value={r.mokCode} onChange={e => patch(i, 'mokCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 4))} placeholder="0000" className={inputCls} /></td>
+                <td className="px-2 py-1"><input value={r.mokCode} onChange={e => patch(i, 'mokCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 3))} placeholder="000" className={inputCls} /></td>
                 <td className="px-2 py-1"><input value={r.mokName} onChange={e => patch(i, 'mokName', e.target.value)} placeholder="목 명칭" className={inputCls} /></td>
-                <td className="px-2 py-1"><input value={r.subCode} onChange={e => patch(i, 'subCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 5))} placeholder="00000" className={inputCls} /></td>
-                <td className="px-2 py-1"><input value={r.subName} onChange={e => patch(i, 'subName', e.target.value)} placeholder="세목 명칭" className={inputCls} /></td>
                 <td className="px-2 py-1 text-center"><button onClick={() => delRow(i)} className="text-xs text-rose-500 hover:underline">삭제</button></td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={11} className="px-2 py-10 text-center text-slate-400 text-sm">{loading ? '불러오는 중…' : '계정이 없습니다. [+ 행 추가] 또는 [이전 계정 불러오기]로 시작하세요.'}</td></tr>
+              <tr><td colSpan={9} className="px-2 py-10 text-center text-slate-400 text-sm">{loading ? '불러오는 중…' : '계정이 없습니다. [+ 행 추가] 또는 [이전 계정 불러오기]로 시작하세요.'}</td></tr>
             )}
           </tbody>
         </table>
