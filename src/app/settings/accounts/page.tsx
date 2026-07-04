@@ -3,27 +3,21 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
 
-// 계정과목 1행 — 관/항/목 3단계 코드+명칭 + 구분(세입/세출)
-// 코드 체계: 관 2자리[03] / 항 2자리[31] / 목 3자리[312] (알콩이회계 기준). 세목 미사용.
-interface CoaItem {
-  gubun: '세입' | '세출'
-  gwanCode: string  // 관(款) 2
-  gwanName: string
-  hangCode: string  // 항(項) 2
-  hangName: string
-  mokCode: string   // 목(目) 3
-  mokName: string
-}
+// 계층(트리) 계정과목 — 관(2) › 항(2) › 목(3) › 세목(4). 어린이집 룰과 동일하게 코드 파생.
+//   관 04 → 항 41,42 (관 끝자리+순번) → 목 411,412 (항+순번) → 세목 4111 (목+순번)
+interface Sub  { code: string; name: string }
+interface Mok  { code: string; name: string; subs: Sub[] }
+interface Hang { code: string; name: string; moks: Mok[] }
+interface Gwan { gubun: '세입' | '세출'; code: string; name: string; hangs: Hang[] }
 
-// 탭: 3개 장부 (헤더/공통 탭 제거 — 직접 세팅 후 [3개 장부 공통 적용]으로 복사)
 const TABS = ILOVECHILD_BOOKS
 const YEARS = ['2024', '2025', '2026', '2027', '2028']
-const emptyRow = (): CoaItem => ({ gubun: '세출', gwanCode: '', gwanName: '', hangCode: '', hangName: '', mokCode: '', mokName: '' })
+const onlyNum = (v: string, len: number) => v.replace(/[^0-9]/g, '').slice(0, len)
 
 export default function CoaSettingsPage() {
   const [year, setYear] = useState('2026')
   const [tab, setTab] = useState(ILOVECHILD_BOOKS[0].code)
-  const [rows, setRows] = useState<CoaItem[]>([])
+  const [tree, setTree] = useState<Gwan[]>([])
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
   const [showImport, setShowImport] = useState(false)
@@ -34,30 +28,47 @@ export default function CoaSettingsPage() {
     setLoading(true); setMsg('')
     try {
       const j = await fetch(`/api/coa?book=${bk}&year=${yr}`, { credentials: 'include' }).then(r => r.json())
-      setRows(j.success && Array.isArray(j.list) ? (j.list as CoaItem[]) : [])
-    } catch { setRows([]) } finally { setLoading(false) }
+      setTree(j.success && Array.isArray(j.list) ? (j.list as Gwan[]) : [])
+    } catch { setTree([]) } finally { setLoading(false) }
   }, [])
-
   useEffect(() => { load(tab, year) }, [tab, year, load])
 
-  const patch = (i: number, key: keyof CoaItem, v: string) =>
-    setRows(prev => prev.map((r, idx) => idx === i ? { ...r, [key]: v } : r))
-  const addRow = () => setRows(prev => [...prev, emptyRow()])
-  const delRow = (i: number) => setRows(prev => prev.filter((_, idx) => idx !== i))
+  // ── 계층 추가 (코드 자동 파생) ──
+  const addGwan = () => setTree(p => [...p, { gubun: '세출', code: '', name: '', hangs: [] }])
+  const addHang = (gi: number) => setTree(p => p.map((g, i) => i !== gi ? g : {
+    ...g, hangs: [...g.hangs, { code: `${g.code.slice(-1) || ''}${g.hangs.length + 1}`, name: '', moks: [] }],
+  }))
+  const addMok = (gi: number, hi: number) => setTree(p => p.map((g, i) => i !== gi ? g : {
+    ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: [...h.moks, { code: `${h.code}${h.moks.length + 1}`, name: '', subs: [] }] }),
+  }))
+  const addSub = (gi: number, hi: number, mi: number) => setTree(p => p.map((g, i) => i !== gi ? g : {
+    ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: [...m.subs, { code: `${m.code}${m.subs.length + 1}`, name: '' }] }) }),
+  }))
+
+  // ── 필드 수정 ──
+  const patchGwan = (gi: number, key: keyof Gwan, v: string) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, [key]: v }))
+  const patchHang = (gi: number, hi: number, key: keyof Hang, v: string) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, [key]: v }) }))
+  const patchMok = (gi: number, hi: number, mi: number, key: keyof Mok, v: string) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, [key]: v }) }) }))
+  const patchSub = (gi: number, hi: number, mi: number, si: number, key: keyof Sub, v: string) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: m.subs.map((s, l) => l !== si ? s : { ...s, [key]: v }) }) }) }))
+
+  // ── 삭제 ──
+  const delGwan = (gi: number) => setTree(p => p.filter((_, i) => i !== gi))
+  const delHang = (gi: number, hi: number) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.filter((_, j) => j !== hi) }))
+  const delMok = (gi: number, hi: number, mi: number) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.filter((_, k) => k !== mi) }) }))
+  const delSub = (gi: number, hi: number, mi: number, si: number) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: m.subs.filter((_, l) => l !== si) }) }) }))
 
   const save = async () => {
     setLoading(true); setMsg('')
     try {
       const j = await fetch('/api/coa', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ book: tab, year, list: rows }),
+        body: JSON.stringify({ book: tab, year, list: tree }),
       }).then(r => r.json())
       setMsg(j.success ? '✅ 저장되었습니다' : `❌ 저장 실패: ${j.error || ''}`)
       setTimeout(() => setMsg(''), 3000)
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
 
-  // [이전 계정 불러오기] 팝업 열기 — 다른 연도별 저장 건수 조회해서 노출
   const openImport = async () => {
     setShowImport(true); setImportLoading(true); setImportCounts({})
     const others = YEARS.filter(y => y !== year)
@@ -69,102 +80,117 @@ export default function CoaSettingsPage() {
       setImportCounts(Object.fromEntries(results))
     } catch { /* ignore */ } finally { setImportLoading(false) }
   }
-
-  // 팝업에서 연도 선택 → 그 연도 계정을 현재 화면으로 복사 (저장은 사용자가 [저장])
   const importFromYear = async (fromYear: string) => {
     setShowImport(false); setLoading(true); setMsg('')
     try {
       const j = await fetch(`/api/coa?book=${tab}&year=${fromYear}`, { credentials: 'include' }).then(r => r.json())
-      const list = j.success && Array.isArray(j.list) ? (j.list as CoaItem[]) : []
-      setRows(list)
-      setMsg(`📥 ${fromYear}년 계정 ${list.length}건 불러옴 — [저장] 눌러 ${year}년에 반영`)
+      const list = j.success && Array.isArray(j.list) ? (j.list as Gwan[]) : []
+      setTree(list)
+      setMsg(`📥 ${fromYear}년 계정 불러옴 (관 ${list.length}개) — [저장] 눌러 ${year}년에 반영`)
       setTimeout(() => setMsg(''), 4000)
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
 
-  const inputCls = 'w-full px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400'
+  const codeCls = 'w-16 px-1.5 py-1 border border-slate-200 rounded text-sm text-center focus:outline-none focus:border-blue-400'
+  const nameCls = 'flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400'
+  const addBtn = 'text-[11px] font-bold px-2 py-0.5 rounded border'
+  const delBtn = 'text-[11px] text-rose-500 hover:underline shrink-0'
 
   return (
     <div className="p-5 space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-lg font-bold text-slate-800">회계계정관리</h1>
-        <span className="text-xs text-slate-400">장부별 계정과목(관·항·목)을 설정합니다. 예산서·전표관리에 적용됩니다.</span>
+        <span className="text-xs text-slate-400">관 › 항 › 목 › 세목 계층으로 계정과목을 만듭니다. 코드는 부모에서 자동 파생됩니다. 예산서·전표관리에 적용.</span>
       </div>
 
-      {/* 탭: 헤더 + 3개 장부 */}
+      {/* 탭: 3개 장부 */}
       <div className="flex items-center gap-1 border-b border-slate-200">
         {TABS.map(t => (
           <button key={t.code} onClick={() => setTab(t.code)}
-            className={`px-4 py-2 text-sm font-bold border-b-2 -mb-px transition-colors ${
-              tab === t.code ? 'text-blue-600 border-blue-500' : 'text-slate-400 border-transparent hover:text-slate-600'
-            }`}>
+            className={`px-4 py-2 text-sm font-bold border-b-2 -mb-px transition-colors ${tab === t.code ? 'text-blue-600 border-blue-500' : 'text-slate-400 border-transparent hover:text-slate-600'}`}>
             {t.label}
           </button>
         ))}
       </div>
 
-      {/* 도구 줄: 이전 연도 불러오기 + (헤더탭) 3장부 적용 + 저장 */}
+      {/* 툴바 */}
       <div className="flex items-center gap-2 flex-wrap">
         {msg && <span className="text-xs font-semibold text-slate-600">{msg}</span>}
         <div className="ml-auto flex items-center gap-2">
-          <button onClick={openImport} disabled={loading}
-            className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">
-            📥 이전 계정 불러오기
-          </button>
+          <button onClick={openImport} disabled={loading} className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">📥 이전 계정 불러오기</button>
           <select value={year} onChange={e => setYear(e.target.value)} className="text-sm border rounded-lg px-2 py-1.5 bg-white">
             {YEARS.map(y => <option key={y} value={y}>{y}년</option>)}
           </select>
-          <button onClick={save} disabled={loading} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-1.5 disabled:opacity-50">
-            💾 저장
-          </button>
+          <button onClick={save} disabled={loading} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-1.5 disabled:opacity-50">💾 저장</button>
         </div>
       </div>
 
-      {/* 계정과목 표 — 관(2)/항(2)/목(3) */}
-      <div className="border border-slate-200 rounded-lg overflow-x-auto">
-        <table className="w-full text-sm" style={{ minWidth: '760px' }}>
-          <thead className="bg-slate-50 text-slate-600">
-            <tr>
-              <th className="px-2 py-2 w-10 font-normal">No</th>
-              <th className="px-2 py-2 w-20 font-normal">구분</th>
-              <th className="px-2 py-2 w-20 font-normal">관코드</th>
-              <th className="px-2 py-2 font-normal">관명</th>
-              <th className="px-2 py-2 w-20 font-normal">항코드</th>
-              <th className="px-2 py-2 font-normal">항명</th>
-              <th className="px-2 py-2 w-20 font-normal">목코드</th>
-              <th className="px-2 py-2 font-normal">목명</th>
-              <th className="px-2 py-2 w-12 font-normal"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => (
-              <tr key={i} className="border-t border-slate-100">
-                <td className="px-2 py-1 text-center text-slate-400">{i + 1}</td>
-                <td className="px-2 py-1">
-                  <select value={r.gubun} onChange={e => patch(i, 'gubun', e.target.value)} className={inputCls}>
-                    <option value="세입">세입</option>
-                    <option value="세출">세출</option>
-                  </select>
-                </td>
-                <td className="px-2 py-1"><input value={r.gwanCode} onChange={e => patch(i, 'gwanCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 2))} placeholder="00" className={inputCls} /></td>
-                <td className="px-2 py-1"><input value={r.gwanName} onChange={e => patch(i, 'gwanName', e.target.value)} placeholder="관 명칭" className={inputCls} /></td>
-                <td className="px-2 py-1"><input value={r.hangCode} onChange={e => patch(i, 'hangCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 2))} placeholder="00" className={inputCls} /></td>
-                <td className="px-2 py-1"><input value={r.hangName} onChange={e => patch(i, 'hangName', e.target.value)} placeholder="항 명칭" className={inputCls} /></td>
-                <td className="px-2 py-1"><input value={r.mokCode} onChange={e => patch(i, 'mokCode', e.target.value.replace(/[^0-9]/g, '').slice(0, 3))} placeholder="000" className={inputCls} /></td>
-                <td className="px-2 py-1"><input value={r.mokName} onChange={e => patch(i, 'mokName', e.target.value)} placeholder="목 명칭" className={inputCls} /></td>
-                <td className="px-2 py-1 text-center"><button onClick={() => delRow(i)} className="text-xs text-rose-500 hover:underline">삭제</button></td>
-              </tr>
+      {/* 계층 트리 편집 */}
+      <div className="space-y-2">
+        {tree.length === 0 && (
+          <div className="text-center text-sm text-slate-400 py-10 border border-slate-100 rounded-lg">
+            {loading ? '불러오는 중…' : '계정이 없습니다. [+ 관 추가] 또는 [이전 계정 불러오기]로 시작하세요.'}
+          </div>
+        )}
+
+        {tree.map((g, gi) => (
+          <div key={gi} className="border border-slate-200 rounded-lg overflow-hidden">
+            {/* 관 */}
+            <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 border-b border-purple-100">
+              <span className="text-[10px] font-bold text-white bg-purple-500 rounded px-1.5 py-0.5 shrink-0">관</span>
+              <select value={g.gubun} onChange={e => patchGwan(gi, 'gubun', e.target.value)} className="text-xs px-1.5 py-1 border border-slate-200 rounded bg-white shrink-0">
+                <option value="세입">세입</option><option value="세출">세출</option>
+              </select>
+              <input value={g.code} onChange={e => patchGwan(gi, 'code', onlyNum(e.target.value, 2))} placeholder="04" className={codeCls} />
+              <input value={g.name} onChange={e => patchGwan(gi, 'name', e.target.value)} placeholder="관 명칭" className={nameCls} />
+              <button onClick={() => addHang(gi)} className={`${addBtn} text-blue-600 border-blue-300 hover:bg-blue-50`}>+ 항</button>
+              <button onClick={() => delGwan(gi)} className={delBtn}>관 삭제</button>
+            </div>
+
+            {/* 항 */}
+            {g.hangs.map((h, hi) => (
+              <div key={hi} className="pl-6 border-b border-slate-100 last:border-0">
+                <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-1.5">
+                  <span className="text-[10px] font-bold text-white bg-blue-500 rounded px-1.5 py-0.5 shrink-0">항</span>
+                  <input value={h.code} onChange={e => patchHang(gi, hi, 'code', onlyNum(e.target.value, 2))} placeholder="41" className={codeCls} />
+                  <input value={h.name} onChange={e => patchHang(gi, hi, 'name', e.target.value)} placeholder="항 명칭" className={nameCls} />
+                  <button onClick={() => addMok(gi, hi)} className={`${addBtn} text-emerald-600 border-emerald-300 hover:bg-emerald-50`}>+ 목</button>
+                  <button onClick={() => delHang(gi, hi)} className={delBtn}>삭제</button>
+                </div>
+
+                {/* 목 */}
+                {h.moks.map((m, mi) => (
+                  <div key={mi} className="pl-6">
+                    <div className="flex items-center gap-2 px-3 py-1.5">
+                      <span className="text-[10px] font-bold text-white bg-emerald-500 rounded px-1.5 py-0.5 shrink-0">목</span>
+                      <input value={m.code} onChange={e => patchMok(gi, hi, mi, 'code', onlyNum(e.target.value, 3))} placeholder="411" className={codeCls} />
+                      <input value={m.name} onChange={e => patchMok(gi, hi, mi, 'name', e.target.value)} placeholder="목 명칭" className={nameCls} />
+                      <button onClick={() => addSub(gi, hi, mi)} className={`${addBtn} text-amber-600 border-amber-300 hover:bg-amber-50`}>+ 세목</button>
+                      <button onClick={() => delMok(gi, hi, mi)} className={delBtn}>삭제</button>
+                    </div>
+
+                    {/* 세목 */}
+                    {m.subs.map((s, si) => (
+                      <div key={si} className="pl-6">
+                        <div className="flex items-center gap-2 px-3 py-1.5">
+                          <span className="text-[10px] font-bold text-white bg-amber-500 rounded px-1.5 py-0.5 shrink-0">세목</span>
+                          <input value={s.code} onChange={e => patchSub(gi, hi, mi, si, 'code', onlyNum(e.target.value, 4))} placeholder="4111" className={codeCls} />
+                          <input value={s.name} onChange={e => patchSub(gi, hi, mi, si, 'name', e.target.value)} placeholder="세목 명칭" className={nameCls} />
+                          <button onClick={() => delSub(gi, hi, mi, si)} className={delBtn}>삭제</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
             ))}
-            {rows.length === 0 && (
-              <tr><td colSpan={9} className="px-2 py-10 text-center text-slate-400 text-sm">{loading ? '불러오는 중…' : '계정이 없습니다. [+ 행 추가] 또는 [이전 계정 불러오기]로 시작하세요.'}</td></tr>
-            )}
-          </tbody>
-        </table>
+          </div>
+        ))}
       </div>
 
-      <button onClick={addRow} className="w-full py-2.5 border border-dashed border-slate-300 text-slate-500 rounded-lg text-sm hover:bg-slate-50">+ 행 추가</button>
+      <button onClick={addGwan} className="w-full py-2.5 border border-dashed border-purple-300 text-purple-600 font-bold rounded-lg text-sm hover:bg-purple-50">+ 관 추가</button>
 
-      {/* 이전 계정 불러오기 팝업 — 연도별 저장 건수 표시 */}
+      {/* 이전 계정 불러오기 팝업 */}
       {showImport && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowImport(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
@@ -181,11 +207,9 @@ export default function CoaSettingsPage() {
                   const cnt = importCounts[y] ?? 0
                   return (
                     <button key={y} onClick={() => cnt > 0 && importFromYear(y)} disabled={cnt === 0}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${
-                        cnt > 0 ? 'border-blue-200 hover:bg-blue-50 text-slate-700' : 'border-slate-100 text-slate-300 cursor-not-allowed'
-                      }`}>
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${cnt > 0 ? 'border-blue-200 hover:bg-blue-50 text-slate-700' : 'border-slate-100 text-slate-300 cursor-not-allowed'}`}>
                       <span className="font-bold">{y}년</span>
-                      <span>{cnt > 0 ? `계정 ${cnt}건` : '저장 없음'}</span>
+                      <span>{cnt > 0 ? `관 ${cnt}개` : '저장 없음'}</span>
                     </button>
                   )
                 })
