@@ -808,7 +808,7 @@ export default function BudgetCreatePage() {
                           const hasFormula = it.unitPrice > 0 && mults.length > 0
                           return (
                             <div key={k} className="flex items-center gap-2 text-[11px] leading-tight">
-                              <span className="text-slate-700 font-medium w-[130px] flex-shrink-0 truncate">{it.name || '(무제목)'}</span>
+                              <span className="text-slate-700 font-medium w-[130px] flex-shrink-0 truncate">{it.name || row.name}</span>
                               {hasFormula
                                 ? <span className="text-slate-500 flex-1 truncate">{fmt(it.unitPrice)}원{mults.map(m => ` × ${m}`).join('')}</span>
                                 : <span className="flex-1" />}
