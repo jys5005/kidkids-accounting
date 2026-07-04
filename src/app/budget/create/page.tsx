@@ -1,7 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import DraggableModal from '@/components/DraggableModal'
+import BookToggle from '@/components/BookToggle'
+import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
 
 interface BudgetRow {
   code: string
@@ -9,13 +11,37 @@ interface BudgetRow {
   amount: number
   prevAmount: number
   change: number
-  level: number // 0: 대분류, 1: 중분류, 2: 소분류, 3: 세분류
+  level: number // 0: 관, 1: 항, 2: 목, 3: 세목
   basis?: string
 }
 
-const budgetData: BudgetRow[] = []
+// ── 아이사랑꿈터 회계계정관리(coa) 트리 → 예산작성 BudgetRow[] 변환 ──
+interface CoaSub  { code: string; name: string }
+interface CoaMok  { code: string; name: string; subs?: CoaSub[] }
+interface CoaHang { code: string; name: string; moks?: CoaMok[] }
+interface CoaGwan { gubun: string; code: string; name: string; hangs?: CoaHang[] }
 
-const expenseBudgetData: BudgetRow[] = []
+/** coa 트리를 세입/세출 BudgetRow[] 로 분리. 세출은 code 앞에 'E' (표시 시 replace('E','')). */
+function coaToBudgetRows(tree: CoaGwan[]): { income: BudgetRow[]; expense: BudgetRow[] } {
+  const income: BudgetRow[] = []
+  const expense: BudgetRow[] = []
+  for (const g of tree || []) {
+    const isIncome = g.gubun === '세입'
+    const arr = isIncome ? income : expense
+    const pf = isIncome ? '' : 'E'
+    const mk = (code: string, name: string, level: number): BudgetRow =>
+      ({ code: pf + code, name, amount: 0, prevAmount: 0, change: 0, level })
+    arr.push(mk(g.code, g.name, 0))
+    for (const h of g.hangs || []) {
+      arr.push(mk(h.code, h.name, 1))
+      for (const m of h.moks || []) {
+        arr.push(mk(m.code, m.name, 2))
+        for (const s of m.subs || []) arr.push(mk(s.code, s.name, 3))
+      }
+    }
+  }
+  return { income, expense }
+}
 
 interface BasisItem {
   name: string
@@ -270,16 +296,52 @@ export default function BudgetCreatePage() {
   const [amendDate, setAmendDate] = useState('')
   const [amendBase, setAmendBase] = useState('본예산')
 
-  const initBasis = () => {
-    const init: Record<string, BasisItem[]> = {}
-    Object.entries(basisDetails).forEach(([code, data]) => {
-      init[code] = data.items.map(item => ({
-        ...item,
-        formula: item.unitPrice > 0 ? `${fmt(item.unitPrice)}원*${item.qty}명*${item.months}개월` : '',
-      }))
-    })
-    return init
-  }
+  // ── 아이사랑꿈터 계정과목(coa) 연동 ──
+  const [institutionType, setInstitutionType] = useState('')
+  const [book, setBook] = useState('')
+  const [year, setYear] = useState('2026')
+  const [incomeRows, setIncomeRows] = useState<BudgetRow[]>([])
+  const [expenseRows, setExpenseRows] = useState<BudgetRow[]>([])
+  const [loadingCoa, setLoadingCoa] = useState(false)
+  const isIlovechild = institutionType === 'ilovechild'
+
+  // 기관유형 + 활성장부 (BookToggle 과 공유)
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      setInstitutionType((d?.institutionType || d?.profile?.institutionType || 'childcare') as string)
+    }).catch(() => {})
+    setBook(getActiveBook())
+    const onCh = (e: Event) => setBook(((e as CustomEvent).detail as string) || '')
+    window.addEventListener(BOOK_CHANGE_EVENT, onCh)
+    return () => window.removeEventListener(BOOK_CHANGE_EVENT, onCh)
+  }, [])
+
+  // 장부·연도 기준으로 회계계정관리(coa) 계정과목 로드 → 예산 트리 (아이사랑꿈터만)
+  useEffect(() => {
+    if (!isIlovechild || !book || !year) return
+    let alive = true
+    setLoadingCoa(true)
+    fetch(`/api/coa?book=${encodeURIComponent(book)}&year=${year}`)
+      .then(r => r.json())
+      .then(d => {
+        if (!alive) return
+        const tree = (Array.isArray(d?.list) ? d.list : []) as CoaGwan[]
+        const { income, expense } = coaToBudgetRows(tree)
+        setIncomeRows(income)
+        setExpenseRows(expense)
+        // 장부/연도가 바뀌면 산출기초(입력값)도 초기화 (아직 B 영속 미구현)
+        setAllBasisState({ '본예산': {} })
+        setBudgetType('본예산')
+        setAmendments([])
+      })
+      .catch(() => { if (alive) { setIncomeRows([]); setExpenseRows([]) } })
+      .finally(() => { if (alive) setLoadingCoa(false) })
+    return () => { alive = false }
+  }, [isIlovechild, book, year])
+
+  // 산출기초(B)는 계정과목(A)이 로드된 뒤 사용자가 입력 / 추후 걸음마에서 가져옴 → 빈 상태로 시작.
+  // (옛 어린이집 샘플 basisDetails 는 coa 목 코드 '111' 등과 충돌해 시드하지 않음)
+  const initBasis = (): Record<string, BasisItem[]> => ({})
 
   const [allBasisState, setAllBasisState] = useState<Record<string, Record<string, BasisItem[]>>>(() => ({
     '본예산': initBasis(),
@@ -366,17 +428,18 @@ export default function BudgetCreatePage() {
     return total
   }
 
-  const totalIncome = budgetData.filter(r => r.level === 0).reduce((s, r) => s + calcGroupTotal(budgetData, 0, r.code), 0)
-  const totalExpense = expenseBudgetData.filter(r => r.level === 0).reduce((s, r) => s + calcGroupTotal(expenseBudgetData, 0, r.code), 0)
+  const totalIncome = incomeRows.filter(r => r.level === 0).reduce((s, r) => s + calcGroupTotal(incomeRows, 0, r.code), 0)
+  const totalExpense = expenseRows.filter(r => r.level === 0).reduce((s, r) => s + calcGroupTotal(expenseRows, 0, r.code), 0)
 
   return (
     <div className="p-3 space-y-3">
       {/* 상단 조건 */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-bold text-slate-700">회계연도</span>
-        <select className="border border-slate-300 rounded px-2 py-1.5 text-xs">
-          <option>2026년</option>
-          <option>2025년</option>
+        <select value={year} onChange={e => setYear(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+          <option value="2026">2026년</option>
+          <option value="2025">2025년</option>
+          <option value="2024">2024년</option>
         </select>
         <span className="text-xs font-bold text-slate-700">예산구분</span>
         <select value={budgetType} onChange={e => setBudgetType(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
@@ -392,6 +455,15 @@ export default function BudgetCreatePage() {
         </select>
         {budgetStatus === '작성완료' && <span className="text-[10px] font-bold text-red-500">🔒 잠금</span>}
       </div>
+
+      {/* 아이사랑꿈터 장부 토글 (보육정보센터/보조금/이용료) */}
+      {isIlovechild && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <BookToggle />
+          {loadingCoa && <span className="text-[11px] text-slate-400">계정 불러오는 중…</span>}
+          <span className="text-[11px] text-slate-400">· 계정과목은 <b className="text-slate-600">설정 › 회계계정관리</b>에서 관리됩니다</span>
+        </div>
+      )}
 
 
       {/* 탭 + 버튼 */}
@@ -510,10 +582,20 @@ export default function BudgetCreatePage() {
         {/* 데이터 */}
         <div className="overflow-x-auto">
           {(() => {
-            const currentData = tab === 'income' ? budgetData : expenseBudgetData
+            const currentData = tab === 'income' ? incomeRows : expenseRows
             const locked = budgetStatus === '작성완료'
+            const leaf = currentData.filter(r => r.level >= 2)
+            if (leaf.length === 0) {
+              return (
+                <div className="px-4 py-16 text-center text-xs text-slate-400">
+                  {isIlovechild
+                    ? <>선택한 장부(<b className="text-slate-600">{bookLabel(book)}</b>) · {year}년 <b>{tab === 'income' ? '세입' : '세출'}</b> 계정과목이 없습니다.<br /><span className="text-[11px]">설정 › 회계계정관리에서 계정과목을 저장하면 여기에 표시됩니다.</span></>
+                    : '표시할 예산 데이터가 없습니다.'}
+                </div>
+              )
+            }
             let prevGwan = '', prevHang = ''
-            return currentData.filter(r => r.level >= 2).map((row) => {
+            return leaf.map((row) => {
               // 관/항 표시 여부
               const rowIdx = currentData.indexOf(row)
               let gwanRow: BudgetRow | undefined, hangRow: BudgetRow | undefined
