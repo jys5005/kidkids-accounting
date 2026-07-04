@@ -219,12 +219,20 @@ export const ILOVECHILD_ONLY_HREFS = new Set<string>([
   '/settings/accounts', // 회계계정관리(장부별 계정과목)
 ])
 
+// 아이사랑꿈터에서 숨기는 메뉴 — 어린이집 서식이라 미사용 (어린이집은 그대로 노출)
+export const ILOVECHILD_HIDDEN_HREFS = new Set<string>([
+  '/monthly-report',          // 월회계보고 (어린이집 서식)
+  '/monthly-report/analysis', // 재무회계분석자료
+])
+
 /** 기관 유형에 맞는 메뉴만 반환. CIS 미사용 유형이면 CIS/검증 제거, 아이사랑꿈터 전용은 그 외 유형에서 제거. */
 export function visibleCategories(institutionType?: string | null): MenuCategory[] {
   const cisOn = isCisEnabled(institutionType)
   const ilove = institutionType === 'ilovechild'
   const hide = (href: string) =>
-    (!cisOn && CIS_GATED_HREFS.has(href)) || (!ilove && ILOVECHILD_ONLY_HREFS.has(href))
+    (!cisOn && CIS_GATED_HREFS.has(href)) ||
+    (!ilove && ILOVECHILD_ONLY_HREFS.has(href)) ||
+    (ilove && ILOVECHILD_HIDDEN_HREFS.has(href))
   return categories.map(cat => ({
     ...cat,
     menus: cat.menus

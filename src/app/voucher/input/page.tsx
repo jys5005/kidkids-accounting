@@ -11,7 +11,6 @@ import {
   type AccItem,
 } from '@/lib/accounts'
 import ReceiptOcrModal, { type ReceiptOcrResult } from '@/components/ReceiptOcrModal'
-import BookDropdown from '@/components/BookDropdown'
 import { getActiveBook, bookLabel, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
 
 interface VoucherRow {
@@ -453,11 +452,10 @@ export default function VoucherInputPage() {
     <div className="space-y-4">
       <ReceiptOcrModal open={receiptRowId !== null} onClose={() => setReceiptRowId(null)} accountOptions={accountOptions} subAccountMap={subAccountMap} onApply={r => { if (receiptRowId !== null) applyReceiptToRow(receiptRowId, r) }} onAttach={url => { if (receiptRowId !== null) applyReceiptImageToRow(receiptRowId, url) }} />
 
-      {/* 장부 선택 드롭다운 + 전환 시 저장 알림 — 아이사랑꿈터 */}
-      {book && (
+      {/* 장부 전환 시 저장 알림 — 아이사랑꿈터 (장부 선택은 상단 헤더) */}
+      {bookSwitchMsg && (
         <div className="flex items-center gap-3 flex-wrap">
-          <BookDropdown />
-          {bookSwitchMsg && <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">{bookSwitchMsg}</span>}
+          <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">{bookSwitchMsg}</span>
         </div>
       )}
 

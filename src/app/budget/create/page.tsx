@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import DraggableModal from '@/components/DraggableModal'
-import BookDropdown from '@/components/BookDropdown'
 import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
 
 interface BudgetRow {
@@ -435,7 +434,6 @@ export default function BudgetCreatePage() {
     <div className="p-3 space-y-3">
       {/* 상단 조건 */}
       <div className="flex items-center gap-2 flex-wrap">
-        <BookDropdown />
         <span className="text-xs font-bold text-slate-700">회계연도</span>
         <select value={year} onChange={e => setYear(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
           <option value="2026">2026년</option>

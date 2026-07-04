@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
+import { ILOVECHILD_BOOKS, getActiveBook, setActiveBook, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
 import { GWIN_CHARTS } from '@/data/gwin-charts'
 
 // 세입/세출은 완전 별도. 각 구분마다 관 › 항 › 목 › 세목 계층.
@@ -45,6 +45,13 @@ function resequence(tree: Gwan[]): Gwan[] {
 export default function CoaSettingsPage() {
   const [year, setYear] = useState('2026')
   const [tab, setTab] = useState(ILOVECHILD_BOOKS[0].code)
+  // 상단 헤더 장부 드롭다운과 양방향 동기화 (mount 시 활성장부로 맞추고, 변경 이벤트 구독)
+  useEffect(() => {
+    setTab(getActiveBook())
+    const onCh = (e: Event) => { const b = ((e as CustomEvent).detail as string) || ''; if (b) setTab(b) }
+    window.addEventListener(BOOK_CHANGE_EVENT, onCh)
+    return () => window.removeEventListener(BOOK_CHANGE_EVENT, onCh)
+  }, [])
   const [gubun, setGubun] = useState<'세입' | '세출'>('세입')
   const [tree, setTree] = useState<Gwan[]>([])
   const [loading, setLoading] = useState(false)
@@ -203,7 +210,7 @@ export default function CoaSettingsPage() {
       {/* 장부 탭 */}
       <div className="flex items-center gap-1 border-b border-slate-200">
         {TABS.map(t => (
-          <button key={t.code} onClick={() => setTab(t.code)}
+          <button key={t.code} onClick={() => { setTab(t.code); setActiveBook(t.code) }}
             className={`px-4 py-2 text-sm font-bold border-b-2 -mb-px transition-colors ${tab === t.code ? 'text-blue-600 border-blue-500' : 'text-slate-400 border-transparent hover:text-slate-600'}`}>
             {t.label}
           </button>
