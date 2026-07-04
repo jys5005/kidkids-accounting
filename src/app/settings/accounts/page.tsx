@@ -13,7 +13,6 @@ interface Gwan { gubun: '세입' | '세출'; code: string; name: string; hangs: 
 const TABS = ILOVECHILD_BOOKS
 const YEARS = ['2024', '2025', '2026', '2027', '2028']
 const GUBUNS: ('세입' | '세출')[] = ['세입', '세출']
-const onlyNum = (v: string, len: number) => v.replace(/[^0-9]/g, '').slice(0, len)
 
 // 기본 세팅 — 세입 관 01~09 + 세출 관 01~09 (완전 별도)
 const defaultTree = (): Gwan[] => {
@@ -123,7 +122,6 @@ export default function CoaSettingsPage() {
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
 
-  const codeCls = 'w-16 px-1.5 py-1 border border-slate-200 rounded text-sm text-center focus:outline-none focus:border-blue-400'
   const roCode = 'w-16 px-1.5 py-1 text-sm text-center font-medium text-slate-500 bg-slate-100 border border-slate-100 rounded shrink-0'
   const nameCls = 'flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400'
   const addBtn = 'text-[11px] font-bold px-2 py-0.5 rounded border'
@@ -182,7 +180,7 @@ export default function CoaSettingsPage() {
               {/* 관 */}
               <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 border-b border-purple-100">
                 <span className="text-[10px] font-bold text-white bg-purple-500 rounded px-1.5 py-0.5 shrink-0">관</span>
-                <input value={g.code} onChange={e => patchGwan(gi, 'code', onlyNum(e.target.value, 2))} placeholder="04" className={codeCls} />
+                <span className={roCode}>{g.code || '-'}</span>
                 <input value={g.name} onChange={e => patchGwan(gi, 'name', e.target.value)} onBlur={() => ensureFirstHang(gi)} placeholder="관 명칭 (입력 후 기본 항 자동 생성)" className={nameCls} />
                 <button onClick={() => addHang(gi)} className={`${addBtn} text-blue-600 border-blue-300 hover:bg-blue-50`}>+ 항</button>
                 <button onClick={() => delGwan(gi)} className={delBtn}>관 삭제</button>
