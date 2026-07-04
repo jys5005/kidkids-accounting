@@ -182,18 +182,7 @@ export default function Header() {
             })}
           </nav>
           <div className="flex items-center gap-2">
-            <a
-              href="https://070remotehelp.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-orange-400 to-red-400 rounded-full hover:from-orange-500 hover:to-red-500 transition-all shadow-sm whitespace-nowrap shrink-0"
-            >
-              원격지원
-              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25h-13.5A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25h-13.5A2.25 2.25 0 013 12V5.25" />
-              </svg>
-            </a>
-            {/* 어린이집명 + 회원정보 팝업 */}
+            {/* 어린이집명 + 회원정보 팝업 (원격지원은 아래 GNB 바로 이동) */}
             <div ref={profileRef} className="relative flex items-center gap-0.5">
               <button
                 onClick={() => setProfileOpen(v => !v)}
@@ -306,15 +295,28 @@ export default function Header() {
               </Link>
             )
           })}
-          <button
-            onClick={() => setGnbExpanded(!gnbExpanded)}
-            className="ml-auto flex items-center gap-1 px-2 py-1 text-[11px] text-white/80 hover:text-white hover:bg-white/15 rounded transition-colors whitespace-nowrap"
-          >
-            <svg className={`w-3.5 h-3.5 transition-transform ${gnbExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-            {gnbExpanded ? '접기' : '펼쳐보기'}
-          </button>
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            <a
+              href="https://070remotehelp.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-3 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-orange-400 to-red-400 rounded-full hover:from-orange-500 hover:to-red-500 transition-all shadow-sm whitespace-nowrap"
+            >
+              원격지원
+              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25h-13.5A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25h-13.5A2.25 2.25 0 013 12V5.25" />
+              </svg>
+            </a>
+            <button
+              onClick={() => setGnbExpanded(!gnbExpanded)}
+              className="flex items-center gap-1 px-2 py-1 text-[11px] text-white/80 hover:text-white hover:bg-white/15 rounded transition-colors whitespace-nowrap"
+            >
+              <svg className={`w-3.5 h-3.5 transition-transform ${gnbExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+              {gnbExpanded ? '접기' : '펼쳐보기'}
+            </button>
+          </div>
         </div>
       </div>
 
