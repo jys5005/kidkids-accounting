@@ -3,6 +3,32 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, isIncomeAccount } from '@/lib/accounts'
 import PrintModal from '@/components/PrintModal'
+import { getActiveBook, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
+
+// 전표입력(voucher-input) 저장 shape
+interface VoucherRow {
+  id: number; date: string; type: '수입' | '지출' | '반납'
+  account: string; subAccount: string; summary: string; amount: number
+  counterpart: string; note: string
+}
+/** 저장된 전표(VoucherRow) → 거래조회 Transaction 으로 변환 */
+function vouchersToTransactions(rows: VoucherRow[]): Transaction[] {
+  return (rows || [])
+    .slice()
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+    .map((r, i) => ({
+      id: r.id ?? i + 1,
+      date: r.date || '',
+      docNo: `A${String(i + 1).padStart(6, '0')}`,
+      account: r.account || '',
+      subAccount: r.subAccount || '',
+      summary: r.summary || '',
+      income: r.type === '수입' ? Number(r.amount) || 0 : 0,
+      expense: (r.type === '지출' || r.type === '반납') ? Number(r.amount) || 0 : 0,
+      counterpart: r.counterpart || '',
+      note: r.note || '',
+    }))
+}
 
 interface Transaction {
   id: number
@@ -81,7 +107,9 @@ const fmt = (n: number) => n ? n.toLocaleString('ko-KR') : ''
 const views = ['거래조회', '현금출납부', '총계정원장', '계정과목별총괄표', '월별수입지출합계', '합계잔액시산표', '월별비교'] as const
 
 export default function TransactionsPage() {
-  const [data] = useState<Transaction[]>(sampleData)
+  const [data, setData] = useState<Transaction[]>(sampleData)
+  const [isIlovechild, setIsIlovechild] = useState(false)
+  const [book, setBook] = useState('')
   const [checked, setChecked] = useState<Set<number>>(new Set())
   const [activeView, setActiveView] = useState<typeof views[number]>('거래조회')
   const [showRange, setShowRange] = useState(false)
@@ -104,6 +132,35 @@ export default function TransactionsPage() {
   const [searchSummary, setSearchSummary] = useState('')
   const [showAccountFilter, setShowAccountFilter] = useState(false)
   const accountFilterRef = useRef<HTMLDivElement>(null)
+
+  // 기관유형 + 활성장부 (아이사랑꿈터만 실제 전표 로드)
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      const t = (d?.institutionType || d?.profile?.institutionType || 'childcare') as string
+      if (cancelled) return
+      setIsIlovechild(t === 'ilovechild')
+      if (t === 'ilovechild') setBook(getActiveBook())
+    }).catch(() => {})
+    const onBook = (e: Event) => setBook(((e as CustomEvent).detail as string) || '')
+    window.addEventListener(BOOK_CHANGE_EVENT, onBook)
+    return () => { cancelled = true; window.removeEventListener(BOOK_CHANGE_EVENT, onBook) }
+  }, [])
+
+  // 아이사랑꿈터: 선택 장부의 전표입력 데이터를 거래조회로 로드 (어린이집은 기존 샘플 유지)
+  useEffect(() => {
+    if (!isIlovechild || !book) return
+    let alive = true
+    fetch(`/api/voucher/list?book=${encodeURIComponent(book)}`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (!alive) return
+        const rows = (Array.isArray(d?.list) ? d.list : []) as VoucherRow[]
+        setData(vouchersToTransactions(rows))
+      })
+      .catch(() => { if (alive) setData([]) })
+    return () => { alive = false }
+  }, [isIlovechild, book])
 
   useEffect(() => {
     if (!showAccountFilter) return
