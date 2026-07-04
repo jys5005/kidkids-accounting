@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap } from '@/lib/accounts'
+import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
 
 function fmt(n: number) { return n.toLocaleString('ko-KR') }
 
@@ -236,7 +237,7 @@ function AccountTable({ type, data, f: fmtFn }: { type: 'income' | 'expense'; da
   )
 }
 
-export default function SettlementMonthlyPage() {
+function SettlementMonthlyLegacy() {
   const ymOpts = useMemo(() => getYmOptions(), [])
   const [selectedYm, setSelectedYm] = useState(ymOpts[1])
   const [unit, setUnit] = useState<'won' | 'thousand'>('won')
@@ -349,4 +350,167 @@ export default function SettlementMonthlyPage() {
       </div>
     </div>
   )
+}
+
+/* ══════════ 아이사랑꿈터 — coa 기반 월별결산서 (예산 vs 당월 vs 누적) ══════════ */
+interface MCoaMok { code: string; name: string }
+interface MCoaHang { code: string; name: string; moks?: MCoaMok[] }
+interface MCoaGwan { gubun: string; code: string; name: string; hangs?: MCoaHang[] }
+type MRow = { gwanCode: string; gwanName: string; hangCode: string; hangName: string; code: string; name: string; budget: number; month: number; cumul: number }
+
+function mCoaRows(tree: MCoaGwan[], gubun: '세입' | '세출', budget: Record<string, { total?: number }[]>, byMonth: Record<string, number>, byCumul: Record<string, number>): MRow[] {
+  const rows: MRow[] = []
+  const pf = gubun === '세출' ? 'E' : ''
+  for (const g of tree || []) {
+    if (g.gubun !== gubun) continue
+    for (const h of g.hangs || []) {
+      for (const m of h.moks || []) {
+        const key = pf + m.code
+        const b = (budget[key] || []).reduce((s, it) => s + (it.total || 0), 0)
+        rows.push({ gwanCode: g.code, gwanName: g.name, hangCode: h.code, hangName: h.name, code: m.code, name: m.name, budget: b, month: byMonth[key] || 0, cumul: byCumul[key] || 0 })
+      }
+    }
+  }
+  return rows
+}
+
+function MonthlySettleTable({ title, rows, tone }: { title: string; rows: MRow[]; tone: 'income' | 'expense' }) {
+  const f = (n: number) => n.toLocaleString('ko-KR')
+  const tB = rows.reduce((s, r) => s + r.budget, 0), tM = rows.reduce((s, r) => s + r.month, 0), tC = rows.reduce((s, r) => s + r.cumul, 0)
+  const head = tone === 'income' ? 'bg-blue-50 text-blue-700' : 'bg-rose-50 text-rose-700'
+  let pg = '', ph = ''
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className={`px-4 py-2 font-bold text-sm ${head}`}>{title} <span className="text-xs font-normal text-slate-500">· 예산 {f(tB)} / 당월 {f(tM)} / 누적 {f(tC)} / 잔액 {f(tB - tC)}</span></div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[11px] border-collapse">
+          <thead>
+            <tr className="bg-slate-50 text-slate-500 font-bold">
+              <th className="px-2 py-1.5 border border-slate-200 w-[80px]">관</th>
+              <th className="px-2 py-1.5 border border-slate-200 w-[110px]">항</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-left">목</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-right w-[100px]">예산액</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-right w-[100px]">당월결산</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-right w-[100px]">누적결산</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-right w-[100px]">잔액</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-right w-[60px]">집행률</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && <tr><td colSpan={8} className="px-2 py-8 text-center text-slate-400">계정과목이 없습니다. (설정 › 회계계정관리)</td></tr>}
+            {rows.map((r, i) => {
+              const showG = r.gwanCode !== pg; if (showG) pg = r.gwanCode
+              const showH = r.hangCode !== ph; if (showH) ph = r.hangCode
+              const rem = r.budget - r.cumul
+              const rate = r.budget > 0 ? Math.round(r.cumul / r.budget * 100) : 0
+              return (
+                <tr key={i} className="hover:bg-slate-50">
+                  <td className="px-2 py-1.5 border border-slate-200 text-center align-top">{showG && <span className="font-bold text-slate-600">{r.gwanCode}<br /><span className="font-medium text-[10px]">{r.gwanName}</span></span>}</td>
+                  <td className="px-2 py-1.5 border border-slate-200 text-center align-top">{showH && <span className="font-semibold text-slate-600">{r.hangCode}<br /><span className="font-medium text-[10px]">{r.hangName}</span></span>}</td>
+                  <td className="px-2 py-1.5 border border-slate-200"><span className="font-bold text-slate-700">{r.code}</span> <span className="text-slate-600">{r.name}</span></td>
+                  <td className="px-2 py-1.5 border border-slate-200 text-right">{r.budget ? f(r.budget) : ''}</td>
+                  <td className="px-2 py-1.5 border border-slate-200 text-right text-slate-700">{r.month ? f(r.month) : ''}</td>
+                  <td className="px-2 py-1.5 border border-slate-200 text-right font-bold text-slate-800">{r.cumul ? f(r.cumul) : ''}</td>
+                  <td className={`px-2 py-1.5 border border-slate-200 text-right ${rem < 0 ? 'text-rose-600' : 'text-slate-600'}`}>{r.budget || r.cumul ? f(rem) : ''}</td>
+                  <td className={`px-2 py-1.5 border border-slate-200 text-right ${rate > 100 ? 'text-rose-600' : 'text-blue-600'}`}>{r.budget ? `${rate}%` : ''}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="bg-yellow-50 font-bold text-slate-700">
+              <td colSpan={3} className="px-2 py-2 border border-slate-200 text-right">합계</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{f(tB)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{f(tM)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right text-blue-700">{f(tC)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{f(tB - tC)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{tB > 0 ? `${Math.round(tC / tB * 100)}%` : ''}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function SettlementMonthlyCoa() {
+  const now = useMemo(() => {
+    const opts: string[] = []
+    for (const y of [2026, 2025, 2024]) for (let m = 12; m >= 1; m--) opts.push(`${y}-${String(m).padStart(2, '0')}`)
+    return opts
+  }, [])
+  const [ym, setYm] = useState('2026-06')
+  const [book, setBook] = useState('')
+  const [tree, setTree] = useState<MCoaGwan[]>([])
+  const [budget, setBudget] = useState<Record<string, { total?: number }[]>>({})
+  const [vouchers, setVouchers] = useState<{ type?: string; amount?: number; accountCode?: string; date?: string }[]>([])
+  const [loading, setLoading] = useState(false)
+  const year = ym.slice(0, 4)
+
+  useEffect(() => {
+    setBook(getActiveBook())
+    const onCh = (e: Event) => setBook(((e as CustomEvent).detail as string) || '')
+    window.addEventListener(BOOK_CHANGE_EVENT, onCh)
+    return () => window.removeEventListener(BOOK_CHANGE_EVENT, onCh)
+  }, [])
+
+  useEffect(() => {
+    if (!book) return
+    let alive = true
+    setLoading(true)
+    Promise.all([
+      fetch(`/api/coa?book=${encodeURIComponent(book)}&year=${year}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/budget?book=${encodeURIComponent(book)}&year=${year}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/voucher/list?book=${encodeURIComponent(book)}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({})),
+    ]).then(([c, b, v]) => {
+      if (!alive) return
+      setTree(Array.isArray(c?.list) ? c.list : [])
+      setBudget((Array.isArray(b?.list) && b.list[0] && (b.list[0] as { basisByMok?: Record<string, { total?: number }[]> }).basisByMok) || {})
+      setVouchers(Array.isArray(v?.list) ? v.list : [])
+    }).finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [book, year])
+
+  const { byMonth, byCumul } = useMemo(() => {
+    const bm: Record<string, number> = {}, bc: Record<string, number> = {}
+    for (const vc of vouchers) {
+      if (!vc.accountCode || !vc.date) continue
+      const d = String(vc.date), dYm = d.slice(0, 7)
+      if (d.slice(0, 4) !== year) continue
+      const k = (vc.type === '수입' ? '' : 'E') + vc.accountCode
+      const amt = Number(vc.amount) || 0
+      if (dYm <= ym) bc[k] = (bc[k] || 0) + amt          // 누적(연초~선택월)
+      if (dYm === ym) bm[k] = (bm[k] || 0) + amt         // 당월
+    }
+    return { byMonth: bm, byCumul: bc }
+  }, [vouchers, ym, year])
+
+  const incomeRows = useMemo(() => mCoaRows(tree, '세입', budget, byMonth, byCumul), [tree, budget, byMonth, byCumul])
+  const expenseRows = useMemo(() => mCoaRows(tree, '세출', budget, byMonth, byCumul), [tree, budget, byMonth, byCumul])
+
+  return (
+    <div className="p-3 space-y-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-bold text-slate-700">출납년월</span>
+        <select value={ym} onChange={e => setYm(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+          {now.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <span className="ml-2 text-[11px] text-slate-400">· 장부(<b className="text-slate-600">{bookLabel(book)}</b>) · 결산액=전표입력 집계(당월/누적) · 예산액=예산작성 {loading && <span>· 불러오는 중…</span>}</span>
+      </div>
+      <MonthlySettleTable title="세입 결산" rows={incomeRows} tone="income" />
+      <MonthlySettleTable title="세출 결산" rows={expenseRows} tone="expense" />
+    </div>
+  )
+}
+
+export default function SettlementMonthlyPage() {
+  const [itype, setItype] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json())
+      .then(d => setItype((d?.institutionType || d?.profile?.institutionType || 'childcare') as string))
+      .catch(() => setItype('childcare'))
+  }, [])
+  if (itype === null) return null
+  if (itype === 'ilovechild') return <SettlementMonthlyCoa />
+  return <SettlementMonthlyLegacy />
 }
