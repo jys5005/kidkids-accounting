@@ -73,8 +73,10 @@ export default function CoaSettingsPage() {
   const addMok = (gi: number, hi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: [...h.moks, { code: '', name: '', subs: [] }] }) }))
   const addSub = (gi: number, hi: number, mi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: [...m.subs, { code: '', name: '' }] }) }) }))
 
-  // 관 명 입력(blur) — 이름 있고 항 없으면 기본 항 1개 자동
+  // 명칭 입력(blur) 시 자식이 없으면 기본 1개 자동 — 관→항, 항→목, 목→세목 동일
   const ensureFirstHang = (gi: number) => mutate(p => p.map((g, i) => (i === gi && g.name.trim() && g.hangs.length === 0) ? { ...g, hangs: [{ code: '', name: '', moks: [] }] } : g))
+  const ensureFirstMok = (gi: number, hi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => (j === hi && h.name.trim() && h.moks.length === 0) ? { ...h, moks: [{ code: '', name: '', subs: [] }] } : h) }))
+  const ensureFirstSub = (gi: number, hi: number, mi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => (k === mi && m.name.trim() && m.subs.length === 0) ? { ...m, subs: [{ code: '', name: '' }] } : m) }) }))
 
   // ── 수정 (명칭·관코드만) ──
   const patchGwan = (gi: number, key: keyof Gwan, v: string) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, [key]: v }))
@@ -192,7 +194,7 @@ export default function CoaSettingsPage() {
                   <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-1.5">
                     <span className="text-[10px] font-bold text-white bg-blue-500 rounded px-1.5 py-0.5 shrink-0">항</span>
                     <span className={roCode}>{h.code || '-'}</span>
-                    <input value={h.name} onChange={e => patchHang(gi, hi, e.target.value)} placeholder="항 명칭" className={nameCls} />
+                    <input value={h.name} onChange={e => patchHang(gi, hi, e.target.value)} onBlur={() => ensureFirstMok(gi, hi)} placeholder="항 명칭 (입력 후 기본 목 자동)" className={nameCls} />
                     <button onClick={() => addMok(gi, hi)} className={`${addBtn} text-emerald-600 border-emerald-300 hover:bg-emerald-50`}>+ 목</button>
                     <button onClick={() => delHang(gi, hi)} className={delBtn}>삭제</button>
                   </div>
@@ -203,7 +205,7 @@ export default function CoaSettingsPage() {
                       <div className="flex items-center gap-2 px-3 py-1.5">
                         <span className="text-[10px] font-bold text-white bg-emerald-500 rounded px-1.5 py-0.5 shrink-0">목</span>
                         <span className={roCode}>{m.code || '-'}</span>
-                        <input value={m.name} onChange={e => patchMok(gi, hi, mi, e.target.value)} placeholder="목 명칭" className={nameCls} />
+                        <input value={m.name} onChange={e => patchMok(gi, hi, mi, e.target.value)} onBlur={() => ensureFirstSub(gi, hi, mi)} placeholder="목 명칭 (입력 후 기본 세목 자동)" className={nameCls} />
                         <button onClick={() => addSub(gi, hi, mi)} className={`${addBtn} text-amber-600 border-amber-300 hover:bg-amber-50`}>+ 세목</button>
                         <button onClick={() => delMok(gi, hi, mi)} className={delBtn}>삭제</button>
                       </div>
