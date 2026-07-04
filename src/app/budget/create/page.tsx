@@ -475,11 +475,11 @@ export default function BudgetCreatePage() {
     }))
   const addModalRow = () => setModalItems(its => [...its, newBasisItem()])
   const removeModalChecked = () => { setModalItems(its => its.filter((_, i) => !basisChecked.has(i))); setBasisChecked(new Set()) }
-  const copyModalRows = () => {
+  // 복사: 체크와 무관하게 해당 행 1개를 클립보드로
+  const copyModalRow = (idx: number) => {
     if (!basisModalCode) return
-    const src = basisState[basisModalCode] || []
-    const rows = [...basisChecked].sort((a, b) => a - b).map(i => src[i]).filter(Boolean)
-    if (rows.length) setBasisClipboard(rows.map(r => ({ ...r, extras: r.extras?.map(e => ({ ...e })) })))
+    const src = (basisState[basisModalCode] || [])[idx]
+    if (src) setBasisClipboard([{ ...src, extras: src.extras?.map(e => ({ ...e })) }])
   }
   const pasteModalRows = () => {
     if (!basisClipboard.length) return
@@ -880,7 +880,6 @@ export default function BudgetCreatePage() {
                   <button onClick={removeModalChecked} className={`${tbtn} text-red-600 bg-red-50 border-red-200 hover:bg-red-100`}>− 행삭제</button>
                   <button onClick={() => moveModalRows(-1)} className={`${tbtn} text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100`}>위로</button>
                   <button onClick={() => moveModalRows(1)} className={`${tbtn} text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100`}>아래로</button>
-                  <button onClick={copyModalRows} className={`${tbtn} text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100`}>복사</button>
                   <button onClick={pasteModalRows} className={`${tbtn} text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100 disabled:opacity-40`} disabled={basisClipboard.length === 0}>붙여넣기{basisClipboard.length ? ` (${basisClipboard.length})` : ''}</button>
                 </div>
               )}
@@ -889,7 +888,7 @@ export default function BudgetCreatePage() {
                 <table className="w-full text-[11px] border-collapse">
                   <thead>
                     <tr className="bg-teal-50 text-slate-600 font-bold">
-                      <th className="w-8 px-1 py-1.5 border border-slate-200"></th>
+                      <th className="w-16 px-1 py-1.5 border border-slate-200"></th>
                       <th className="px-2 py-1.5 border border-slate-200 text-left min-w-[130px]">산출기초명</th>
                       <th className="px-2 py-1.5 border border-slate-200">단가</th>
                       <th className="px-2 py-1.5 border border-slate-200">수량(명)</th>
@@ -901,8 +900,11 @@ export default function BudgetCreatePage() {
                   <tbody>
                     {mitems.map((it, i) => (
                       <tr key={i} className="hover:bg-slate-50">
-                        <td className="px-1 py-1 border border-slate-200 text-center">
-                          <input type="checkbox" checked={basisChecked.has(i)} onChange={() => setBasisChecked(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n })} className="w-3.5 h-3.5" />
+                        <td className="px-1 py-1 border border-slate-200">
+                          <div className="flex items-center justify-center gap-1">
+                            <input type="checkbox" checked={basisChecked.has(i)} onChange={() => setBasisChecked(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n })} className="w-3.5 h-3.5" />
+                            {!locked && <button onClick={() => copyModalRow(i)} title="이 행 복사" className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded px-1 py-0.5 hover:bg-blue-100">복사</button>}
+                          </div>
                         </td>
                         <td className="px-1 py-1 border border-slate-200"><input disabled={locked} value={it.name} onChange={e => patchModalItem(i, { name: e.target.value })} placeholder="산출기초명" className="w-full px-1.5 py-1 border border-slate-200 rounded text-[11px] focus:outline-none focus:border-blue-400" /></td>
                         <td className="px-1 py-1 border border-slate-200 text-right"><input disabled={locked} value={it.unitPrice ? fmt(it.unitPrice) : ''} onChange={e => patchModalItem(i, { unitPrice: num(e.target.value) })} className={numCls} /></td>
@@ -937,7 +939,7 @@ export default function BudgetCreatePage() {
                 <div className="mt-3 text-[11px] text-slate-400 leading-relaxed">
                   <p className="font-bold text-slate-500">ⓘ 참고사항</p>
                   <p>1) 단위가 &lsquo;식&rsquo;인 경우에는 계산하지 않습니다.</p>
-                  <p>2) 복사를 할 경우에는 먼저 복사하려는 행을 체크하고 복사 버튼을 클릭해 주세요.</p>
+                  <p>2) 복사는 해당 행의 [복사]를 누른 뒤 [붙여넣기]로 새 행에 추가됩니다. (체크 불필요)</p>
                   <p>3) 단가가 &lsquo;0&rsquo;인 경우 산출기초명만 표시됩니다.</p>
                 </div>
               </div>
