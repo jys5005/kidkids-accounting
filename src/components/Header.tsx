@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { visibleCategories, isCisEnabled } from './Sidebar'
-import { ILOVECHILD_BOOKS, getActiveBook, setActiveBook } from '@/lib/ilovechild-books'
 
 const TIMEOUT_SEC = 30 * 60
 
@@ -75,8 +74,6 @@ export default function Header() {
   const [centerInfoTab, setCenterInfoTab] = useState<'basic' | 'accounting' | 'stamp'>('basic')
   const [profileData, setProfileData] = useState({ centerName: '', displayName: '', phone: '', email: '' })
   const [institutionType, setInstitutionType] = useState<string>('childcare')
-  const [activeBook, setActiveBookState] = useState('')
-  useEffect(() => { setActiveBookState(getActiveBook()) }, [])
   const [editData, setEditData] = useState({ phone: '', email: '' })
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -182,19 +179,19 @@ export default function Header() {
                 </Link>
               )
             })}
+          </nav>
+          <div className="flex items-center gap-2">
             <a
               href="https://070remotehelp.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-orange-400 to-red-400 rounded-full hover:from-orange-500 hover:to-red-500 transition-all shadow-sm ml-1 whitespace-nowrap shrink-0"
+              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-orange-400 to-red-400 rounded-full hover:from-orange-500 hover:to-red-500 transition-all shadow-sm whitespace-nowrap shrink-0"
             >
               원격지원
               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25h-13.5A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25h-13.5A2.25 2.25 0 013 12V5.25" />
               </svg>
             </a>
-          </nav>
-          <div className="flex items-center gap-2">
             {/* 어린이집명 + 회원정보 팝업 */}
             <div ref={profileRef} className="relative flex items-center gap-0.5">
               <button
@@ -308,22 +305,9 @@ export default function Header() {
               </Link>
             )
           })}
-          {institutionType === 'ilovechild' && (
-            <div className="ml-auto flex items-center gap-1.5 whitespace-nowrap">
-              <span className="text-[11px] font-bold text-white/90">장부</span>
-              <select
-                value={activeBook}
-                onChange={e => { setActiveBook(e.target.value); setActiveBookState(e.target.value) }}
-                className="text-[12px] font-bold text-slate-800 bg-white rounded px-2 py-1 border-0 focus:outline-none"
-                title="장부(계정) 선택 — 예산·결산·전표가 장부별로 분리됩니다"
-              >
-                {ILOVECHILD_BOOKS.map(b => <option key={b.code} value={b.code}>{b.label}</option>)}
-              </select>
-            </div>
-          )}
           <button
             onClick={() => setGnbExpanded(!gnbExpanded)}
-            className={`${institutionType === 'ilovechild' ? '' : 'ml-auto'} flex items-center gap-1 px-2 py-1 text-[11px] text-white/80 hover:text-white hover:bg-white/15 rounded transition-colors whitespace-nowrap`}
+            className="ml-auto flex items-center gap-1 px-2 py-1 text-[11px] text-white/80 hover:text-white hover:bg-white/15 rounded transition-colors whitespace-nowrap"
           >
             <svg className={`w-3.5 h-3.5 transition-transform ${gnbExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />

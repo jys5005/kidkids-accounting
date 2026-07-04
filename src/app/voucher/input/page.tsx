@@ -4,7 +4,8 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, codeToAccount, type AccItem } from '@/lib/accounts'
 import ReceiptOcrModal, { type ReceiptOcrResult } from '@/components/ReceiptOcrModal'
-import { getActiveBook, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
+import BookToggle from '@/components/BookToggle'
+import { getActiveBook, bookLabel, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
 
 interface VoucherRow {
   id: number
@@ -49,7 +50,13 @@ export default function VoucherInputPage() {
   const [loaded, setLoaded] = useState(false)  // ← mount 로드 완료 전엔 자동저장 금지
   // 아이사랑꿈터 장부(계정) — 3개 장부별로 전표가 분리 저장됨. 어린이집은 '' (분리 안 함)
   const [book, setBook] = useState<string | null>(null)  // null = 아직 결정 전
+  const [bookSwitchMsg, setBookSwitchMsg] = useState('')  // 장부 전환 저장 알림
   const bookRef = useRef('')
+  // 최신 rows/loaded 를 이벤트 핸들러(mount 클로저)에서 참조하기 위한 ref
+  const rowsRef = useRef<VoucherRow[]>([])
+  const loadedRef = useRef(false)
+  useEffect(() => { rowsRef.current = rows }, [rows])
+  useEffect(() => { loadedRef.current = loaded }, [loaded])
 
   // 1) 기관 유형 확인 → 초기 장부 결정 + 장부 변경 이벤트 구독
   useEffect(() => {
@@ -62,7 +69,19 @@ export default function VoucherInputPage() {
       } catch { /* ignore */ }
       if (!cancelled) setBook(itype === 'ilovechild' ? getActiveBook() : '')
     })()
-    const onBookChange = (e: Event) => setBook(((e as CustomEvent).detail as string) || '')
+    // 장부 전환 시: 편집 중이던 이전 장부를 먼저 저장하고 알림 → 새 장부 로드
+    const onBookChange = async (e: Event) => {
+      const next = ((e as CustomEvent).detail as string) || ''
+      const prev = bookRef.current
+      if (prev && prev !== next && loadedRef.current) {
+        try {
+          await persistRows(rowsRef.current)   // persistRows 는 bookRef.current(=prev) 로 저장
+          setBookSwitchMsg(`💾 ${bookLabel(prev)} 장부 저장 완료 → ${bookLabel(next)} 장부로 이동합니다`)
+          setTimeout(() => setBookSwitchMsg(''), 3500)
+        } catch { /* 저장 실패해도 이동은 진행 */ }
+      }
+      setBook(next)
+    }
     window.addEventListener(BOOK_CHANGE_EVENT, onBookChange)
     return () => { cancelled = true; window.removeEventListener(BOOK_CHANGE_EVENT, onBookChange) }
   }, [])
@@ -367,6 +386,12 @@ export default function VoucherInputPage() {
   return (
     <div className="space-y-4">
       <ReceiptOcrModal open={receiptRowId !== null} onClose={() => setReceiptRowId(null)} accountOptions={accountOptions} subAccountMap={subAccountMap} onApply={r => { if (receiptRowId !== null) applyReceiptToRow(receiptRowId, r) }} onAttach={url => { if (receiptRowId !== null) applyReceiptImageToRow(receiptRowId, url) }} />
+
+      {/* 장부(계정) 토글 + 전환 시 저장 알림 — 아이사랑꿈터 */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <BookToggle />
+        {bookSwitchMsg && <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">{bookSwitchMsg}</span>}
+      </div>
 
       {/* ═══ 모바일(폰) 전용 화면 — 카드형 + 영수증 촬영 중심 ═══ */}
       <div className="sm:hidden space-y-3">
