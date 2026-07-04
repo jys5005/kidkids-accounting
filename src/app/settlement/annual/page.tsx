@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap } from '@/lib/accounts'
+import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
 
 function fmt(n: number) { return n.toLocaleString('ko-KR') }
 
@@ -218,7 +219,7 @@ function AnnualTable({ type, data, f: fmtFn }: { type: 'income' | 'expense'; dat
   )
 }
 
-export default function SettlementAnnualPage() {
+function SettlementAnnualLegacy() {
   const now = new Date()
   const yearOpts = Array.from({ length: 5 }, (_, i) => String(now.getFullYear() - i))
   const [selectedYear, setSelectedYear] = useState(yearOpts[0])
@@ -398,4 +399,161 @@ export default function SettlementAnnualPage() {
       </div>
     </div>
   )
+}
+
+/* ══════════ 아이사랑꿈터 — coa 기반 연말결산서 (예산액 vs 결산액) ══════════ */
+interface CoaMok2 { code: string; name: string }
+interface CoaHang2 { code: string; name: string; moks?: CoaMok2[] }
+interface CoaGwan2 { gubun: string; code: string; name: string; hangs?: CoaHang2[] }
+type SettleRow = { gwanCode: string; gwanName: string; hangCode: string; hangName: string; code: string; name: string; budget: number; settled: number }
+
+function coaSettleRows(tree: CoaGwan2[], gubun: '세입' | '세출', budget: Record<string, { total?: number }[]>, settleByCode: Record<string, number>): SettleRow[] {
+  const rows: SettleRow[] = []
+  const pf = gubun === '세출' ? 'E' : ''
+  for (const g of tree || []) {
+    if (g.gubun !== gubun) continue
+    for (const h of g.hangs || []) {
+      for (const m of h.moks || []) {
+        const key = pf + m.code
+        const b = (budget[key] || []).reduce((s, it) => s + (it.total || 0), 0)
+        rows.push({ gwanCode: g.code, gwanName: g.name, hangCode: h.code, hangName: h.name, code: m.code, name: m.name, budget: b, settled: settleByCode[key] || 0 })
+      }
+    }
+  }
+  return rows
+}
+
+function SettleTable({ title, rows, tone }: { title: string; rows: SettleRow[]; tone: 'income' | 'expense' }) {
+  const f = (n: number) => n.toLocaleString('ko-KR')
+  const tBudget = rows.reduce((s, r) => s + r.budget, 0)
+  const tSettled = rows.reduce((s, r) => s + r.settled, 0)
+  const head = tone === 'income' ? 'bg-blue-50 text-blue-700' : 'bg-rose-50 text-rose-700'
+  let pg = '', ph = ''
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className={`px-4 py-2 font-bold text-sm ${head}`}>{title} <span className="text-xs font-normal text-slate-500">· 예산 {f(tBudget)} / 결산 {f(tSettled)} / 잔액 {f(tBudget - tSettled)}</span></div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[11px] border-collapse">
+          <thead>
+            <tr className="bg-slate-50 text-slate-500 font-bold">
+              <th className="px-2 py-1.5 border border-slate-200 w-[90px]">관</th>
+              <th className="px-2 py-1.5 border border-slate-200 w-[120px]">항</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-left">목</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">예산액</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">결산액</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">잔액</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-right w-[70px]">집행률</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">계정과목이 없습니다. (설정 › 회계계정관리)</td></tr>}
+            {rows.map((r, i) => {
+              const showG = r.gwanCode !== pg; if (showG) pg = r.gwanCode
+              const showH = r.hangCode !== ph; if (showH) ph = r.hangCode
+              const rem = r.budget - r.settled
+              const rate = r.budget > 0 ? Math.round(r.settled / r.budget * 100) : 0
+              return (
+                <tr key={i} className="hover:bg-slate-50">
+                  <td className="px-2 py-1.5 border border-slate-200 text-center align-top">{showG && <span className="font-bold text-slate-600">{r.gwanCode}<br /><span className="font-medium text-[10px]">{r.gwanName}</span></span>}</td>
+                  <td className="px-2 py-1.5 border border-slate-200 text-center align-top">{showH && <span className="font-semibold text-slate-600">{r.hangCode}<br /><span className="font-medium text-[10px]">{r.hangName}</span></span>}</td>
+                  <td className="px-2 py-1.5 border border-slate-200"><span className="font-bold text-slate-700">{r.code}</span> <span className="text-slate-600">{r.name}</span></td>
+                  <td className="px-2 py-1.5 border border-slate-200 text-right">{r.budget ? f(r.budget) : ''}</td>
+                  <td className="px-2 py-1.5 border border-slate-200 text-right font-bold text-slate-800">{r.settled ? f(r.settled) : ''}</td>
+                  <td className={`px-2 py-1.5 border border-slate-200 text-right ${rem < 0 ? 'text-rose-600' : 'text-slate-600'}`}>{r.budget || r.settled ? f(rem) : ''}</td>
+                  <td className={`px-2 py-1.5 border border-slate-200 text-right ${rate > 100 ? 'text-rose-600' : 'text-blue-600'}`}>{r.budget ? `${rate}%` : ''}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="bg-yellow-50 font-bold text-slate-700">
+              <td colSpan={3} className="px-2 py-2 border border-slate-200 text-right">합계</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{f(tBudget)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right text-blue-700">{f(tSettled)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{f(tBudget - tSettled)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{tBudget > 0 ? `${Math.round(tSettled / tBudget * 100)}%` : ''}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function SettlementAnnualCoa() {
+  const [book, setBook] = useState('')
+  const [year, setYear] = useState('2026')
+  const [tree, setTree] = useState<CoaGwan2[]>([])
+  const [budget, setBudget] = useState<Record<string, { total?: number }[]>>({})
+  const [vouchers, setVouchers] = useState<{ type?: string; amount?: number; accountCode?: string }[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setBook(getActiveBook())
+    const onCh = (e: Event) => setBook(((e as CustomEvent).detail as string) || '')
+    window.addEventListener(BOOK_CHANGE_EVENT, onCh)
+    return () => window.removeEventListener(BOOK_CHANGE_EVENT, onCh)
+  }, [])
+
+  useEffect(() => {
+    if (!book) return
+    let alive = true
+    setLoading(true)
+    Promise.all([
+      fetch(`/api/coa?book=${encodeURIComponent(book)}&year=${year}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/budget?book=${encodeURIComponent(book)}&year=${year}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/voucher/list?book=${encodeURIComponent(book)}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({})),
+    ]).then(([c, b, v]) => {
+      if (!alive) return
+      setTree(Array.isArray(c?.list) ? c.list : [])
+      const bm = (Array.isArray(b?.list) && b.list[0] && (b.list[0] as { basisByMok?: Record<string, { total?: number }[]> }).basisByMok) || {}
+      setBudget(bm)
+      setVouchers(Array.isArray(v?.list) ? v.list : [])
+    }).finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [book, year])
+
+  const settleByCode = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const vc of vouchers) {
+      if (!vc.accountCode) continue
+      const k = (vc.type === '수입' ? '' : 'E') + vc.accountCode
+      m[k] = (m[k] || 0) + (Number(vc.amount) || 0)
+    }
+    return m
+  }, [vouchers])
+
+  const incomeRows = useMemo(() => coaSettleRows(tree, '세입', budget, settleByCode), [tree, budget, settleByCode])
+  const expenseRows = useMemo(() => coaSettleRows(tree, '세출', budget, settleByCode), [tree, budget, settleByCode])
+  const incTot = incomeRows.reduce((s, r) => s + r.settled, 0)
+  const expTot = expenseRows.reduce((s, r) => s + r.settled, 0)
+
+  return (
+    <div className="p-3 space-y-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-bold text-slate-700">회계연도</span>
+        <select value={year} onChange={e => setYear(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+          <option value="2026">2026년</option>
+          <option value="2025">2025년</option>
+          <option value="2024">2024년</option>
+        </select>
+        <span className="ml-2 text-[11px] text-slate-400">· 장부(<b className="text-slate-600">{bookLabel(book)}</b>) · 결산액=전표입력 집계 · 예산액=예산작성 {loading && <span className="text-slate-400">· 불러오는 중…</span>}</span>
+        <span className="ml-auto text-xs text-slate-500">세입결산 <b className="text-blue-700">{incTot.toLocaleString('ko-KR')}</b> · 세출결산 <b className="text-rose-600">{expTot.toLocaleString('ko-KR')}</b> · 차액 <b className="text-emerald-700">{(incTot - expTot).toLocaleString('ko-KR')}</b></span>
+      </div>
+      <SettleTable title="세입 결산" rows={incomeRows} tone="income" />
+      <SettleTable title="세출 결산" rows={expenseRows} tone="expense" />
+    </div>
+  )
+}
+
+export default function SettlementAnnualPage() {
+  const [itype, setItype] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json())
+      .then(d => setItype((d?.institutionType || d?.profile?.institutionType || 'childcare') as string))
+      .catch(() => setItype('childcare'))
+  }, [])
+  if (itype === null) return null
+  if (itype === 'ilovechild') return <SettlementAnnualCoa />
+  return <SettlementAnnualLegacy />
 }
