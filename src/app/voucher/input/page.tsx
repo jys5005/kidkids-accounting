@@ -1,8 +1,15 @@
 'use client'
 
-import React, { useState, useRef, useCallback, useEffect } from 'react'
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import * as XLSX from 'xlsx'
-import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, codeToAccount, type AccItem } from '@/lib/accounts'
+import {
+  incomeAccounts as DEF_INCOME_ACCOUNTS,
+  expenseAccounts as DEF_EXPENSE_ACCOUNTS,
+  accountCodeMap as DEF_ACCOUNT_CODE_MAP,
+  subAccountCodeMap as DEF_SUB_ACCOUNT_CODE_MAP,
+  codeToAccount as DEF_CODE_TO_ACCOUNT,
+  type AccItem,
+} from '@/lib/accounts'
 import ReceiptOcrModal, { type ReceiptOcrResult } from '@/components/ReceiptOcrModal'
 import BookDropdown from '@/components/BookDropdown'
 import { getActiveBook, bookLabel, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
@@ -27,8 +34,9 @@ interface VoucherRow {
 
 const sampleData: VoucherRow[] = []
 
-const accountOptions = ['보육료', '보조금', '인건비', '4대보험', '운영비', '기타수입', '전입금', '차입금']
-const subAccountMap: Record<string, string[]> = {
+// 어린이집 기본 계정 옵션 (아이사랑꿈터는 coa 목으로 대체됨)
+const DEF_ACCOUNT_OPTIONS = ['보육료', '보조금', '인건비', '4대보험', '운영비', '기타수입', '전입금', '차입금']
+const DEF_SUB_ACCOUNT_MAP: Record<string, string[]> = {
   '보육료': ['정부지원 보육료', '부모부담 보육료'],
   '보조금': ['인건비 보조금', '기관보육료', '연장보육료', '그 밖의 지원금'],
   '인건비': ['기본급', '제수당', '일용잡급', '퇴직급여'],
@@ -39,7 +47,50 @@ const subAccountMap: Record<string, string[]> = {
   '차입금': ['단기차입금', '장기차입금'],
 }
 
-// 계정과목 데이터: @/lib/accounts.ts 에서 import
+// ── 계정과목 모델: 어린이집(기본) vs 아이사랑꿈터(coa 목) ──
+type AccountModel = {
+  incomeAccounts: AccItem[]; expenseAccounts: AccItem[]
+  accountOptions: string[]; subAccountMap: Record<string, string[]>
+  accountCodeMap: Record<string, string>; subAccountCodeMap: Record<string, string>
+  codeToAccount: Record<string, { account: string; subAccount: string }>
+}
+const DEFAULT_MODEL: AccountModel = {
+  incomeAccounts: DEF_INCOME_ACCOUNTS, expenseAccounts: DEF_EXPENSE_ACCOUNTS,
+  accountOptions: DEF_ACCOUNT_OPTIONS, subAccountMap: DEF_SUB_ACCOUNT_MAP,
+  accountCodeMap: DEF_ACCOUNT_CODE_MAP, subAccountCodeMap: DEF_SUB_ACCOUNT_CODE_MAP,
+  codeToAccount: DEF_CODE_TO_ACCOUNT,
+}
+interface CoaSub { code: string; name: string }
+interface CoaMok { code: string; name: string; subs?: CoaSub[] }
+interface CoaHang { code: string; name: string; moks?: CoaMok[] }
+interface CoaGwan { gubun: string; code: string; name: string; hangs?: CoaHang[] }
+/** 회계계정관리(coa) 트리 → 전표 계정 모델 (세입→수입계정, 세출→지출계정, 목=계정/세목=세목). null이면 어린이집 기본. */
+function buildAccountModel(tree: CoaGwan[] | null): AccountModel {
+  if (!tree) return DEFAULT_MODEL
+  const incomeAccounts: AccItem[] = []
+  const expenseAccounts: AccItem[] = []
+  const accountOptions: string[] = []
+  const subAccountMap: Record<string, string[]> = {}
+  const accountCodeMap: Record<string, string> = {}
+  const subAccountCodeMap: Record<string, string> = {}
+  const codeToAccount: Record<string, { account: string; subAccount: string }> = {}
+  for (const g of tree) {
+    const arr = g.gubun === '세입' ? incomeAccounts : expenseAccounts
+    for (const h of g.hangs || []) for (const m of h.moks || []) {
+      arr.push({ value: m.name, label: m.name })
+      if (!accountOptions.includes(m.name)) accountOptions.push(m.name)
+      accountCodeMap[m.name] = m.code
+      codeToAccount[m.code] = { account: m.name, subAccount: '' }
+      for (const s of m.subs || []) {
+        arr.push({ value: `세목:${s.name}`, label: s.name, isSub: true })
+        ;(subAccountMap[m.name] ||= []).push(s.name)
+        subAccountCodeMap[s.name] = s.code
+        codeToAccount[s.code] = { account: m.name, subAccount: s.name }
+      }
+    }
+  }
+  return { incomeAccounts, expenseAccounts, accountOptions, subAccountMap, accountCodeMap, subAccountCodeMap, codeToAccount }
+}
 
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 
@@ -144,6 +195,21 @@ export default function VoucherInputPage() {
   const [searchKey, setSearchKey] = useState<'적요' | '계정' | '결제방식' | '전표번호'>('적요')
   const [searchText, setSearchText] = useState('')
   const [filterYearMonth, setFilterYearMonth] = useState('2026-03')
+
+  // 아이사랑꿈터: 활성 장부의 coa 계정과목 로드 → 전표 계정 드롭다운/코드에 사용 (어린이집은 기본 accounts.ts)
+  const [coaTree, setCoaTree] = useState<CoaGwan[] | null>(null)
+  const coaYear = filterYearMonth.slice(0, 4)
+  useEffect(() => {
+    if (!book) { setCoaTree(null); return }
+    let alive = true
+    fetch(`/api/coa?book=${encodeURIComponent(book)}&year=${coaYear}`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { if (alive) setCoaTree(Array.isArray(d?.list) ? (d.list as CoaGwan[]) : []) })
+      .catch(() => { if (alive) setCoaTree(null) })
+    return () => { alive = false }
+  }, [book, coaYear])
+  const acctModel = useMemo(() => buildAccountModel(book && coaTree ? coaTree : null), [book, coaTree])
+  const { incomeAccounts, expenseAccounts, accountOptions, subAccountMap, accountCodeMap, subAccountCodeMap, codeToAccount } = acctModel
   const [filterDayFrom, setFilterDayFrom] = useState(0) // 0 = 전체
   const [filterDayTo, setFilterDayTo] = useState(0)
   const [sortMode, setSortMode] = useState<'' | '수입부우선' | '전표번호' | '전체'>('')
@@ -314,8 +380,8 @@ export default function VoucherInputPage() {
       id: nextId(),
       date: new Date().toISOString().slice(0, 10),
       type: '지출',
-      account: '운영비',
-      subAccount: '소모품비',
+      account: book ? '' : '운영비',
+      subAccount: book ? '' : '소모품비',
       summary: '',
       amount: 0,
       counterpart: '',
@@ -371,7 +437,7 @@ export default function VoucherInputPage() {
     const day = nowYmd.slice(0, 7) === filterYearMonth ? nowYmd.slice(8, 10) : '01'
     const newRow: VoucherRow = {
       id: nextId(), date: `${filterYearMonth}-${day}`, type: '지출',
-      account: '운영비', subAccount: '소모품비', summary: '', amount: 0,
+      account: book ? '' : '운영비', subAccount: book ? '' : '소모품비', summary: '', amount: 0,
       counterpart: '', note: '', approved: false,
     }
     setRows(prev => [...prev, newRow])
@@ -1049,7 +1115,7 @@ export default function VoucherInputPage() {
       </div>
 
       {/* 간편등록 모드 */}
-      {inputMode === '간편등록' && <SimpleInputPanel rows={rows} setRows={setRows} filterYearMonth={filterYearMonth} incomeAccounts={incomeAccounts} expenseAccounts={expenseAccounts} accountCodeMap={accountCodeMap} subAccountCodeMap={subAccountCodeMap} inputMethod={filterInputMethod} excelParsed={excelParsed} setExcelParsed={setExcelParsed} excelFileName={excelFileName} setExcelFileName={setExcelFileName} />}
+      {inputMode === '간편등록' && <SimpleInputPanel rows={rows} setRows={setRows} filterYearMonth={filterYearMonth} incomeAccounts={incomeAccounts} expenseAccounts={expenseAccounts} accountCodeMap={accountCodeMap} subAccountCodeMap={subAccountCodeMap} codeToAccount={codeToAccount} inputMethod={filterInputMethod} excelParsed={excelParsed} setExcelParsed={setExcelParsed} excelFileName={excelFileName} setExcelFileName={setExcelFileName} />}
 
       {/* 건별등록은 일괄수정과 동일한 테이블 사용 */}
 
@@ -2139,6 +2205,7 @@ interface InputPanelProps {
   expenseAccounts: AccItem[]
   accountCodeMap: Record<string, string>
   subAccountCodeMap: Record<string, string>
+  codeToAccount?: Record<string, { account: string; subAccount: string }>
   inputMethod?: string
   excelParsed?: { day: string; type: '수입' | '지출'; summary: string; incomeAmount: string; expenseAmount: string; account: string; subAccount: string; accountCode: string; payment: string }[]
   setExcelParsed?: React.Dispatch<React.SetStateAction<{ day: string; type: '수입' | '지출'; summary: string; incomeAmount: string; expenseAmount: string; account: string; subAccount: string; accountCode: string; payment: string }[]>>
@@ -2162,7 +2229,7 @@ interface SimpleRow {
   saved: boolean
 }
 
-function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, inputMethod, excelParsed = [], setExcelParsed, excelFileName = '', setExcelFileName }: InputPanelProps) {
+function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, codeToAccount = {}, inputMethod, excelParsed = [], setExcelParsed, excelFileName = '', setExcelFileName }: InputPanelProps) {
   const [simpleRows, setSimpleRows] = useState<SimpleRow[]>([
     { id: 1, day: '', type: '지출', summary: '', incomeAmount: '', expenseAmount: '', account: '', subAccount: '', accountCode: '', payment: '', rowInputMethod: '수기', saved: false },
     { id: 2, day: '', type: '지출', summary: '', incomeAmount: '', expenseAmount: '', account: '', subAccount: '', accountCode: '', payment: '', rowInputMethod: '수기', saved: false },
