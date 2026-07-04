@@ -106,15 +106,20 @@ export default function CoaSettingsPage() {
   const delMok = (gi: number, hi: number, mi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.filter((_, k) => k !== mi) }) }))
   const delSub = (gi: number, hi: number, mi: number, si: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: m.subs.filter((_, l) => l !== si) }) }) }))
 
+  // 저장 — 24·25·26년 3개년에 한꺼번에 (계정과목은 연도 무관이라 동일 적용)
+  const SAVE_YEARS = ['2024', '2025', '2026']
   const save = async () => {
     setLoading(true); setMsg('')
     try {
-      const j = await fetch('/api/coa', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ book: tab, year, list: tree }),
-      }).then(r => r.json())
-      setMsg(j.success ? '✅ 저장되었습니다 (세입·세출 모두)' : `❌ 저장 실패: ${j.error || ''}`)
-      setTimeout(() => setMsg(''), 3000)
+      const results = await Promise.all(SAVE_YEARS.map(y =>
+        fetch('/api/coa', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ book: tab, year: y, list: tree }),
+        }).then(r => r.json()).catch(() => ({ success: false }))
+      ))
+      const ok = results.every(r => r.success)
+      setMsg(ok ? '✅ 저장되었습니다 (24·25·26년 · 세입·세출 모두)' : '⚠ 일부 연도 저장 실패')
+      setTimeout(() => setMsg(''), 3500)
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
 
@@ -199,7 +204,7 @@ export default function CoaSettingsPage() {
           <select value={year} onChange={e => setYear(e.target.value)} className="text-sm border rounded-lg px-2 py-1.5 bg-white">
             {YEARS.map(y => <option key={y} value={y}>{y}년</option>)}
           </select>
-          <button onClick={save} disabled={loading} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-1.5 disabled:opacity-50">💾 저장</button>
+          <button onClick={save} disabled={loading} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-1.5 disabled:opacity-50">💾 저장 (24·25·26)</button>
         </div>
       </div>
 
