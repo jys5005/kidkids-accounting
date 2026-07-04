@@ -787,17 +787,45 @@ export default function BudgetCreatePage() {
                   <div className="w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex items-center justify-end">
                     <span className="text-[11px] font-bold text-slate-800">{mokTotal > 0 ? fmt(mokTotal) : ''}</span>
                   </div>
-                  {/* 세부항목 — 클릭하면 산출기초 입력 모달 (걸음마식) */}
-                  <div
-                    className={`flex-1 border-t border-slate-200 px-3 py-2 flex items-center gap-2 ${locked ? 'bg-slate-50/50' : 'cursor-pointer hover:bg-teal-50/50'}`}
-                    onClick={() => openBasisModal(row.code)}
-                  >
-                    {(() => {
-                      const filled = items.filter(it => it.name || it.total > 0)
-                      if (filled.length === 0) return <span className="text-[11px] text-slate-400">클릭하여 산출기초 입력</span>
-                      return <span className="text-[11px] text-slate-600 truncate">{filled.map(it => `${it.name || '항목'} ${fmt(it.total)}`).join('  ·  ')}</span>
-                    })()}
-                    {!locked && <span className="ml-auto flex-shrink-0 text-[10px] font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded">✏ 산출기초</span>}
+                  {/* 세부항목 — 산출기초 전체 인라인 노출 (걸음마식), 클릭하면 입력 모달 */}
+                  <div className={`flex-1 border-t border-slate-200 flex items-stretch ${isSub ? 'bg-slate-50/30' : ''}`}>
+                    <div
+                      className={`flex-1 min-w-0 px-3 py-1.5 flex flex-col justify-center gap-0.5 ${locked ? 'bg-slate-50/50' : 'cursor-pointer hover:bg-teal-50/40'}`}
+                      onClick={() => openBasisModal(row.code)}
+                    >
+                      {(() => {
+                        const filled = items.filter(it => it.name || it.total > 0)
+                        if (filled.length === 0) return <span className="text-[11px] text-slate-400">클릭하여 산출기초 입력</span>
+                        return filled.map((it, k) => {
+                          const mults: string[] = []
+                          if (it.qty) mults.push(`${fmt(it.qty)}${it.qtyUnit || '명'}`)
+                          if (it.months) mults.push(`${fmt(it.months)}${it.monthsUnit || '회'}`)
+                          for (const e of it.extras || []) {
+                            if (!e.num) continue
+                            if (e.num === 1 && (e.unit === '식' || !e.unit)) continue
+                            mults.push(`${fmt(e.num)}${e.unit || ''}`)
+                          }
+                          const hasFormula = it.unitPrice > 0 && mults.length > 0
+                          return (
+                            <div key={k} className="flex items-center gap-2 text-[11px] leading-tight">
+                              <span className="text-slate-700 font-medium w-[130px] flex-shrink-0 truncate">{it.name || '(무제목)'}</span>
+                              {hasFormula
+                                ? <span className="text-slate-500 flex-1 truncate">{fmt(it.unitPrice)}원{mults.map(m => ` × ${m}`).join('')}</span>
+                                : <span className="flex-1" />}
+                              <span className="text-slate-400">=</span>
+                              <span className="font-bold text-slate-800 whitespace-nowrap w-[100px] text-right">{it.total ? fmt(it.total) : ''}</span>
+                              <span className="text-[10px] text-slate-400">원</span>
+                            </div>
+                          )
+                        })
+                      })()}
+                    </div>
+                    {!locked && (
+                      <button
+                        onClick={() => openBasisModal(row.code)}
+                        className="flex-shrink-0 self-center mr-2 my-1.5 text-[10px] font-bold text-teal-700 bg-teal-100 px-2 py-1 rounded hover:bg-teal-200 whitespace-nowrap"
+                      >✏ 산출기초</button>
+                    )}
                   </div>
                 </div>
               )
