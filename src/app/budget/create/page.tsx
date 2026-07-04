@@ -761,16 +761,29 @@ export default function BudgetCreatePage() {
               return (
                 <div key={row.code} className={`flex group/row hover:bg-blue-50/30 transition-colors ${isSub ? 'bg-slate-50/30' : ''}`}>
                   {/* 관 */}
-                  <div className={`w-[80px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center ${showGwan ? 'border-t border-slate-200' : ''}`}>
-                    {showGwan && gwanRow && <span className="text-[11px] font-bold text-slate-700">{gwanRow.code.replace('E', '')}<br /><span className="text-[10px] font-medium">{gwanRow.name}</span></span>}
+                  <div className={`w-[80px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex flex-col items-center justify-center gap-0.5 ${showGwan ? 'border-t border-slate-200' : ''}`}>
+                    {showGwan && gwanRow && (
+                      <>
+                        <div className="flex items-center gap-1"><span className="text-[9px] font-bold text-violet-700 bg-violet-100 rounded px-1 py-px">관</span><span className="text-[11px] font-bold text-slate-700">{gwanRow.code.replace('E', '')}</span></div>
+                        <span className="text-[10px] font-medium text-slate-600 text-center leading-tight">{gwanRow.name}</span>
+                      </>
+                    )}
                   </div>
                   {/* 항 */}
-                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 text-center ${showHang ? 'border-t border-slate-200' : ''}`}>
-                    {showHang && hangRow && <span className="text-[11px] font-semibold text-slate-600">{hangRow.code.replace('E', '')}<br /><span className="text-[10px] font-medium">{hangRow.name}</span></span>}
+                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex flex-col items-center justify-center gap-0.5 ${showHang ? 'border-t border-slate-200' : ''}`}>
+                    {showHang && hangRow && (
+                      <>
+                        <div className="flex items-center gap-1"><span className="text-[9px] font-bold text-sky-700 bg-sky-100 rounded px-1 py-px">항</span><span className="text-[11px] font-semibold text-slate-600">{hangRow.code.replace('E', '')}</span></div>
+                        <span className="text-[10px] font-medium text-slate-600 text-center leading-tight">{hangRow.name}</span>
+                      </>
+                    )}
                   </div>
                   {/* 목 */}
-                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex flex-col justify-center ${isSub ? 'pl-4' : ''}`}>
-                    <span className={`text-[11px] font-bold ${isSub ? 'text-slate-400' : 'text-slate-700'}`}>{row.code.replace('E', '')}</span>
+                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex flex-col justify-center gap-0.5 ${isSub ? 'pl-4' : ''}`}>
+                    <div className="flex items-center gap-1">
+                      <span className={`text-[9px] font-bold rounded px-1 py-px ${isSub ? 'text-slate-400 bg-slate-100' : 'text-emerald-700 bg-emerald-100'}`}>{isSub ? '세' : '목'}</span>
+                      <span className={`text-[11px] font-bold ${isSub ? 'text-slate-400' : 'text-slate-700'}`}>{row.code.replace('E', '')}</span>
+                    </div>
                     <span className={`text-[10px] ${isSub ? 'text-slate-400' : 'text-slate-600'}`}>{row.name}</span>
                   </div>
                   {/* 전년도결산액 / 결산액 + 예산대비차액 */}
