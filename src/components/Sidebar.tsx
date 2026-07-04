@@ -223,6 +223,11 @@ export const ILOVECHILD_ONLY_HREFS = new Set<string>([
 export const ILOVECHILD_HIDDEN_HREFS = new Set<string>([
   '/monthly-report',          // 월회계보고 (어린이집 서식)
   '/monthly-report/analysis', // 재무회계분석자료
+  // 전표관리는 전표입력(일괄수정)만 사용 — 나머지 숨김
+  '/voucher/deleted',         // 삭제전표
+  '/voucher/balance',         // 잔액비교
+  '/voucher/transactions',    // 거래내역
+  '/voucher/bank',            // 계좌내역
 ])
 
 /** 기관 유형에 맞는 메뉴만 반환. CIS 미사용 유형이면 CIS/검증 제거, 아이사랑꿈터 전용은 그 외 유형에서 제거. */

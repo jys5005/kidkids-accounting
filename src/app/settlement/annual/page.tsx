@@ -423,40 +423,56 @@ function coaSettleRows(tree: CoaGwan2[], gubun: '세입' | '세출', budget: Rec
   return rows
 }
 
+// 연속 관/항 그룹의 rowSpan 계산 (셀병합용)
+function withSpans<T extends { gwanCode: string; hangCode: string }>(rows: T[]) {
+  return rows.map((r, i) => {
+    const firstG = i === 0 || rows[i - 1].gwanCode !== r.gwanCode
+    const firstH = firstG || rows[i - 1].hangCode !== r.hangCode
+    let gSpan = 1, hSpan = 1
+    if (firstG) { let j = i + 1; while (j < rows.length && rows[j].gwanCode === r.gwanCode) j++; gSpan = j - i }
+    if (firstH) { let j = i + 1; while (j < rows.length && rows[j].gwanCode === r.gwanCode && rows[j].hangCode === r.hangCode) j++; hSpan = j - i }
+    return { r, firstG, firstH, gSpan, hSpan }
+  })
+}
+const GWAN_BADGE = 'text-[9px] font-bold text-violet-700 bg-violet-100 rounded px-1 py-px'
+const HANG_BADGE = 'text-[9px] font-bold text-sky-700 bg-sky-100 rounded px-1 py-px'
+const MOK_BADGE = 'text-[9px] font-bold text-emerald-700 bg-emerald-100 rounded px-1 py-px'
+
 function SettleTable({ title, rows, tone }: { title: string; rows: SettleRow[]; tone: 'income' | 'expense' }) {
   const f = (n: number) => n.toLocaleString('ko-KR')
   const tBudget = rows.reduce((s, r) => s + r.budget, 0)
   const tSettled = rows.reduce((s, r) => s + r.settled, 0)
   const head = tone === 'income' ? 'bg-blue-50 text-blue-700' : 'bg-rose-50 text-rose-700'
-  let pg = '', ph = ''
+  const spans = withSpans(rows)
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className={`px-4 py-2 font-bold text-sm ${head}`}>{title} <span className="text-xs font-normal text-slate-500">· 예산 {f(tBudget)} / 결산 {f(tSettled)} / 잔액 {f(tBudget - tSettled)}</span></div>
       <div className="overflow-x-auto">
         <table className="w-full text-[11px] border-collapse">
           <thead>
+            <tr className="bg-slate-100 text-slate-600 font-bold">
+              <th colSpan={3} className="px-2 py-1.5 border border-slate-200">계정과목</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">예산액</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">결산액</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">잔액</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[70px]">집행률</th>
+            </tr>
             <tr className="bg-slate-50 text-slate-500 font-bold">
               <th className="px-2 py-1.5 border border-slate-200 w-[90px]">관</th>
               <th className="px-2 py-1.5 border border-slate-200 w-[120px]">항</th>
               <th className="px-2 py-1.5 border border-slate-200 text-left">목</th>
-              <th className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">예산액</th>
-              <th className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">결산액</th>
-              <th className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">잔액</th>
-              <th className="px-2 py-1.5 border border-slate-200 text-right w-[70px]">집행률</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">계정과목이 없습니다. (설정 › 회계계정관리)</td></tr>}
-            {rows.map((r, i) => {
-              const showG = r.gwanCode !== pg; if (showG) pg = r.gwanCode
-              const showH = r.hangCode !== ph; if (showH) ph = r.hangCode
+            {spans.map(({ r, firstG, firstH, gSpan, hSpan }, i) => {
               const rem = r.budget - r.settled
               const rate = r.budget > 0 ? Math.round(r.settled / r.budget * 100) : 0
               return (
-                <tr key={i} className="hover:bg-slate-50">
-                  <td className="px-2 py-1.5 border border-slate-200 text-center align-top">{showG && <span className="font-bold text-slate-600">{r.gwanCode}<br /><span className="font-medium text-[10px]">{r.gwanName}</span></span>}</td>
-                  <td className="px-2 py-1.5 border border-slate-200 text-center align-top">{showH && <span className="font-semibold text-slate-600">{r.hangCode}<br /><span className="font-medium text-[10px]">{r.hangName}</span></span>}</td>
-                  <td className="px-2 py-1.5 border border-slate-200"><span className="font-bold text-slate-700">{r.code}</span> <span className="text-slate-600">{r.name}</span></td>
+                <tr key={i} className="hover:bg-slate-50/60">
+                  {firstG && <td rowSpan={gSpan} className="px-1 py-1.5 border border-slate-200 text-center align-middle bg-violet-50/40"><div className="flex flex-col items-center gap-0.5"><span className={GWAN_BADGE}>관</span><span className="font-bold text-slate-700">{r.gwanCode}</span><span className="text-[10px] text-slate-600 leading-tight">{r.gwanName}</span></div></td>}
+                  {firstH && <td rowSpan={hSpan} className="px-1 py-1.5 border border-slate-200 text-center align-middle bg-sky-50/40"><div className="flex flex-col items-center gap-0.5"><span className={HANG_BADGE}>항</span><span className="font-semibold text-slate-600">{r.hangCode}</span><span className="text-[10px] text-slate-600 leading-tight">{r.hangName}</span></div></td>}
+                  <td className="px-2 py-1.5 border border-slate-200"><div className="flex items-center gap-1"><span className={MOK_BADGE}>목</span><span className="font-bold text-slate-700">{r.code}</span><span className="text-slate-600">{r.name}</span></div></td>
                   <td className="px-2 py-1.5 border border-slate-200 text-right">{r.budget ? f(r.budget) : ''}</td>
                   <td className="px-2 py-1.5 border border-slate-200 text-right font-bold text-slate-800">{r.settled ? f(r.settled) : ''}</td>
                   <td className={`px-2 py-1.5 border border-slate-200 text-right ${rem < 0 ? 'text-rose-600' : 'text-slate-600'}`}>{r.budget || r.settled ? f(rem) : ''}</td>
