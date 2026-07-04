@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import DraggableModal from '@/components/DraggableModal'
-import BookToggle from '@/components/BookToggle'
 import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
 
 interface BudgetRow {
@@ -456,12 +455,11 @@ export default function BudgetCreatePage() {
         {budgetStatus === '작성완료' && <span className="text-[10px] font-bold text-red-500">🔒 잠금</span>}
       </div>
 
-      {/* 아이사랑꿈터 장부 토글 (보육정보센터/보조금/이용료) */}
+      {/* 아이사랑꿈터 안내 (장부 토글은 상단 헤더) */}
       {isIlovechild && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <BookToggle />
-          {loadingCoa && <span className="text-[11px] text-slate-400">계정 불러오는 중…</span>}
-          <span className="text-[11px] text-slate-400">· 계정과목은 <b className="text-slate-600">설정 › 회계계정관리</b>에서 관리됩니다</span>
+        <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400">
+          {loadingCoa && <span>계정 불러오는 중…</span>}
+          <span>· 장부는 상단 <b className="text-slate-600">장부</b> 토글에서, 계정과목은 <b className="text-slate-600">설정 › 회계계정관리</b>에서 관리됩니다</span>
         </div>
       )}
 

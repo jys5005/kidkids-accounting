@@ -298,10 +298,16 @@ export default function DataMigrationPage() {
       .catch(() => {})
   }, [])
   const autoSelectedRef = useRef(false)
-  // 화면 열 때: 이 업체가 저장해둔 출발지가 있으면 그 출발지로 자동 선택 (PC↔모바일 동기화 체감)
+  // 화면 열 때: (1) 마지막 선택 출발지(localStorage) 우선 복원 → (2) 없으면 저장된 인증정보 있는 출발지 자동선택
   useEffect(() => {
     if (autoSelectedRef.current) return
     autoSelectedRef.current = true
+    let restored = false
+    try {
+      const last = localStorage.getItem('data-migration:source')
+      if (last && SOURCE_OPTIONS.some(o => o.value === last)) { setSource(last as SourceType); restored = true }
+    } catch {}
+    if (restored) return
     fetch('/api/migration-auth?list=1')
       .then(res => res.json())
       .then(json => {
@@ -312,6 +318,13 @@ export default function DataMigrationPage() {
       })
       .catch(() => {})
   }, [])
+
+  // 선택한 출발지 기억 (다음에 열 때 복원) — 첫 렌더(초기값)는 저장 건너뜀
+  const sourcePersistRef = useRef(false)
+  useEffect(() => {
+    if (!sourcePersistRef.current) { sourcePersistRef.current = true; return }
+    try { localStorage.setItem('data-migration:source', source) } catch {}
+  }, [source])
   const [sourceId, setSourceId] = useState('')
   const [sourcePw, setSourcePw] = useState('')
   const [yearMonth, setYearMonth] = useState(() => {
@@ -480,6 +493,8 @@ export default function DataMigrationPage() {
   })()
 
   const currentSource = SOURCE_OPTIONS.find((s) => s.value === source)!
+  // 목적지 명칭: 아이사랑꿈터는 통합e 회계로 이관, 그 외는 수전자장부
+  const destName = isIlovechild ? '통합e 회계' : '수전자장부'
 
   // 출발지에서 데이터 가져오기
   const handleFetch = async () => {
@@ -855,7 +870,7 @@ export default function DataMigrationPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-800">데이터 이관</h1>
         <p className="text-sm text-slate-500 mt-1">
-          {currentSource.label}({currentSource.url}) → 수전자장부(sunote.co.kr) 현금출납부 이관
+          {currentSource.label}({currentSource.url}) → {destName}{isIlovechild ? '' : '(sunote.co.kr)'} 현금출납부 이관
         </p>
       </div>
 
@@ -1150,8 +1165,8 @@ export default function DataMigrationPage() {
               <span className="text-emerald-600 font-bold text-sm">2</span>
             </div>
             <div className="flex-1">
-              <h2 className="font-semibold text-slate-800">수전자장부 (목적지)</h2>
-              <p className="text-xs text-slate-400">sunote.co.kr</p>
+              <h2 className="font-semibold text-slate-800">{destName} (목적지)</h2>
+              <p className="text-xs text-slate-400">{isIlovechild ? '통합e 회계앱' : 'sunote.co.kr'}</p>
             </div>
             <button
               onClick={() => {
@@ -1174,7 +1189,7 @@ export default function DataMigrationPage() {
                 value={sunoteId}
                 onChange={(e) => setSunoteId(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                placeholder="수전자장부 아이디"
+                placeholder={`${destName} 아이디`}
               />
             </div>
             <div>
