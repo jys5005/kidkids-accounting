@@ -51,6 +51,18 @@ export default function CoaSettingsPage() {
   const [showImport, setShowImport] = useState(false)
   const [importCounts, setImportCounts] = useState<Record<string, number>>({})
   const [importLoading, setImportLoading] = useState(false)
+  const [allowed, setAllowed] = useState<boolean | null>(null)  // 아이사랑꿈터 전용 가드
+
+  // 접근 가드 — 아이사랑꿈터(ilovechild) 유형만 허용
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => {
+        const t = (d?.institutionType || d?.profile?.institutionType || 'childcare') as string
+        setAllowed(t === 'ilovechild')
+      })
+      .catch(() => setAllowed(false))
+  }, [])
 
   const load = useCallback(async (bk: string, yr: string) => {
     setLoading(true); setMsg('')
@@ -129,6 +141,16 @@ export default function CoaSettingsPage() {
   const addBtn = 'text-[11px] font-bold px-2 py-0.5 rounded border'
   const delBtn = 'text-[11px] text-rose-500 hover:underline shrink-0'
   const gubunCount = tree.filter(g => g.gubun === gubun).length
+
+  if (allowed === null) return <div className="p-10 text-center text-sm text-slate-400">확인 중…</div>
+  if (allowed === false) return (
+    <div className="p-16 flex flex-col items-center gap-3 text-center">
+      <div className="text-4xl">🔒</div>
+      <div className="text-lg font-bold text-slate-700">아이사랑꿈터 전용 페이지</div>
+      <p className="text-sm text-slate-500">회계계정관리는 아이사랑꿈터 계정에서만 사용할 수 있습니다.</p>
+      <a href="/accounting" className="text-sm font-bold text-blue-600 hover:underline">← 회계현황으로</a>
+    </div>
+  )
 
   return (
     <div className="p-5 space-y-4">
