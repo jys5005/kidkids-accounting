@@ -183,6 +183,7 @@ export default function CoaSettingsPage() {
             </button>
           ))}
         </div>
+        <button onClick={addGwan} className="text-xs font-bold text-purple-600 bg-purple-50 border border-purple-200 rounded-lg px-3 py-1.5 hover:bg-purple-100">+ 관 추가</button>
         {msg && <span className="text-xs font-semibold text-slate-600">{msg}</span>}
         <div className="ml-auto flex items-center gap-2">
           <button onClick={openImport} disabled={loading} className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">📥 이전 계정 불러오기</button>
