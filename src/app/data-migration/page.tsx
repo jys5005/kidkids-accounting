@@ -290,6 +290,13 @@ function fmtAmt(n: number): string {
 export default function DataMigrationPage() {
   // 출발지
   const [source, setSource] = useState<SourceType>('by24')
+  // 걸음마회계 출발지는 아이사랑꿈터 유형만 노출 (어린이집은 기존 목록 그대로)
+  const [isIlovechild, setIsIlovechild] = useState(false)
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json())
+      .then(d => setIsIlovechild(((d?.institutionType || d?.profile?.institutionType || 'childcare') as string) === 'ilovechild'))
+      .catch(() => {})
+  }, [])
   const autoSelectedRef = useRef(false)
   // 화면 열 때: 이 업체가 저장해둔 출발지가 있으면 그 출발지로 자동 선택 (PC↔모바일 동기화 체감)
   useEffect(() => {
@@ -874,7 +881,7 @@ export default function DataMigrationPage() {
                   }}
                   className="px-2 py-1 border border-slate-200 rounded-lg text-sm font-medium text-blue-700 bg-blue-50"
                 >
-                  {SOURCE_OPTIONS.map((o) => (
+                  {SOURCE_OPTIONS.filter((o) => o.value !== 'walk' || isIlovechild).map((o) => (
                     <option key={o.value} value={o.value}>{o.label}{o.features.length > 0 ? '  (가능)' : ''}</option>
                   ))}
                 </select>
