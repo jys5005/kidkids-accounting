@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
+import { GWIN_CHARTS } from '@/data/gwin-charts'
 
 // 세입/세출은 완전 별도. 각 구분마다 관 › 항 › 목 › 세목 계층.
 //   코드 파생: 관 04 → 항 41,42 (관 끝자리+순번) → 목 411 (항+순번) → 세목 4111 (목+순번)
@@ -21,19 +22,19 @@ const defaultTree = (): Gwan[] => {
   return [...mk('세입'), ...mk('세출')]
 }
 
-// 항/목/세목 코드 자동 재파생 (번호 임의 섞임 방지, 항상 순차)
+// 코드 재파생 — 기존 코드(걸음마에서 가져온 것 등) 있으면 유지, 없으면(수기 추가) 순차 파생
 function resequence(tree: Gwan[]): Gwan[] {
   return tree.map(g => {
     const gl = g.code.slice(-1)
     return {
       ...g,
       hangs: g.hangs.map((h, hi) => {
-        const hc = `${gl}${hi + 1}`
+        const hc = h.code || `${gl}${hi + 1}`
         return {
           ...h, code: hc,
           moks: h.moks.map((m, mi) => {
-            const mc = `${hc}${mi + 1}`
-            return { ...m, code: mc, subs: m.subs.map((s, si) => ({ ...s, code: `${mc}${si + 1}` })) }
+            const mc = m.code || `${hc}${mi + 1}`
+            return { ...m, code: mc, subs: m.subs.map((s, si) => ({ ...s, code: s.code || `${mc}${si + 1}` })) }
           }),
         }
       }),
@@ -69,7 +70,10 @@ export default function CoaSettingsPage() {
     try {
       const j = await fetch(`/api/coa?book=${bk}&year=${yr}`, { credentials: 'include' }).then(r => r.json())
       const list = j.success && Array.isArray(j.list) ? (j.list as Gwan[]) : []
-      setTree(list.length ? resequence(list) : defaultTree())
+      // 저장본 있으면 그거, 없으면 걸음마 가져온 계정과목(있으면), 그것도 없으면 관 01~09 기본
+      const gwin = GWIN_CHARTS[bk] as Gwan[] | undefined
+      const base = list.length ? list : (gwin && gwin.length ? (JSON.parse(JSON.stringify(gwin)) as Gwan[]) : defaultTree())
+      setTree(resequence(base))
     } catch { setTree(defaultTree()) } finally { setLoading(false) }
   }, [])
   useEffect(() => { load(tab, year) }, [tab, year, load])
