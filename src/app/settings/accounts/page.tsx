@@ -9,7 +9,7 @@ import { GWIN_CHARTS } from '@/data/gwin-charts'
 interface Sub  { code: string; name: string }
 interface Mok  { code: string; name: string; subs: Sub[] }
 interface Hang { code: string; name: string; moks: Mok[] }
-interface Gwan { gubun: '세입' | '세출'; code: string; name: string; hangs: Hang[] }
+interface Gwan { gubun: '세입' | '세출'; code: string; name: string; hangs: Hang[]; custom?: boolean }
 
 const TABS = ILOVECHILD_BOOKS
 const YEARS = ['2024', '2025', '2026', '2027', '2028']
@@ -83,7 +83,7 @@ export default function CoaSettingsPage() {
   // ── 계층 추가 ── (addGwan 은 현재 구분(세입/세출)에 추가)
   const addGwan = () => mutate(p => {
     const cnt = p.filter(g => g.gubun === gubun).length
-    return [...p, { gubun, code: String(cnt + 1).padStart(2, '0'), name: '', hangs: [] }]
+    return [...p, { gubun, code: String(cnt + 1).padStart(2, '0'), name: '', hangs: [], custom: true }]
   })
   const addHang = (gi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: [...g.hangs, { code: '', name: '', moks: [] }] }))
   const addMok = (gi: number, hi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: [...h.moks, { code: '', name: '', subs: [] }] }) }))
@@ -221,7 +221,7 @@ export default function CoaSettingsPage() {
                 <span className={roCode}>{g.code || '-'}</span>
                 <input value={g.name} onChange={e => patchGwan(gi, 'name', e.target.value)} onBlur={() => ensureFirstHang(gi)} placeholder="관 명칭 (입력 후 기본 항 자동 생성)" className={nameCls} />
                 <button onClick={() => addHang(gi)} className={`${addBtn} text-blue-600 border-blue-300 hover:bg-blue-50`}>+ 항</button>
-                {Number(g.code) > 9 && <button onClick={() => delGwan(gi)} className={delBtn}>관 삭제</button>}
+                {g.custom && <button onClick={() => delGwan(gi)} className={delBtn}>관 삭제</button>}
               </div>
 
               {/* 항 */}
