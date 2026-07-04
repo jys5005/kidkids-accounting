@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
 
-// 계층(트리) 계정과목 — 관(2) › 항(2) › 목(3) › 세목(4). 어린이집 룰과 동일하게 코드 파생.
-//   관 04 → 항 41,42 (관 끝자리+순번) → 목 411,412 (항+순번) → 세목 4111 (목+순번)
+// 세입/세출은 완전 별도. 각 구분마다 관 › 항 › 목 › 세목 계층.
+//   코드 파생: 관 04 → 항 41,42 (관 끝자리+순번) → 목 411 (항+순번) → 세목 4111 (목+순번)
 interface Sub  { code: string; name: string }
 interface Mok  { code: string; name: string; subs: Sub[] }
 interface Hang { code: string; name: string; moks: Mok[] }
@@ -12,15 +12,40 @@ interface Gwan { gubun: '세입' | '세출'; code: string; name: string; hangs: 
 
 const TABS = ILOVECHILD_BOOKS
 const YEARS = ['2024', '2025', '2026', '2027', '2028']
+const GUBUNS: ('세입' | '세출')[] = ['세입', '세출']
 const onlyNum = (v: string, len: number) => v.replace(/[^0-9]/g, '').slice(0, len)
 
-// 기본 세팅 — 관 01~09 미리 (빈 장부/연도 시작 시)
-const defaultTree = (): Gwan[] =>
-  Array.from({ length: 9 }, (_, i): Gwan => ({ gubun: '세출', code: String(i + 1).padStart(2, '0'), name: '', hangs: [] }))
+// 기본 세팅 — 세입 관 01~09 + 세출 관 01~09 (완전 별도)
+const defaultTree = (): Gwan[] => {
+  const mk = (gubun: '세입' | '세출'): Gwan[] =>
+    Array.from({ length: 9 }, (_, i): Gwan => ({ gubun, code: String(i + 1).padStart(2, '0'), name: '', hangs: [] }))
+  return [...mk('세입'), ...mk('세출')]
+}
+
+// 항/목/세목 코드 자동 재파생 (번호 임의 섞임 방지, 항상 순차)
+function resequence(tree: Gwan[]): Gwan[] {
+  return tree.map(g => {
+    const gl = g.code.slice(-1)
+    return {
+      ...g,
+      hangs: g.hangs.map((h, hi) => {
+        const hc = `${gl}${hi + 1}`
+        return {
+          ...h, code: hc,
+          moks: h.moks.map((m, mi) => {
+            const mc = `${hc}${mi + 1}`
+            return { ...m, code: mc, subs: m.subs.map((s, si) => ({ ...s, code: `${mc}${si + 1}` })) }
+          }),
+        }
+      }),
+    }
+  })
+}
 
 export default function CoaSettingsPage() {
   const [year, setYear] = useState('2026')
   const [tab, setTab] = useState(ILOVECHILD_BOOKS[0].code)
+  const [gubun, setGubun] = useState<'세입' | '세출'>('세입')
   const [tree, setTree] = useState<Gwan[]>([])
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
@@ -33,34 +58,36 @@ export default function CoaSettingsPage() {
     try {
       const j = await fetch(`/api/coa?book=${bk}&year=${yr}`, { credentials: 'include' }).then(r => r.json())
       const list = j.success && Array.isArray(j.list) ? (j.list as Gwan[]) : []
-      setTree(list.length ? list : defaultTree())  // 저장본 없으면 관 01~09 기본
+      setTree(list.length ? resequence(list) : defaultTree())
     } catch { setTree(defaultTree()) } finally { setLoading(false) }
   }, [])
   useEffect(() => { load(tab, year) }, [tab, year, load])
 
-  // ── 계층 추가 (코드 자동 파생) ──
-  const addGwan = () => setTree(p => [...p, { gubun: '세출', code: '', name: '', hangs: [] }])
-  const addHang = (gi: number) => setTree(p => p.map((g, i) => i !== gi ? g : {
-    ...g, hangs: [...g.hangs, { code: `${g.code.slice(-1) || ''}${g.hangs.length + 1}`, name: '', moks: [] }],
-  }))
-  const addMok = (gi: number, hi: number) => setTree(p => p.map((g, i) => i !== gi ? g : {
-    ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: [...h.moks, { code: `${h.code}${h.moks.length + 1}`, name: '', subs: [] }] }),
-  }))
-  const addSub = (gi: number, hi: number, mi: number) => setTree(p => p.map((g, i) => i !== gi ? g : {
-    ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: [...m.subs, { code: `${m.code}${m.subs.length + 1}`, name: '' }] }) }),
-  }))
+  const mutate = (fn: (t: Gwan[]) => Gwan[]) => setTree(prev => resequence(fn(prev)))
 
-  // ── 필드 수정 ──
-  const patchGwan = (gi: number, key: keyof Gwan, v: string) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, [key]: v }))
-  const patchHang = (gi: number, hi: number, key: keyof Hang, v: string) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, [key]: v }) }))
-  const patchMok = (gi: number, hi: number, mi: number, key: keyof Mok, v: string) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, [key]: v }) }) }))
-  const patchSub = (gi: number, hi: number, mi: number, si: number, key: keyof Sub, v: string) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: m.subs.map((s, l) => l !== si ? s : { ...s, [key]: v }) }) }) }))
+  // ── 계층 추가 ── (addGwan 은 현재 구분(세입/세출)에 추가)
+  const addGwan = () => mutate(p => {
+    const cnt = p.filter(g => g.gubun === gubun).length
+    return [...p, { gubun, code: String(cnt + 1).padStart(2, '0'), name: '', hangs: [] }]
+  })
+  const addHang = (gi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: [...g.hangs, { code: '', name: '', moks: [] }] }))
+  const addMok = (gi: number, hi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: [...h.moks, { code: '', name: '', subs: [] }] }) }))
+  const addSub = (gi: number, hi: number, mi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: [...m.subs, { code: '', name: '' }] }) }) }))
+
+  // 관 명 입력(blur) — 이름 있고 항 없으면 기본 항 1개 자동
+  const ensureFirstHang = (gi: number) => mutate(p => p.map((g, i) => (i === gi && g.name.trim() && g.hangs.length === 0) ? { ...g, hangs: [{ code: '', name: '', moks: [] }] } : g))
+
+  // ── 수정 (명칭·관코드만) ──
+  const patchGwan = (gi: number, key: keyof Gwan, v: string) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, [key]: v }))
+  const patchHang = (gi: number, hi: number, v: string) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, name: v }) }))
+  const patchMok = (gi: number, hi: number, mi: number, v: string) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, name: v }) }) }))
+  const patchSub = (gi: number, hi: number, mi: number, si: number, v: string) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: m.subs.map((s, l) => l !== si ? s : { ...s, name: v }) }) }) }))
 
   // ── 삭제 ──
-  const delGwan = (gi: number) => setTree(p => p.filter((_, i) => i !== gi))
-  const delHang = (gi: number, hi: number) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.filter((_, j) => j !== hi) }))
-  const delMok = (gi: number, hi: number, mi: number) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.filter((_, k) => k !== mi) }) }))
-  const delSub = (gi: number, hi: number, mi: number, si: number) => setTree(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: m.subs.filter((_, l) => l !== si) }) }) }))
+  const delGwan = (gi: number) => mutate(p => p.filter((_, i) => i !== gi))
+  const delHang = (gi: number, hi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.filter((_, j) => j !== hi) }))
+  const delMok = (gi: number, hi: number, mi: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.filter((_, k) => k !== mi) }) }))
+  const delSub = (gi: number, hi: number, mi: number, si: number) => mutate(p => p.map((g, i) => i !== gi ? g : { ...g, hangs: g.hangs.map((h, j) => j !== hi ? h : { ...h, moks: h.moks.map((m, k) => k !== mi ? m : { ...m, subs: m.subs.filter((_, l) => l !== si) }) }) }))
 
   const save = async () => {
     setLoading(true); setMsg('')
@@ -69,7 +96,7 @@ export default function CoaSettingsPage() {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({ book: tab, year, list: tree }),
       }).then(r => r.json())
-      setMsg(j.success ? '✅ 저장되었습니다' : `❌ 저장 실패: ${j.error || ''}`)
+      setMsg(j.success ? '✅ 저장되었습니다 (세입·세출 모두)' : `❌ 저장 실패: ${j.error || ''}`)
       setTimeout(() => setMsg(''), 3000)
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
@@ -90,25 +117,27 @@ export default function CoaSettingsPage() {
     try {
       const j = await fetch(`/api/coa?book=${tab}&year=${fromYear}`, { credentials: 'include' }).then(r => r.json())
       const list = j.success && Array.isArray(j.list) ? (j.list as Gwan[]) : []
-      setTree(list)
+      setTree(resequence(list))
       setMsg(`📥 ${fromYear}년 계정 불러옴 (관 ${list.length}개) — [저장] 눌러 ${year}년에 반영`)
       setTimeout(() => setMsg(''), 4000)
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
 
   const codeCls = 'w-16 px-1.5 py-1 border border-slate-200 rounded text-sm text-center focus:outline-none focus:border-blue-400'
+  const roCode = 'w-16 px-1.5 py-1 text-sm text-center font-medium text-slate-500 bg-slate-100 border border-slate-100 rounded shrink-0'
   const nameCls = 'flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400'
   const addBtn = 'text-[11px] font-bold px-2 py-0.5 rounded border'
   const delBtn = 'text-[11px] text-rose-500 hover:underline shrink-0'
+  const gubunCount = tree.filter(g => g.gubun === gubun).length
 
   return (
     <div className="p-5 space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-lg font-bold text-slate-800">회계계정관리</h1>
-        <span className="text-xs text-slate-400">관 › 항 › 목 › 세목 계층으로 계정과목을 만듭니다. 코드는 부모에서 자동 파생됩니다. 예산서·전표관리에 적용.</span>
+        <span className="text-xs text-slate-400">세입·세출 각각 관 › 항 › 목 › 세목. 번호는 부모에서 자동 파생. 예산서·전표관리에 적용.</span>
       </div>
 
-      {/* 탭: 3개 장부 */}
+      {/* 장부 탭 */}
       <div className="flex items-center gap-1 border-b border-slate-200">
         {TABS.map(t => (
           <button key={t.code} onClick={() => setTab(t.code)}
@@ -118,8 +147,16 @@ export default function CoaSettingsPage() {
         ))}
       </div>
 
-      {/* 툴바 */}
+      {/* 상단: 세입/세출 전환 + 툴바 */}
       <div className="flex items-center gap-2 flex-wrap">
+        <div className="inline-flex rounded-lg overflow-hidden border border-slate-200 text-sm font-bold">
+          {GUBUNS.map(gb => (
+            <button key={gb} onClick={() => setGubun(gb)}
+              className={`px-5 py-1.5 ${gubun === gb ? (gb === '세입' ? 'bg-sky-500 text-white' : 'bg-rose-500 text-white') : 'bg-white text-slate-400 hover:bg-slate-50'} ${gb === '세출' ? 'border-l border-slate-200' : ''}`}>
+              {gb}
+            </button>
+          ))}
+        </div>
         {msg && <span className="text-xs font-semibold text-slate-600">{msg}</span>}
         <div className="ml-auto flex items-center gap-2">
           <button onClick={openImport} disabled={loading} className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">📥 이전 계정 불러오기</button>
@@ -130,71 +167,70 @@ export default function CoaSettingsPage() {
         </div>
       </div>
 
-      {/* 계층 트리 편집 */}
-      <div className="space-y-2">
-        {tree.length === 0 && (
-          <div className="text-center text-sm text-slate-400 py-10 border border-slate-100 rounded-lg">
-            {loading ? '불러오는 중…' : '계정이 없습니다. [+ 관 추가] 또는 [이전 계정 불러오기]로 시작하세요.'}
-          </div>
+      {/* 현재 구분(세입/세출) 트리 */}
+      <div className={`rounded-lg border-2 p-3 space-y-2 ${gubun === '세입' ? 'border-sky-200 bg-sky-50/30' : 'border-rose-200 bg-rose-50/30'}`}>
+        <div className={`text-sm font-bold ${gubun === '세입' ? 'text-sky-700' : 'text-rose-700'}`}>{gubun} 계정과목</div>
+
+        {gubunCount === 0 && (
+          <div className="text-center text-sm text-slate-400 py-8">{loading ? '불러오는 중…' : `${gubun} 관이 없습니다. [+ 관 추가]로 시작하세요.`}</div>
         )}
 
-        {tree.map((g, gi) => (
-          <div key={gi} className="border border-slate-200 rounded-lg overflow-hidden">
-            {/* 관 */}
-            <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 border-b border-purple-100">
-              <span className="text-[10px] font-bold text-white bg-purple-500 rounded px-1.5 py-0.5 shrink-0">관</span>
-              <div className="inline-flex rounded-md overflow-hidden border border-slate-200 shrink-0 text-xs font-bold">
-                <button onClick={() => patchGwan(gi, 'gubun', '세입')} className={`px-2.5 py-1 ${g.gubun === '세입' ? 'bg-sky-500 text-white' : 'bg-white text-slate-400 hover:bg-slate-50'}`}>세입</button>
-                <button onClick={() => patchGwan(gi, 'gubun', '세출')} className={`px-2.5 py-1 border-l border-slate-200 ${g.gubun === '세출' ? 'bg-rose-500 text-white' : 'bg-white text-slate-400 hover:bg-slate-50'}`}>세출</button>
+        {tree.map((g, gi) => {
+          if (g.gubun !== gubun) return null
+          return (
+            <div key={gi} className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+              {/* 관 */}
+              <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 border-b border-purple-100">
+                <span className="text-[10px] font-bold text-white bg-purple-500 rounded px-1.5 py-0.5 shrink-0">관</span>
+                <input value={g.code} onChange={e => patchGwan(gi, 'code', onlyNum(e.target.value, 2))} placeholder="04" className={codeCls} />
+                <input value={g.name} onChange={e => patchGwan(gi, 'name', e.target.value)} onBlur={() => ensureFirstHang(gi)} placeholder="관 명칭 (입력 후 기본 항 자동 생성)" className={nameCls} />
+                <button onClick={() => addHang(gi)} className={`${addBtn} text-blue-600 border-blue-300 hover:bg-blue-50`}>+ 항</button>
+                <button onClick={() => delGwan(gi)} className={delBtn}>관 삭제</button>
               </div>
-              <input value={g.code} onChange={e => patchGwan(gi, 'code', onlyNum(e.target.value, 2))} placeholder="04" className={codeCls} />
-              <input value={g.name} onChange={e => patchGwan(gi, 'name', e.target.value)} placeholder="관 명칭" className={nameCls} />
-              <button onClick={() => addHang(gi)} className={`${addBtn} text-blue-600 border-blue-300 hover:bg-blue-50`}>+ 항</button>
-              <button onClick={() => delGwan(gi)} className={delBtn}>관 삭제</button>
-            </div>
 
-            {/* 항 */}
-            {g.hangs.map((h, hi) => (
-              <div key={hi} className="pl-6 border-b border-slate-100 last:border-0">
-                <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-1.5">
-                  <span className="text-[10px] font-bold text-white bg-blue-500 rounded px-1.5 py-0.5 shrink-0">항</span>
-                  <input value={h.code} onChange={e => patchHang(gi, hi, 'code', onlyNum(e.target.value, 2))} placeholder="41" className={codeCls} />
-                  <input value={h.name} onChange={e => patchHang(gi, hi, 'name', e.target.value)} placeholder="항 명칭" className={nameCls} />
-                  <button onClick={() => addMok(gi, hi)} className={`${addBtn} text-emerald-600 border-emerald-300 hover:bg-emerald-50`}>+ 목</button>
-                  <button onClick={() => delHang(gi, hi)} className={delBtn}>삭제</button>
-                </div>
-
-                {/* 목 */}
-                {h.moks.map((m, mi) => (
-                  <div key={mi} className="pl-6">
-                    <div className="flex items-center gap-2 px-3 py-1.5">
-                      <span className="text-[10px] font-bold text-white bg-emerald-500 rounded px-1.5 py-0.5 shrink-0">목</span>
-                      <input value={m.code} onChange={e => patchMok(gi, hi, mi, 'code', onlyNum(e.target.value, 3))} placeholder="411" className={codeCls} />
-                      <input value={m.name} onChange={e => patchMok(gi, hi, mi, 'name', e.target.value)} placeholder="목 명칭" className={nameCls} />
-                      <button onClick={() => addSub(gi, hi, mi)} className={`${addBtn} text-amber-600 border-amber-300 hover:bg-amber-50`}>+ 세목</button>
-                      <button onClick={() => delMok(gi, hi, mi)} className={delBtn}>삭제</button>
-                    </div>
-
-                    {/* 세목 */}
-                    {m.subs.map((s, si) => (
-                      <div key={si} className="pl-6">
-                        <div className="flex items-center gap-2 px-3 py-1.5">
-                          <span className="text-[10px] font-bold text-white bg-amber-500 rounded px-1.5 py-0.5 shrink-0">세목</span>
-                          <input value={s.code} onChange={e => patchSub(gi, hi, mi, si, 'code', onlyNum(e.target.value, 4))} placeholder="4111" className={codeCls} />
-                          <input value={s.name} onChange={e => patchSub(gi, hi, mi, si, 'name', e.target.value)} placeholder="세목 명칭" className={nameCls} />
-                          <button onClick={() => delSub(gi, hi, mi, si)} className={delBtn}>삭제</button>
-                        </div>
-                      </div>
-                    ))}
+              {/* 항 */}
+              {g.hangs.map((h, hi) => (
+                <div key={hi} className="pl-6 border-b border-slate-100 last:border-0">
+                  <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-1.5">
+                    <span className="text-[10px] font-bold text-white bg-blue-500 rounded px-1.5 py-0.5 shrink-0">항</span>
+                    <span className={roCode}>{h.code || '-'}</span>
+                    <input value={h.name} onChange={e => patchHang(gi, hi, e.target.value)} placeholder="항 명칭" className={nameCls} />
+                    <button onClick={() => addMok(gi, hi)} className={`${addBtn} text-emerald-600 border-emerald-300 hover:bg-emerald-50`}>+ 목</button>
+                    <button onClick={() => delHang(gi, hi)} className={delBtn}>삭제</button>
                   </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
 
-      <button onClick={addGwan} className="w-full py-2.5 border border-dashed border-purple-300 text-purple-600 font-bold rounded-lg text-sm hover:bg-purple-50">+ 관 추가</button>
+                  {/* 목 */}
+                  {h.moks.map((m, mi) => (
+                    <div key={mi} className="pl-6">
+                      <div className="flex items-center gap-2 px-3 py-1.5">
+                        <span className="text-[10px] font-bold text-white bg-emerald-500 rounded px-1.5 py-0.5 shrink-0">목</span>
+                        <span className={roCode}>{m.code || '-'}</span>
+                        <input value={m.name} onChange={e => patchMok(gi, hi, mi, e.target.value)} placeholder="목 명칭" className={nameCls} />
+                        <button onClick={() => addSub(gi, hi, mi)} className={`${addBtn} text-amber-600 border-amber-300 hover:bg-amber-50`}>+ 세목</button>
+                        <button onClick={() => delMok(gi, hi, mi)} className={delBtn}>삭제</button>
+                      </div>
+
+                      {/* 세목 */}
+                      {m.subs.map((s, si) => (
+                        <div key={si} className="pl-6">
+                          <div className="flex items-center gap-2 px-3 py-1.5">
+                            <span className="text-[10px] font-bold text-white bg-amber-500 rounded px-1.5 py-0.5 shrink-0">세목</span>
+                            <span className={roCode}>{s.code || '-'}</span>
+                            <input value={s.name} onChange={e => patchSub(gi, hi, mi, si, e.target.value)} placeholder="세목 명칭" className={nameCls} />
+                            <button onClick={() => delSub(gi, hi, mi, si)} className={delBtn}>삭제</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )
+        })}
+
+        <button onClick={addGwan} className="w-full py-2 border border-dashed border-purple-300 text-purple-600 font-bold rounded-lg text-sm hover:bg-purple-50">+ 관 추가 ({gubun})</button>
+      </div>
 
       {/* 이전 계정 불러오기 팝업 */}
       {showImport && (
