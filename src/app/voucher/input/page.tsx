@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, codeToAccount, type AccItem } from '@/lib/accounts'
 import ReceiptOcrModal, { type ReceiptOcrResult } from '@/components/ReceiptOcrModal'
+import { getActiveBook, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
 
 interface VoucherRow {
   id: number
@@ -46,20 +47,43 @@ export default function VoucherInputPage() {
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string>('')
   const [loaded, setLoaded] = useState(false)  // ← mount 로드 완료 전엔 자동저장 금지
+  // 아이사랑꿈터 장부(계정) — 3개 장부별로 전표가 분리 저장됨. 어린이집은 '' (분리 안 함)
+  const [book, setBook] = useState<string | null>(null)  // null = 아직 결정 전
+  const bookRef = useRef('')
 
-  // mount 시 DB 에서 저장된 전표 로드
+  // 1) 기관 유형 확인 → 초기 장부 결정 + 장부 변경 이벤트 구독
   useEffect(() => {
-    fetch('/api/voucher/list', { credentials: 'include' })
+    let cancelled = false
+    ;(async () => {
+      let itype = 'childcare'
+      try {
+        const me = await fetch('/api/auth/me').then(r => r.json())
+        itype = (me?.institutionType || me?.profile?.institutionType || 'childcare') as string
+      } catch { /* ignore */ }
+      if (!cancelled) setBook(itype === 'ilovechild' ? getActiveBook() : '')
+    })()
+    const onBookChange = (e: Event) => setBook(((e as CustomEvent).detail as string) || '')
+    window.addEventListener(BOOK_CHANGE_EVENT, onBookChange)
+    return () => { cancelled = true; window.removeEventListener(BOOK_CHANGE_EVENT, onBookChange) }
+  }, [])
+
+  // 2) 장부 결정/변경 시 해당 장부 전표 로드 (loaded=false 로 전환 → 자동저장 취소·오저장 방지)
+  useEffect(() => {
+    if (book === null) return
+    bookRef.current = book
+    setLoaded(false)
+    let cancelled = false
+    fetch(`/api/voucher/list?book=${encodeURIComponent(book)}`, { credentials: 'include' })
       .then(r => r.json())
       .then(j => {
-        if (j.success && Array.isArray(j.list)) {
-          setRows(j.list as VoucherRow[])
-          if (j.savedAt) setSavedAt(String(j.savedAt))
-        }
+        if (cancelled) return
+        setRows(j.success && Array.isArray(j.list) ? (j.list as VoucherRow[]) : [])
+        setSavedAt(j.savedAt ? String(j.savedAt) : '')
       })
-      .catch(() => {})
-      .finally(() => setLoaded(true))
-  }, [])
+      .catch(() => { if (!cancelled) setRows([]) })
+      .finally(() => { if (!cancelled) setLoaded(true) })
+    return () => { cancelled = true }
+  }, [book])
 
   // 저장 (DB 영속) — 저장 버튼 onClick + 행 변경 시 자동 (debounce)
   const persistRows = async (next: VoucherRow[]) => {
@@ -69,7 +93,7 @@ export default function VoucherInputPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ list: next }),
+        body: JSON.stringify({ list: next, book: bookRef.current }),
       })
       const j = await res.json()
       if (j.success) {

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { visibleCategories, isCisEnabled } from './Sidebar'
+import { ILOVECHILD_BOOKS, getActiveBook, setActiveBook } from '@/lib/ilovechild-books'
 
 const TIMEOUT_SEC = 30 * 60
 
@@ -74,6 +75,8 @@ export default function Header() {
   const [centerInfoTab, setCenterInfoTab] = useState<'basic' | 'accounting' | 'stamp'>('basic')
   const [profileData, setProfileData] = useState({ centerName: '', displayName: '', phone: '', email: '' })
   const [institutionType, setInstitutionType] = useState<string>('childcare')
+  const [activeBook, setActiveBookState] = useState('')
+  useEffect(() => { setActiveBookState(getActiveBook()) }, [])
   const [editData, setEditData] = useState({ phone: '', email: '' })
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -305,9 +308,22 @@ export default function Header() {
               </Link>
             )
           })}
+          {institutionType === 'ilovechild' && (
+            <div className="ml-auto flex items-center gap-1.5 whitespace-nowrap">
+              <span className="text-[11px] font-bold text-white/90">장부</span>
+              <select
+                value={activeBook}
+                onChange={e => { setActiveBook(e.target.value); setActiveBookState(e.target.value) }}
+                className="text-[12px] font-bold text-slate-800 bg-white rounded px-2 py-1 border-0 focus:outline-none"
+                title="장부(계정) 선택 — 예산·결산·전표가 장부별로 분리됩니다"
+              >
+                {ILOVECHILD_BOOKS.map(b => <option key={b.code} value={b.code}>{b.label}</option>)}
+              </select>
+            </div>
+          )}
           <button
             onClick={() => setGnbExpanded(!gnbExpanded)}
-            className="ml-auto flex items-center gap-1 px-2 py-1 text-[11px] text-white/80 hover:text-white hover:bg-white/15 rounded transition-colors whitespace-nowrap"
+            className={`${institutionType === 'ilovechild' ? '' : 'ml-auto'} flex items-center gap-1 px-2 py-1 text-[11px] text-white/80 hover:text-white hover:bg-white/15 rounded transition-colors whitespace-nowrap`}
           >
             <svg className={`w-3.5 h-3.5 transition-transform ${gnbExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
