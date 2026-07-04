@@ -185,7 +185,7 @@ export default function CoaSettingsPage() {
                 <span className={roCode}>{g.code || '-'}</span>
                 <input value={g.name} onChange={e => patchGwan(gi, 'name', e.target.value)} onBlur={() => ensureFirstHang(gi)} placeholder="관 명칭 (입력 후 기본 항 자동 생성)" className={nameCls} />
                 <button onClick={() => addHang(gi)} className={`${addBtn} text-blue-600 border-blue-300 hover:bg-blue-50`}>+ 항</button>
-                <button onClick={() => delGwan(gi)} className={delBtn}>관 삭제</button>
+                {Number(g.code) > 9 && <button onClick={() => delGwan(gi)} className={delBtn}>관 삭제</button>}
               </div>
 
               {/* 항 */}
