@@ -312,9 +312,10 @@ export default function DataMigrationPage() {
       .then(res => res.json())
       .then(json => {
         const saved: string[] = json.sources || []
-        if (saved.length > 0 && !saved.includes('by24') && SOURCE_OPTIONS.some(o => o.value === saved[0])) {
-          setSource(saved[0] as SourceType)
-        }
+        // 저장된 인증정보가 있는 출발지 중 by24(보육나라 기본) 이 아닌 것을 우선 선택
+        const pick = saved.find(s => s !== 'by24' && SOURCE_OPTIONS.some(o => o.value === s))
+          || saved.find(s => SOURCE_OPTIONS.some(o => o.value === s))
+        if (pick) setSource(pick as SourceType)
       })
       .catch(() => {})
   }, [])

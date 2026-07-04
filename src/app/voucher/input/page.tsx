@@ -218,7 +218,7 @@ export default function VoucherInputPage() {
   const [excelFileName, setExcelFileName] = useState('')
   const [showColumnSettings, setShowColumnSettings] = useState(false)
   const [columnOrder, setColumnOrder] = useState<[string, string, string][]>([
-    ['no', '번호', '1'], ['date', '일자', '2'], ['type', '구분', '3'], ['summary', '적요', '4'],
+    ['no', '번호', '1'], ['date', '일자', '2'], ['type', '입력방식', '3'], ['summary', '적요', '4'],
     ['evidence', '증빙(영수/이체/은행/증빙)', '5'], ['register', '등록', '6'], ['attach', '첨부', '7'],
     ['amountGroup', '금액(수입/지출/잔액)', '8'],
     ['accountGroup', '계정(복사/세목/코드/분리/반납)', '9'], ['fee', '수수료', '10'],
@@ -1404,7 +1404,7 @@ export default function VoucherInputPage() {
                     switch(key) {
                       case 'no': return <th key={key} className={`${thCls} w-[40px]`}>번호</th>
                       case 'date': return <th key={key} className={`${thCls} w-[62px]`}>일자</th>
-                      case 'type': return <th key={key} className={`${thCls} w-[40px]`}>구분</th>
+                      case 'type': return <th key={key} className={`${thCls} w-[64px]`}>입력방식</th>
                       case 'summary': return <th key={key} className={`${thCls} w-[300px]`}>적요</th>
                       case 'evidence': return <React.Fragment key={key}><th className={`${thCls} w-[43px]`}>영수</th><th className={`${thCls} w-[43px]`}>이체</th><th className={`${thCls} w-[43px]`}>은행</th><th className={`${thCls} w-[53px]`}>증빙</th></React.Fragment>
                       case 'register': return <th key={key} className={`${thCls} w-[43px]`}>등록</th>
@@ -1549,7 +1549,7 @@ export default function VoucherInputPage() {
                   switch (key) {
                     case 'no': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[40px]">번호</th>
                     case 'date': return <th key={key} className="text-center px-1 py-2 font-normal text-slate-700 w-[62px]">일자</th>
-                    case 'type': return <th key={key} className="text-center px-0.5 py-2 font-normal text-slate-700 w-[40px]">구분</th>
+                    case 'type': return <th key={key} className="text-center px-0.5 py-2 font-normal text-slate-700 w-[64px]">입력방식</th>
                     case 'summary': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[300px]">적요</th>
                     case 'evidence': return <React.Fragment key={key}>
                       <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[43px]">영수</th>
