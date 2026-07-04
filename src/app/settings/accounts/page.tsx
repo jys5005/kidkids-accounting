@@ -140,8 +140,8 @@ export default function CoaSettingsPage() {
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
 
-  const roCode = 'w-16 px-1.5 py-1 text-sm text-center font-medium text-slate-500 bg-slate-100 border border-slate-100 rounded shrink-0'
-  const nameCls = 'flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400'
+  const roCode = 'w-16 px-1.5 py-1 text-[13px] leading-5 text-center font-medium text-slate-500 bg-slate-100 border border-slate-100 rounded shrink-0'
+  const nameCls = 'flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-[13px] leading-5 focus:outline-none focus:border-blue-400'
   const addBtn = 'text-[11px] font-bold px-2 py-0.5 rounded border'
   const delBtn = 'text-[11px] text-rose-500 hover:underline shrink-0'
   const gubunCount = tree.filter(g => g.gubun === gubun).length
