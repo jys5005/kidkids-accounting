@@ -82,22 +82,6 @@ export default function CoaSettingsPage() {
     } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
   }
 
-  // 현재 화면의 계정을 3개 장부에 공통 적용 (초기 세팅 후 복사용)
-  const applyToBooks = async () => {
-    if (!confirm(`현재 계정 ${rows.length}건을 보육정보센터·보조금·이용료 3개 장부(${year}년)에 공통 적용할까요?\n각 장부의 ${year}년 계정이 덮어써집니다.`)) return
-    setLoading(true); setMsg('')
-    try {
-      for (const b of ILOVECHILD_BOOKS) {
-        await fetch('/api/coa', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ book: b.code, year, list: rows }),
-        })
-      }
-      setMsg('✅ 3개 장부에 적용되었습니다')
-      setTimeout(() => setMsg(''), 3000)
-    } catch (e) { setMsg(`❌ ${e instanceof Error ? e.message : e}`) } finally { setLoading(false) }
-  }
-
   const inputCls = 'w-full px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400'
 
   return (
@@ -121,15 +105,12 @@ export default function CoaSettingsPage() {
 
       {/* 도구 줄: 이전 연도 불러오기 + (헤더탭) 3장부 적용 + 저장 */}
       <div className="flex items-center gap-2 flex-wrap">
-        <button onClick={openImport} disabled={loading}
-          className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">
-          📥 이전 계정 불러오기
-        </button>
-        <button onClick={applyToBooks} disabled={loading} className="text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-lg px-3 py-1.5 disabled:opacity-50">
-          현재 계정 → 3개 장부 공통 적용
-        </button>
         {msg && <span className="text-xs font-semibold text-slate-600">{msg}</span>}
         <div className="ml-auto flex items-center gap-2">
+          <button onClick={openImport} disabled={loading}
+            className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-100 disabled:opacity-50">
+            📥 이전 계정 불러오기
+          </button>
           <select value={year} onChange={e => setYear(e.target.value)} className="text-sm border rounded-lg px-2 py-1.5 bg-white">
             {YEARS.map(y => <option key={y} value={y}>{y}년</option>)}
           </select>
