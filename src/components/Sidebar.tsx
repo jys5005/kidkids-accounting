@@ -79,6 +79,7 @@ const categories: MenuCategory[] = [
       {
         label: '설정',
         children: [
+          { label: '회계계정관리', href: '/settings/accounts' },
           { label: '결제방식관리', href: '/settings/payment-method' },
           { label: '결제방식매칭관리', href: '/settings/payment-matching' },
           { label: '적요코드매칭관리', href: '/settings/summary-matching' },
@@ -213,13 +214,21 @@ export function isCisEnabled(institutionType?: string | null): boolean {
   return !institutionType || institutionType === 'childcare'
 }
 
-/** 기관 유형에 맞는 메뉴만 반환. CIS 미사용 유형이면 CIS/검증 항목 제거 + 빈 메뉴 정리. */
+// 아이사랑꿈터 전용 메뉴 — 다른 유형에서는 숨김
+export const ILOVECHILD_ONLY_HREFS = new Set<string>([
+  '/settings/accounts', // 회계계정관리(장부별 계정과목)
+])
+
+/** 기관 유형에 맞는 메뉴만 반환. CIS 미사용 유형이면 CIS/검증 제거, 아이사랑꿈터 전용은 그 외 유형에서 제거. */
 export function visibleCategories(institutionType?: string | null): MenuCategory[] {
-  if (isCisEnabled(institutionType)) return categories
+  const cisOn = isCisEnabled(institutionType)
+  const ilove = institutionType === 'ilovechild'
+  const hide = (href: string) =>
+    (!cisOn && CIS_GATED_HREFS.has(href)) || (!ilove && ILOVECHILD_ONLY_HREFS.has(href))
   return categories.map(cat => ({
     ...cat,
     menus: cat.menus
-      .map(m => (m.children ? { ...m, children: m.children.filter(c => !CIS_GATED_HREFS.has(c.href)) } : m))
+      .map(m => (m.children ? { ...m, children: m.children.filter(c => !hide(c.href)) } : m))
       .filter(m => !m.children || m.children.length > 0), // 자식이 전부 제거된 메뉴는 숨김
   }))
 }
