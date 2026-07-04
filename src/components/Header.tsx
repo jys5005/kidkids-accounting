@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { visibleCategories, isCisEnabled } from './Sidebar'
-import BookToggle from './BookToggle'
 
 const TIMEOUT_SEC = 30 * 60
 
@@ -306,19 +305,15 @@ export default function Header() {
               </Link>
             )
           })}
-          <div className="ml-auto flex items-center gap-2">
-            {/* 아이사랑꿈터 장부 토글 — 모든 회계 페이지 공통 (자체적으로 유형 게이트) */}
-            <BookToggle />
-            <button
-              onClick={() => setGnbExpanded(!gnbExpanded)}
-              className="flex items-center gap-1 px-2 py-1 text-[11px] text-white/80 hover:text-white hover:bg-white/15 rounded transition-colors whitespace-nowrap"
-            >
-              <svg className={`w-3.5 h-3.5 transition-transform ${gnbExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-              {gnbExpanded ? '접기' : '펼쳐보기'}
-            </button>
-          </div>
+          <button
+            onClick={() => setGnbExpanded(!gnbExpanded)}
+            className="ml-auto flex items-center gap-1 px-2 py-1 text-[11px] text-white/80 hover:text-white hover:bg-white/15 rounded transition-colors whitespace-nowrap"
+          >
+            <svg className={`w-3.5 h-3.5 transition-transform ${gnbExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+            {gnbExpanded ? '접기' : '펼쳐보기'}
+          </button>
         </div>
       </div>
 

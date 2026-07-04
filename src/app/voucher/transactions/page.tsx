@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, isIncomeAccount } from '@/lib/accounts'
 import PrintModal from '@/components/PrintModal'
+import BookDropdown from '@/components/BookDropdown'
 import { getActiveBook, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
 
 // 전표입력(voucher-input) 저장 shape
@@ -214,6 +215,12 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-1">
+      {/* 장부 선택 — 아이사랑꿈터 */}
+      {book && (
+        <div className="flex items-center gap-2 flex-wrap pb-1">
+          <BookDropdown />
+        </div>
+      )}
       {/* 라디오 뷰 선택 */}
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 flex items-center gap-1.5 flex-wrap">

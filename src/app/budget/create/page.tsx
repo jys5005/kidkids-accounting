@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import DraggableModal from '@/components/DraggableModal'
+import BookDropdown from '@/components/BookDropdown'
 import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
 
 interface BudgetRow {
@@ -434,6 +435,7 @@ export default function BudgetCreatePage() {
     <div className="p-3 space-y-3">
       {/* 상단 조건 */}
       <div className="flex items-center gap-2 flex-wrap">
+        <BookDropdown />
         <span className="text-xs font-bold text-slate-700">회계연도</span>
         <select value={year} onChange={e => setYear(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
           <option value="2026">2026년</option>
@@ -455,11 +457,11 @@ export default function BudgetCreatePage() {
         {budgetStatus === '작성완료' && <span className="text-[10px] font-bold text-red-500">🔒 잠금</span>}
       </div>
 
-      {/* 아이사랑꿈터 안내 (장부 토글은 상단 헤더) */}
+      {/* 아이사랑꿈터 안내 */}
       {isIlovechild && (
         <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400">
           {loadingCoa && <span>계정 불러오는 중…</span>}
-          <span>· 장부는 상단 <b className="text-slate-600">장부</b> 토글에서, 계정과목은 <b className="text-slate-600">설정 › 회계계정관리</b>에서 관리됩니다</span>
+          <span>· 계정과목은 <b className="text-slate-600">설정 › 회계계정관리</b>에서 관리됩니다</span>
         </div>
       )}
 
@@ -512,17 +514,21 @@ export default function BudgetCreatePage() {
 
         {/* 합계 */}
         <div className="px-4 py-2 border-b border-slate-200 flex items-center gap-4 sticky top-[33px] z-10 bg-white">
-          <div className="flex items-center gap-1">
-            <span className="text-xs font-bold text-slate-600">정원:</span>
-            <input type="text" defaultValue="96" className="w-10 px-1 py-0.5 border border-slate-300 rounded text-xs text-center focus:outline-none focus:border-blue-400" />
-            <span className="text-xs text-slate-500">명</span>
-          </div>
-          <div className="w-px h-4 bg-slate-200" />
+          {!isIlovechild && (
+            <>
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-bold text-slate-600">정원:</span>
+                <input type="text" defaultValue="96" className="w-10 px-1 py-0.5 border border-slate-300 rounded text-xs text-center focus:outline-none focus:border-blue-400" />
+                <span className="text-xs text-slate-500">명</span>
+              </div>
+              <div className="w-px h-4 bg-slate-200" />
+            </>
+          )}
           <span className="text-xs font-bold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">{budgetType}</span>
           <span className="text-xs text-slate-500">세입금액: <span className="font-bold text-blue-700">{fmt(totalIncome)}</span>원</span>
           <span className="text-xs text-slate-500">세출금액: <span className="font-bold text-red-600">{fmt(totalExpense)}</span>원</span>
           <span className="text-xs text-slate-500">차이액: <span className="font-bold text-emerald-700">{fmt(totalIncome - totalExpense)}</span>원</span>
-          {tab === 'income' && budgetType === '본예산' && (
+          {!isIlovechild && tab === 'income' && budgetType === '본예산' && (
             <div className="flex items-center gap-1">
               <span className="text-xs text-slate-500">2026년2월말 잔액:</span>
               <span className="text-xs font-bold text-slate-800">{fmt(117139911)}원</span>
