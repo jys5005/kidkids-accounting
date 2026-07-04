@@ -424,6 +424,7 @@ export default function BudgetCreatePage() {
   const [basisModalCode, setBasisModalCode] = useState<string | null>(null)
   const [basisChecked, setBasisChecked] = useState<Set<number>>(new Set())
   const [basisClipboard, setBasisClipboard] = useState<BasisItem[]>([])
+  const [basisCopySrc, setBasisCopySrc] = useState<number | null>(null)  // 복사 원본 행(복사모드)
   const [showAll7, setShowAll7] = useState(true)
 
   const basisState = allBasisState[budgetType] || {}
@@ -458,6 +459,7 @@ export default function BudgetCreatePage() {
       return { ...prev, [code]: items.length ? items : [newBasisItem()] }
     })
     setBasisChecked(new Set())
+    setBasisCopySrc(null)
     setBasisModalCode(code)
   }
   const setModalItems = (fn: (its: BasisItem[]) => BasisItem[]) => {
@@ -475,15 +477,18 @@ export default function BudgetCreatePage() {
     }))
   const addModalRow = () => setModalItems(its => [...its, newBasisItem()])
   const removeModalChecked = () => { setModalItems(its => its.filter((_, i) => !basisChecked.has(i))); setBasisChecked(new Set()) }
-  // 복사: 체크와 무관하게 해당 행 1개를 클립보드로
+  // 복사: 해당 행을 원본으로 지정(복사모드 진입) → 다른 행 버튼이 [붙여넣기]로 바뀜
   const copyModalRow = (idx: number) => {
     if (!basisModalCode) return
     const src = (basisState[basisModalCode] || [])[idx]
-    if (src) setBasisClipboard([{ ...src, extras: src.extras?.map(e => ({ ...e })) }])
+    if (src) { setBasisClipboard([{ ...src, extras: src.extras?.map(e => ({ ...e })) }]); setBasisCopySrc(idx) }
   }
-  const pasteModalRows = () => {
-    if (!basisClipboard.length) return
-    setModalItems(its => [...its, ...basisClipboard.map(r => normItem({ ...r, extras: r.extras?.map(e => ({ ...e })) }))])
+  const cancelCopyMode = () => { setBasisCopySrc(null); setBasisClipboard([]) }
+  // 붙여넣기: 원본 값을 해당 행에 덮어씀 (복사모드 유지 → 여러 행에 연속 붙여넣기 가능)
+  const pasteIntoRow = (idx: number) => {
+    const src = basisClipboard[0]
+    if (!src) return
+    setModalItems(its => its.map((it, i) => i === idx ? normItem({ ...src, extras: src.extras?.map(e => ({ ...e })) }) : it))
   }
   const moveModalRows = (dir: -1 | 1) => setModalItems(its => {
     const arr = [...its]; const idxs = [...basisChecked].sort((a, b) => dir === -1 ? a - b : b - a)
@@ -880,7 +885,7 @@ export default function BudgetCreatePage() {
                   <button onClick={removeModalChecked} className={`${tbtn} text-red-600 bg-red-50 border-red-200 hover:bg-red-100`}>− 행삭제</button>
                   <button onClick={() => moveModalRows(-1)} className={`${tbtn} text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100`}>위로</button>
                   <button onClick={() => moveModalRows(1)} className={`${tbtn} text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100`}>아래로</button>
-                  <button onClick={pasteModalRows} className={`${tbtn} text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100 disabled:opacity-40`} disabled={basisClipboard.length === 0}>붙여넣기{basisClipboard.length ? ` (${basisClipboard.length})` : ''}</button>
+                  {basisCopySrc !== null && <button onClick={cancelCopyMode} className={`${tbtn} text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100`}>복사취소</button>}
                 </div>
               )}
               {/* 표 */}
@@ -903,7 +908,13 @@ export default function BudgetCreatePage() {
                         <td className="px-1 py-1 border border-slate-200">
                           <div className="flex items-center justify-center gap-1">
                             <input type="checkbox" checked={basisChecked.has(i)} onChange={() => setBasisChecked(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n })} className="w-3.5 h-3.5" />
-                            {!locked && <button onClick={() => copyModalRow(i)} title="이 행 복사" className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded px-1 py-0.5 hover:bg-blue-100">복사</button>}
+                            {!locked && (
+                              basisCopySrc === null
+                                ? <button onClick={() => copyModalRow(i)} title="이 행 복사" className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded px-1 py-0.5 hover:bg-blue-100">복사</button>
+                                : basisCopySrc === i
+                                  ? <button onClick={cancelCopyMode} title="복사 취소" className="text-[9px] font-bold text-amber-700 bg-amber-100 border border-amber-300 rounded px-1 py-0.5">복사됨</button>
+                                  : <button onClick={() => pasteIntoRow(i)} title="이 행에 붙여넣기" className="text-[9px] font-bold text-green-700 bg-green-50 border border-green-300 rounded px-1 py-0.5 hover:bg-green-100">붙여넣기</button>
+                            )}
                           </div>
                         </td>
                         <td className="px-1 py-1 border border-slate-200"><input disabled={locked} value={it.name} onChange={e => patchModalItem(i, { name: e.target.value })} placeholder="산출기초명" className="w-full px-1.5 py-1 border border-slate-200 rounded text-[11px] focus:outline-none focus:border-blue-400" /></td>
@@ -939,7 +950,7 @@ export default function BudgetCreatePage() {
                 <div className="mt-3 text-[11px] text-slate-400 leading-relaxed">
                   <p className="font-bold text-slate-500">ⓘ 참고사항</p>
                   <p>1) 단위가 &lsquo;식&rsquo;인 경우에는 계산하지 않습니다.</p>
-                  <p>2) 복사는 해당 행의 [복사]를 누른 뒤 [붙여넣기]로 새 행에 추가됩니다. (체크 불필요)</p>
+                  <p>2) 해당 행 [복사]를 누르면 나머지 행 버튼이 [붙여넣기]로 바뀝니다. 원하는 행에 [붙여넣기]로 값을 채우세요. (여러 행 연속 가능, [복사됨]/[복사취소]로 해제)</p>
                   <p>3) 단가가 &lsquo;0&rsquo;인 경우 산출기초명만 표시됩니다.</p>
                 </div>
               </div>
