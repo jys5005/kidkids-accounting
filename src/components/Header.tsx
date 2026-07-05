@@ -351,8 +351,8 @@ export default function Header() {
         </div>
       )}
 
-      {/* 4단: 아이사랑꿈터 장부 선택 — 서브탭 아래(회계연도 줄) 전용 바 */}
-      {institutionType === 'ilovechild' && activeMenu && activeMenu.children && (
+      {/* 4단: 아이사랑꿈터 장부 선택 — 회계 메뉴에서만 노출 (종사자/아동/물품/커뮤니티 제외) */}
+      {institutionType === 'ilovechild' && currentCategory.key === 'accounting' && activeMenu && activeMenu.children && (
         <div className="bg-white border-b border-slate-200">
           <div className="px-5 py-1.5 flex items-center">
             <BookDropdown />
