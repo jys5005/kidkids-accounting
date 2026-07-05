@@ -2174,8 +2174,20 @@ export default function VoucherInputPage() {
 
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={1 + Object.values(visibleColumns).filter(Boolean).length} className="py-16 text-center text-slate-400 text-sm">
-                    해당 조건의 전표가 없습니다
+                  <td colSpan={1 + Object.values(visibleColumns).filter(Boolean).length} className="py-12 text-center text-slate-400 text-sm">
+                    {(() => {
+                      if (rows.length === 0) return '해당 조건의 전표가 없습니다'
+                      // 이 장부에 다른 달 데이터가 있으면 안내 + 그 달로 이동 버튼
+                      const months = Array.from(new Set(rows.map(r => (r.date || '').slice(0, 7)).filter(Boolean))).sort()
+                      const first = months[0], last = months[months.length - 1]
+                      return (
+                        <div className="space-y-2">
+                          <div><b className="text-slate-500">{filterYearMonth}</b> 전표가 없습니다.</div>
+                          <div className="text-slate-500">이 장부 전표({rows.length}건)는 <b className="text-teal-600">{first} ~ {last}</b>에 있습니다.</div>
+                          <button type="button" onClick={() => setFilterYearMonth(first)} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded">→ {first} 전표 보기</button>
+                        </div>
+                      )
+                    })()}
                   </td>
                 </tr>
               )}
