@@ -76,7 +76,7 @@ const IMG_EXT = ['.jpg', '.jpeg', '.png', '.webp']
 async function attachReceipts(acc: Page, fcltcd: string, list: Record<string, unknown>[]): Promise<{ photos: number; bills: number }> {
   const dir = path.join(process.cwd(), 'data', 'receipts')
   await mkdir(dir, { recursive: true })
-  const targets = list.filter(r => ['2', '3'].includes(String(r.BILL_ATCH_TYPE)))
+  const targets = list.filter(r => String(r.BILL_ATCH_TYPE) === '2') // 2=영수증 사진만 (1=카드 제외)
   let photos = 0, bills = 0
   for (const row of targets) {
     try {
