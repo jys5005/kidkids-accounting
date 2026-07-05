@@ -12,12 +12,20 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 const BOOK_GB: Record<string, string> = { subsidy: '03', fee: '04', 'info-center': '01' }
 const PORTAL_REF = GWIN + '/portal/websquare/websquare.html'
 const ACC_REF = GWIN + '/acc/websquare/websquare.html'
-// getBillList 후보 (billManage 모듈)
+// 예산(작동 확인됨) 대조군 — 세션 유효성 확인용
+const CONTROL_ENDPOINT = '/acc/api/acc/acc/budgetManage/getBudgetList'
+// getBillList 후보 (모듈×메서드 다수) — 401=경로없음(auth필터), 200+list=정답
 const BILL_ENDPOINTS = [
   '/acc/api/acc/acc/billManage/getBillList',
   '/acc/api/acc/acc/billManage/getBillMngList',
-  '/acc/api/acc/acc/billManage/getPaperList',
-  '/acc/api/acc/acc/billManage/getCashList',
+  '/acc/api/acc/acc/billManage/selectBillList',
+  '/acc/api/acc/acc/billManage/getBillPaperList',
+  '/acc/api/acc/acc/paperManage/getPaperList',
+  '/acc/api/acc/acc/paperManage/getBillList',
+  '/acc/api/acc/acc/voucherManage/getVoucherList',
+  '/acc/api/acc/acc/cashManage/getCashList',
+  '/acc/api/acc/acc/cashbookManage/getCashbookList',
+  '/acc/api/acc/acc/billManage/getBillListPaging',
 ]
 
 class Jar {
@@ -79,8 +87,16 @@ export async function POST(req: NextRequest) {
       START_YM: `${yFrom}${mF}`, END_YM: `${yTo}${mT}`,
     }
 
+    // /acc 세션 warmup — 예산과 동일한 첫 /acc 호출(getEstimateSetList)로 acc 컨텍스트 활성화
+    const warm = await post(jar, '/acc/api/acc/acc/budgetManage/getEstimateSetList', {
+      search: { FCLTCD: fcltcd, BOOK_GB: bg, ESTI_YEAR: y, ESTI_INOUT: 'I', ESTIM_GB: 'M01', DURATION_GB: 1, IS_LAST_SET: 'Y' },
+    }, ACC_REF)
+    // 대조군 — 예산 getBudgetList (작동 확인됨). 세션 유효 시 200/JSON.
+    const ctrl = await post(jar, CONTROL_ENDPOINT, { search: { FCLTCD: fcltcd, BOOK_GB: bg, ESTI_YEAR: y, ESTI_INOUT: 'I', ESTIM_GB: 'M01', DURATION_GB: 1 } }, ACC_REF)
+    const control = { status: ctrl.status, hasJson: !!ctrl.json, snippet: String(ctrl.text || '').slice(0, 120) }
+
     // getBillList 후보 순회 — list 있는 응답 채택
-    const tried: { ep: string; status: number; keys: string[] }[] = []
+    const tried: { ep: string; status: number; snippet: string }[] = []
     for (const ep of BILL_ENDPOINTS) {
       const res = await post(jar, ep, { search }, ACC_REF)
       const j = res.json as Record<string, unknown> | null
@@ -93,12 +109,12 @@ export async function POST(req: NextRequest) {
             keys: Object.keys(list[0]), rows: list.slice(0, 2000),
           })
         }
-        tried.push({ ep, status: res.status, keys: j ? Object.keys(j) : [] })
+        tried.push({ ep, status: res.status, snippet: `keys:${Object.keys(j).join(',').slice(0, 60)}` })
       } else {
-        tried.push({ ep, status: res.status, keys: [] })
+        tried.push({ ep, status: res.status, snippet: String(res.text || '').slice(0, 60) })
       }
     }
-    return NextResponse.json({ success: false, error: `전표 목록 응답을 찾지 못했습니다 (엔드포인트/파라미터 확인 필요).`, tried }, { status: 200 })
+    return NextResponse.json({ success: false, error: `전표 목록 응답을 찾지 못했습니다.`, warmStatus: warm.status, control, tried }, { status: 200 })
   } catch (e) {
     return NextResponse.json({ success: false, error: `걸음마 전표 조회 오류: ${e instanceof Error ? e.message : String(e)}` }, { status: 200 })
   }
