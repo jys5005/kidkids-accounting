@@ -215,7 +215,8 @@ export default function VoucherInputPage() {
   const acctModel = useMemo(() => buildAccountModel(book && coaTree ? coaTree : null), [book, coaTree])
   const { incomeAccounts, expenseAccounts, accountOptions, subAccountMap, accountCodeMap, subAccountCodeMap, codeToAccount } = acctModel
   // 아이사랑꿈터(book)는 등록/수수료/원아 컬럼 미사용 → 컬럼설정·테이블에서 완전 제거
-  const hiddenCol = (key: string) => !!book && (key === 'register' || key === 'fee' || key === 'child')
+  // 아이사랑꿈터(book 있음): 어린이집용 컬럼 숨김. 영수/이체/은행/증빙(evidence)은 안 쓰므로 숨기고 첨부(영수증사진)만 유지.
+  const hiddenCol = (key: string) => !!book && (key === 'register' || key === 'fee' || key === 'child' || key === 'evidence')
   const [filterDayFrom, setFilterDayFrom] = useState(0) // 0 = 전체
   const [filterDayTo, setFilterDayTo] = useState(0)
   const [sortMode, setSortMode] = useState<'' | '수입부우선' | '전표번호' | '전체'>('')
