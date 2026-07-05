@@ -233,6 +233,12 @@ export const ILOVECHILD_HIDDEN_HREFS = new Set<string>([
   '/voucher/balance',         // 잔액비교
   '/voucher/transactions',    // 거래내역
   '/voucher/bank',            // 계좌내역
+  // 정산관리 — 어린이집 전용 정산서(누리/급식/필요경비/특별활동) 미사용, 정부보조금명세서·보조금정산서만
+  '/reconciliation/nuri',             // 누리과정정산서
+  '/reconciliation/meal',             // 급식비정산서
+  '/reconciliation/required-expense', // 필요경비정산서
+  '/reconciliation/activity',         // 특별활동비보고서
+  '/reconciliation/expense',          // 기타필요경비보고서
 ])
 
 /** 기관 유형에 맞는 메뉴만 반환. CIS 미사용 유형이면 CIS/검증 제거, 아이사랑꿈터 전용은 그 외 유형에서 제거. */

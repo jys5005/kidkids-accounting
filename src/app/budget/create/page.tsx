@@ -695,9 +695,9 @@ export default function BudgetCreatePage() {
           <div className="w-[360px] flex-shrink-0 border-r border-slate-200 flex flex-col">
             <div className="py-1.5 text-center border-b border-slate-200">계정과목</div>
             <div className="flex">
-              <div className="w-[80px] flex-shrink-0 border-r border-slate-200 py-1.5 text-center">관</div>
-              <div className="w-[140px] flex-shrink-0 border-r border-slate-200 py-1.5 text-center">항</div>
-              <div className="w-[140px] flex-shrink-0 py-1.5 text-center">목</div>
+              <div className="w-[100px] flex-shrink-0 border-r border-slate-200 py-1.5 text-center">관</div>
+              <div className="w-[130px] flex-shrink-0 border-r border-slate-200 py-1.5 text-center">항</div>
+              <div className="w-[130px] flex-shrink-0 py-1.5 text-center">목</div>
             </div>
           </div>
           <div className="w-[160px] flex-shrink-0 border-r border-slate-200 px-2 flex items-center justify-center text-center">
@@ -746,12 +746,10 @@ export default function BudgetCreatePage() {
               return (
                 <div key={row.code} className={`flex group/row hover:bg-blue-50/30 transition-colors ${mi > 0 ? 'border-t border-slate-100' : ''} ${isSub ? 'bg-slate-50/30' : ''}`}>
                   {/* 목 */}
-                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 flex flex-col justify-center gap-0.5 ${isSub ? 'pl-4' : ''}`}>
-                    <div className="flex items-center gap-1">
-                      <span className={`text-[9px] font-bold rounded px-1 py-px ${isSub ? 'text-slate-400 bg-slate-100' : 'text-emerald-700 bg-emerald-100'}`}>{isSub ? '세' : '목'}</span>
-                      <span className={`text-[11px] font-bold ${isSub ? 'text-slate-400' : 'text-slate-700'}`}>{row.code.replace('E', '')}</span>
-                    </div>
-                    <span className={`text-[10px] ${isSub ? 'text-slate-400' : 'text-slate-600'}`}>{row.name}</span>
+                  <div className={`w-[130px] flex-shrink-0 border-r border-slate-200 px-2 py-2 flex items-center gap-1 overflow-hidden ${isSub ? 'pl-4' : ''}`}>
+                    <span className={`text-[9px] font-bold rounded px-1 py-px flex-shrink-0 ${isSub ? 'text-slate-400 bg-slate-100' : 'text-emerald-700 bg-emerald-100'}`}>{isSub ? '세' : '목'}</span>
+                    <span className={`text-[11px] font-bold flex-shrink-0 ${isSub ? 'text-slate-400' : 'text-slate-700'}`}>{row.code.replace('E', '')}</span>
+                    <span className={`text-[10px] truncate ${isSub ? 'text-slate-400' : 'text-slate-600'}`}>{row.name}</span>
                   </div>
                   {/* 전년도결산액 / 결산액 + 예산대비차액 */}
                   <div className="w-[160px] flex-shrink-0 border-r border-slate-200 px-2 py-2 flex flex-col items-end justify-center">
@@ -813,18 +811,16 @@ export default function BudgetCreatePage() {
             return groups.map((g) => (
               <div key={g.gwan.code} className="flex border-t border-slate-300">
                 {/* 관 — 세로 중앙정렬(셀병합) */}
-                <div className="w-[80px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex flex-col items-center justify-center gap-0.5">
-                  <div className="flex items-center gap-1"><span className="text-[9px] font-bold text-violet-700 bg-violet-100 rounded px-1 py-px">관</span><span className="text-[11px] font-bold text-slate-700">{g.gwan.code.replace('E', '')}</span></div>
-                  <span className="text-[10px] font-medium text-slate-600 text-center leading-tight">{g.gwan.name}</span>
+                <div className="w-[100px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex items-center justify-center gap-1 overflow-hidden">
+                  <span className="text-[9px] font-bold text-violet-700 bg-violet-100 rounded px-1 py-px flex-shrink-0">관</span><span className="text-[11px] font-bold text-slate-700 flex-shrink-0">{g.gwan.code.replace('E', '')}</span><span className="text-[10px] font-medium text-slate-600 truncate">{g.gwan.name}</span>
                 </div>
                 {/* 항 그룹 */}
                 <div className="flex-1">
                   {g.hangs.map((h, hi) => (
                     <div key={h.hang.code} className={`flex ${hi > 0 ? 'border-t border-slate-200' : ''}`}>
                       {/* 항 — 세로 중앙정렬(셀병합) */}
-                      <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex flex-col items-center justify-center gap-0.5">
-                        <div className="flex items-center gap-1"><span className="text-[9px] font-bold text-sky-700 bg-sky-100 rounded px-1 py-px">항</span><span className="text-[11px] font-semibold text-slate-600">{h.hang.code.replace('E', '')}</span></div>
-                        <span className="text-[10px] font-medium text-slate-600 text-center leading-tight">{h.hang.name}</span>
+                      <div className="w-[130px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex items-center justify-center gap-1 overflow-hidden">
+                        <span className="text-[9px] font-bold text-sky-700 bg-sky-100 rounded px-1 py-px flex-shrink-0">항</span><span className="text-[11px] font-semibold text-slate-600 flex-shrink-0">{h.hang.code.replace('E', '')}</span><span className="text-[10px] font-medium text-slate-600 truncate">{h.hang.name}</span>
                       </div>
                       {/* 목 행들 */}
                       <div className="flex-1">

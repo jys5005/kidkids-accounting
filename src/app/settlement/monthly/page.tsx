@@ -409,8 +409,8 @@ function MonthlySettleTable({ title, rows, tone }: { title: string; rows: MRow[]
               <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[60px]">집행률</th>
             </tr>
             <tr className="bg-slate-50 text-slate-500 font-bold">
-              <th className="px-2 py-1.5 border border-slate-200 w-[80px]">관</th>
-              <th className="px-2 py-1.5 border border-slate-200 w-[110px]">항</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-left w-[150px]">관</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-left w-[160px]">항</th>
               <th className="px-2 py-1.5 border border-slate-200 text-left">목</th>
             </tr>
           </thead>
@@ -421,8 +421,8 @@ function MonthlySettleTable({ title, rows, tone }: { title: string; rows: MRow[]
               const rate = r.budget > 0 ? Math.round(r.cumul / r.budget * 100) : 0
               return (
                 <tr key={i} className="hover:bg-slate-50/60">
-                  {firstG && <td rowSpan={gSpan} className="px-1 py-1.5 border border-slate-200 text-center align-middle bg-violet-50/40"><div className="flex flex-col items-center gap-0.5"><span className={GWAN_BADGE}>관</span><span className="font-bold text-slate-700">{r.gwanCode}</span><span className="text-[10px] text-slate-600 leading-tight">{r.gwanName}</span></div></td>}
-                  {firstH && <td rowSpan={hSpan} className="px-1 py-1.5 border border-slate-200 text-center align-middle bg-sky-50/40"><div className="flex flex-col items-center gap-0.5"><span className={HANG_BADGE}>항</span><span className="font-semibold text-slate-600">{r.hangCode}</span><span className="text-[10px] text-slate-600 leading-tight">{r.hangName}</span></div></td>}
+                  {firstG && <td rowSpan={gSpan} className="px-2 py-1.5 border border-slate-200 align-middle bg-violet-50/40"><div className="flex items-center gap-1 whitespace-nowrap"><span className={GWAN_BADGE}>관</span><span className="font-bold text-slate-700">{r.gwanCode}</span><span className="text-slate-600">{r.gwanName}</span></div></td>}
+                  {firstH && <td rowSpan={hSpan} className="px-2 py-1.5 border border-slate-200 align-middle bg-sky-50/40"><div className="flex items-center gap-1 whitespace-nowrap"><span className={HANG_BADGE}>항</span><span className="font-semibold text-slate-600">{r.hangCode}</span><span className="text-slate-600">{r.hangName}</span></div></td>}
                   <td className="px-2 py-1.5 border border-slate-200"><div className="flex items-center gap-1"><span className={MOK_BADGE}>목</span><span className="font-bold text-slate-700">{r.code}</span><span className="text-slate-600">{r.name}</span></div></td>
                   <td className="px-2 py-1.5 border border-slate-200 text-right">{r.budget ? f(r.budget) : ''}</td>
                   <td className="px-2 py-1.5 border border-slate-200 text-right text-slate-700">{r.month ? f(r.month) : ''}</td>
