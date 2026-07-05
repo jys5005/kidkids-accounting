@@ -110,6 +110,10 @@ export async function POST(req: NextRequest) {
     for (const inout of ['I', 'O'] as const) {
       const setRes = await post(jar, '/acc/api/acc/acc/budgetManage/getEstimateSetList',
         { search: baseSearch(fcltcd, bg, y, inout, '') }, ACC_REF)
+      // 401 = 걸음마 세션 거부(반복 로그인 차단 등) — "예산 없음"으로 오인 표시 방지
+      if (setRes.status === 401 || (setRes.json as { status?: number } | null)?.status === 401) {
+        return NextResponse.json({ success: false, error: '걸음마 접속이 일시 거부되었습니다(반복 로그인 차단 가능). 잠시 후 다시 시도해 주세요.' }, { status: 200 })
+      }
       const setList = (setRes.json as { estimateSetList?: Array<{ SET_IDX?: string }> } | null)?.estimateSetList
       const setIdx = setList?.[0]?.SET_IDX || ''
       if (!setIdx) continue // 해당 장부/방향 예산 없음
