@@ -1545,8 +1545,10 @@ export default function VoucherInputPage() {
           }
           .single-input-mode td[data-cell] > button { border: none !important; }
           .single-input-mode td[data-cell="income"] > span,
-          .single-input-mode td[data-cell="expense"] > span {
-            justify-content: flex-end; width: 100%;
+          .single-input-mode td[data-cell="income"] > div:not(.absolute),
+          .single-input-mode td[data-cell="expense"] > span,
+          .single-input-mode td[data-cell="expense"] > div:not(.absolute) {
+            justify-content: flex-end; width: 100%; text-align: right;
           }
           .single-input-mode td[data-cell="date"] > span {
             justify-content: center;
