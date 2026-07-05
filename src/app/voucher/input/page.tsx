@@ -1880,7 +1880,7 @@ export default function VoucherInputPage() {
                                   onClick={e => e.stopPropagation()}
                                   className="w-full px-2 py-1 border border-teal-300 rounded text-[11px] text-right focus:ring-1 focus:ring-teal-300 outline-none" />
                               ) : (
-                                <div className={`w-full text-right text-[11px] px-2 py-1 rounded border border-slate-200 bg-white ${row.type === '수입' ? 'text-blue-700 font-medium' : 'text-slate-300'}`}>{row.type === '수입' ? fmt(row.amount) : '0'}</div>
+                                <div className={`w-full text-right text-[11px] px-2 py-1 rounded border border-slate-200 bg-white ${row.type === '수입' ? (row.amount < 0 ? 'text-amber-600 font-bold' : 'text-blue-700 font-medium') : 'text-slate-300'}`} title={row.type === '수입' && row.amount < 0 ? '수입 반납(음수)' : undefined}>{row.type === '수입' ? fmt(row.amount) : '0'}</div>
                               )}
                             </td>
                             <td data-cell="expense" className="px-1.5 py-1 cursor-pointer" onClick={row.type === '지출' ? cellClick('amount') : undefined}>
@@ -1891,7 +1891,7 @@ export default function VoucherInputPage() {
                                   onClick={e => e.stopPropagation()}
                                   className="w-full px-2 py-1 border border-teal-300 rounded text-[11px] text-right focus:ring-1 focus:ring-teal-300 outline-none" />
                               ) : (
-                                <div className={`w-full text-right text-[11px] px-2 py-1 rounded border border-slate-200 bg-white ${row.type === '지출' ? 'text-red-600 font-medium' : 'text-slate-300'}`}>{row.type === '지출' ? fmt(row.amount) : '0'}</div>
+                                <div className={`w-full text-right text-[11px] px-2 py-1 rounded border border-slate-200 bg-white ${row.type === '지출' ? (row.amount < 0 ? 'text-amber-600 font-bold' : 'text-red-600 font-medium') : 'text-slate-300'}`} title={row.type === '지출' && row.amount < 0 ? '지출 반납(음수)' : undefined}>{row.type === '지출' ? fmt(row.amount) : '0'}</div>
                               )}
                             </td>
                             <td className="text-right px-3 py-1">

@@ -21,7 +21,8 @@ function mapRow(r: Record<string, unknown>, i: number) {
   const date = d8.length === 8 ? `${d8.slice(0, 4)}-${d8.slice(4, 6)}-${d8.slice(6, 8)}` : ''
   const amt = num(pick(r, ['BILL_MONEY']))
   const io = String(pick(r, ['ESTI_INOUT'])) // I=수입 / O(그 외)=지출
-  const type: '수입' | '지출' | '반납' = amt < 0 ? '반납' : (io === 'I' ? '수입' : '지출')
+  // ⚠ 반납은 별도 타입이 아니라 '수입/지출 행의 음수 금액'(앱 관례) → 타입은 수입/지출 유지, 금액 부호 보존(음수=반납)
+  const type: '수입' | '지출' = io === 'I' ? '수입' : '지출'
   return {
     id: i + 1,
     date,
@@ -29,7 +30,7 @@ function mapRow(r: Record<string, unknown>, i: number) {
     account: String(pick(r, ['ESTI_NAME_3', 'ESTI_NAME', 'ESTI_DISPLAY'])),      // 목
     subAccount: String(pick(r, ['ESTI_NAME_4', 'ESTI_NAME_DETAIL'])),            // 세목
     summary: String(pick(r, ['BILL_MEMO'])),                                     // 적요(원본 통째)
-    amount: Math.abs(amt),
+    amount: amt,                                                                 // 부호 유지(음수=반납)
     counterpart: String(pick(r, ['CREDITOR'])),                                  // 거래처(실제 컬럼)
     note: String(pick(r, ['BILL_BIGO'])),                                        // 비고(카드/계좌)
     approved: false,
