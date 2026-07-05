@@ -56,7 +56,11 @@ export async function POST(req: NextRequest) {
     const bg = BOOK_GB[book] || '03'
     const y = String(year || new Date().getFullYear())
     const mF = String(monthFrom || '03').padStart(2, '0')
-    const mT = String(monthTo || '12').padStart(2, '0')
+    const mT = String(monthTo || '02').padStart(2, '0')
+    // 회계연도 3월~익년2월: 1·2월은 회계연도+1 (달력연도 보정)
+    const yFrom = Number(mF) >= 3 ? y : String(Number(y) + 1)
+    const yTo = Number(mT) >= 3 ? y : String(Number(y) + 1)
+    const lastDay = String(new Date(Number(yTo), Number(mT), 0).getDate()).padStart(2, '0')
     const jar = new Jar()
 
     // 로그인 → 시설
@@ -70,9 +74,9 @@ export async function POST(req: NextRequest) {
     const search: Record<string, unknown> = {
       FCLTCD: fcltcd, BOOK_GB: bg, ESTI_YEAR: y, PAPER_YEAR: y, YEAR: y, DURATION_GB: 1,
       ESTI_CODE: '', ACCT_CODE: '', SEMOK_CODE: '', INOUT_GB: 'A', SORT_GB: '',
-      PAPER_DATE_START: `${y}${mF}01`, PAPER_DATE_END: `${y}${mT}31`,
-      PAPER_YEARMONTH_START: `${y}${mF}`, PAPER_YEARMONTH_END: `${y}${mT}`,
-      START_YM: `${y}${mF}`, END_YM: `${y}${mT}`,
+      PAPER_DATE_START: `${yFrom}${mF}01`, PAPER_DATE_END: `${yTo}${mT}${lastDay}`,
+      PAPER_YEARMONTH_START: `${yFrom}${mF}`, PAPER_YEARMONTH_END: `${yTo}${mT}`,
+      START_YM: `${yFrom}${mF}`, END_YM: `${yTo}${mT}`,
     }
 
     // getBillList 후보 순회 — list 있는 응답 채택

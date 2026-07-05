@@ -551,7 +551,8 @@ export default function DataMigrationPage() {
   // 걸음마 전표 가져오기 — 여기에 미리보기(원시행) 저장·표시 → 별도 [전표관리로 저장]
   const [gbVLoading, setGbVLoading] = useState(false)
   const [gbVFrom, setGbVFrom] = useState('03') // 회계연도 시작(3월)
-  const [gbVTo, setGbVTo] = useState('12')
+  const [gbVTo, setGbVTo] = useState('02') // 회계연도 종료(익년 2월)
+  const FISCAL_MONTHS = ['03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '01', '02']
   const [gbVRows, setGbVRows] = useState<Record<string, unknown>[] | null>(null)
   const [gbVKeys, setGbVKeys] = useState<string[]>([])
   const [gbVBook, setGbVBook] = useState('')
@@ -1011,12 +1012,12 @@ export default function DataMigrationPage() {
             <button onClick={saveGwinBudget} disabled={!gbPreviewByBook || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-40">💾 저장</button>
             <button onClick={loadGwinBudgetStatic} className="px-2 py-1.5 text-[11px] font-bold text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50" title="실시간 조회 실패 시 마지막 저장된 스냅샷으로 미리보기">저장 데이터로 보기</button>
             <span className="text-[11px] font-bold text-slate-500 ml-1">전표기간</span>
-            <select value={gbVFrom} onChange={e => setGbVFrom(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="시작월">
-              {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map(m => <option key={m} value={m}>{Number(m)}월</option>)}
+            <select value={gbVFrom} onChange={e => setGbVFrom(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="시작월(회계연도 3월~익년2월)">
+              {FISCAL_MONTHS.map(m => <option key={m} value={m}>{Number(m)}월{Number(m) < 3 ? '(익년)' : ''}</option>)}
             </select>
             <span className="text-slate-400 text-xs">~</span>
-            <select value={gbVTo} onChange={e => setGbVTo(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="종료월">
-              {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map(m => <option key={m} value={m}>{Number(m)}월</option>)}
+            <select value={gbVTo} onChange={e => setGbVTo(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="종료월(회계연도 3월~익년2월)">
+              {FISCAL_MONTHS.map(m => <option key={m} value={m}>{Number(m)}월{Number(m) < 3 ? '(익년)' : ''}</option>)}
             </select>
             <button onClick={loadGwinVouchers} disabled={gbVLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50" title="걸음마 전표(현금출납부) 조회">{gbVLoading ? '⏳ 전표 조회 중…' : '🧾 전표 가져오기'}</button>
             <button onClick={saveGwinVouchers} disabled={!gbVRows || !gbVRows.length || gbVSaving} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded disabled:opacity-40" title="가져온 전표를 전표관리로 저장">{gbVSaving ? '저장 중…' : '📒 전표관리로 저장'}</button>
