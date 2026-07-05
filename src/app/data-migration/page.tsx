@@ -930,8 +930,8 @@ export default function DataMigrationPage() {
         </div>
       )}
 
-      {/* 2열 레이아웃: 출발지 / 목적지 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* 2열 레이아웃: 출발지 / 목적지 (아이사랑꿈터는 자체 저장 → 단일 컬럼) */}
+      <div className={`grid grid-cols-1 gap-6 ${isIlovechild ? '' : 'lg:grid-cols-2'}`}>
         {/* 출발지 */}
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -1214,7 +1214,8 @@ export default function DataMigrationPage() {
           </div>
         </div>
 
-        {/* 목적지: 수전자장부 */}
+        {/* 목적지: 수전자장부 — 아이사랑꿈터는 자체(page_data) 저장이라 목적지 로그인 불필요 → 숨김 */}
+        {!isIlovechild && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -1379,6 +1380,7 @@ export default function DataMigrationPage() {
 
           </div>
         </div>
+        )}
       </div>
 
       {/* 이관 버튼 (2열 그리드 바로 아래) */}
