@@ -109,7 +109,7 @@ function CoverSection({ centerName }: { centerName: string }) {
         </div>
         <div className="flex-1" />
         <div className="text-center pb-16">
-          <p className="text-2xl font-bold text-purple-900 tracking-widest">{centerName || '기관명'}</p>
+          <span className="inline-block px-8 py-2.5 rounded-full bg-purple-100 border border-purple-300 text-2xl font-bold text-purple-900 tracking-widest">{centerName || '기관명'}</span>
         </div>
       </div>
     </div>
