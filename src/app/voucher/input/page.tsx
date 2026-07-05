@@ -209,6 +209,8 @@ export default function VoucherInputPage() {
   }, [book, coaYear])
   const acctModel = useMemo(() => buildAccountModel(book && coaTree ? coaTree : null), [book, coaTree])
   const { incomeAccounts, expenseAccounts, accountOptions, subAccountMap, accountCodeMap, subAccountCodeMap, codeToAccount } = acctModel
+  // 아이사랑꿈터(book)는 등록/수수료/원아 컬럼 미사용 → 컬럼설정·테이블에서 완전 제거
+  const hiddenCol = (key: string) => !!book && (key === 'register' || key === 'fee' || key === 'child')
   const [filterDayFrom, setFilterDayFrom] = useState(0) // 0 = 전체
   const [filterDayTo, setFilterDayTo] = useState(0)
   const [sortMode, setSortMode] = useState<'' | '수입부우선' | '전표번호' | '전체'>('')
@@ -931,6 +933,7 @@ export default function VoucherInputPage() {
                 </button>
               </div>
               {columnOrder.map(([key, label, num], i) => {
+                if (hiddenCol(key)) return null
                 const fixedKeys = ['no', 'date', 'type', 'summary', 'amountGroup', 'accountGroup']
                 const isFixed = fixedKeys.includes(key)
                 const canMove = i >= 3
@@ -1084,8 +1087,8 @@ export default function VoucherInputPage() {
             <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
             {/* 매핑 그룹 */}
             <div className="flex items-center gap-1">
-              <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-pink-600 bg-pink-100 rounded cursor-default">매핑</span>
-              <button data-tip="아동관리에 등록아동과 전표에 아동의 필요경비를 자동 매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">원아경비</button>
+              {!book && <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-pink-600 bg-pink-100 rounded cursor-default">매핑</span>}
+              {!book && <button data-tip="아동관리에 등록아동과 전표에 아동의 필요경비를 자동 매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">원아경비</button>}
               <button data-tip="기 설정된 조건에 부합하는 계정으로 동시매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">거래처.적요.결제방식</button>
             </div>
             <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
@@ -1401,7 +1404,7 @@ export default function VoucherInputPage() {
               <thead>
                 <tr className="bg-teal-50 border-b border-teal-400/30">
                   {columnOrder.map(([key]) => {
-                    if (!visibleColumns[key as keyof typeof visibleColumns]) return null
+                    if (hiddenCol(key) || !visibleColumns[key as keyof typeof visibleColumns]) return null
                     const thCls = "px-1.5 py-2 font-normal text-slate-700 text-center"
                     switch(key) {
                       case 'no': return <th key={key} className={`${thCls} w-[40px]`}>번호</th>
@@ -1429,7 +1432,7 @@ export default function VoucherInputPage() {
               <tbody>
                 <tr className="bg-white [&>td]:align-middle">
                   {columnOrder.map(([key]) => {
-                    if (!visibleColumns[key as keyof typeof visibleColumns]) return null
+                    if (hiddenCol(key) || !visibleColumns[key as keyof typeof visibleColumns]) return null
                     switch(key) {
                       case 'no': return <td key={key} className="px-1 py-1 text-center text-xs text-slate-400">{(selectedIdx >= 0 ? selectedIdx : 0) + 1}</td>
                       case 'date': return <td key={key} className="px-1 py-1"><input type="text" value={dr.date.slice(5)} onChange={e => { const val = e.target.value.replace(/[^0-9-]/g, ''); if (val.match(/^\d{2}-\d{2}$/)) updateDraft('date', `${filterYearMonth.slice(0,4)}-${val}`) }} className={`${inputCls} text-center`} /></td>
@@ -1547,7 +1550,7 @@ export default function VoucherInputPage() {
                   <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.size === filtered.length && filtered.length > 0} onChange={toggleAll} />
                 </th>
                 {columnOrder.map(([key]) => {
-                  if (!visibleColumns[key as keyof typeof visibleColumns]) return null
+                  if (hiddenCol(key) || !visibleColumns[key as keyof typeof visibleColumns]) return null
                   switch (key) {
                     case 'no': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[40px]">번호</th>
                     case 'date': return <th key={key} className="text-center px-1 py-2 font-normal text-slate-700 w-[62px]">일자</th>
@@ -1617,7 +1620,7 @@ export default function VoucherInputPage() {
                     </td>
                     {/* Dynamic columns rendered in columnOrder */}
                     {columnOrder.map(([key]) => {
-                      if (!visibleColumns[key as keyof typeof visibleColumns]) return null
+                      if (hiddenCol(key) || !visibleColumns[key as keyof typeof visibleColumns]) return null
                       switch (key) {
                         case 'no':
                           return <td key={key} className="text-center px-2 py-1 text-slate-400">{idx + 1}</td>
