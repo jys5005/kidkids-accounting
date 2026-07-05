@@ -561,12 +561,18 @@ export default function DataMigrationPage() {
   const [gbVSavedYm, setGbVSavedYm] = useState('')     // 저장 데이터의 첫 달(YYYY-MM) — 전표입력을 그 달로 열기
   const [gbVSavedSig, setGbVSavedSig] = useState('')   // 마지막으로 저장한 데이터 시그니처(중복 저장 방지)
   const [gbVConfirmOpen, setGbVConfirmOpen] = useState(false) // 중복 저장 확인 팝업
+  const [gbVPartialYm, setGbVPartialYm] = useState('') // 조회 중단된 달(YYYY-MM) — 있으면 다음 조회는 이어받기(merge)
   const [gbVWithReceipts, setGbVWithReceipts] = useState(true) // 영수증 사진까지 가져오기
   const loadGwinVouchers = async () => {
     if (!sourceId || !sourcePw) { setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
     const books = gbSelBooks.length ? gbSelBooks : ['subsidy']
     const cacheKey = books.join(',')
-    setGbVLoading(true); setGbVRows(null); setGbMsg(`걸음마 전표 조회 중(${books.map(bookLabel).join('·')} · ${gbYear}.${gbVFrom}~${gbVTo}월)${gbVWithReceipts ? ' + 영수증 사진 다운로드(시간 걸림)' : ''}…`)
+    const resuming = !!gbVPartialYm                 // 직전 조회가 중간에 끊겼으면 이어받기(merge)
+    const prevRows = resuming ? (gbVRows || []) : []
+    setGbVLoading(true); if (!resuming) setGbVRows(null)
+    setGbMsg(`걸음마 전표 조회 중(${books.map(bookLabel).join('·')} · ${gbYear}.${gbVFrom}~${gbVTo}월)${resuming ? ' — 이어받기' : ''}${gbVWithReceipts ? ' + 영수증 사진(시간 걸림)' : ''}…`)
+    // BILL_IDX 기준 중복 제거(이어받기 시 겹치는 달 안전)
+    const dedupById = (arr: Record<string, unknown>[]) => { const m = new Map<string, Record<string, unknown>>(); for (const r of arr) m.set(String(r.BILL_IDX ?? JSON.stringify(r)), r); return [...m.values()].sort((a, b) => String(a.BILL_DATE ?? '').localeCompare(String(b.BILL_DATE ?? ''))) }
     try {
       const res = await fetch('/api/gwin/vouchers', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
@@ -574,21 +580,34 @@ export default function DataMigrationPage() {
       })
       const j = await res.json().catch(() => ({}))
       if (j?.success && Array.isArray(j.rows)) {
-        setGbVRows(j.rows); setGbVKeys(j.keys || []); setGbVBook(cacheKey); setGbVSavedSig('') // 새 조회 → 저장가드 해제
-        const rc = j.receiptBills ? ` · 🧾 영수증 ${j.receiptPhotos}장(${j.receiptBills}건 전표)` : ''
+        const merged = resuming ? dedupById([...prevRows, ...j.rows]) : j.rows
+        setGbVRows(merged); setGbVKeys(j.keys || gbVKeys); setGbVBook(cacheKey); setGbVSavedSig('') // 새 조회 → 저장가드 해제
+        const rc = j.receiptBills ? ` · 🧾 영수증 ${j.receiptPhotos}장(${j.receiptBills}건)` : ''
         const pb = Array.isArray(j.perBook) ? ' · ' + j.perBook.map((p: { label: string; count: number }) => `${p.label} ${p.count}건`).join(' / ') : ''
-        setGbMsg(`✅ 전표 ${j.count}건 조회${pb}${rc}. 아래 미리보기 확인 후 [전표관리로 저장].`)
-        // 조회 결과 저장(덮어쓰기) — 새로고침/재방문 시 복원용
+        if (j.partial && j.failedYm) {
+          const fm = String(j.failedYm).slice(5, 7)
+          if (fm) setGbVFrom(fm)                    // 시작월을 실패한 달로 자동 세팅 → 다시 누르면 이어받기
+          setGbVPartialYm(String(j.failedYm))
+          setGbMsg(`⚠️ ${j.failedYm} 조회 중 끊김 — ${j.lastOkYm || '이전'}월까지 총 ${merged.length}건 확보. 시작월을 ${Number(fm)}월로 맞췄습니다. 다시 [🧾 전표 가져오기]를 누르면 ${Number(fm)}월부터 이어서 가져옵니다.`)
+        } else {
+          setGbVPartialYm('')
+          setGbMsg(`✅ 전표 ${merged.length}건 조회${pb}${rc}. 아래 미리보기 확인 후 [전표관리로 저장].`)
+        }
+        // 조회 결과 저장(덮어쓰기) — 새로고침/재방문 시 복원용(누적본 저장)
         fetch('/api/gwin/vouchers/cache', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ book: cacheKey, year: gbYear, rows: j.rows, keys: j.keys || [], from: gbVFrom, to: gbVTo, receiptPhotos: j.receiptPhotos || 0, receiptBills: j.receiptBills || 0 }),
+          body: JSON.stringify({ book: cacheKey, year: gbYear, rows: merged, keys: j.keys || gbVKeys, from: gbVFrom, to: gbVTo, receiptPhotos: j.receiptPhotos || 0, receiptBills: j.receiptBills || 0 }),
         }).catch(() => {})
       } else {
-        setGbVRows(null)
-        const ctrl = j?.control ? ` | accEnter:${j.control.accEnter} warmup:${j.control.warm} 대조군:${j.control.status}` : ''
-        const bill = j?.billStatus !== undefined ? ` | getBillList:${j.billStatus}` : ''
-        const msg = j?.control?.msg ? ` | 메시지:${String(j.control.msg).slice(0, 140)}` : ''
-        setGbMsg(`❌ ${j?.error || '전표 조회 실패'}${ctrl}${bill}${msg}`)
+        if (!resuming) setGbVRows(null)             // 이어받기 실패 시 기존 누적본 보존
+        if (j?.failedYm) {                          // 첫 달부터 실패 → 그 달부터 재시도 안내
+          const fm = String(j.failedYm).slice(5, 7); if (fm) setGbVFrom(fm)
+          setGbVPartialYm(String(j.failedYm))
+          setGbMsg(`⚠️ ${j.failedYm}월 조회 실패. 잠시 후 다시 [🧾 전표 가져오기]를 누르면 ${Number(fm)}월부터 다시 시도합니다.`)
+        } else {
+          const bill = j?.billStatus !== undefined ? ` | getBillList:${j.billStatus}` : ''
+          setGbMsg(`❌ ${j?.error || '전표 조회 실패'}${bill}`)
+        }
       }
     } catch (e) { setGbVRows(null); setGbMsg(`❌ 전표 조회 오류: ${e instanceof Error ? e.message : ''}`) }
     finally { setGbVLoading(false) }
@@ -632,6 +651,7 @@ export default function DataMigrationPage() {
   const activeVBook = (gbSelBooks.length ? gbSelBooks : ['subsidy']).join(',')
   useEffect(() => {
     if (!isIlovechild) return
+    setGbVPartialYm('') // 장부/연도 변경 → 이어받기 상태 초기화
     let cancelled = false
     fetch(`/api/gwin/vouchers/cache?book=${encodeURIComponent(activeVBook)}&year=${encodeURIComponent(gbYear)}`, { credentials: 'include' })
       .then(r => r.json()).then(j => {
