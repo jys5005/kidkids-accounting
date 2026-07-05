@@ -1,50 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server'
+import puppeteer, { type Browser, type Page } from 'puppeteer'
 
 export const runtime = 'nodejs'
-export const maxDuration = 120
+export const maxDuration = 180
 
-// 걸음마(gwin.co.kr) 전표(현금출납부) 조회 — 예산과 동일한 서버 방식(브라우저 없이 fetch + 쿠키 jar).
-// login → mberFclt → getBillList(장부·기간). 응답 원시 행 + 필드키 반환(구조 확인 후 매핑 확정).
+// 걸음마(gwin.co.kr) 전표(현금출납부) — 실 브라우저 UI 흐름으로 세션 확보.
+// ⚠ 핵심: 로그인 후 "걸음마회계 WiN 실행" 버튼을 실제 클릭해야 /acc 세션이 활성화됨(핸드오프).
+//    직접 fetch/포털API 로그인만으론 /acc 가 401("세션만료") — 이 클릭이 유일한 열쇠.
 // 자격증명은 클라이언트 전달, 저장/로그 금지.
 
-const GWIN = 'https://gwin.co.kr'
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36'
 const BOOK_GB: Record<string, string> = { subsidy: '03', fee: '04', 'info-center': '01' }
-const PORTAL_REF = GWIN + '/portal/websquare/websquare.html'
-const ACC_REF = GWIN + '/acc/websquare/websquare.html'
-// 전표 목록 (HAR 실측 확정)
-const BILL_ENDPOINTS = ['/acc/api/acc/acc/billManage/getBillList']
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
-class Jar {
-  private m = new Map<string, string>()
-  absorb(res: Response) {
-    const sc = (res.headers as unknown as { getSetCookie?: () => string[] }).getSetCookie?.() ?? []
-    const list = sc.length ? sc : (res.headers.get('set-cookie') ? [res.headers.get('set-cookie') as string] : [])
-    for (const c of list) {
-      const [pair] = c.split(';'); const eq = pair.indexOf('=')
-      if (eq > 0) this.m.set(pair.slice(0, eq).trim(), pair.slice(eq + 1).trim())
-    }
-  }
-  header() { return [...this.m].map(([k, v]) => `${k}=${v}`).join('; ') }
+let _b: Browser | null = null
+async function getBrowser(): Promise<Browser> {
+  if (_b && _b.connected) return _b
+  _b = await puppeteer.launch({ headless: true, protocolTimeout: 220000, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] })
+  return _b
 }
 
-async function post(jar: Jar, path: string, body: unknown, referer: string) {
-  const res = await fetch(GWIN + path, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json', 'User-Agent': UA, 'Origin': GWIN, 'Referer': referer,
-      'Accept': 'application/json, text/plain, */*', ...(jar.header() ? { 'Cookie': jar.header() } : {}),
-    },
-    body: JSON.stringify(body),
+// 로그인 → 팝업닫기 → "걸음마회계 WiN 실행" 클릭 → { acc페이지, fcltcd }
+async function loginAndEnterAcc(page: Page, id: string, password: string): Promise<{ acc: Page; fcltcd: string } | null> {
+  page.on('dialog', async d => { await d.accept().catch(() => {}) })
+  // 로그인 중 mberFclt 응답 가로채 fcltcd 확보
+  let fcltcd = ''
+  page.on('response', async r => {
+    if (r.url().includes('/portal/api/cmmn/mberFclt')) {
+      try { const j = await r.json() as Array<{ fcltcd?: string }>; if (j?.[0]?.fcltcd) fcltcd = j[0].fcltcd } catch { }
+    }
   })
-  jar.absorb(res)
-  const text = await res.text()
-  let json: unknown = null
-  try { json = text ? JSON.parse(text) : null } catch { /* non-json */ }
-  return { ok: res.ok, status: res.status, json, text }
+  await page.goto('https://gwin.co.kr/', { waitUntil: 'domcontentloaded', timeout: 40000 }).catch(() => {})
+  await sleep(5000)
+  // 로그인 팝업 열기
+  await page.evaluate(() => { const t = [...document.querySelectorAll('button,a,span,div')].find(e => ((e as HTMLElement).innerText || '').trim() === '로그인'); if (t) (t as HTMLElement).click() })
+  await sleep(3500)
+  // 아이디/패스워드 입력(React value setter) + 로그인
+  await page.evaluate((uid, pw) => {
+    const set = (el: HTMLInputElement, v: string) => { const s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) }
+    const idEl = [...document.querySelectorAll('input')].find(i => (i as HTMLInputElement).placeholder === '아이디' && (i as HTMLElement).offsetParent) as HTMLInputElement | undefined
+    const pwEl = [...document.querySelectorAll('input')].find(i => (i as HTMLInputElement).placeholder === '패스워드' && (i as HTMLElement).offsetParent) as HTMLInputElement | undefined
+    if (idEl) set(idEl, uid); if (pwEl) set(pwEl, pw)
+  }, id, password)
+  await sleep(600)
+  await page.evaluate(() => { const bs = [...document.querySelectorAll('button,a,input')].filter(e => (((e as HTMLElement).innerText || (e as HTMLInputElement).value || '').trim()) === '로그인' && (e as HTMLElement).offsetParent); (bs[bs.length - 1] as HTMLElement)?.click() })
+  await sleep(6000)
+  // 로그인 성공 확인
+  const loggedIn = await page.evaluate(() => !![...document.querySelectorAll('button,a,span')].find(e => ((e as HTMLElement).innerText || '').trim() === '로그아웃'))
+  if (!loggedIn) return null
+  // 팝업(별도 창 + 인페이지 모달) 닫기
+  const b = page.browser()
+  for (const pg of await b.pages()) { if (pg !== page) await pg.close().catch(() => {}) }
+  await page.evaluate(() => { ['나중에 하기', '닫기'].forEach(txt => [...document.querySelectorAll('button,a,span,div')].filter(e => ((e as HTMLElement).innerText || '').trim() === txt && (e as HTMLElement).offsetParent).forEach(e => { try { (e as HTMLElement).click() } catch { } })) })
+  await sleep(2500)
+  // "걸음마회계 WiN 실행" 실제 마우스 클릭 → /acc 세션 핸드오프
+  const meta = await page.evaluate(() => {
+    const t = [...document.querySelectorAll('*')].find(e => ((e as HTMLElement).innerText || '').trim() === '걸음마회계 WiN 실행')
+    if (!t) return null
+    const a = (t.closest('a,button,[onclick]') || t) as HTMLElement
+    const r = a.getBoundingClientRect()
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+  })
+  if (!meta) return null
+  await page.mouse.click(meta.x, meta.y)
+  await sleep(10000)
+  const acc = (await b.pages()).find(pg => pg.url().includes('/acc/')) || page
+  if (!fcltcd) return null
+  return { acc, fcltcd }
 }
 
 export async function POST(req: NextRequest) {
+  let page: Page | null = null
   try {
     const { id, password, book, year, monthFrom, monthTo } = await req.json()
     if (!id || !password) return NextResponse.json({ success: false, error: '걸음마 아이디/비밀번호가 필요합니다.' }, { status: 400 })
@@ -52,47 +77,46 @@ export async function POST(req: NextRequest) {
     const y = String(year || new Date().getFullYear())
     const mF = String(monthFrom || '03').padStart(2, '0')
     const mT = String(monthTo || '02').padStart(2, '0')
-    // 회계연도 3월~익년2월: 1·2월은 회계연도+1 (달력연도 보정)
     const yFrom = Number(mF) >= 3 ? y : String(Number(y) + 1)
     const yTo = Number(mT) >= 3 ? y : String(Number(y) + 1)
     const lastDay = String(new Date(Number(yTo), Number(mT), 0).getDate()).padStart(2, '0')
-    const jar = new Jar()
 
-    // 로그인 → 시설
-    const login = await post(jar, '/portal/api/cmmn/login', { id, password }, PORTAL_REF)
-    const mberNo = (login.json as { mberNo?: string } | null)?.mberNo
-    if (!mberNo) return NextResponse.json({ success: false, error: `걸음마 로그인 실패 (${login.status}) ${String(login.text).slice(0, 120)}` }, { status: 200 })
-    const fclt = await post(jar, '/portal/api/cmmn/mberFclt', { mberNo }, PORTAL_REF)
-    const fcltcd = (fclt.json as Array<{ fcltcd?: string }> | null)?.[0]?.fcltcd
-    if (!fcltcd) return NextResponse.json({ success: false, error: '걸음마 시설 정보를 찾을 수 없습니다.' }, { status: 200 })
+    const b = await getBrowser()
+    page = await b.newPage()
+    await page.setViewport({ width: 1500, height: 950 })
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36')
+    const entered = await loginAndEnterAcc(page, id, password)
+    if (!entered) { await page.close().catch(() => {}); page = null; return NextResponse.json({ success: false, error: '걸음마 로그인/회계 진입 실패 (아이디·비밀번호 확인 또는 잠시 후 재시도)' }, { status: 200 }) }
+    const { acc, fcltcd } = entered
 
-    // HAR 실측 파라미터 (billManage/getBillList). 예산과 동일하게 login→mberFclt 직후 바로 호출.
-    const search: Record<string, unknown> = {
-      FCLTCD: fcltcd, schBookGb: bg,
-      schACCOUNT_IDX: '', schACCOUNT_IDXforBillSearch: '',
+    // /acc 세션 활성 상태에서 getBillList 호출 (기간=회계연도 범위). FCLTCD 필수, schACCOUNT_IDX/AAV_IDX 는 빈값 가능.
+    const search = {
+      FCLTCD: fcltcd, schBookGb: bg, schACCOUNT_IDX: '', schACCOUNT_IDXforBillSearch: '',
       schYear: y, schByTerm: 'Y', schNotEstimate: 'Y', schYearMonth: '',
       schDateFrom: `${yFrom}${mF}01`, schDateTo: `${yTo}${mT}${lastDay}`,
-      schTRANS_GB: '', schESTI_INOUT: '', schESTI_IDX: '', schESTI_IDX2_DEPTH4: '',
-      schBILL_MEMO: '', schSUPPORT_NURI: '', FIX_COMBINE_BILL_IN: '', FIX_COMBINE_BILL_OUT: '',
+      schTRANS_GB: '', schESTI_INOUT: '', schESTI_IDX: '', schBILL_MEMO: '',
       BILL_NUM_TYPE: '2', BILL_DATE_START: `${yFrom}${mF}`, BILL_DATE_END: `${yTo}${mT}`,
-      CRED_IDX: '', AAV_IDX: '', FCLT_NM: '', schByMonth: '',
-      rd_EstiDepth: '3', rd_EstiDepthDetail: '3', schBILL_GB: 'statement_A',
-      schESTI_IDX2: '', schESTI_IDX_DEPTH4: '', schESTI_DEPTH: '', schESTI_INOUT2: '',
-      schSUPPORT: '', schType1: '', schAutoBill: '', schDirect: '', schAutoDirect: '',
+      CRED_IDX: '', AAV_IDX: '', schByMonth: '', rd_EstiDepth: '3', rd_EstiDepthDetail: '3',
+      schBILL_GB: 'statement_A', schType1: '',
     }
+    const result = await acc.evaluate(async (sch) => {
+      // FCLTCD 는 페이지가 아는 값이 우선. 비었으면 서버가 세션기준으로 처리.
+      const r = await fetch('/acc/api/acc/acc/billManage/getBillList', {
+        method: 'POST', headers: { 'Content-Type': 'application/json; charset="UTF-8"', 'submissionid': 'sbm_getBillList2' },
+        credentials: 'include', body: JSON.stringify({ search: sch }),
+      })
+      const t = await r.text(); let j: unknown = null; try { j = JSON.parse(t) } catch { }
+      return { status: r.status, json: j }
+    }, search)
 
-    const res = await post(jar, BILL_ENDPOINTS[0], { search }, ACC_REF)
-    const j = res.json as Record<string, unknown> | null
-    // 401 = 걸음마 세션 거부(자동접근 일시 차단 등) — "전표 없음"으로 오인 표시 방지
-    if (res.status === 401 || (j && (j as { status?: number }).status === 401)) {
-      return NextResponse.json({ success: false, error: '걸음마 접속이 일시 거부되었습니다(반복 로그인 차단 가능). 잠시 후 다시 시도해 주세요.', billStatus: 401 }, { status: 200 })
-    }
-    const list = (j && Array.isArray((j as { billList?: unknown[] }).billList)) ? (j as { billList: Record<string, unknown>[] }).billList : []
-    if (list.length > 0) {
-      return NextResponse.json({ success: true, endpoint: BILL_ENDPOINTS[0], count: list.length, keys: Object.keys(list[0]), rows: list.slice(0, 3000) })
-    }
-    return NextResponse.json({ success: false, error: `해당 기간 전표가 없습니다 (또는 파라미터 확인 필요).`, billStatus: res.status, billSnippet: j ? `keys:${Object.keys(j).join(',')}` : String(res.text || '').slice(0, 150) }, { status: 200 })
+    await page.close().catch(() => {}); page = null
+    const j = result.json as { billList?: Record<string, unknown>[]; status?: number } | null
+    if (result.status === 401 || j?.status === 401) return NextResponse.json({ success: false, error: '걸음마 회계 세션 활성 실패 — 잠시 후 다시 시도해 주세요.', billStatus: 401 }, { status: 200 })
+    const list = Array.isArray(j?.billList) ? j!.billList! : []
+    if (list.length > 0) return NextResponse.json({ success: true, count: list.length, keys: Object.keys(list[0]), rows: list.slice(0, 3000) })
+    return NextResponse.json({ success: false, error: '해당 기간 전표가 없습니다.', billStatus: result.status }, { status: 200 })
   } catch (e) {
+    try { if (page) await page.close() } catch { }
     return NextResponse.json({ success: false, error: `걸음마 전표 조회 오류: ${e instanceof Error ? e.message : String(e)}` }, { status: 200 })
   }
 }
