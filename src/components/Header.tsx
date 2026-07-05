@@ -324,12 +324,6 @@ export default function Header() {
       {activeMenu && activeMenu.children && (
         <div className="bg-white border-b border-slate-200">
           <div className="px-5 flex items-center gap-0 overflow-x-auto scrollbar-hide">
-            {/* 아이사랑꿈터 장부 선택 — 모든 서브탭 페이지 공통 (설정 포함) */}
-            {institutionType === 'ilovechild' && (
-              <div className="flex items-center pr-3 mr-2 border-r border-slate-200">
-                <BookDropdown />
-              </div>
-            )}
             {activeMenu.children.map((sub) => {
               const isActive = pathname === sub.href || pathname?.startsWith(sub.href + '/')
               return (
@@ -356,6 +350,16 @@ export default function Header() {
           </div>
         </div>
       )}
+
+      {/* 4단: 아이사랑꿈터 장부 선택 — 서브탭 아래(회계연도 줄) 전용 바 */}
+      {institutionType === 'ilovechild' && activeMenu && activeMenu.children && (
+        <div className="bg-white border-b border-slate-200">
+          <div className="px-5 py-1.5 flex items-center">
+            <BookDropdown />
+          </div>
+        </div>
+      )}
+
       {/* 어린이집 정보 팝업 */}
       {centerInfoOpen && (
         <div className="fixed inset-0 bg-black/40 z-[9999] flex items-start justify-center pt-10 overflow-y-auto">
