@@ -16,26 +16,27 @@ export async function POST(req: NextRequest) {
     const { book, rows } = await req.json() as { book?: string; year?: string; rows?: Record<string, unknown>[] }
     if (!book || !Array.isArray(rows) || rows.length === 0) return NextResponse.json({ success: false, error: '저장할 전표가 없습니다.' }, { status: 400 })
 
+    // 걸음마 billManage/getBillList 실측 필드 매핑
     const list = rows.map((r, i) => {
-      const dateRaw = String(pick(r, ['PAPER_DATE', 'BALEUI_DATE', 'ESTI_DATE', 'REG_DATE', 'BILL_DATE', 'ISSUE_DATE']))
-      const d8 = dateRaw.replace(/[^0-9]/g, '').slice(0, 8)
-      const date = d8.length === 8 ? `${d8.slice(0, 4)}-${d8.slice(4, 6)}-${d8.slice(6, 8)}` : dateRaw
-      const inAmt = num(pick(r, ['IN_MONEY', 'INMONEY', 'SUIP_MONEY']))
-      const outAmt = num(pick(r, ['OUT_MONEY', 'OUTMONEY', 'JICHUL_MONEY']))
-      const amt = num(pick(r, ['PAPER_MONEY', 'BILL_MONEY', 'MONEY', 'TOT_MONEY', 'AMOUNT'])) || inAmt || outAmt
-      const io = String(pick(r, ['INOUT_GB', 'IO_GB', 'INOUT', 'ESTI_INOUT']))
-      const type: '수입' | '지출' | '반납' = amt < 0 ? '반납' : (io === 'I' || inAmt > 0 ? '수입' : '지출')
+      const d8 = String(pick(r, ['BILL_DATE', 'BILL_ORDER_DATE'])).replace(/[^0-9]/g, '').slice(0, 8)
+      const date = d8.length === 8 ? `${d8.slice(0, 4)}-${d8.slice(4, 6)}-${d8.slice(6, 8)}` : ''
+      const amt = num(pick(r, ['BILL_MONEY']))
+      const io = String(pick(r, ['ESTI_INOUT'])) // I=수입 / O(그 외)=지출
+      const type: '수입' | '지출' | '반납' = amt < 0 ? '반납' : (io === 'I' ? '수입' : '지출')
       return {
         id: i + 1,
         date,
         type,
-        account: String(pick(r, ['ACCT_NAME', 'ESTI_NAME', 'ACCOUNT_NAME', 'GYEJEONG_NM', 'ESTI_DISPLAY_ESTI_NAME_3'])),
-        subAccount: String(pick(r, ['SEMOK_NAME', 'SEMOK_NM', 'SUBACCT_NAME'])),
-        summary: String(pick(r, ['JUKYO', 'JEOKYO', 'SUMMARY', 'JEOKYOTEXT', 'CONTENT'])),
+        account: String(pick(r, ['ESTI_NAME_3', 'ESTI_NAME', 'ESTI_DISPLAY', 'ESTI_NAME_DETAIL'])), // 목
+        subAccount: String(pick(r, ['ESTI_NAME_4'])), // 세목
+        summary: String(pick(r, ['BILL_MEMO'])), // 적요
         amount: Math.abs(amt),
-        counterpart: String(pick(r, ['GEORAECHEO', 'GEORAECHEO_NM', 'DEAL_NM', 'CUST_NM'])),
-        note: String(pick(r, ['BIGO', 'NOTE', 'REMARK', 'BANK_NM'])),
-        payment: String(pick(r, ['GYELJE_BANGSIK', 'PAY_TYPE', 'GYELJE_NM'])),
+        counterpart: String(pick(r, ['CREDITOR', 'CRED_NAME_BIZRNO'])), // 거래처
+        note: String(pick(r, ['BILL_BIGO'])), // 비고
+        payment: String(pick(r, ['SETLE_MTHD_NAME'])), // 결제방식
+        bankAccount: String(pick(r, ['ACCOUNT_NICKNAME'])), // 통장구분
+        isSupport: String(pick(r, ['BILL_SUPPORT_AT'])) === 'Y', // 보조금
+        isNuri: String(pick(r, ['BILL_NURI_AT'])) === 'Y', // 누리지원
       }
     })
 

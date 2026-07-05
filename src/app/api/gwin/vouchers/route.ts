@@ -79,42 +79,37 @@ export async function POST(req: NextRequest) {
     const fcltcd = (fclt.json as Array<{ fcltcd?: string }> | null)?.[0]?.fcltcd
     if (!fcltcd) return NextResponse.json({ success: false, error: '걸음마 시설 정보를 찾을 수 없습니다.' }, { status: 200 })
 
+    // HAR 실측 파라미터 (billManage/getBillList). schACCOUNT_IDX/AAV_IDX 는 페이지 컨텍스트값 → 우선 빈값 시도.
     const search: Record<string, unknown> = {
-      FCLTCD: fcltcd, BOOK_GB: bg, ESTI_YEAR: y, PAPER_YEAR: y, YEAR: y, DURATION_GB: 1,
-      ESTI_CODE: '', ACCT_CODE: '', SEMOK_CODE: '', INOUT_GB: 'A', SORT_GB: '',
-      PAPER_DATE_START: `${yFrom}${mF}01`, PAPER_DATE_END: `${yTo}${mT}${lastDay}`,
-      PAPER_YEARMONTH_START: `${yFrom}${mF}`, PAPER_YEARMONTH_END: `${yTo}${mT}`,
-      START_YM: `${yFrom}${mF}`, END_YM: `${yTo}${mT}`,
+      FCLTCD: fcltcd, schBookGb: bg,
+      schACCOUNT_IDX: '', schACCOUNT_IDXforBillSearch: '',
+      schYear: y, schByTerm: 'Y', schNotEstimate: 'Y', schYearMonth: '',
+      schDateFrom: `${yFrom}${mF}01`, schDateTo: `${yTo}${mT}${lastDay}`,
+      schTRANS_GB: '', schESTI_INOUT: '', schESTI_IDX: '', schESTI_IDX2_DEPTH4: '',
+      schBILL_MEMO: '', schSUPPORT_NURI: '', FIX_COMBINE_BILL_IN: '', FIX_COMBINE_BILL_OUT: '',
+      BILL_NUM_TYPE: '2', BILL_DATE_START: `${yFrom}${mF}`, BILL_DATE_END: `${yTo}${mT}`,
+      CRED_IDX: '', AAV_IDX: '', FCLT_NM: '', schByMonth: '',
+      rd_EstiDepth: '3', rd_EstiDepthDetail: '3', schBILL_GB: 'statement_A',
+      schESTI_IDX2: '', schESTI_IDX_DEPTH4: '', schESTI_DEPTH: '', schESTI_INOUT2: '',
+      schSUPPORT: '', schType1: '', schAutoBill: '', schDirect: '', schAutoDirect: '',
     }
 
-    // /acc 세션 warmup — 예산과 동일한 첫 /acc 호출(getEstimateSetList)로 acc 컨텍스트 활성화
-    const warm = await post(jar, '/acc/api/acc/acc/budgetManage/getEstimateSetList', {
-      search: { FCLTCD: fcltcd, BOOK_GB: bg, ESTI_YEAR: y, ESTI_INOUT: 'I', ESTIM_GB: 'M01', DURATION_GB: 1, IS_LAST_SET: 'Y' },
-    }, ACC_REF)
-    // 대조군 — 예산 getBudgetList (작동 확인됨). 세션 유효 시 200/JSON.
+    // 대조군 — 예산 getBudgetList(작동 확인됨). 세션 유효 시 200/JSON.
     const ctrl = await post(jar, CONTROL_ENDPOINT, { search: { FCLTCD: fcltcd, BOOK_GB: bg, ESTI_YEAR: y, ESTI_INOUT: 'I', ESTIM_GB: 'M01', DURATION_GB: 1 } }, ACC_REF)
     const control = { status: ctrl.status, hasJson: !!ctrl.json, snippet: String(ctrl.text || '').slice(0, 120) }
 
-    // getBillList 후보 순회 — list 있는 응답 채택
-    const tried: { ep: string; status: number; snippet: string }[] = []
-    for (const ep of BILL_ENDPOINTS) {
-      const res = await post(jar, ep, { search }, ACC_REF)
-      const j = res.json as Record<string, unknown> | null
-      if (j && typeof j === 'object') {
-        const listKey = Object.keys(j).find(k => Array.isArray((j as Record<string, unknown>)[k]))
-        const list = (listKey ? (j as Record<string, unknown[]>)[listKey] : []) as Record<string, unknown>[]
-        if (Array.isArray(list) && list.length > 0) {
-          return NextResponse.json({
-            success: true, endpoint: ep, listKey, count: list.length,
-            keys: Object.keys(list[0]), rows: list.slice(0, 2000),
-          })
-        }
-        tried.push({ ep, status: res.status, snippet: `keys:${Object.keys(j).join(',').slice(0, 60)}` })
-      } else {
-        tried.push({ ep, status: res.status, snippet: String(res.text || '').slice(0, 60) })
-      }
+    const res = await post(jar, BILL_ENDPOINTS[0], { search }, ACC_REF)
+    const j = res.json as Record<string, unknown> | null
+    const list = (j && Array.isArray((j as { billList?: unknown[] }).billList)) ? (j as { billList: Record<string, unknown>[] }).billList : []
+    if (list.length > 0) {
+      return NextResponse.json({ success: true, endpoint: BILL_ENDPOINTS[0], count: list.length, keys: Object.keys(list[0]), rows: list.slice(0, 3000) })
     }
-    return NextResponse.json({ success: false, error: `전표 목록 응답을 찾지 못했습니다.`, warmStatus: warm.status, control, tried }, { status: 200 })
+    return NextResponse.json({
+      success: false,
+      error: `전표 목록 비었거나 실패`,
+      billStatus: res.status, control,
+      billSnippet: j ? `keys:${Object.keys(j).join(',')}` : String(res.text || '').slice(0, 200),
+    }, { status: 200 })
   } catch (e) {
     return NextResponse.json({ success: false, error: `걸음마 전표 조회 오류: ${e instanceof Error ? e.message : String(e)}` }, { status: 200 })
   }
