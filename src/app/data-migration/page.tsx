@@ -548,6 +548,26 @@ export default function DataMigrationPage() {
     if (Object.keys(out).length) { setGbPreviewByBook(out); setGbMsg('저장된 스냅샷 미리보기입니다. [저장]을 눌러야 반영됩니다.') }
     else { setGbPreviewByBook(null); setGbMsg('선택한 장부의 저장된 스냅샷이 없습니다.') }
   }
+  // 걸음마 전표 가져오기 — 1차 진단(응답 구조 확인). 첫 선택 장부 기준.
+  const [gbVLoading, setGbVLoading] = useState(false)
+  const loadGwinVouchers = async () => {
+    if (!sourceId || !sourcePw) { setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
+    const book = gbSelBooks[0] || 'subsidy'
+    setGbVLoading(true); setGbMsg(`걸음마 전표 조회 중(${bookLabel(book)} · ${gbYear}-06)…`)
+    try {
+      const res = await fetch('/api/gwin/vouchers', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ id: sourceId, password: sourcePw, book, year: gbYear, month: '06' }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (j?.success && j.diag) {
+        const d = j.diag
+        if (d.step === 'bill') setGbMsg(`✅ 전표 조회 성공 — ${d.count}건 (endpoint: ${d.endpoint}, 필드: ${(d.keys || []).slice(0, 8).join(', ')}…). 구조 확인 후 매핑 붙입니다.`)
+        else setGbMsg(`⚠ 전표 조회 단계 '${d.step}' — ${JSON.stringify(d).slice(0, 200)}`)
+      } else setGbMsg(`❌ ${j?.error || '전표 조회 실패'}`)
+    } catch (e) { setGbMsg(`❌ 전표 조회 오류: ${e instanceof Error ? e.message : ''}`) }
+    finally { setGbVLoading(false) }
+  }
   const saveGwinBudget = async () => {
     if (!gbPreviewByBook) return
     setGbSaving(true)
@@ -968,7 +988,7 @@ export default function DataMigrationPage() {
             <button onClick={loadGwinBudget} disabled={gbLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50">{gbLoading ? '⏳ 걸음마 조회 중…' : '📥 예산 가져오기 (실시간)'}</button>
             <button onClick={saveGwinBudget} disabled={!gbPreviewByBook || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-40">💾 저장</button>
             <button onClick={loadGwinBudgetStatic} className="px-2 py-1.5 text-[11px] font-bold text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50" title="실시간 조회 실패 시 마지막 저장된 스냅샷으로 미리보기">저장 데이터로 보기</button>
-            <button disabled className="px-3 py-1.5 text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200 rounded cursor-not-allowed" title="걸음마 현금출납부 데이터 연동 후 제공">🧾 전표 가져오기 (준비중)</button>
+            <button onClick={loadGwinVouchers} disabled={gbVLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50" title="걸음마 전표(현금출납부) 조회">{gbVLoading ? '⏳ 전표 조회 중…' : '🧾 전표 가져오기'}</button>
             {gbMsg && <span className={`text-xs font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}
           </div>
           {gbPreviewByBook && (
