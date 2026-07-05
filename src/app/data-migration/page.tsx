@@ -506,14 +506,14 @@ export default function DataMigrationPage() {
   // 걸음마 예산 가져오기(아이사랑꿈터) — 3장부(보육정보센터+보조금+이용료) 토글, [가져오기]→미리보기→[저장]
   type GbBasis = Record<string, { total?: number }[]>
   const [gbYear, setGbYear] = useState('2026')
-  const [gbSelBooks, setGbSelBooks] = useState<string[]>(ILOVECHILD_BOOKS.map(b => b.code)) // 기본 3장부 전체
+  const [gbSelBooks, setGbSelBooks] = useState<string[]>(['subsidy']) // ⚠ 단일 선택(한 장부씩). 예산·전표 모두 선택한 1개 장부만 조회
   const [gbPreviewByBook, setGbPreviewByBook] = useState<Record<string, GbBasis> | null>(null)
   const [gbSaving, setGbSaving] = useState(false)
   const [gbMsg, setGbMsg] = useState('')
   const [gbLoading, setGbLoading] = useState(false)
   const toggleGbBook = (code: string) => {
     setGbPreviewByBook(null); setGbMsg('')
-    setGbSelBooks(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code])
+    setGbSelBooks([code]) // 단일 선택(라디오): 항상 1개 장부만
   }
   // 걸음마 실시간 조회 — 선택 장부별로 로그인 후 예산 가져오기 (3장부 반복)
   const loadGwinBudget = async () => {
@@ -1029,9 +1029,9 @@ export default function DataMigrationPage() {
               <option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option>
             </select>
           </div>
-          {/* 장부 선택 토글 — 3장부 동시 가져오기 (보육정보센터+보조금+이용료) */}
+          {/* 장부 선택 — 단일 선택(한 장부씩 조회·저장). 여러 장부는 장부를 바꿔가며 각각 진행 */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-bold text-slate-500">가져올 장부</span>
+            <span className="text-xs font-bold text-slate-500">가져올 장부 <span className="text-slate-400 font-normal">(한 개씩)</span></span>
             {ILOVECHILD_BOOKS.map(b => {
               const on = gbSelBooks.includes(b.code)
               return (
