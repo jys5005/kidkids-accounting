@@ -8,6 +8,14 @@ import BookDropdown from './BookDropdown'
 
 const TIMEOUT_SEC = 30 * 60
 
+// 전화번호 문자열 → [지역/앞, 중간, 끝] 3분할 (기본정보 모달 입력칸용)
+function splitPhone(p: string): [string, string, string] {
+  const d = (p || '').replace(/[^0-9]/g, '')
+  if (d.length === 11) return [d.slice(0, 3), d.slice(3, 7), d.slice(7)]
+  if (d.length === 10) return [d.slice(0, 3), d.slice(3, 6), d.slice(6)]
+  return ['', '', '']
+}
+
 function useAutoLogout() {
   const [secondsLeft, setSecondsLeft] = useState(TIMEOUT_SEC)
 
@@ -73,7 +81,7 @@ export default function Header() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [centerInfoOpen, setCenterInfoOpen] = useState(false)
   const [centerInfoTab, setCenterInfoTab] = useState<'basic' | 'accounting' | 'stamp'>('basic')
-  const [profileData, setProfileData] = useState({ centerName: '', displayName: '', phone: '', email: '' })
+  const [profileData, setProfileData] = useState({ centerName: '', displayName: '', phone: '', email: '', userId: '', bizNo: '', ownerName: '', address: '', zipCode: '' })
   const [institutionType, setInstitutionType] = useState<string>('childcare')
   const [editData, setEditData] = useState({ phone: '', email: '' })
   const profileRef = useRef<HTMLDivElement>(null)
@@ -91,6 +99,11 @@ export default function Header() {
             displayName: data.displayName || data.userId || '',
             phone,
             email,
+            userId: data.userId || p.userId || '',
+            bizNo: (data.bizNo as string) || p.bizNo || p.businessNo || p.regNo || '',
+            ownerName: (data.ownerName as string) || p.ownerName || p.representative || p.principalName || p.name || '',
+            address: p.address || (data.address as string) || '',
+            zipCode: p.zipCode || p.zip || p.postCode || '',
           })
           const itype = (data.institutionType as string) || (p.institutionType as string) || 'childcare'
           setInstitutionType(itype)
@@ -379,12 +392,12 @@ export default function Header() {
                 <table className="w-full text-[12px] border-collapse">
                   <tbody>
                     {[
-                      ['아이디', 'jys5005'],
+                      ['아이디', profileData.userId || ''],
                       ['새 비밀번호', ''],
                       ['새 비밀번호 확인', ''],
-                      ['이름(상호)', '예인어린이집'],
-                      ['사업자등록번호', '137-80-30550'],
-                      ['대표자명', '조영수'],
+                      ['이름(상호)', profileData.centerName || ''],
+                      ['사업자등록번호', profileData.bizNo || ''],
+                      ['대표자명', profileData.ownerName || ''],
                     ].map(([label, val], i) => (
                       <tr key={i} className="border-b border-slate-100">
                         <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200 w-[120px]">{label}</td>
@@ -393,29 +406,29 @@ export default function Header() {
                     ))}
                     <tr className="border-b border-slate-100">
                       <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">주소</td>
-                      <td className="px-3 py-2.5"><div className="flex gap-1 mb-1"><input type="text" defaultValue="21115" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-20" /><button className="px-2 py-1 text-[10px] bg-slate-100 border border-slate-300 rounded">우편번호</button></div><input type="text" defaultValue="인천 계양구 봉오대로676번길 13 제이엠디엔지니어링 2층 누리터" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-full" /></td>
+                      <td className="px-3 py-2.5"><div className="flex gap-1 mb-1"><input type="text" defaultValue={profileData.zipCode} key={`zip-${profileData.zipCode}`} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-20" /><button className="px-2 py-1 text-[10px] bg-slate-100 border border-slate-300 rounded">우편번호</button></div><input type="text" defaultValue={profileData.address} key={`addr-${profileData.address}`} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-full" /></td>
                     </tr>
                     <tr className="border-b border-slate-100">
                       <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">일반전화</td>
-                      <td className="px-3 py-2.5 flex items-center gap-0.5"><input type="text" defaultValue="032" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" />-<input type="text" defaultValue="1577" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" />-<input type="text" defaultValue="9046" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" /></td>
+                      <td className="px-3 py-2.5 flex items-center gap-0.5" key={`tel-${profileData.phone}`}><input type="text" defaultValue={splitPhone(profileData.phone)[0]} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" />-<input type="text" defaultValue={splitPhone(profileData.phone)[1]} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" />-<input type="text" defaultValue={splitPhone(profileData.phone)[2]} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" /></td>
                     </tr>
                     <tr className="border-b border-slate-100">
                       <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">휴대전화</td>
-                      <td className="px-3 py-2.5 flex items-center gap-0.5"><select className="border border-teal-300 rounded px-1 py-1 text-[12px] w-16"><option>010</option></select>-<input type="text" defaultValue="2803" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" />-<input type="text" defaultValue="2984" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" /></td>
+                      <td className="px-3 py-2.5 flex items-center gap-0.5" key={`hp-${profileData.phone}`}><input type="text" defaultValue={splitPhone(profileData.phone)[0] || '010'} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" />-<input type="text" defaultValue={splitPhone(profileData.phone)[1]} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" />-<input type="text" defaultValue={splitPhone(profileData.phone)[2]} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-14 text-center" /></td>
                     </tr>
-                    {[
-                      ['이메일', 'choyoungsu5005@daum.net'],
-                      ['제본', ''],
-                      ['원아 정원', '76 명'],
-                    ].map(([label, val], i) => (
-                      <tr key={i} className="border-b border-slate-100">
+                    {([
+                      ['이메일', profileData.email || ''],
+                      // 제본·원아 정원은 아이사랑꿈터 미사용 → 제거 (어린이집은 유지)
+                      ...(institutionType !== 'ilovechild' ? [['제본', ''], ['원아 정원', '76 명']] as [string, string][] : []),
+                    ] as [string, string][]).map(([label, val]) => (
+                      <tr key={`${label}-${val}`} className="border-b border-slate-100">
                         <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">{label}</td>
                         <td className="px-3 py-2.5">{label === '제본' ? <><label className="text-[11px]"><input type="radio" name="binding" className="mr-0.5" />양면</label><label className="text-[11px] ml-2"><input type="radio" name="binding" defaultChecked className="mr-0.5" />단면</label></> : label === '원아 정원' ? <select className="border border-teal-300 rounded px-2 py-1 text-[12px]"><option>76 명</option></select> : <input type="text" defaultValue={val} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" />}</td>
                       </tr>
                     ))}
                     <tr className="border-b border-slate-100">
                       <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">그룹/등급/상태</td>
-                      <td className="px-3 py-2.5 text-[12px] text-slate-600">어린이집회원 / 통합 일반 / 정상회원</td>
+                      <td className="px-3 py-2.5 text-[12px] text-slate-600">{institutionType === 'ilovechild' ? '아이사랑꿈터회원' : '어린이집회원'} / 통합 일반 / 정상회원</td>
                     </tr>
                     <tr>
                       <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">가입/수정/로긴</td>
