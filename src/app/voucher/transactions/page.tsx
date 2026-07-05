@@ -1,9 +1,37 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
-import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, isIncomeAccount } from '@/lib/accounts'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { incomeAccounts as DEF_INCOME, expenseAccounts as DEF_EXPENSE, accountCodeMap as DEF_ACODE, subAccountCodeMap as DEF_SACODE, isIncomeAccount as DEF_ISINCOME, type AccItem } from '@/lib/accounts'
 import PrintModal from '@/components/PrintModal'
 import { getActiveBook, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
+
+// 아이사랑꿈터 coa(계정과목) 트리 → 거래내역 계정 카탈로그(어린이집 @/lib/accounts 대체)
+interface CoaSub { code: string; name: string }
+interface CoaMok { code: string; name: string; subs?: CoaSub[] }
+interface CoaHang { code: string; name: string; moks?: CoaMok[] }
+interface CoaGwan { gubun: string; code: string; name: string; hangs?: CoaHang[] }
+function coaToAccounts(tree: CoaGwan[]) {
+  const incomeAccounts: AccItem[] = []
+  const expenseAccounts: AccItem[] = []
+  const accountCodeMap: Record<string, string> = {}
+  const subAccountCodeMap: Record<string, string> = {}
+  const incomeNames = new Set<string>()
+  for (const g of tree || []) {
+    const isInc = g.gubun === '세입'
+    const arr = isInc ? incomeAccounts : expenseAccounts
+    for (const h of g.hangs || []) for (const m of h.moks || []) {
+      arr.push({ value: m.name, label: m.name })
+      accountCodeMap[m.name] = m.code
+      if (isInc) incomeNames.add(m.name)
+      for (const s of m.subs || []) {
+        arr.push({ value: s.name, label: s.name, isSub: true })
+        subAccountCodeMap[s.name] = s.code
+        if (isInc) incomeNames.add(s.name)
+      }
+    }
+  }
+  return { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, incomeNames }
+}
 
 // 전표입력(voucher-input) 저장 shape
 interface VoucherRow {
@@ -132,6 +160,7 @@ export default function TransactionsPage() {
   const [searchSummary, setSearchSummary] = useState('')
   const [showAccountFilter, setShowAccountFilter] = useState(false)
   const accountFilterRef = useRef<HTMLDivElement>(null)
+  const [coaTree, setCoaTree] = useState<CoaGwan[] | null>(null)
 
   // 기관유형 + 활성장부 (아이사랑꿈터만 실제 전표 로드)
   useEffect(() => {
@@ -170,6 +199,25 @@ export default function TransactionsPage() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [showAccountFilter])
+
+  // 아이사랑꿈터 선택 장부의 coa 로드 (계정과목 카탈로그)
+  useEffect(() => {
+    if (!isIlovechild || !book) { setCoaTree(null); return }
+    let alive = true
+    fetch(`/api/coa?book=${encodeURIComponent(book)}&year=2026`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { if (alive) setCoaTree(Array.isArray(d?.list) ? d.list as CoaGwan[] : []) })
+      .catch(() => { if (alive) setCoaTree([]) })
+    return () => { alive = false }
+  }, [isIlovechild, book])
+
+  // coa 있으면 coa 계정과목, 없으면(어린이집) 기존 @/lib/accounts
+  const coaAcc = useMemo(() => (isIlovechild && book && coaTree ? coaToAccounts(coaTree) : null), [isIlovechild, book, coaTree])
+  const incomeAccounts = coaAcc ? coaAcc.incomeAccounts : DEF_INCOME
+  const expenseAccounts = coaAcc ? coaAcc.expenseAccounts : DEF_EXPENSE
+  const accountCodeMap = coaAcc ? coaAcc.accountCodeMap : DEF_ACODE
+  const subAccountCodeMap = coaAcc ? coaAcc.subAccountCodeMap : DEF_SACODE
+  const isIncomeAccount = coaAcc ? (n: string) => coaAcc.incomeNames.has(n) : DEF_ISINCOME
 
   const allAccountsWithSub = [...incomeAccounts, ...expenseAccounts]
 
