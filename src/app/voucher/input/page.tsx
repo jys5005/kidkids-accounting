@@ -1414,7 +1414,7 @@ export default function VoucherInputPage() {
               </div>
             </div>
             <div className="overflow-x-auto">
-            <table className="text-sm w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
+            <table className="text-xs w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
               <thead>
                 <tr className="bg-teal-50 border-b border-teal-400/30">
                   {columnOrder.map(([key]) => {
@@ -1557,7 +1557,7 @@ export default function VoucherInputPage() {
           }
         `}</style>
         <div className="max-h-[calc(100vh-380px)] overflow-y-auto overflow-x-auto">
-          <table className="text-sm w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
+          <table className="text-xs w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
             <thead className="sticky top-0 z-10">
               <tr className="bg-teal-50 border-b border-teal-400/30">
                 <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[34px]">
@@ -1711,7 +1711,7 @@ export default function VoucherInputPage() {
                           </td>
 
                         case 'summary':
-                          return <td key={key} data-cell="summary" className="px-2 py-1 cursor-pointer" onClick={cellClick('summary')} style={{display: 'flex', alignItems: 'center'}}>
+                          return <td key={key} data-cell="summary" className="px-2 py-1 cursor-pointer" onClick={cellClick('summary')} style={{display: 'flex', alignItems: 'center', position: 'relative'}}>
                             {inputMode !== '건별등록' && inputMode !== '상세등록' && <button
                               onClick={(e) => { e.stopPropagation(); startVoice(row.id) }}
                               className={`shrink-0 w-4 h-4 flex items-center justify-center rounded-full transition-all mr-1 ${
@@ -1725,11 +1725,12 @@ export default function VoucherInputPage() {
                               </svg>
                             </button>}
                             {isCell('summary') ? (
-                              <div onClick={e => e.stopPropagation()}>
-                                <textarea value={row.summary} autoFocus rows={3}
+                              <div onClick={e => e.stopPropagation()} className="absolute left-0 top-0 z-40 w-[480px] max-w-[70vw] bg-white border border-teal-300 rounded-lg shadow-xl p-2">
+                                <textarea value={row.summary} autoFocus rows={5}
                                   ref={el => { if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length) } }}
                                   onChange={e => updateRow(row.id, 'summary', e.target.value)}
                                   onKeyDown={e => {
+                                    if (e.key === 'Escape') { setEditingCell(null) }
                                     if (e.key === 'Tab') {
                                       e.preventDefault()
                                       const nextRow = filtered[idx + 1]
@@ -1740,15 +1741,15 @@ export default function VoucherInputPage() {
                                       }
                                     }
                                   }}
-                                  className="w-full px-2 py-1.5 border border-teal-300 rounded text-xs text-slate-700 focus:ring-1 focus:ring-teal-300 outline-none resize-none bg-white" />
+                                  className="w-full px-2 py-1.5 border border-teal-200 rounded text-xs leading-relaxed text-slate-700 focus:ring-1 focus:ring-teal-300 outline-none resize-y bg-white" />
                                 <div className="flex items-center justify-end mt-1 gap-2">
                                   <span className="text-[10px] text-slate-400">{row.summary.length}자</span>
-                                  <button onClick={() => setEditingCell(null)} className="text-[10px] text-slate-400 hover:text-slate-700 font-medium">닫기</button>
+                                  <button onClick={() => setEditingCell(null)} className="text-[10px] text-white bg-teal-600 hover:bg-teal-700 rounded px-2 py-0.5 font-bold">닫기</button>
                                 </div>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-1 flex-1">
-                                <span className="text-slate-700 text-sm truncate flex-1 py-0.5">{row.summary || '-'}</span>
+                              <div className="flex items-center gap-1 flex-1 min-w-0">
+                                <span className="text-slate-700 text-xs truncate flex-1 py-0.5">{row.summary || '-'}</span>
                               </div>
                             )}
                           </td>
