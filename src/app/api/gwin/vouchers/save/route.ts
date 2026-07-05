@@ -28,14 +28,14 @@ function mapRow(r: Record<string, unknown>, i: number) {
     date,
     type,
     account: String(pick(r, ['ESTI_NAME_3', 'ESTI_NAME', 'ESTI_DISPLAY'])),      // 목
-    subAccount: String(pick(r, ['ESTI_NAME_4', 'ESTI_NAME_DETAIL'])),            // 세목
+    subAccount: String(pick(r, ['ESTI_NAME_4'])),                                // 세목(실제 ESTI_NAME_4만. 없으면 '' → 목만)
     summary: String(pick(r, ['BILL_MEMO'])),                                     // 적요(원본 통째)
     amount: amt,                                                                 // 부호 유지(음수=반납)
     counterpart: String(pick(r, ['CREDITOR'])),                                  // 거래처(실제 컬럼)
     note: '',                                                                    // ⚠ 결제방식=note. 걸음마 BILL_BIGO는 이체/카드 원시코드([타행FB] 등) → 스킵(사용자 요청). 결제수단은 적요에 이미 있음
     approved: false,
     inputMethod: '일괄' as const,
-    accountCode: String(pick(r, ['ESTI_IDX'])),
+    accountCode: '',                                                             // ⚠ 걸음마 ESTI_IDX 저장 금지. 비워두면 전표입력이 목(계정과목) 기준 coa 코드로 자동 매핑(accountCodeMap[목])
     receiptImage: String(pick(r, ['_receiptImage'])) || undefined,           // 영수증 사진(첫 장, /api/receipt-file/…)
     receiptImages: String(pick(r, ['_receiptImages'])) || undefined,         // 영수증 여러 장(콤마 구분)
     payment: String(pick(r, ['SETLE_MTHD_NAME'])),                               // 결제방식(실제 컬럼)
