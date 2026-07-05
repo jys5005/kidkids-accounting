@@ -32,7 +32,7 @@ function mapRow(r: Record<string, unknown>, i: number) {
     summary: String(pick(r, ['BILL_MEMO'])),                                     // 적요(원본 통째)
     amount: amt,                                                                 // 부호 유지(음수=반납)
     counterpart: String(pick(r, ['CREDITOR'])),                                  // 거래처(실제 컬럼)
-    note: String(pick(r, ['BILL_BIGO'])),                                        // 비고(카드/계좌)
+    note: '',                                                                    // ⚠ 결제방식=note. 걸음마 BILL_BIGO는 이체/카드 원시코드([타행FB] 등) → 스킵(사용자 요청). 결제수단은 적요에 이미 있음
     approved: false,
     inputMethod: '일괄' as const,
     accountCode: String(pick(r, ['ESTI_IDX'])),
