@@ -1,7 +1,5 @@
 'use client'
-import React, { useState } from 'react'
-
-const educationTypes = ['법정의무교육', '보수교육', '직무교육', '승급교육', '기타교육']
+import React, { useState, useEffect } from 'react'
 
 const educationData: { id: number; name: string; type: string; title: string; hours: number; startDate: string; endDate: string; institution: string; status: string; certificate: boolean }[] = []
 
@@ -10,9 +8,21 @@ const inputCls = "border border-teal-300 rounded px-2 py-1 text-[12px] focus:out
 export default function EducationPage() {
   const [activeTab, setActiveTab] = useState('전체')
   const [filterStatus, setFilterStatus] = useState('전체')
-  const [filterField, setFilterField] = useState('교직원이름')
+  const [filterField, setFilterField] = useState('name')
   const [search, setSearch] = useState('')
   const [checked, setChecked] = useState<Set<number>>(new Set())
+  // 아이사랑꿈터: 교사/교직원 → 종사자, 교육구분 사업주훈련·내일배움카드교육
+  const [isIlove, setIsIlove] = useState(false)
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setIsIlove(((d?.institutionType || d?.profile?.institutionType) as string) === 'ilovechild'))
+      .catch(() => {})
+  }, [])
+  const T = isIlove ? '종사자' : '교직원'
+  const educationTypes = isIlove
+    ? ['법정의무교육', '사업주훈련', '내일배움카드교육']
+    : ['법정의무교육', '보수교육', '직무교육', '승급교육', '기타교육']
 
   const tabs = ['전체', ...educationTypes]
 
@@ -29,8 +39,8 @@ export default function EducationPage() {
     <div className="p-3 space-y-3">
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700">교사교육</span>
-          <span className="text-xs text-slate-400">교직원 교육이수 현황을 관리합니다.</span>
+          <span className="text-sm font-bold text-slate-700">{isIlove ? '종사자교육' : '교사교육'}</span>
+          <span className="text-xs text-slate-400">{T} 교육이수 현황을 관리합니다.</span>
         </div>
       </div>
 
@@ -50,7 +60,7 @@ export default function EducationPage() {
           <option>전체</option><option>이수</option><option>진행중</option><option>미이수</option>
         </select>
         <select value={filterField} onChange={e => setFilterField(e.target.value)} className={`${inputCls} w-28`}>
-          <option>교직원이름</option><option>교육명</option>
+          <option value="name">{T}이름</option><option value="title">교육명</option>
         </select>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} w-36`} placeholder="검색어 입력" />
         <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">조회</button>
@@ -76,7 +86,7 @@ export default function EducationPage() {
               }} />
             </th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[40px]">번호</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">교직원</th>
+            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">{T}</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">교육구분</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">교육명</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">교육시간</th>
