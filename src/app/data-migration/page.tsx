@@ -296,7 +296,11 @@ export default function DataMigrationPage() {
   const [isIlovechild, setIsIlovechild] = useState(false)
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json())
-      .then(d => setIsIlovechild(((d?.institutionType || d?.profile?.institutionType || 'childcare') as string) === 'ilovechild'))
+      .then(d => {
+        const ilove = ((d?.institutionType || d?.profile?.institutionType || 'childcare') as string) === 'ilovechild'
+        setIsIlovechild(ilove)
+        if (ilove) setSource('walk') // 아이사랑꿈터는 걸음마만 사용
+      })
       .catch(() => {})
   }, [])
   const autoSelectedRef = useRef(false)
@@ -975,7 +979,8 @@ export default function DataMigrationPage() {
                   }}
                   className="px-2 py-1 border border-slate-200 rounded-lg text-sm font-medium text-blue-700 bg-blue-50"
                 >
-                  {SOURCE_OPTIONS.filter((o) => o.value !== 'walk' || isIlovechild).map((o) => (
+                  {/* 아이사랑꿈터는 걸음마만(어린이집 이관원 제외), 어린이집은 걸음마 제외 */}
+                  {SOURCE_OPTIONS.filter((o) => isIlovechild ? o.value === 'walk' : o.value !== 'walk').map((o) => (
                     <option key={o.value} value={o.value}>{o.label}{o.features.length > 0 ? '  (가능)' : ''}</option>
                   ))}
                 </select>
@@ -990,7 +995,9 @@ export default function DataMigrationPage() {
               </div>
               <div className="flex items-center gap-1.5">
                 <p className="text-xs text-slate-400">{currentSource.url}</p>
-                {currentSource.features.length > 0 ? (
+                {isIlovechild && source === 'walk' ? (
+                  <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">예산 실시간</span>
+                ) : currentSource.features.length > 0 ? (
                   currentSource.features.map((f) => (
                     <span key={f} className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">{f}</span>
                   ))
@@ -1080,7 +1087,8 @@ export default function DataMigrationPage() {
               </>
             )}
 
-            {/* 조회 모드 */}
+            {/* 조회 모드 — 어린이집 현금출납부 이관 전용. 아이사랑꿈터는 상단 걸음마 예산·전표 패널 사용 → 숨김 */}
+            {!isIlovechild && (<>
             <div className="flex gap-2">
               <button
                 onClick={() => setMode('single')}
@@ -1165,6 +1173,7 @@ export default function DataMigrationPage() {
                 '데이터 가져오기'
               )}
             </button>
+            </>)}
 
             {/* 저장된 데이터 불러오기 */}
             {(source === 'kidshome' || source === 'by24' || source === 'incheon' || source === 'ifriends' || source === 'wisean') && (
