@@ -125,12 +125,16 @@ export default function StaffInfoPage() {
                 <div className="p-3 space-y-2 text-[11px]">
                   <div><label className="text-slate-600 font-medium block mb-0.5">입사일 <span className="text-red-500">*</span></label><input type="date" className={`${inputCls} w-full`} /></div>
                   <div><label className="text-slate-600 font-medium block mb-0.5">퇴사일</label><div className="flex gap-1"><input type="date" className={`${inputCls} flex-1`} /><button className="px-2 py-0.5 text-[10px] bg-slate-100 border border-slate-300 rounded whitespace-nowrap">빈칸</button></div></div>
-                  <div><label className="text-slate-600 font-medium block mb-0.5">직원구분</label>
+                  <div><label className="text-slate-600 font-medium block mb-0.5">{isIlove ? '종사자구분' : '직원구분'}</label>
                     <select className={`${inputCls} w-full`}>
-                      <option>선 택</option><option>원장</option><option>보육교사</option><option>대체교사</option><option>방과후 교사</option><option>특수교사</option><option>시간연장 교사</option><option>비상근 교사</option><option>사회복지사</option><option>간호사</option><option>간호조무사</option><option>영양사</option><option>취사부</option><option>사무원</option><option>조리사</option><option>보조교사</option><option>보육도우미</option><option>행복도우미</option><option>연장전담교사</option><option>기타종사자</option>
+                      {isIlove ? (
+                        <><option>선 택</option><option>꿈터장</option><option>운영요원</option></>
+                      ) : (
+                        <><option>선 택</option><option>원장</option><option>보육교사</option><option>대체교사</option><option>방과후 교사</option><option>특수교사</option><option>시간연장 교사</option><option>비상근 교사</option><option>사회복지사</option><option>간호사</option><option>간호조무사</option><option>영양사</option><option>취사부</option><option>사무원</option><option>조리사</option><option>보조교사</option><option>보육도우미</option><option>행복도우미</option><option>연장전담교사</option><option>기타종사자</option></>
+                      )}
                     </select>
                   </div>
-                  <div><label className="text-slate-600 font-medium block mb-0.5">직위</label><select className={`${inputCls} w-full`}><option>선 택</option><option>원장</option><option>보육교사</option><option>보조교사</option><option>조리사</option><option>행정원</option></select></div>
+                  <div><label className="text-slate-600 font-medium block mb-0.5">직위</label><select className={`${inputCls} w-full`}>{isIlove ? (<><option>선 택</option><option>꿈터장</option><option>운영요원</option></>) : (<><option>선 택</option><option>원장</option><option>보육교사</option><option>보조교사</option><option>조리사</option><option>행정원</option></>)}</select></div>
                   <div><label className="text-slate-600 font-medium block mb-0.5">상태</label>
                     <select className={`${inputCls} w-full`}><option>선 택</option><option>임용</option><option>면직</option><option>유급휴직</option><option>무급휴직</option><option>휴직</option><option>임용신청</option><option>면직신청</option><option>반려</option></select>
                   </div>
