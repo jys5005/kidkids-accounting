@@ -155,7 +155,7 @@ export default function DeletedVoucherPage() {
           </button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-[11px]">
             <thead>
               <tr className="bg-teal-50 border-b border-teal-400/30">
                 <th className="text-center px-3 py-2 w-10">

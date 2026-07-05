@@ -128,7 +128,7 @@ function StoreDepositTab() {
 
       {/* 테이블 */}
       <div className="overflow-x-auto border border-slate-200 rounded-lg">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-[11px] border-collapse">
           <thead>
             <tr className="bg-teal-50 border-b border-orange-200">
               <th className={`${TH} w-8`}>
@@ -282,7 +282,7 @@ export default function ReceiptPage() {
 
               {/* 모바일 촬영영수증 테이블 */}
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-xs">
+                <table className="w-full text-[11px]">
                   <thead>
                     <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-2 py-2.5 text-center w-8"><input type="checkbox" className="rounded" /></th>
@@ -370,7 +370,7 @@ export default function ReceiptPage() {
 
               {/* 이체내역 테이블 */}
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-xs">
+                <table className="w-full text-[11px]">
                   <thead>
                     <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-2 py-2.5 text-center w-8"><input type="checkbox" className="rounded" /></th>
@@ -453,7 +453,7 @@ export default function ReceiptPage() {
 
               {/* 세금계산서 테이블 */}
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-xs">
+                <table className="w-full text-[11px]">
                   <thead>
                     <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-2 py-2.5 text-center w-8"><input type="checkbox" className="rounded" /></th>
@@ -517,7 +517,7 @@ export default function ReceiptPage() {
 
               {/* 현금영수증 테이블 */}
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-xs">
+                <table className="w-full text-[11px]">
                   <thead>
                     <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-2 py-2.5 text-center w-8"><input type="checkbox" className="rounded" /></th>
@@ -570,7 +570,7 @@ export default function ReceiptPage() {
 
               {/* 4대보험 고지서 매칭 테이블 */}
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-xs">
+                <table className="w-full text-[11px]">
                   <thead>
                     <tr className="bg-teal-50 border-b border-orange-200">
                       <th className="px-3 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap w-32"></th>
@@ -807,7 +807,7 @@ function ShoppingTab() {
       {/* 쇼핑몰 계정 테이블 */}
       <div>
         <div className="overflow-x-auto border border-slate-200 rounded-lg">
-          <table className="w-full text-xs">
+          <table className="w-full text-[11px]">
             <thead>
               <tr className="bg-teal-50 border-b border-orange-200">
                 <th className={TH}>구분</th>
@@ -906,7 +906,7 @@ function ShoppingTab() {
           <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">쇼핑몰 영수증 자동매칭하기</button>
         </div>
         <div className="overflow-x-auto border border-slate-200 rounded-lg">
-          <table className="w-full text-xs">
+          <table className="w-full text-[11px]">
             <thead>
               <tr className="bg-teal-50 border-b border-orange-200">
                 <th className={TH}>쇼핑몰</th>

@@ -463,7 +463,7 @@ export default function TransactionsPage() {
       {/* 거래조회 / 현금출납부 테이블 */}
       {(activeView === '거래조회' || activeView === '현금출납부') && (
         <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
-          <table className="w-full text-sm">
+          <table className="w-full text-[11px]">
             <thead className="sticky top-0 z-10">
               <tr className="bg-teal-50 border-b border-teal-400/30">
                 <th className="text-center px-3 py-2.5 w-10">
@@ -563,7 +563,7 @@ export default function TransactionsPage() {
                     <span className="text-xs text-slate-400 font-mono">{code}</span>
                   </div>
                   {/* 테이블 */}
-                  <table className="w-full text-sm">
+                  <table className="w-full text-[11px]">
                     <thead>
                       <tr className="bg-teal-50 border-b border-teal-400/30">
                         <th className="text-center px-4 py-2 font-normal text-slate-700 w-16">월일</th>
@@ -722,7 +722,7 @@ export default function TransactionsPage() {
         })
         return (
           <div className="max-w-5xl mx-auto bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
-            <table className="w-full text-sm">
+            <table className="w-full text-[11px]">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-teal-50 border-b border-teal-400/30">
                   <th className="text-center px-4 py-2.5 font-normal text-slate-700 w-20">계정</th>
@@ -803,7 +803,7 @@ export default function TransactionsPage() {
 
         return (
           <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
-            <table className="text-xs" style={{ minWidth: '1400px' }}>
+            <table className="text-[11px]" style={{ minWidth: '1400px' }}>
               <thead className="sticky top-0 z-10">
                 <tr className="bg-teal-50 border-b border-teal-400/30">
                   <th className="text-center px-4 py-2.5 font-normal text-slate-700 w-16 sticky left-0 bg-teal-50 z-20">계정</th>
@@ -902,7 +902,7 @@ export default function TransactionsPage() {
 
         return (
           <div className="max-w-4xl mx-auto bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
-            <table className="w-full text-sm">
+            <table className="w-full text-[11px]">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-teal-50 border-b border-teal-400/30">
                   <th className="text-center px-6 py-2.5 font-normal text-slate-700 w-32">월구분</th>
@@ -995,7 +995,7 @@ export default function TransactionsPage() {
 
         return (
           <div className="max-w-5xl mx-auto bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-220px)]">
-            <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+            <table className="w-full text-[11px]" style={{ tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: '20%' }} />
                 <col style={{ width: '20%' }} />
@@ -1086,7 +1086,7 @@ export default function TransactionsPage() {
               </div>
             </div>
           <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-270px)]">
-            <table className="w-full text-xs" style={{ minWidth: '1100px', tableLayout: 'fixed' }}>
+            <table className="w-full text-[11px]" style={{ minWidth: '1100px', tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: '5%' }} />
                 <col style={{ width: '9%' }} />

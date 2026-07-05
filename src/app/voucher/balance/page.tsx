@@ -78,7 +78,7 @@ export default function BalancePage() {
 
   const renderBalanceTable = (data: { label: string; bankAmounts: Record<string, number>; bankTotal: number; accountBalance: number; diff: number; matched: boolean }[], keyField: string) => (
     <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-[11px]">
         <thead>
           <tr className="bg-teal-50 border-b border-teal-400/30">
             <th rowSpan={2} className="text-center px-4 py-2.5 font-normal text-slate-700 w-32 border-r border-teal-400/20">{keyField === 'month' ? '입금일자' : '일자'}</th>
@@ -273,7 +273,7 @@ export default function BalancePage() {
                 </div>
               </div>
               <div className="overflow-auto flex-1">
-                <table className="w-full text-sm">
+                <table className="w-full text-[11px]">
                   <thead>
                     <tr className="bg-slate-100 border-b border-slate-300">
                       <th colSpan={5} className="text-center px-3 py-2 font-normal text-slate-700 border-r border-slate-300">현금출납부</th>

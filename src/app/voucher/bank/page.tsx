@@ -273,7 +273,7 @@ export default function BankPage() {
           </div>
         </div>
         <div className="overflow-auto">
-          <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
+          <table className="w-full text-[11px]" style={{ tableLayout: 'fixed' }}>
             <colgroup>
               <col style={{ width: '10%' }} />
               <col style={{ width: '16%' }} />
@@ -366,7 +366,7 @@ export default function BankPage() {
 
       {/* 거래내역 테이블 */}
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-420px)]">
-        <table className="w-full text-sm" style={{ minWidth: '1200px' }}>
+        <table className="w-full text-[11px]" style={{ minWidth: '1200px' }}>
           <thead className="sticky top-0 z-10">
             <tr className="bg-teal-50 border-b border-teal-400/30">
               <th className="text-center px-3 py-2.5 font-normal text-slate-600 w-44">계좌번호</th>
