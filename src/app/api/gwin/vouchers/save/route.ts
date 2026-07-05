@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
         approved: false,
         inputMethod: '일괄' as const,
         accountCode: String(pick(r, ['ESTI_IDX'])),
+        receiptImage: String(pick(r, ['_receiptImage'])) || undefined,           // 영수증 사진(첫 장, /api/receipt-file/…)
+        receiptImages: String(pick(r, ['_receiptImages'])) || undefined,         // 영수증 여러 장(콤마 구분)
         // 참고 필드(전표입력 표엔 없지만 보존)
         payment: String(pick(r, ['SETLE_MTHD_NAME'])),                               // 결제방식(실제 컬럼)
         bankAccount: String(pick(r, ['ACCOUNT_NICKNAME'])),                          // 통장구분

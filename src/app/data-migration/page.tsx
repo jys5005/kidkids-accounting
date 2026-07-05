@@ -557,19 +557,21 @@ export default function DataMigrationPage() {
   const [gbVKeys, setGbVKeys] = useState<string[]>([])
   const [gbVBook, setGbVBook] = useState('')
   const [gbVSaving, setGbVSaving] = useState(false)
+  const [gbVWithReceipts, setGbVWithReceipts] = useState(true) // 영수증 사진까지 가져오기
   const loadGwinVouchers = async () => {
     if (!sourceId || !sourcePw) { setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
     const book = gbSelBooks[0] || 'subsidy'
-    setGbVLoading(true); setGbVRows(null); setGbMsg(`걸음마 전표 조회 중(${bookLabel(book)} · ${gbYear}.${gbVFrom}~${gbVTo}월)…`)
+    setGbVLoading(true); setGbVRows(null); setGbMsg(`걸음마 전표 조회 중(${bookLabel(book)} · ${gbYear}.${gbVFrom}~${gbVTo}월)${gbVWithReceipts ? ' + 영수증 사진 다운로드(시간 걸림)' : ''}…`)
     try {
       const res = await fetch('/api/gwin/vouchers', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ id: sourceId, password: sourcePw, book, year: gbYear, monthFrom: gbVFrom, monthTo: gbVTo }),
+        body: JSON.stringify({ id: sourceId, password: sourcePw, book, year: gbYear, monthFrom: gbVFrom, monthTo: gbVTo, withReceipts: gbVWithReceipts }),
       })
       const j = await res.json().catch(() => ({}))
       if (j?.success && Array.isArray(j.rows)) {
         setGbVRows(j.rows); setGbVKeys(j.keys || []); setGbVBook(book)
-        setGbMsg(`✅ 전표 ${j.count}건 조회 (${bookLabel(book)}, endpoint: ${j.endpoint}). 아래 미리보기 확인 후 [전표관리로 저장].`)
+        const rc = j.receiptBills ? ` · 🧾 영수증 ${j.receiptPhotos}장(${j.receiptBills}건 전표)` : ''
+        setGbMsg(`✅ 전표 ${j.count}건 조회 (${bookLabel(book)})${rc}. 아래 미리보기 확인 후 [전표관리로 저장].`)
       } else {
         setGbVRows(null)
         const ctrl = j?.control ? ` | accEnter:${j.control.accEnter} warmup:${j.control.warm} 대조군:${j.control.status}` : ''
@@ -1022,6 +1024,9 @@ export default function DataMigrationPage() {
             <select value={gbVTo} onChange={e => setGbVTo(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="종료월(회계연도 3월~익년2월)">
               {FISCAL_MONTHS.map(m => <option key={m} value={m}>{Number(m)}월{Number(m) < 3 ? '(익년)' : ''}</option>)}
             </select>
+            <label className="flex items-center gap-1 text-xs text-slate-600 select-none cursor-pointer" title="첨부된 영수증 사진까지 함께 가져와 전표에 붙입니다(시간이 더 걸립니다)">
+              <input type="checkbox" checked={gbVWithReceipts} onChange={e => setGbVWithReceipts(e.target.checked)} /> 🧾 영수증 사진 포함
+            </label>
             <button onClick={loadGwinVouchers} disabled={gbVLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50" title="걸음마 전표(현금출납부) 조회">{gbVLoading ? '⏳ 전표 조회 중…' : '🧾 전표 가져오기'}</button>
             <button onClick={saveGwinVouchers} disabled={!gbVRows || !gbVRows.length || gbVSaving} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded disabled:opacity-40" title="가져온 전표를 전표관리로 저장">{gbVSaving ? '저장 중…' : '📒 전표관리로 저장'}</button>
             {gbMsg && <span className={`text-xs font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}

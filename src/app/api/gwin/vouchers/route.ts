@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import puppeteer, { type Browser, type Page } from 'puppeteer'
+import { writeFile, mkdir } from 'fs/promises'
+import path from 'path'
 
 export const runtime = 'nodejs'
-export const maxDuration = 180
+export const maxDuration = 300
 
 // 걸음마(gwin.co.kr) 전표(현금출납부) — 실 브라우저 UI 흐름으로 세션 확보.
 // ⚠ 핵심: 로그인 후 "걸음마회계 WiN 실행" 버튼을 실제 클릭해야 /acc 세션이 활성화됨(핸드오프).
@@ -68,10 +70,55 @@ async function loginAndEnterAcc(page: Page, id: string, password: string): Promi
   return { acc, fcltcd }
 }
 
+// 첨부(영수증) 있는 전표의 이미지 다운로드 → data/receipts 저장 → 각 행에 _receiptImage(첫장)/_receiptImages(전체) 부착.
+// ⚠ acc 세션이 살아있어야 함(다운로드가 세션쿠키 필요). BILL_ATCH_TYPE: 1=카드만 / 2=영수증사진 / 3=둘다 / 0=없음.
+const IMG_EXT = ['.jpg', '.jpeg', '.png', '.webp']
+async function attachReceipts(acc: Page, fcltcd: string, list: Record<string, unknown>[]): Promise<{ photos: number; bills: number }> {
+  const dir = path.join(process.cwd(), 'data', 'receipts')
+  await mkdir(dir, { recursive: true })
+  const targets = list.filter(r => ['2', '3'].includes(String(r.BILL_ATCH_TYPE)))
+  let photos = 0, bills = 0
+  for (const row of targets) {
+    try {
+      const billIdx = String(row.BILL_IDX)
+      // 전표별 영수증 이미지 목록
+      const imgs = await acc.evaluate(async (bd) => {
+        const r = await fetch('/acc/api/acc/acc/billManage/getBillRciptMappngImageList', {
+          method: 'POST', headers: { 'Content-Type': 'application/json; charset="UTF-8"' },
+          credentials: 'include', body: JSON.stringify(bd),
+        })
+        try { return ((await r.json())?.billRciptMappngList || []) as Record<string, unknown>[] } catch { return [] }
+      }, { search: { BILL_IDX: billIdx, FCLTCD: fcltcd, PARENT_ROWINDEX: '0' } })
+      const urls: string[] = []
+      for (const im of imgs) {
+        const ext = '.' + String(im.EXTSN || '').toLowerCase()
+        if (!IMG_EXT.includes(ext)) continue // 이미지만(PDF 등 제외)
+        // 세션쿠키로 실제 파일 다운로드 → base64
+        const b64 = await acc.evaluate(async (key: string, name: string) => {
+          const url = 'https://gwin.co.kr/file/api/download/file?downloadKey=' + encodeURIComponent(key) + '&fileName=' + encodeURIComponent(name)
+          const r = await fetch(url, { credentials: 'include' })
+          if (!r.ok) return null
+          const bytes = new Uint8Array(await r.arrayBuffer())
+          let bin = ''; const CH = 0x8000
+          for (let i = 0; i < bytes.length; i += CH) bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + CH)))
+          return btoa(bin)
+        }, String(im.DOWNLOAD_KEY), String(im.ORGINL_NM || ('receipt' + ext)))
+        if (!b64) continue
+        const safe = `gwin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}${ext}`
+        await writeFile(path.join(dir, safe), Buffer.from(b64, 'base64'))
+        urls.push(`/api/receipt-file/${safe}`)
+        photos++
+      }
+      if (urls.length) { row._receiptImage = urls[0]; row._receiptImages = urls.join(','); bills++ }
+    } catch { /* 개별 전표 실패는 건너뜀 */ }
+  }
+  return { photos, bills }
+}
+
 export async function POST(req: NextRequest) {
   let page: Page | null = null
   try {
-    const { id, password, book, year, monthFrom, monthTo } = await req.json()
+    const { id, password, book, year, monthFrom, monthTo, withReceipts } = await req.json()
     if (!id || !password) return NextResponse.json({ success: false, error: '걸음마 아이디/비밀번호가 필요합니다.' }, { status: 400 })
     const bg = BOOK_GB[book] || '03'
     const y = String(year || new Date().getFullYear())
@@ -109,11 +156,16 @@ export async function POST(req: NextRequest) {
       return { status: r.status, json: j }
     }, search)
 
-    await page.close().catch(() => {}); page = null
     const j = result.json as { billList?: Record<string, unknown>[]; status?: number } | null
-    if (result.status === 401 || j?.status === 401) return NextResponse.json({ success: false, error: '걸음마 회계 세션 활성 실패 — 잠시 후 다시 시도해 주세요.', billStatus: 401 }, { status: 200 })
+    if (result.status === 401 || j?.status === 401) { await page.close().catch(() => {}); page = null; return NextResponse.json({ success: false, error: '걸음마 회계 세션 활성 실패 — 잠시 후 다시 시도해 주세요.', billStatus: 401 }, { status: 200 }) }
     const list = Array.isArray(j?.billList) ? j!.billList! : []
-    if (list.length > 0) return NextResponse.json({ success: true, count: list.length, keys: Object.keys(list[0]), rows: list.slice(0, 3000) })
+    // 영수증 사진 다운로드(세션 살아있는 동안) — withReceipts !== false 면 첨부 있는 전표 이미지 저장
+    let receipt = { photos: 0, bills: 0 }
+    if (list.length > 0 && withReceipts !== false) {
+      try { receipt = await attachReceipts(acc, fcltcd, list) } catch { /* 영수증 실패해도 전표는 반환 */ }
+    }
+    await page.close().catch(() => {}); page = null
+    if (list.length > 0) return NextResponse.json({ success: true, count: list.length, keys: Object.keys(list[0]), rows: list.slice(0, 3000), receiptPhotos: receipt.photos, receiptBills: receipt.bills })
     return NextResponse.json({ success: false, error: '해당 기간 전표가 없습니다.', billStatus: result.status }, { status: 200 })
   } catch (e) {
     try { if (page) await page.close() } catch { }
