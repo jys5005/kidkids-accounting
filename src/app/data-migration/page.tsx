@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import * as XLSX from 'xlsx'
-import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
+import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel, ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
 import { GWIN_BUDGETS } from '@/data/gwin-budgets'
 
 interface CashLedgerRow {
@@ -503,53 +503,64 @@ export default function DataMigrationPage() {
   // 목적지 명칭: 아이사랑꿈터는 통합e 회계로 이관, 그 외는 수전자장부
   const destName = isIlovechild ? '통합e 회계' : '수전자장부'
 
-  // 걸음마 예산 가져오기(아이사랑꿈터) — 상단 장부 드롭다운 + 연도, [가져오기]→미리보기→[저장]
-  const [gbBook, setGbBook] = useState('')
+  // 걸음마 예산 가져오기(아이사랑꿈터) — 3장부(보육정보센터+보조금+이용료) 토글, [가져오기]→미리보기→[저장]
+  type GbBasis = Record<string, { total?: number }[]>
   const [gbYear, setGbYear] = useState('2026')
-  const [gbPreview, setGbPreview] = useState<Record<string, { total?: number }[]> | null>(null)
+  const [gbSelBooks, setGbSelBooks] = useState<string[]>(ILOVECHILD_BOOKS.map(b => b.code)) // 기본 3장부 전체
+  const [gbPreviewByBook, setGbPreviewByBook] = useState<Record<string, GbBasis> | null>(null)
   const [gbSaving, setGbSaving] = useState(false)
   const [gbMsg, setGbMsg] = useState('')
-  useEffect(() => {
-    setGbBook(getActiveBook())
-    const onCh = (e: Event) => { setGbBook(((e as CustomEvent).detail as string) || ''); setGbPreview(null); setGbMsg('') }
-    window.addEventListener(BOOK_CHANGE_EVENT, onCh)
-    return () => window.removeEventListener(BOOK_CHANGE_EVENT, onCh)
-  }, [])
   const [gbLoading, setGbLoading] = useState(false)
-  // 걸음마 실시간 조회 — 저장된(또는 입력된) 걸음마 아이디/비번으로 로그인 후 예산 가져오기
-  const loadGwinBudget = async () => {
-    if (!sourceId || !sourcePw) { setGbPreview(null); setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
-    setGbLoading(true); setGbPreview(null); setGbMsg('걸음마 로그인 후 예산을 가져오는 중…')
-    try {
-      const res = await fetch('/api/gwin/budget', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ id: sourceId, password: sourcePw, book: gbBook, year: gbYear }),
-      })
-      const j = await res.json().catch(() => ({}))
-      if (j?.success && j.basisByMok) {
-        setGbPreview(j.basisByMok)
-        setGbMsg(`✅ 걸음마 실시간 조회 완료 — 목 ${j.mokCount}개 (세입 ${(j.moneyIn || 0).toLocaleString()} / 세출 ${(j.moneyOut || 0).toLocaleString()}). [저장]을 눌러야 반영됩니다.`)
-      } else {
-        setGbPreview(null); setGbMsg(`❌ ${j?.error || '걸음마 조회 실패'}`)
-      }
-    } catch (e) {
-      setGbPreview(null); setGbMsg(`❌ 걸음마 조회 오류: ${e instanceof Error ? e.message : ''}`)
-    } finally { setGbLoading(false) }
+  const toggleGbBook = (code: string) => {
+    setGbPreviewByBook(null); setGbMsg('')
+    setGbSelBooks(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code])
   }
-  // 저장된 데이터(정적 스냅샷)로 미리보기 — 실시간 조회 실패 시 대안
+  // 걸음마 실시간 조회 — 선택 장부별로 로그인 후 예산 가져오기 (3장부 반복)
+  const loadGwinBudget = async () => {
+    if (!sourceId || !sourcePw) { setGbPreviewByBook(null); setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
+    if (gbSelBooks.length === 0) { setGbMsg('가져올 장부를 하나 이상 선택하세요.'); return }
+    setGbLoading(true); setGbPreviewByBook(null); setGbMsg('걸음마 로그인 후 예산을 가져오는 중…')
+    const out: Record<string, GbBasis> = {}; const errs: string[] = []
+    for (const book of gbSelBooks) {
+      try {
+        const res = await fetch('/api/gwin/budget', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ id: sourceId, password: sourcePw, book, year: gbYear }),
+        })
+        const j = await res.json().catch(() => ({}))
+        if (j?.success && j.basisByMok) out[book] = j.basisByMok
+        else errs.push(`${bookLabel(book)}: ${j?.error || '실패'}`)
+      } catch (e) { errs.push(`${bookLabel(book)}: ${e instanceof Error ? e.message : '오류'}`) }
+    }
+    setGbLoading(false)
+    if (Object.keys(out).length) {
+      setGbPreviewByBook(out)
+      setGbMsg(`✅ ${Object.keys(out).length}개 장부 조회 완료${errs.length ? ` (실패: ${errs.join(' / ')})` : ''}. [저장]을 눌러야 반영됩니다.`)
+    } else { setGbPreviewByBook(null); setGbMsg(`❌ ${errs.join(' / ') || '조회 실패'}`) }
+  }
+  // 저장된 데이터(정적 스냅샷)로 미리보기 — 선택 장부
   const loadGwinBudgetStatic = () => {
-    const data = GWIN_BUDGETS[gbBook] as Record<string, { total?: number }[]> | undefined
-    if (!data || Object.keys(data).length === 0) { setGbPreview(null); setGbMsg(`저장된 스냅샷에 예산이 없습니다 (${bookLabel(gbBook)}).`); return }
-    setGbPreview(data); setGbMsg('저장된 스냅샷 미리보기입니다. [저장]을 눌러야 반영됩니다.')
+    const out: Record<string, GbBasis> = {}
+    for (const book of gbSelBooks) {
+      const d = GWIN_BUDGETS[book] as GbBasis | undefined
+      if (d && Object.keys(d).length) out[book] = d
+    }
+    if (Object.keys(out).length) { setGbPreviewByBook(out); setGbMsg('저장된 스냅샷 미리보기입니다. [저장]을 눌러야 반영됩니다.') }
+    else { setGbPreviewByBook(null); setGbMsg('선택한 장부의 저장된 스냅샷이 없습니다.') }
   }
   const saveGwinBudget = async () => {
-    if (!gbPreview) return
+    if (!gbPreviewByBook) return
     setGbSaving(true)
-    try {
-      const res = await fetch('/api/budget', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ book: gbBook, year: gbYear, basisByMok: gbPreview }) })
-      const j = await res.json().catch(() => ({}))
-      setGbMsg(j?.success !== false ? `✅ 저장 완료 — ${bookLabel(gbBook)} ${gbYear}년 예산 (목 ${Object.keys(gbPreview).length}개). 예산작성에서 확인하세요.` : '저장 실패')
-    } catch { setGbMsg('저장 오류') } finally { setGbSaving(false) }
+    const saved: string[] = []; const errs: string[] = []
+    for (const [book, basis] of Object.entries(gbPreviewByBook)) {
+      try {
+        const res = await fetch('/api/budget', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ book, year: gbYear, basisByMok: basis }) })
+        const j = await res.json().catch(() => ({}))
+        if (j?.success !== false) saved.push(bookLabel(book)); else errs.push(bookLabel(book))
+      } catch { errs.push(bookLabel(book)) }
+    }
+    setGbSaving(false)
+    setGbMsg(`✅ 저장: ${saved.join(', ') || '없음'}${errs.length ? ` / 실패: ${errs.join(', ')}` : ''} (${gbYear}년). 예산작성에서 확인하세요.`)
   }
 
   // 출발지에서 데이터 가져오기
@@ -935,24 +946,41 @@ export default function DataMigrationPage() {
         <div className="bg-white rounded-xl border-2 border-amber-200 p-5 space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-amber-800 font-bold text-sm">🐤 걸음마 예산·전표 가져오기</span>
-            <span className="text-xs text-slate-400">· 장부: <b className="text-slate-600">{bookLabel(gbBook)}</b> (상단 장부 드롭다운에서 변경)</span>
             <span className="ml-2 text-xs font-bold text-slate-600">회계연도</span>
-            <select value={gbYear} onChange={e => { setGbYear(e.target.value); setGbPreview(null); setGbMsg('') }} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+            <select value={gbYear} onChange={e => { setGbYear(e.target.value); setGbPreviewByBook(null); setGbMsg('') }} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
               <option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option>
             </select>
           </div>
+          {/* 장부 선택 토글 — 3장부 동시 가져오기 (보육정보센터+보조금+이용료) */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs font-bold text-slate-500">가져올 장부</span>
+            {ILOVECHILD_BOOKS.map(b => {
+              const on = gbSelBooks.includes(b.code)
+              return (
+                <button key={b.code} onClick={() => toggleGbBook(b.code)}
+                  className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors ${on ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-300 hover:border-amber-400'}`}>
+                  {on ? '✓ ' : ''}{b.label}
+                </button>
+              )
+            })}
+          </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button onClick={loadGwinBudget} disabled={gbLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50">{gbLoading ? '⏳ 걸음마 조회 중…' : '📥 예산 가져오기 (실시간)'}</button>
-            <button onClick={saveGwinBudget} disabled={!gbPreview || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-40">💾 저장</button>
+            <button onClick={saveGwinBudget} disabled={!gbPreviewByBook || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-40">💾 저장</button>
             <button onClick={loadGwinBudgetStatic} className="px-2 py-1.5 text-[11px] font-bold text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50" title="실시간 조회 실패 시 마지막 저장된 스냅샷으로 미리보기">저장 데이터로 보기</button>
             <button disabled className="px-3 py-1.5 text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200 rounded cursor-not-allowed" title="걸음마 현금출납부 데이터 연동 후 제공">🧾 전표 가져오기 (준비중)</button>
             {gbMsg && <span className={`text-xs font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}
           </div>
-          {gbPreview && (() => {
-            const keys = Object.keys(gbPreview)
-            const total = keys.reduce((s, k) => s + (gbPreview[k] || []).reduce((a, it) => a + (it.total || 0), 0), 0)
-            return <div className="text-xs text-slate-600 bg-amber-50 rounded px-3 py-2">미리보기: <b>목 {keys.length}개</b> · 합계 <b>{total.toLocaleString('ko-KR')}원</b> — <b className="text-blue-700">[저장]</b>을 눌러야 실제 반영됩니다.</div>
-          })()}
+          {gbPreviewByBook && (
+            <div className="text-xs text-slate-600 bg-amber-50 rounded px-3 py-2 space-y-0.5">
+              {Object.entries(gbPreviewByBook).map(([book, basis]) => {
+                const keys = Object.keys(basis)
+                const total = keys.reduce((s, k) => s + (basis[k] || []).reduce((a, it) => a + (it.total || 0), 0), 0)
+                return <div key={book}>· <b className="text-amber-800">{bookLabel(book)}</b> — 목 {keys.length}개 · 합계 <b>{total.toLocaleString('ko-KR')}원</b></div>
+              })}
+              <div className="text-slate-500 pt-0.5"><b className="text-blue-700">[저장]</b>을 눌러야 실제 반영됩니다.</div>
+            </div>
+          )}
           <p className="text-[11px] text-slate-400">· 예산은 <b className="text-slate-600">예산관리 › 예산작성</b>에 반영됩니다. 전표(현금출납부) 가져오기는 걸음마 데이터 연동 후 제공 예정입니다.</p>
         </div>
       )}
