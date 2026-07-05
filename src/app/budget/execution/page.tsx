@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
+import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
 
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 
@@ -213,7 +214,7 @@ function getRowBadgeColor(row: BudgetRow) {
   return 'bg-green-500'
 }
 
-export default function BudgetExecutionPage() {
+function BudgetExecutionLegacy() {
   const [month, setMonth] = useState('2026년 03월')
   const [viewLevel, setViewLevel] = useState<ViewLevel>('gwan')
   const [tab, setTab] = useState<'monthly' | 'compare'>('monthly')
@@ -434,4 +435,162 @@ export default function BudgetExecutionPage() {
       </div>
     </div>
   )
+}
+
+/* ══════════ 아이사랑꿈터 — coa 기반 예산대비집행현황 (예산 vs 집행 vs 잔액) ══════════ */
+interface ECoaMok { code: string; name: string }
+interface ECoaHang { code: string; name: string; moks?: ECoaMok[] }
+interface ECoaGwan { gubun: string; code: string; name: string; hangs?: ECoaHang[] }
+type ERow = { gwanCode: string; gwanName: string; hangCode: string; hangName: string; code: string; name: string; budget: number; exec: number }
+
+function eSpans<T extends { gwanCode: string; hangCode: string }>(rows: T[]) {
+  return rows.map((r, i) => {
+    const firstG = i === 0 || rows[i - 1].gwanCode !== r.gwanCode
+    const firstH = firstG || rows[i - 1].hangCode !== r.hangCode
+    let gSpan = 1, hSpan = 1
+    if (firstG) { let j = i + 1; while (j < rows.length && rows[j].gwanCode === r.gwanCode) j++; gSpan = j - i }
+    if (firstH) { let j = i + 1; while (j < rows.length && rows[j].gwanCode === r.gwanCode && rows[j].hangCode === r.hangCode) j++; hSpan = j - i }
+    return { r, firstG, firstH, gSpan, hSpan }
+  })
+}
+const EG = 'text-[9px] font-bold text-violet-700 bg-violet-100 rounded px-1 py-px'
+const EH = 'text-[9px] font-bold text-sky-700 bg-sky-100 rounded px-1 py-px'
+const EM = 'text-[9px] font-bold text-emerald-700 bg-emerald-100 rounded px-1 py-px'
+
+function ExecTable({ title, rows, tone }: { title: string; rows: ERow[]; tone: 'income' | 'expense' }) {
+  const tB = rows.reduce((s, r) => s + r.budget, 0), tE = rows.reduce((s, r) => s + r.exec, 0)
+  const head = tone === 'income' ? 'bg-blue-50 text-blue-700' : 'bg-rose-50 text-rose-700'
+  const spans = eSpans(rows)
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className={`px-4 py-2 font-bold text-sm ${head}`}>{title} <span className="text-xs font-normal text-slate-500">· 예산 {fmt(tB)} / 집행 {fmt(tE)} / 잔액 {fmt(tB - tE)}</span></div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[11px] border-collapse">
+          <thead>
+            <tr className="bg-slate-100 text-slate-600 font-bold">
+              <th colSpan={3} className="px-2 py-1.5 border border-slate-200">계정과목</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">예산액</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">집행액</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[110px]">잔액</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[70px]">집행률</th>
+            </tr>
+            <tr className="bg-slate-50 text-slate-500 font-bold">
+              <th className="px-2 py-1.5 border border-slate-200 w-[90px]">관</th>
+              <th className="px-2 py-1.5 border border-slate-200 w-[120px]">항</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-left">목</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">계정과목이 없습니다. (설정 › 회계계정관리)</td></tr>}
+            {spans.map(({ r, firstG, firstH, gSpan, hSpan }, i) => {
+              const rem = r.budget - r.exec
+              const rate = r.budget > 0 ? Math.round(r.exec / r.budget * 100) : 0
+              return (
+                <tr key={i} className="hover:bg-slate-50/60">
+                  {firstG && <td rowSpan={gSpan} className="px-1 py-1.5 border border-slate-200 text-center align-middle bg-violet-50/40"><div className="flex flex-col items-center gap-0.5"><span className={EG}>관</span><span className="font-bold text-slate-700">{r.gwanCode}</span><span className="text-[10px] text-slate-600 leading-tight">{r.gwanName}</span></div></td>}
+                  {firstH && <td rowSpan={hSpan} className="px-1 py-1.5 border border-slate-200 text-center align-middle bg-sky-50/40"><div className="flex flex-col items-center gap-0.5"><span className={EH}>항</span><span className="font-semibold text-slate-600">{r.hangCode}</span><span className="text-[10px] text-slate-600 leading-tight">{r.hangName}</span></div></td>}
+                  <td className="px-2 py-1.5 border border-slate-200"><div className="flex items-center gap-1"><span className={EM}>목</span><span className="font-bold text-slate-700">{r.code}</span><span className="text-slate-600">{r.name}</span></div></td>
+                  <td className="px-2 py-1.5 border border-slate-200 text-right">{r.budget ? fmt(r.budget) : ''}</td>
+                  <td className="px-2 py-1.5 border border-slate-200 text-right font-bold text-slate-800">{r.exec ? fmt(r.exec) : ''}</td>
+                  <td className={`px-2 py-1.5 border border-slate-200 text-right ${rem < 0 ? 'text-rose-600' : 'text-slate-600'}`}>{r.budget || r.exec ? fmt(rem) : ''}</td>
+                  <td className={`px-2 py-1.5 border border-slate-200 text-right ${rate > 100 ? 'text-rose-600' : 'text-blue-600'}`}>{r.budget ? `${rate}%` : ''}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="bg-yellow-50 font-bold text-slate-700">
+              <td colSpan={3} className="px-2 py-2 border border-slate-200 text-right">합계</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{fmt(tB)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right text-blue-700">{fmt(tE)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{fmt(tB - tE)}</td>
+              <td className="px-2 py-2 border border-slate-200 text-right">{tB > 0 ? `${Math.round(tE / tB * 100)}%` : ''}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function eCoaRows(tree: ECoaGwan[], gubun: '세입' | '세출', budget: Record<string, { total?: number }[]>, execByCode: Record<string, number>): ERow[] {
+  const rows: ERow[] = []
+  const pf = gubun === '세출' ? 'E' : ''
+  for (const g of tree || []) {
+    if (g.gubun !== gubun) continue
+    for (const h of g.hangs || []) for (const m of h.moks || []) {
+      const key = pf + m.code
+      const b = (budget[key] || []).reduce((s, it) => s + (it.total || 0), 0)
+      rows.push({ gwanCode: g.code, gwanName: g.name, hangCode: h.code, hangName: h.name, code: m.code, name: m.name, budget: b, exec: execByCode[key] || 0 })
+    }
+  }
+  return rows
+}
+
+function BudgetExecutionCoa() {
+  const [year, setYear] = useState('2026')
+  const [book, setBook] = useState('')
+  const [tree, setTree] = useState<ECoaGwan[]>([])
+  const [budget, setBudget] = useState<Record<string, { total?: number }[]>>({})
+  const [vouchers, setVouchers] = useState<{ type?: string; amount?: number; accountCode?: string; date?: string }[]>([])
+
+  useEffect(() => {
+    setBook(getActiveBook())
+    const onCh = (e: Event) => setBook(((e as CustomEvent).detail as string) || '')
+    window.addEventListener(BOOK_CHANGE_EVENT, onCh)
+    return () => window.removeEventListener(BOOK_CHANGE_EVENT, onCh)
+  }, [])
+  useEffect(() => {
+    if (!book) return
+    let alive = true
+    Promise.all([
+      fetch(`/api/coa?book=${encodeURIComponent(book)}&year=${year}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/budget?book=${encodeURIComponent(book)}&year=${year}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/voucher/list?book=${encodeURIComponent(book)}`, { credentials: 'include' }).then(r => r.json()).catch(() => ({})),
+    ]).then(([c, b, v]) => {
+      if (!alive) return
+      setTree(Array.isArray(c?.list) ? c.list : [])
+      setBudget((Array.isArray(b?.list) && b.list[0] && (b.list[0] as { basisByMok?: Record<string, { total?: number }[]> }).basisByMok) || {})
+      setVouchers(Array.isArray(v?.list) ? v.list : [])
+    })
+    return () => { alive = false }
+  }, [book, year])
+
+  const execByCode = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const vc of vouchers) {
+      if (!vc.accountCode || (vc.date && String(vc.date).slice(0, 4) !== year)) continue
+      const k = (vc.type === '수입' ? '' : 'E') + vc.accountCode
+      m[k] = (m[k] || 0) + (Number(vc.amount) || 0)
+    }
+    return m
+  }, [vouchers, year])
+  const incomeRows = useMemo(() => eCoaRows(tree, '세입', budget, execByCode), [tree, budget, execByCode])
+  const expenseRows = useMemo(() => eCoaRows(tree, '세출', budget, execByCode), [tree, budget, execByCode])
+
+  return (
+    <div className="p-3 space-y-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-bold text-slate-700">회계연도</span>
+        <select value={year} onChange={e => setYear(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+          <option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option>
+        </select>
+        <span className="ml-2 text-[11px] text-slate-400">· 장부(<b className="text-slate-600">{bookLabel(book)}</b>) · 집행액=전표입력 누적 · 예산액=예산작성</span>
+      </div>
+      <ExecTable title="세입 집행현황" rows={incomeRows} tone="income" />
+      <ExecTable title="세출 집행현황" rows={expenseRows} tone="expense" />
+    </div>
+  )
+}
+
+export default function BudgetExecutionPage() {
+  const [itype, setItype] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json())
+      .then(d => setItype((d?.institutionType || d?.profile?.institutionType || 'childcare') as string))
+      .catch(() => setItype('childcare'))
+  }, [])
+  if (itype === null) return null
+  if (itype === 'ilovechild') return <BudgetExecutionCoa />
+  return <BudgetExecutionLegacy />
 }
