@@ -1,5 +1,6 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const payroll = [
   { name: '홍길동', position: '원장', basic: 6500000, allowance: 300000, overtime: 0, pension: 292500, health: 224250, employ: 58500, income: 385000, net: 5840750 },
@@ -14,19 +15,29 @@ const payroll = [
 ]
 export default function PayrollLedgerPage() {
   const [month, setMonth] = useState('2026-03')
-  const totalBasic = payroll.reduce((s,r) => s+r.basic, 0)
-  const totalNet = payroll.reduce((s,r) => s+r.net, 0)
+  const [isIlove, setIsIlove] = useState(false)
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setIsIlove(((d?.institutionType || d?.profile?.institutionType) as string) === 'ilovechild'))
+      .catch(() => {})
+  }, [])
+  const T = isIlove ? '종사자' : '교직원'
+  const data = isIlove ? [] : payroll   // 아이사랑꿈터는 예시 미노출(실데이터만)
+  const totalBasic = data.reduce((s,r) => s+r.basic, 0)
+  const totalNet = data.reduce((s,r) => s+r.net, 0)
   return (
     <div className="p-3 space-y-3">
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2">
           <span className="text-sm font-bold text-slate-700">급여대장</span>
-          <span className="text-xs text-slate-400">월별 교직원 급여 내역을 관리합니다.</span>
+          <span className="text-xs text-slate-400">월별 {T} 급여 내역을 관리합니다.</span>
         </div>
         <div className="px-4 py-3 flex items-center gap-2">
           <span className="text-xs font-bold text-slate-700">급여월</span>
           <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs" />
           <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">조회</button>
+          {isIlove && <Link href="/staff/info" className="px-4 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded">종사자 등록</Link>}
           <div className="ml-auto flex items-center gap-1.5">
             <button className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 rounded text-xs text-slate-600">
               <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5z" /></svg>인쇄</button>
@@ -51,7 +62,7 @@ export default function PayrollLedgerPage() {
             <th className="px-2 py-2 font-bold text-slate-600">실지급액</th>
           </tr></thead>
           <tbody>
-            {payroll.map((r,i) => (
+            {data.map((r,i) => (
               <tr key={i} className="border-b border-slate-100 hover:bg-blue-50/40">
                 <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{i+1}</td>
                 <td className="px-2 py-1.5 text-slate-700 font-medium border-r border-slate-100">{r.name}</td>
@@ -66,12 +77,17 @@ export default function PayrollLedgerPage() {
                 <td className="px-2 py-1.5 text-right text-blue-700 font-bold">{fmt(r.net)}</td>
               </tr>
             ))}
-            <tr className="bg-teal-50 font-bold">
-              <td colSpan={3} className="px-2 py-2 text-center text-slate-700 border-r border-slate-200">합계</td>
-              <td className="px-2 py-2 text-right text-slate-700 border-r border-slate-200">{fmt(totalBasic)}</td>
-              <td colSpan={6} className="px-2 py-2 border-r border-slate-200"></td>
-              <td className="px-2 py-2 text-right text-blue-700">{fmt(totalNet)}</td>
-            </tr>
+            {data.length === 0 && (
+              <tr><td colSpan={11} className="px-4 py-8 text-center text-slate-400 text-xs">조회된 급여내역이 없습니다.{isIlove && ' 상단 [종사자 등록]에서 종사자를 먼저 등록하세요.'}</td></tr>
+            )}
+            {data.length > 0 && (
+              <tr className="bg-teal-50 font-bold">
+                <td colSpan={3} className="px-2 py-2 text-center text-slate-700 border-r border-slate-200">합계</td>
+                <td className="px-2 py-2 text-right text-slate-700 border-r border-slate-200">{fmt(totalBasic)}</td>
+                <td colSpan={6} className="px-2 py-2 border-r border-slate-200"></td>
+                <td className="px-2 py-2 text-right text-blue-700">{fmt(totalNet)}</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

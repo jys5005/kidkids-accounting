@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { NameInput, SsnInput, NumberOnlyInput, inputCls } from '@/components/InsuranceInputs'
+import CisStaffLookupButton from '@/components/CisStaffLookupButton'
 
 export default function AcquisitionPage() {
   const [year, setYear] = useState(2026)
@@ -20,7 +21,7 @@ export default function AcquisitionPage() {
         <select value={year} onChange={e => setYear(Number(e.target.value))} className={`${inputCls} w-20`}>
           <option>2026</option><option>2025</option>
         </select>
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 rounded">CIS종사자조회</button>
+        <CisStaffLookupButton />
         <button className="px-4 py-1.5 text-xs font-bold text-white bg-slate-400 hover:bg-slate-500 rounded">등록된 종사자 불러오기</button>
       </div>
 
