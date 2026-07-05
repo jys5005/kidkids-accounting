@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import DraggableModal from '@/components/DraggableModal'
 
 const staffList: { id: number; name: string; ssn: string; staffNo: string; hireDate: string; leaveDate: string; phone: string; type: string; status: string; contract: string; login: string; note: string }[] = []
@@ -12,12 +12,22 @@ export default function StaffInfoPage() {
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [filterStatus, setFilterStatus] = useState('상태전체')
-  const [filterField, setFilterField] = useState('교직원이름')
+  const [filterField, setFilterField] = useState('name')
   const [includeDeleted, setIncludeDeleted] = useState(false)
   const [checked, setChecked] = useState<Set<number>>(new Set())
+  // 아이사랑꿈터: 교직원/보육교직원 → 종사자 용어 치환
+  const [isIlove, setIsIlove] = useState(false)
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setIsIlove(((d?.institutionType || d?.profile?.institutionType) as string) === 'ilovechild'))
+      .catch(() => {})
+  }, [])
+  const T = isIlove ? '종사자' : '교직원'
+  const staffNoLabel = isIlove ? '종사자번호' : '보육교직원번호'
   const filtered = staffList.filter(s =>
     (filterStatus === '상태전체' || s.status === filterStatus) &&
-    (search === '' || (filterField === '교직원이름' ? s.name.includes(search) : s.staffNo.includes(search))) &&
+    (search === '' || (filterField === 'name' ? s.name.includes(search) : s.staffNo.includes(search))) &&
     (includeDeleted || s.status !== '퇴직')
   )
 
@@ -25,9 +35,9 @@ export default function StaffInfoPage() {
     <div className="p-3 space-y-3">
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700">교직원정보</span>
-          <span className="text-xs text-slate-400">교직원 인사정보를 관리합니다.</span>
-          <button className="ml-auto px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">CIS교직원조회</button>
+          <span className="text-sm font-bold text-slate-700">{T}정보</span>
+          <span className="text-xs text-slate-400">{T} 인사정보를 관리합니다.</span>
+          {!isIlove && <button className="ml-auto px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">CIS교직원조회</button>}
         </div>
       </div>
 
@@ -39,7 +49,7 @@ export default function StaffInfoPage() {
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[40px]">번호</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">이 름</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">주민번호</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">보육교직원번호</th>
+            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">{staffNoLabel}</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">입사일</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">퇴사일</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">전화번호</th>
@@ -70,26 +80,26 @@ export default function StaffInfoPage() {
 
         {/* 하단 필터 + 버튼 */}
         <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-center gap-2 flex-wrap">
-          <label className="text-xs text-slate-600"><input type="checkbox" checked={includeDeleted} onChange={e => setIncludeDeleted(e.target.checked)} className="mr-1" />삭제교직원포함 :</label>
+          <label className="text-xs text-slate-600"><input type="checkbox" checked={includeDeleted} onChange={e => setIncludeDeleted(e.target.checked)} className="mr-1" />삭제{T}포함 :</label>
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={`${inputCls} w-28`}>
             <option>상태전체</option><option>임용</option><option>면직</option><option>유급휴직</option><option>무급휴직</option><option>휴직</option><option>임용신청</option><option>면직신청</option><option>반려</option>
           </select>
           <select value={filterField} onChange={e => setFilterField(e.target.value)} className={`${inputCls} w-28`}>
-            <option>교직원이름</option><option>보육교직원번호</option>
+            <option value="name">{T}이름</option><option value="staffNo">{staffNoLabel}</option>
           </select>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} w-36`} />
           <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
         </div>
         <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-end gap-2">
-          <button onClick={() => setShowForm(true)} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">교직원 등록</button>
-          <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">교직원 엑셀 등록</button>
-          <button className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 rounded transition-colors">선택 교직원 삭제</button>
+          <button onClick={() => setShowForm(true)} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">{T} 등록</button>
+          <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">{T} 엑셀 등록</button>
+          <button className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 rounded transition-colors">선택 {T} 삭제</button>
         </div>
       </div>
 
       {/* 신규등록/수정 폼 팝업 */}
       {showForm && (
-        <DraggableModal onClose={() => setShowForm(false)} title="교직원 등록/수정" className="w-[76vw] max-w-[1120px]">
+        <DraggableModal onClose={() => setShowForm(false)} title={`${T} 등록/수정`} className="w-[76vw] max-w-[1120px]">
             {/* 3개 박스 */}
             <div className="grid grid-cols-3 gap-3 mx-4 mt-4">
               {/* 박스1: 인적사항 */}
@@ -103,7 +113,7 @@ export default function StaffInfoPage() {
                   <div><label className="text-slate-600 font-medium block mb-0.5">휴대폰</label><div className="flex items-center gap-0.5"><input type="text" maxLength={3} className={`${inputCls} min-w-0 flex-1 text-center`} /><span className="text-slate-400">-</span><input type="text" maxLength={4} className={`${inputCls} min-w-0 flex-1 text-center`} /><span className="text-slate-400">-</span><input type="text" maxLength={4} className={`${inputCls} min-w-0 flex-1 text-center`} /></div></div>
                   <div><label className="text-slate-600 font-medium block mb-0.5">이메일</label><input type="email" className={`${inputCls} w-full`} /></div>
                   <div><label className="text-slate-600 font-medium block mb-0.5">주소</label><div className="flex gap-1 mb-1"><input type="text" placeholder="우편번호" className={`${inputCls} w-24`} /><button className="px-2 py-0.5 text-[10px] bg-slate-100 border border-slate-300 rounded">검색</button></div><input type="text" placeholder="상세주소" className={`${inputCls} w-full`} /></div>
-                  <div><label className="text-slate-600 font-medium block mb-0.5">보육교직원번호</label><input type="text" className={`${inputCls} w-full`} /><span className="text-[9px] text-red-500">* 보육시스템자료</span></div>
+                  <div><label className="text-slate-600 font-medium block mb-0.5">{staffNoLabel}</label><input type="text" className={`${inputCls} w-full`} />{!isIlove && <span className="text-[9px] text-red-500">* 보육시스템자료</span>}</div>
                   <div><label className="text-slate-600 font-medium block mb-0.5">로그인 아이디</label><input type="text" className={`${inputCls} w-full`} /></div>
                   <div><label className="text-slate-600 font-medium block mb-0.5">로그인 비밀번호</label><input type="password" className={`${inputCls} w-full`} /></div>
                 </div>

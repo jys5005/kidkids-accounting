@@ -243,12 +243,19 @@ export function visibleCategories(institutionType?: string | null): MenuCategory
     (!cisOn && CIS_GATED_HREFS.has(href)) ||
     (!ilove && ILOVECHILD_ONLY_HREFS.has(href)) ||
     (ilove && ILOVECHILD_HIDDEN_HREFS.has(href))
+  // 아이사랑꿈터 용어 치환 — 교직원/보육교직원/교사 → 종사자 (라벨 표시만, 라우팅은 href 기준이라 무관)
+  const relabel = (s: string): string => {
+    if (!ilove) return s
+    return ({ '교직원': '종사자', '교직원현황': '종사자현황', '교직원정보': '종사자정보', '교사교육': '종사자교육' } as Record<string, string>)[s] ?? s
+  }
   return categories.map(cat => ({
     ...cat,
+    label: relabel(cat.label),
     menus: cat.menus
       .map(m => (m.children ? { ...m, children: m.children.filter(c => !hide(c.href)) } : m))
       .filter(m => !(m.href && hide(m.href)))               // 자체 href 게이트(children 없는 메뉴)
-      .filter(m => !m.children || m.children.length > 0), // 자식이 전부 제거된 메뉴는 숨김
+      .filter(m => !m.children || m.children.length > 0)  // 자식이 전부 제거된 메뉴는 숨김
+      .map(m => ({ ...m, label: relabel(m.label), children: m.children?.map(c => ({ ...c, label: relabel(c.label) })) })),
   }))
 }
 
