@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 const reportSections = [
   { id: 'cover', title: '예산서 표지', icon: '📋', desc: '예산서 표지 (기관명·시설명 자동)' },
@@ -13,6 +13,13 @@ const reportSections = [
 export default function BudgetReportPage() {
   const [selected, setSelected] = useState<string | null>(null)
   const [showAll, setShowAll] = useState(false)
+  const [centerName, setCenterName] = useState('')
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setCenterName(d?.centerName || d?.profile?.centerName || ''))
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="p-3 space-y-3">
@@ -68,9 +75,9 @@ export default function BudgetReportPage() {
         <div className="space-y-4">
           {reportSections.map(section => (
             <div key={section.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              {section.id === 'cover' && <CoverSection />}
-              {section.id === 'general' && <GeneralSection />}
-              {section.id === 'summary' && <SummarySection />}
+              {section.id === 'cover' && <CoverSection centerName={centerName} />}
+              {section.id === 'general' && <GeneralSection centerName={centerName} />}
+              {section.id === 'summary' && <SummarySection centerName={centerName} />}
               {section.id === 'income' && <IncomeSection />}
               {section.id === 'expense' && <ExpenseSection />}
             </div>
@@ -78,9 +85,9 @@ export default function BudgetReportPage() {
         </div>
       ) : selected && (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          {selected === 'cover' && <CoverSection />}
-          {selected === 'general' && <GeneralSection />}
-          {selected === 'summary' && <SummarySection />}
+          {selected === 'cover' && <CoverSection centerName={centerName} />}
+          {selected === 'general' && <GeneralSection centerName={centerName} />}
+          {selected === 'summary' && <SummarySection centerName={centerName} />}
           {selected === 'income' && <IncomeSection />}
           {selected === 'expense' && <ExpenseSection />}
         </div>
@@ -91,7 +98,7 @@ export default function BudgetReportPage() {
 
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 
-function CoverSection() {
+function CoverSection({ centerName }: { centerName: string }) {
   return (
     <div className="p-8 flex justify-center">
       <div className="border border-slate-400 w-[550px] aspect-[210/297] flex flex-col px-12 py-10">
@@ -102,14 +109,14 @@ function CoverSection() {
         </div>
         <div className="flex-1" />
         <div className="text-center pb-16">
-          <p className="text-2xl font-bold text-purple-900 tracking-widest">기관명</p>
+          <p className="text-2xl font-bold text-purple-900 tracking-widest">{centerName || '기관명'}</p>
         </div>
       </div>
     </div>
   )
 }
 
-function GeneralSection() {
+function GeneralSection({ centerName }: { centerName: string }) {
   const [loanLimit, setLoanLimit] = useState('10000000')
   const [reserveFund, setReserveFund] = useState('0')
 
@@ -142,7 +149,7 @@ function GeneralSection() {
               <td className="border border-slate-300 px-3 py-3 text-center text-slate-600">
                 <div>시설회계</div>
                 <div>보육사업비</div>
-                <div className="mt-1 text-slate-800">기관명</div>
+                <div className="mt-1 text-slate-800">{centerName || '기관명'}</div>
               </td>
               <td className="border border-slate-300 px-3 py-3 text-right text-slate-700">{fmt(incomeTotal)}</td>
               <td className="border border-slate-300 px-3 py-3 text-right text-slate-700">{fmt(expenseTotal)}</td>
@@ -172,7 +179,7 @@ function GeneralSection() {
   )
 }
 
-function SummarySection() {
+function SummarySection({ centerName }: { centerName: string }) {
   const income = [
     { name: '* 총 계 *', amount: 1276671, prev: 1276390, diff: 281, isTotal: true },
     { name: '보육료', amount: 445864, prev: 449768, diff: -3904 },
@@ -206,7 +213,7 @@ function SummarySection() {
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-600">기관명</span>
+        <span className="text-xs text-slate-600">{centerName || '기관명'}</span>
         <span className="text-[10px] text-slate-500">금액단위:천원</span>
       </div>
 
