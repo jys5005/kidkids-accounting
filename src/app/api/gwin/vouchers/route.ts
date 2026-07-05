@@ -115,12 +115,16 @@ async function attachReceipts(acc: Page, fcltcd: string, list: Record<string, un
   return { photos, bills }
 }
 
+const BOOK_LABEL: Record<string, string> = { subsidy: '보조금', fee: '이용료', 'info-center': '보육정보센터' }
+
 export async function POST(req: NextRequest) {
   let page: Page | null = null
   try {
-    const { id, password, book, year, monthFrom, monthTo, withReceipts } = await req.json()
+    const body = await req.json()
+    const { id, password, book, books, year, monthFrom, monthTo, withReceipts } = body
     if (!id || !password) return NextResponse.json({ success: false, error: '걸음마 아이디/비밀번호가 필요합니다.' }, { status: 400 })
-    const bg = BOOK_GB[book] || '03'
+    // 다중 장부: books 배열 우선, 없으면 단일 book
+    const bookList: string[] = Array.isArray(books) && books.length ? books.filter((x: string) => BOOK_GB[x]) : [book || 'subsidy']
     const y = String(year || new Date().getFullYear())
     const mF = String(monthFrom || '03').padStart(2, '0')
     const mT = String(monthTo || '02').padStart(2, '0')
@@ -136,8 +140,7 @@ export async function POST(req: NextRequest) {
     if (!entered) { await page.close().catch(() => {}); page = null; return NextResponse.json({ success: false, error: '걸음마 로그인/회계 진입 실패 (아이디·비밀번호 확인 또는 잠시 후 재시도)' }, { status: 200 }) }
     const { acc, fcltcd } = entered
 
-    // /acc 세션 활성 상태에서 getBillList 호출 (기간=회계연도 범위). FCLTCD 필수, schACCOUNT_IDX/AAV_IDX 는 빈값 가능.
-    const search = {
+    const buildSearch = (bg: string) => ({
       FCLTCD: fcltcd, schBookGb: bg, schACCOUNT_IDX: '', schACCOUNT_IDXforBillSearch: '',
       schYear: y, schByTerm: 'Y', schNotEstimate: 'Y', schYearMonth: '',
       schDateFrom: `${yFrom}${mF}01`, schDateTo: `${yTo}${mT}${lastDay}`,
@@ -145,28 +148,41 @@ export async function POST(req: NextRequest) {
       BILL_NUM_TYPE: '2', BILL_DATE_START: `${yFrom}${mF}`, BILL_DATE_END: `${yTo}${mT}`,
       CRED_IDX: '', AAV_IDX: '', schByMonth: '', rd_EstiDepth: '3', rd_EstiDepthDetail: '3',
       schBILL_GB: 'statement_A', schType1: '',
-    }
-    const result = await acc.evaluate(async (sch) => {
-      // FCLTCD 는 페이지가 아는 값이 우선. 비었으면 서버가 세션기준으로 처리.
-      const r = await fetch('/acc/api/acc/acc/billManage/getBillList', {
-        method: 'POST', headers: { 'Content-Type': 'application/json; charset="UTF-8"', 'submissionid': 'sbm_getBillList2' },
-        credentials: 'include', body: JSON.stringify({ search: sch }),
-      })
-      const t = await r.text(); let j: unknown = null; try { j = JSON.parse(t) } catch { }
-      return { status: r.status, json: j }
-    }, search)
+    })
 
-    const j = result.json as { billList?: Record<string, unknown>[]; status?: number } | null
-    if (result.status === 401 || j?.status === 401) { await page.close().catch(() => {}); page = null; return NextResponse.json({ success: false, error: '걸음마 회계 세션 활성 실패 — 잠시 후 다시 시도해 주세요.', billStatus: 401 }, { status: 200 }) }
-    const list = Array.isArray(j?.billList) ? j!.billList! : []
-    // 영수증 사진 다운로드(세션 살아있는 동안) — withReceipts !== false 면 첨부 있는 전표 이미지 저장
-    let receipt = { photos: 0, bills: 0 }
-    if (list.length > 0 && withReceipts !== false) {
-      try { receipt = await attachReceipts(acc, fcltcd, list) } catch { /* 영수증 실패해도 전표는 반환 */ }
+    // 체크한 장부들을 한 세션에서 순차 조회 (각 행에 _book 태그) + 영수증 다운로드
+    const allRows: Record<string, unknown>[] = []
+    const perBook: { book: string; label: string; count: number }[] = []
+    let photos = 0, bills = 0
+    let sessionDead = false
+    for (const bk of bookList) {
+      const bg = BOOK_GB[bk]
+      const result = await acc.evaluate(async (sch) => {
+        const r = await fetch('/acc/api/acc/acc/billManage/getBillList', {
+          method: 'POST', headers: { 'Content-Type': 'application/json; charset="UTF-8"', 'submissionid': 'sbm_getBillList2' },
+          credentials: 'include', body: JSON.stringify({ search: sch }),
+        })
+        const t = await r.text(); let j: unknown = null; try { j = JSON.parse(t) } catch { }
+        return { status: r.status, json: j }
+      }, buildSearch(bg))
+      const j = result.json as { billList?: Record<string, unknown>[]; status?: number } | null
+      if (result.status === 401 || j?.status === 401) { sessionDead = true; break }
+      const list = Array.isArray(j?.billList) ? j!.billList! : []
+      if (list.length > 0 && withReceipts !== false) {
+        try { const rc = await attachReceipts(acc, fcltcd, list); photos += rc.photos; bills += rc.bills } catch { /* 영수증 실패 무시 */ }
+      }
+      for (const row of list) { row._book = bk; row._bookLabel = BOOK_LABEL[bk] || bk }
+      allRows.push(...list)
+      perBook.push({ book: bk, label: BOOK_LABEL[bk] || bk, count: list.length })
     }
     await page.close().catch(() => {}); page = null
-    if (list.length > 0) return NextResponse.json({ success: true, count: list.length, keys: Object.keys(list[0]), rows: list.slice(0, 3000), receiptPhotos: receipt.photos, receiptBills: receipt.bills })
-    return NextResponse.json({ success: false, error: '해당 기간 전표가 없습니다.', billStatus: result.status }, { status: 200 })
+
+    if (sessionDead && allRows.length === 0) return NextResponse.json({ success: false, error: '걸음마 회계 세션 활성 실패 — 잠시 후 다시 시도해 주세요.', billStatus: 401 }, { status: 200 })
+    if (allRows.length === 0) return NextResponse.json({ success: false, error: `해당 기간 전표가 없습니다. (장부: ${bookList.map(bk => BOOK_LABEL[bk] || bk).join(', ')})`, billStatus: 200, perBook }, { status: 200 })
+    // keys: _bookLabel 을 앞에 두고 나머지 합집합
+    const keySet = new Set<string>(['_bookLabel'])
+    for (const r of allRows) for (const k of Object.keys(r)) if (k !== '_book') keySet.add(k)
+    return NextResponse.json({ success: true, count: allRows.length, keys: [...keySet], rows: allRows.slice(0, 6000), perBook, receiptPhotos: photos, receiptBills: bills })
   } catch (e) {
     try { if (page) await page.close() } catch { }
     return NextResponse.json({ success: false, error: `걸음마 전표 조회 오류: ${e instanceof Error ? e.message : String(e)}` }, { status: 200 })

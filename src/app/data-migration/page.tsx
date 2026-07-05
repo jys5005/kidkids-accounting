@@ -560,22 +560,24 @@ export default function DataMigrationPage() {
   const [gbVWithReceipts, setGbVWithReceipts] = useState(true) // 영수증 사진까지 가져오기
   const loadGwinVouchers = async () => {
     if (!sourceId || !sourcePw) { setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
-    const book = gbSelBooks[0] || 'subsidy'
-    setGbVLoading(true); setGbVRows(null); setGbMsg(`걸음마 전표 조회 중(${bookLabel(book)} · ${gbYear}.${gbVFrom}~${gbVTo}월)${gbVWithReceipts ? ' + 영수증 사진 다운로드(시간 걸림)' : ''}…`)
+    const books = gbSelBooks.length ? gbSelBooks : ['subsidy']
+    const cacheKey = books.join(',')
+    setGbVLoading(true); setGbVRows(null); setGbMsg(`걸음마 전표 조회 중(${books.map(bookLabel).join('·')} · ${gbYear}.${gbVFrom}~${gbVTo}월)${gbVWithReceipts ? ' + 영수증 사진 다운로드(시간 걸림)' : ''}…`)
     try {
       const res = await fetch('/api/gwin/vouchers', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ id: sourceId, password: sourcePw, book, year: gbYear, monthFrom: gbVFrom, monthTo: gbVTo, withReceipts: gbVWithReceipts }),
+        body: JSON.stringify({ id: sourceId, password: sourcePw, books, year: gbYear, monthFrom: gbVFrom, monthTo: gbVTo, withReceipts: gbVWithReceipts }),
       })
       const j = await res.json().catch(() => ({}))
       if (j?.success && Array.isArray(j.rows)) {
-        setGbVRows(j.rows); setGbVKeys(j.keys || []); setGbVBook(book)
+        setGbVRows(j.rows); setGbVKeys(j.keys || []); setGbVBook(cacheKey)
         const rc = j.receiptBills ? ` · 🧾 영수증 ${j.receiptPhotos}장(${j.receiptBills}건 전표)` : ''
-        setGbMsg(`✅ 전표 ${j.count}건 조회 (${bookLabel(book)})${rc}. 아래 미리보기 확인 후 [전표관리로 저장].`)
+        const pb = Array.isArray(j.perBook) ? ' · ' + j.perBook.map((p: { label: string; count: number }) => `${p.label} ${p.count}건`).join(' / ') : ''
+        setGbMsg(`✅ 전표 ${j.count}건 조회${pb}${rc}. 아래 미리보기 확인 후 [전표관리로 저장].`)
         // 조회 결과 저장(덮어쓰기) — 새로고침/재방문 시 복원용
         fetch('/api/gwin/vouchers/cache', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ book, year: gbYear, rows: j.rows, keys: j.keys || [], from: gbVFrom, to: gbVTo, receiptPhotos: j.receiptPhotos || 0, receiptBills: j.receiptBills || 0 }),
+          body: JSON.stringify({ book: cacheKey, year: gbYear, rows: j.rows, keys: j.keys || [], from: gbVFrom, to: gbVTo, receiptPhotos: j.receiptPhotos || 0, receiptBills: j.receiptBills || 0 }),
         }).catch(() => {})
       } else {
         setGbVRows(null)
@@ -597,12 +599,13 @@ export default function DataMigrationPage() {
         body: JSON.stringify({ book: gbVBook, year: gbYear, rows: gbVRows }),
       })
       const j = await res.json().catch(() => ({}))
-      setGbMsg(j?.success ? `✅ 전표관리 저장 완료 — ${j.saved || gbVRows.length}건 (${bookLabel(gbVBook)}). 전표관리에서 확인하세요.` : `❌ ${j?.error || '전표관리 저장 실패'}`)
+      const pb = Array.isArray(j?.perBook) ? ' (' + j.perBook.map((p: { book: string; saved: number }) => `${bookLabel(p.book)} ${p.saved}건`).join(' / ') + ')' : ''
+      setGbMsg(j?.success ? `✅ 전표관리 저장 완료 — ${j.saved || gbVRows.length}건${pb}. 전표관리에서 각 장부별로 확인하세요.` : `❌ ${j?.error || '전표관리 저장 실패'}`)
     } catch (e) { setGbMsg(`❌ 전표 저장 오류: ${e instanceof Error ? e.message : ''}`) }
     finally { setGbVSaving(false) }
   }
-  // 페이지 열 때 / 장부·연도 변경 시: 저장된 전표 조회 결과 복원
-  const activeVBook = gbSelBooks[0] || 'subsidy'
+  // 페이지 열 때 / 장부·연도 변경 시: 저장된 전표 조회 결과 복원 (체크한 장부 조합 기준)
+  const activeVBook = (gbSelBooks.length ? gbSelBooks : ['subsidy']).join(',')
   useEffect(() => {
     if (!isIlovechild) return
     let cancelled = false
@@ -614,7 +617,8 @@ export default function DataMigrationPage() {
           setGbVRows(s.rows); setGbVKeys(s.keys || []); setGbVBook(activeVBook)
           if (s.from) setGbVFrom(s.from); if (s.to) setGbVTo(s.to)
           const rc = s.receiptBills ? ` · 🧾 영수증 ${s.receiptPhotos}장` : ''
-          setGbMsg(`💾 저장된 조회 결과 ${s.count || s.rows.length}건 표시 (${bookLabel(activeVBook)} · ${gbYear})${rc}. 다시 [전표 가져오기] 하면 갱신됩니다.`)
+          const labels = activeVBook.split(',').map(bookLabel).join('·')
+          setGbMsg(`💾 저장된 조회 결과 ${s.count || s.rows.length}건 표시 (${labels} · ${gbYear})${rc}. 다시 [전표 가져오기] 하면 갱신됩니다.`)
         } else {
           setGbVRows(null)
         }
@@ -1071,7 +1075,7 @@ export default function DataMigrationPage() {
           {gbVRows && gbVRows.length > 0 && (
             <div className="border border-slate-200 rounded-lg overflow-hidden">
               <div className="bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 flex items-center gap-2">
-                🧾 가져온 전표 {gbVRows.length}건 <span className="text-slate-400 font-normal">({bookLabel(gbVBook)} · {gbYear}.{gbVFrom}~{gbVTo}월) — [📒 전표관리로 저장]으로 반영</span>
+                🧾 가져온 전표 {gbVRows.length}건 <span className="text-slate-400 font-normal">({gbVBook.split(',').map(bookLabel).join('·')} · {gbYear}.{gbVFrom}~{gbVTo}월) — [📒 전표관리로 저장]으로 반영</span>
               </div>
               <div className="overflow-x-auto max-h-64 overflow-y-auto">
                 <table className="text-[11px] w-full">
