@@ -15,27 +15,54 @@ const pick = (r: Record<string, unknown>, keys: string[]) => {
   return ''
 }
 
+type CoaMaps = { accCode: Record<string, string>; subCode: Record<string, string> }
+type CoaNode = { gubun?: string; code?: string; name?: string; hangs?: CoaNode[]; moks?: CoaNode[]; subs?: CoaNode[] }
+
+// 통합e 계정과목표(coa::{book}::{year}) → 목이름→코드 / 세목이름→코드 맵
+async function fetchCoaMaps(cookie: string, book: string, year: string): Promise<CoaMaps> {
+  const accCode: Record<string, string> = {}
+  const subCode: Record<string, string> = {}
+  try {
+    const field = `coa::${book || 'template'}::${year}`
+    const res = await fetch(`${PLATFORM_URL}/api/settings/page-data?field=${encodeURIComponent(field)}`, { headers: { cookie }, signal: AbortSignal.timeout(20_000) })
+    const data = await res.json().catch(() => ({})) as { list?: CoaNode[] }
+    for (const g of data.list || []) {
+      for (const h of g.hangs || []) {
+        for (const m of h.moks || []) {
+          if (m.name && m.code) accCode[String(m.name)] = String(m.code)
+          for (const s of m.subs || []) if (s.name && s.code) subCode[String(s.name)] = String(s.code)
+        }
+      }
+    }
+  } catch { /* coa 없으면 빈 맵 → accountCode '' (화면 자동매핑 폴백) */ }
+  return { accCode, subCode }
+}
+
 // 걸음마 getBillList 실측 필드 → VoucherRow 매핑. ⚠ 적요/거래처/결제방식은 실제 컬럼 그대로(강제 분리 금지).
-function mapRow(r: Record<string, unknown>, i: number) {
+function mapRow(r: Record<string, unknown>, i: number, maps: CoaMaps) {
   const d8 = String(pick(r, ['BILL_DATE', 'BILL_ORDER_DATE'])).replace(/[^0-9]/g, '').slice(0, 8)
   const date = d8.length === 8 ? `${d8.slice(0, 4)}-${d8.slice(4, 6)}-${d8.slice(6, 8)}` : ''
   const amt = num(pick(r, ['BILL_MONEY']))
   const io = String(pick(r, ['ESTI_INOUT'])) // I=수입 / O(그 외)=지출
   // ⚠ 반납은 별도 타입이 아니라 '수입/지출 행의 음수 금액'(앱 관례) → 타입은 수입/지출 유지, 금액 부호 보존(음수=반납)
   const type: '수입' | '지출' = io === 'I' ? '수입' : '지출'
+  const account = String(pick(r, ['ESTI_NAME_3', 'ESTI_NAME', 'ESTI_DISPLAY']))   // 목
+  const subAccount = String(pick(r, ['ESTI_NAME_4']))                             // 세목(실제 ESTI_NAME_4만)
+  // ⚠ 코드는 통합e coa 기준: 실제 세목 있으면 세목코드, 없으면 목코드. 걸음마 임의값(ESTI_IDX) 사용 안 함
+  const accountCode = (subAccount && maps.subCode[subAccount]) || maps.accCode[account] || ''
   return {
     id: i + 1,
     date,
     type,
-    account: String(pick(r, ['ESTI_NAME_3', 'ESTI_NAME', 'ESTI_DISPLAY'])),      // 목
-    subAccount: String(pick(r, ['ESTI_NAME_4'])),                                // 세목(실제 ESTI_NAME_4만. 없으면 '' → 목만)
+    account,
+    subAccount,
     summary: String(pick(r, ['BILL_MEMO'])),                                     // 적요(원본 통째)
     amount: amt,                                                                 // 부호 유지(음수=반납)
     counterpart: String(pick(r, ['CREDITOR'])),                                  // 거래처(실제 컬럼)
     note: '',                                                                    // ⚠ 결제방식=note. 걸음마 BILL_BIGO는 이체/카드 원시코드([타행FB] 등) → 스킵(사용자 요청). 결제수단은 적요에 이미 있음
     approved: false,
     inputMethod: '일괄' as const,
-    accountCode: '',                                                             // ⚠ 걸음마 ESTI_IDX 저장 금지. 비워두면 전표입력이 목(계정과목) 기준 coa 코드로 자동 매핑(accountCodeMap[목])
+    accountCode,                                                                 // 통합e coa 코드(목/세목 기준)
     receiptImage: String(pick(r, ['_receiptImage'])) || undefined,           // 영수증 사진(첫 장, /api/receipt-file/…)
     receiptImages: String(pick(r, ['_receiptImages'])) || undefined,         // 영수증 여러 장(콤마 구분)
     payment: String(pick(r, ['SETLE_MTHD_NAME'])),                               // 결제방식(실제 컬럼)
@@ -45,8 +72,9 @@ function mapRow(r: Record<string, unknown>, i: number) {
   }
 }
 
-async function saveBook(cookie: string, book: string, rows: Record<string, unknown>[]): Promise<number> {
-  const list = rows.map(mapRow)
+async function saveBook(cookie: string, book: string, year: string, rows: Record<string, unknown>[]): Promise<number> {
+  const maps = await fetchCoaMaps(cookie, book, year)   // 장부·연도별 coa 코드 맵
+  const list = rows.map((r, i) => mapRow(r, i, maps))
   const field = bookField('voucher-input', book)
   // 덮어쓰기: 기존 삭제 후 저장
   await fetch(`${PLATFORM_URL}/api/settings/page-data?field=${encodeURIComponent(field)}`, {
@@ -64,7 +92,8 @@ async function saveBook(cookie: string, book: string, rows: Record<string, unkno
 export async function POST(req: NextRequest) {
   try {
     const cookie = req.headers.get('cookie') || ''
-    const { book, rows } = await req.json() as { book?: string; year?: string; rows?: Record<string, unknown>[] }
+    const { book, year, rows } = await req.json() as { book?: string; year?: string; rows?: Record<string, unknown>[] }
+    const y = String(year || new Date().getFullYear())
     if (!Array.isArray(rows) || rows.length === 0) return NextResponse.json({ success: false, error: '저장할 전표가 없습니다.' }, { status: 400 })
 
     // 행에 _book 태그 있으면 장부별 그룹핑 저장, 없으면 body.book 로 단일 저장
@@ -77,7 +106,7 @@ export async function POST(req: NextRequest) {
     const perBook: { book: string; saved: number }[] = []
     let total = 0
     for (const [bk, grpRows] of groups) {
-      const n = await saveBook(cookie, bk, grpRows)
+      const n = await saveBook(cookie, bk, y, grpRows)
       perBook.push({ book: bk, saved: n }); total += n
     }
     return NextResponse.json({ success: true, saved: total, perBook })
