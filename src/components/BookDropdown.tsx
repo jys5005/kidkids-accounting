@@ -29,17 +29,23 @@ export default function BookDropdown() {
 
   if (!show) return null
 
-  // 다른 조회조건 셀렉트(회계연도 등)와 동일한 크기·글자. 장부 구분만 파란 글자로 살짝 강조.
+  // 장부 구분(보육정보센터/보조금/이용료) — 알약(pill) 토글. 선택 장부만 파란 배지로 강조.
   return (
-    <select
-      value={book}
-      onChange={e => setActiveBook(e.target.value)}
-      title="장부 선택"
-      className="border border-slate-300 rounded px-2 py-1.5 text-xs font-bold text-blue-700 bg-white cursor-pointer focus:outline-none focus:border-blue-400"
-    >
+    <div className="inline-flex items-center gap-1" title="장부 선택">
+      <span className="text-[11px] font-bold text-slate-400 mr-1">장부</span>
       {ILOVECHILD_BOOKS.map(b => (
-        <option key={b.code} value={b.code}>{b.label}</option>
+        <button
+          key={b.code}
+          onClick={() => { if (b.code !== book) setActiveBook(b.code) }}
+          className={`px-3.5 py-1 text-xs font-bold rounded-full border transition-colors ${
+            book === b.code
+              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+              : 'bg-white text-slate-500 border-slate-300 hover:border-blue-400 hover:text-blue-600'
+          }`}
+        >
+          {b.label}
+        </button>
       ))}
-    </select>
+    </div>
   )
 }
