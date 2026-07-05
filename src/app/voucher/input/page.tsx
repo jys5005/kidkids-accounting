@@ -1107,6 +1107,7 @@ export default function VoucherInputPage() {
               </span>
               {(['수입부우선', '전표번호', '전체'] as const).map(mode => (
                 <button key={mode}
+                  data-tip={mode === '수입부우선' ? '동일 일자일 때 수입 전표를 먼저(위) 정렬' : mode === '전표번호' ? '전표번호(입력 순서) 기준 정렬' : '정렬 해제 — 전체 전표를 일자순으로 표시'}
                   onClick={() => {
                     setSortMode(mode)
                     if (mode === '수입부우선') {
