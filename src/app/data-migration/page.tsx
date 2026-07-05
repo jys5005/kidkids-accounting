@@ -548,16 +548,18 @@ export default function DataMigrationPage() {
     if (Object.keys(out).length) { setGbPreviewByBook(out); setGbMsg('저장된 스냅샷 미리보기입니다. [저장]을 눌러야 반영됩니다.') }
     else { setGbPreviewByBook(null); setGbMsg('선택한 장부의 저장된 스냅샷이 없습니다.') }
   }
-  // 걸음마 전표 가져오기 — 1차 진단(응답 구조 확인). 첫 선택 장부 기준.
+  // 걸음마 전표 가져오기 — 1차 진단(응답 구조 확인). 첫 선택 장부 + 기간(시작월~종료월).
   const [gbVLoading, setGbVLoading] = useState(false)
+  const [gbVFrom, setGbVFrom] = useState('03') // 회계연도 시작(3월)
+  const [gbVTo, setGbVTo] = useState('12')
   const loadGwinVouchers = async () => {
     if (!sourceId || !sourcePw) { setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
     const book = gbSelBooks[0] || 'subsidy'
-    setGbVLoading(true); setGbMsg(`걸음마 전표 조회 중(${bookLabel(book)} · ${gbYear}-06)…`)
+    setGbVLoading(true); setGbMsg(`걸음마 전표 조회 중(${bookLabel(book)} · ${gbYear}.${gbVFrom}~${gbVTo}월)…`)
     try {
       const res = await fetch('/api/gwin/vouchers', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ id: sourceId, password: sourcePw, book, year: gbYear, month: '06' }),
+        body: JSON.stringify({ id: sourceId, password: sourcePw, book, year: gbYear, monthFrom: gbVFrom, monthTo: gbVTo }),
       })
       const j = await res.json().catch(() => ({}))
       if (j?.success && j.diag) {
@@ -988,6 +990,14 @@ export default function DataMigrationPage() {
             <button onClick={loadGwinBudget} disabled={gbLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50">{gbLoading ? '⏳ 걸음마 조회 중…' : '📥 예산 가져오기 (실시간)'}</button>
             <button onClick={saveGwinBudget} disabled={!gbPreviewByBook || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-40">💾 저장</button>
             <button onClick={loadGwinBudgetStatic} className="px-2 py-1.5 text-[11px] font-bold text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50" title="실시간 조회 실패 시 마지막 저장된 스냅샷으로 미리보기">저장 데이터로 보기</button>
+            <span className="text-[11px] font-bold text-slate-500 ml-1">전표기간</span>
+            <select value={gbVFrom} onChange={e => setGbVFrom(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="시작월">
+              {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map(m => <option key={m} value={m}>{Number(m)}월</option>)}
+            </select>
+            <span className="text-slate-400 text-xs">~</span>
+            <select value={gbVTo} onChange={e => setGbVTo(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="종료월">
+              {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map(m => <option key={m} value={m}>{Number(m)}월</option>)}
+            </select>
             <button onClick={loadGwinVouchers} disabled={gbVLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50" title="걸음마 전표(현금출납부) 조회">{gbVLoading ? '⏳ 전표 조회 중…' : '🧾 전표 가져오기'}</button>
             {gbMsg && <span className={`text-xs font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}
           </div>

@@ -31,11 +31,12 @@ async function getBrowser(): Promise<Browser> {
 export async function POST(req: NextRequest) {
   let page = null
   try {
-    const { id, password, book, year, month } = await req.json()
+    const { id, password, book, year, monthFrom, monthTo, month } = await req.json()
     if (!id || !password) return NextResponse.json({ success: false, error: '걸음마 아이디/비밀번호가 필요합니다.' }, { status: 400 })
     const bg = BOOK_GB[book] || '03'
     const y = String(year || new Date().getFullYear())
-    const m = String(month || '06').padStart(2, '0')
+    const mFrom = String(monthFrom || month || '03').padStart(2, '0')
+    const mTo = String(monthTo || month || '12').padStart(2, '0')
 
     const b = await getBrowser()
     page = await b.newPage()
@@ -66,10 +67,10 @@ export async function POST(req: NextRequest) {
       const search = {
         FCLTCD: fcltcd, BOOK_GB: '${bg}',
         ESTI_YEAR: '${y}', PAPER_YEAR: '${y}', YEAR: '${y}',
-        ESTI_MONTH: '${m}', PAPER_MONTH: '${m}', MONTH: '${m}',
-        PAPER_YEARMONTH: '${y}${m}', ESTI_YEARMONTH: '${y}${m}',
-        DURATION_GB: 0, ESTI_CODE: '', ACCT_CODE: '', SEMOK_CODE: '',
-        PAPER_DATE_START: '${y}${m}01', PAPER_DATE_END: '${y}${m}31',
+        DURATION_GB: 1, ESTI_CODE: '', ACCT_CODE: '', SEMOK_CODE: '',
+        PAPER_DATE_START: '${y}${mFrom}01', PAPER_DATE_END: '${y}${mTo}31',
+        PAPER_YEARMONTH_START: '${y}${mFrom}', PAPER_YEARMONTH_END: '${y}${mTo}',
+        START_YM: '${y}${mFrom}', END_YM: '${y}${mTo}',
         SORT_GB: '', INOUT_GB: 'A'
       };
       const endpoints = ${JSON.stringify(BILL_ENDPOINTS)};
