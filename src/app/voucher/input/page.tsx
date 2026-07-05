@@ -1590,9 +1590,9 @@ export default function VoucherInputPage() {
                     case 'register': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[43px]">등록</th>
                     case 'attach': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[43px]">첨부</th>
                     case 'amountGroup': return <React.Fragment key={key}>
-                                            <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[160px]">수입</th>
-                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[160px]">지출</th>
-                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[130px]">잔액</th>
+                                            <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[90px]">수입</th>
+                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[90px]">지출</th>
+                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[110px]">잔액</th>
                     </React.Fragment>
                     case 'accountGroup': return <React.Fragment key={key}>
                       {inputMode !== '건별등록' && inputMode !== '상세등록' && <th className="text-center px-1 py-2 font-normal text-slate-700 w-[40px]">복사</th>}
@@ -1872,31 +1872,27 @@ export default function VoucherInputPage() {
 
                         case 'amountGroup':
                           return <React.Fragment key={key}>
-                            <td data-cell="income" className="text-right px-3 py-1 cursor-pointer" onClick={row.type === '수입' ? cellClick('amount') : undefined}>
-                              {row.type === '수입' ? (
-                                isCell('amount') ? (
-                                  <input type="text" value={fmt(row.amount)} autoFocus
-                                    onChange={e => updateRow(row.id, 'amount', Number(e.target.value.replace(/,/g, '')) || 0)}
-                                    onBlur={() => setEditingCell(null)}
-                                    onClick={e => e.stopPropagation()}
-                                    className="w-full px-1 py-0.5 border border-teal-300 rounded text-xs text-right focus:ring-1 focus:ring-teal-300 outline-none" />
-                                ) : (
-                                  <span className="font-medium text-blue-700">{fmt(row.amount)}</span>
-                                )
-                              ) : null}
+                            <td data-cell="income" className="px-1.5 py-1 cursor-pointer" onClick={row.type === '수입' ? cellClick('amount') : undefined}>
+                              {row.type === '수입' && isCell('amount') ? (
+                                <input type="text" value={fmt(row.amount)} autoFocus
+                                  onChange={e => updateRow(row.id, 'amount', Number(e.target.value.replace(/,/g, '')) || 0)}
+                                  onBlur={() => setEditingCell(null)}
+                                  onClick={e => e.stopPropagation()}
+                                  className="w-full px-2 py-1 border border-teal-300 rounded text-[11px] text-right focus:ring-1 focus:ring-teal-300 outline-none" />
+                              ) : (
+                                <div className={`w-full text-right text-[11px] px-2 py-1 rounded border border-slate-200 bg-white ${row.type === '수입' ? 'text-blue-700 font-medium' : 'text-slate-300'}`}>{row.type === '수입' ? fmt(row.amount) : '0'}</div>
+                              )}
                             </td>
-                            <td data-cell="expense" className="text-right px-3 py-1 cursor-pointer" onClick={row.type === '지출' ? cellClick('amount') : undefined}>
-                              {row.type === '지출' ? (
-                                isCell('amount') ? (
-                                  <input type="text" value={fmt(row.amount)} autoFocus
-                                    onChange={e => updateRow(row.id, 'amount', Number(e.target.value.replace(/,/g, '')) || 0)}
-                                    onBlur={() => setEditingCell(null)}
-                                    onClick={e => e.stopPropagation()}
-                                    className="w-full px-1 py-0.5 border border-teal-300 rounded text-xs text-right focus:ring-1 focus:ring-teal-300 outline-none" />
-                                ) : (
-                                  <span className="font-medium text-red-600">{fmt(row.amount)}</span>
-                                )
-                              ) : null}
+                            <td data-cell="expense" className="px-1.5 py-1 cursor-pointer" onClick={row.type === '지출' ? cellClick('amount') : undefined}>
+                              {row.type === '지출' && isCell('amount') ? (
+                                <input type="text" value={fmt(row.amount)} autoFocus
+                                  onChange={e => updateRow(row.id, 'amount', Number(e.target.value.replace(/,/g, '')) || 0)}
+                                  onBlur={() => setEditingCell(null)}
+                                  onClick={e => e.stopPropagation()}
+                                  className="w-full px-2 py-1 border border-teal-300 rounded text-[11px] text-right focus:ring-1 focus:ring-teal-300 outline-none" />
+                              ) : (
+                                <div className={`w-full text-right text-[11px] px-2 py-1 rounded border border-slate-200 bg-white ${row.type === '지출' ? 'text-red-600 font-medium' : 'text-slate-300'}`}>{row.type === '지출' ? fmt(row.amount) : '0'}</div>
+                              )}
                             </td>
                             <td className="text-right px-3 py-1">
                               {(() => {
@@ -1906,7 +1902,7 @@ export default function VoucherInputPage() {
                                   if (r.type === '수입') balance += r.amount
                                   else balance -= r.amount
                                 }
-                                return <span className="font-medium text-sm text-slate-700">{fmt(balance)}</span>
+                                return <span className="font-medium text-[11px] text-slate-700">{fmt(balance)}</span>
                               })()}
                             </td>
                           </React.Fragment>
