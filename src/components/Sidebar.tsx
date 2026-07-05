@@ -77,6 +77,10 @@ const categories: MenuCategory[] = [
         ],
       },
       {
+        label: '경영분석',
+        href: '/analysis',
+      },
+      {
         label: '설정',
         children: [
           { label: '회계계정관리', href: '/settings/accounts' },
@@ -217,6 +221,7 @@ export function isCisEnabled(institutionType?: string | null): boolean {
 // 아이사랑꿈터 전용 메뉴 — 다른 유형에서는 숨김
 export const ILOVECHILD_ONLY_HREFS = new Set<string>([
   '/settings/accounts', // 회계계정관리(장부별 계정과목)
+  '/analysis',          // 경영분석 집계표(coa 기반)
 ])
 
 // 아이사랑꿈터에서 숨기는 메뉴 — 어린이집 서식이라 미사용 (어린이집은 그대로 노출)
@@ -242,6 +247,7 @@ export function visibleCategories(institutionType?: string | null): MenuCategory
     ...cat,
     menus: cat.menus
       .map(m => (m.children ? { ...m, children: m.children.filter(c => !hide(c.href)) } : m))
+      .filter(m => !(m.href && hide(m.href)))               // 자체 href 게이트(children 없는 메뉴)
       .filter(m => !m.children || m.children.length > 0), // 자식이 전부 제거된 메뉴는 숨김
   }))
 }
