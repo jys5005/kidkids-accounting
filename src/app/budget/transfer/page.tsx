@@ -1,7 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import DraggableModal from '@/components/DraggableModal'
+import { getActiveBook, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
+
+interface TCoaMok { code: string; name: string }
+interface TCoaHang { code: string; name: string; moks?: TCoaMok[] }
+interface TCoaGwan { gubun: string; code: string; name: string; hangs?: TCoaHang[] }
 
 interface TransferRecord {
   id: number
@@ -16,7 +21,7 @@ interface TransferRecord {
   active: boolean
 }
 
-const EXPENSE_ACCOUNTS = [
+const DEF_EXPENSE_ACCOUNTS = [
   { code: 'E111', name: '원장급여', amount: 78000000 },
   { code: 'E112', name: '원장수당', amount: 600000 },
   { code: 'E121', name: '보육교직원급여', amount: 476237280 },
@@ -63,6 +68,46 @@ export default function BudgetTransferPage() {
   const [formNote, setFormNote] = useState('')
   const [formActive, setFormActive] = useState(true)
   const [editId, setEditId] = useState<number | null>(null)
+
+  // 아이사랑꿈터: 과목(세출 계정)을 coa 목 + 예산액으로 (어린이집은 기존 하드코딩)
+  const [institutionType, setInstitutionType] = useState('')
+  const [book, setBook] = useState('')
+  const [tree, setTree] = useState<TCoaGwan[]>([])
+  const [budget, setBudget] = useState<Record<string, { total?: number }[]>>({})
+  const isIlovechild = institutionType === 'ilovechild'
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => setInstitutionType((d?.institutionType || d?.profile?.institutionType || 'childcare') as string)).catch(() => {})
+    setBook(getActiveBook())
+    const onCh = (e: Event) => setBook(((e as CustomEvent).detail as string) || '')
+    window.addEventListener(BOOK_CHANGE_EVENT, onCh)
+    return () => window.removeEventListener(BOOK_CHANGE_EVENT, onCh)
+  }, [])
+  useEffect(() => {
+    if (!isIlovechild || !book) { setTree([]); setBudget({}); return }
+    let alive = true
+    Promise.all([
+      fetch(`/api/coa?book=${encodeURIComponent(book)}&year=${year}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/budget?book=${encodeURIComponent(book)}&year=${year}`).then(r => r.json()).catch(() => ({})),
+    ]).then(([c, b]) => {
+      if (!alive) return
+      setTree(Array.isArray(c?.list) ? c.list : [])
+      setBudget((Array.isArray(b?.list) && b.list[0] && (b.list[0] as { basisByMok?: Record<string, { total?: number }[]> }).basisByMok) || {})
+    })
+    return () => { alive = false }
+  }, [isIlovechild, book, year])
+  const coaExpenseAccounts = useMemo(() => {
+    const out: { code: string; name: string; amount: number }[] = []
+    for (const g of tree) {
+      if (g.gubun !== '세출') continue
+      for (const h of g.hangs || []) for (const m of h.moks || []) {
+        const code = 'E' + m.code
+        const amount = (budget[code] || []).reduce((s, it) => s + (it.total || 0), 0)
+        out.push({ code, name: m.name, amount })
+      }
+    }
+    return out
+  }, [tree, budget])
+  const EXPENSE_ACCOUNTS = isIlovechild && book ? coaExpenseAccounts : DEF_EXPENSE_ACCOUNTS
 
   const getAccount = (code: string) => EXPENSE_ACCOUNTS.find(a => a.code === code)
 
