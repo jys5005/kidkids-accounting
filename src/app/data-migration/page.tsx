@@ -548,27 +548,47 @@ export default function DataMigrationPage() {
     if (Object.keys(out).length) { setGbPreviewByBook(out); setGbMsg('저장된 스냅샷 미리보기입니다. [저장]을 눌러야 반영됩니다.') }
     else { setGbPreviewByBook(null); setGbMsg('선택한 장부의 저장된 스냅샷이 없습니다.') }
   }
-  // 걸음마 전표 가져오기 — 1차 진단(응답 구조 확인). 첫 선택 장부 + 기간(시작월~종료월).
+  // 걸음마 전표 가져오기 — 여기에 미리보기(원시행) 저장·표시 → 별도 [전표관리로 저장]
   const [gbVLoading, setGbVLoading] = useState(false)
   const [gbVFrom, setGbVFrom] = useState('03') // 회계연도 시작(3월)
   const [gbVTo, setGbVTo] = useState('12')
+  const [gbVRows, setGbVRows] = useState<Record<string, unknown>[] | null>(null)
+  const [gbVKeys, setGbVKeys] = useState<string[]>([])
+  const [gbVBook, setGbVBook] = useState('')
+  const [gbVSaving, setGbVSaving] = useState(false)
   const loadGwinVouchers = async () => {
     if (!sourceId || !sourcePw) { setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
     const book = gbSelBooks[0] || 'subsidy'
-    setGbVLoading(true); setGbMsg(`걸음마 전표 조회 중(${bookLabel(book)} · ${gbYear}.${gbVFrom}~${gbVTo}월)…`)
+    setGbVLoading(true); setGbVRows(null); setGbMsg(`걸음마 전표 조회 중(${bookLabel(book)} · ${gbYear}.${gbVFrom}~${gbVTo}월)…`)
     try {
       const res = await fetch('/api/gwin/vouchers', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({ id: sourceId, password: sourcePw, book, year: gbYear, monthFrom: gbVFrom, monthTo: gbVTo }),
       })
       const j = await res.json().catch(() => ({}))
-      if (j?.success && j.diag) {
-        const d = j.diag
-        if (d.step === 'bill') setGbMsg(`✅ 전표 조회 성공 — ${d.count}건 (endpoint: ${d.endpoint}, 필드: ${(d.keys || []).slice(0, 8).join(', ')}…). 구조 확인 후 매핑 붙입니다.`)
-        else setGbMsg(`⚠ 전표 조회 단계 '${d.step}' — ${JSON.stringify(d).slice(0, 200)}`)
-      } else setGbMsg(`❌ ${j?.error || '전표 조회 실패'}`)
-    } catch (e) { setGbMsg(`❌ 전표 조회 오류: ${e instanceof Error ? e.message : ''}`) }
+      if (j?.success && Array.isArray(j.rows)) {
+        setGbVRows(j.rows); setGbVKeys(j.keys || []); setGbVBook(book)
+        setGbMsg(`✅ 전표 ${j.count}건 조회 (${bookLabel(book)}, endpoint: ${j.endpoint}). 아래 미리보기 확인 후 [전표관리로 저장].`)
+      } else {
+        setGbVRows(null)
+        setGbMsg(`❌ ${j?.error || '전표 조회 실패'}${j?.tried ? ` (시도: ${j.tried.map((t: { ep: string; status: number }) => `${t.ep.split('/').pop()}:${t.status}`).join(', ')})` : ''}`)
+      }
+    } catch (e) { setGbVRows(null); setGbMsg(`❌ 전표 조회 오류: ${e instanceof Error ? e.message : ''}`) }
     finally { setGbVLoading(false) }
+  }
+  // 별도: 가져온 전표를 전표관리(voucher-input)로 저장 — 응답 필드 확인 후 매핑 확정 예정
+  const saveGwinVouchers = async () => {
+    if (!gbVRows || gbVRows.length === 0) return
+    setGbVSaving(true)
+    try {
+      const res = await fetch('/api/gwin/vouchers/save', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ book: gbVBook, year: gbYear, rows: gbVRows }),
+      })
+      const j = await res.json().catch(() => ({}))
+      setGbMsg(j?.success ? `✅ 전표관리 저장 완료 — ${j.saved || gbVRows.length}건 (${bookLabel(gbVBook)}). 전표관리에서 확인하세요.` : `❌ ${j?.error || '전표관리 저장 실패'}`)
+    } catch (e) { setGbMsg(`❌ 전표 저장 오류: ${e instanceof Error ? e.message : ''}`) }
+    finally { setGbVSaving(false) }
   }
   const saveGwinBudget = async () => {
     if (!gbPreviewByBook) return
@@ -999,6 +1019,7 @@ export default function DataMigrationPage() {
               {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map(m => <option key={m} value={m}>{Number(m)}월</option>)}
             </select>
             <button onClick={loadGwinVouchers} disabled={gbVLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50" title="걸음마 전표(현금출납부) 조회">{gbVLoading ? '⏳ 전표 조회 중…' : '🧾 전표 가져오기'}</button>
+            <button onClick={saveGwinVouchers} disabled={!gbVRows || !gbVRows.length || gbVSaving} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded disabled:opacity-40" title="가져온 전표를 전표관리로 저장">{gbVSaving ? '저장 중…' : '📒 전표관리로 저장'}</button>
             {gbMsg && <span className={`text-xs font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}
           </div>
           {gbPreviewByBook && (
@@ -1011,7 +1032,28 @@ export default function DataMigrationPage() {
               <div className="text-slate-500 pt-0.5"><b className="text-blue-700">[저장]</b>을 눌러야 실제 반영됩니다.</div>
             </div>
           )}
-          <p className="text-[11px] text-slate-400">· 예산은 <b className="text-slate-600">예산관리 › 예산작성</b>에 반영됩니다. 전표(현금출납부) 가져오기는 걸음마 데이터 연동 후 제공 예정입니다.</p>
+          {/* 가져온 전표 미리보기 (여기에 표시) */}
+          {gbVRows && gbVRows.length > 0 && (
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
+              <div className="bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 flex items-center gap-2">
+                🧾 가져온 전표 {gbVRows.length}건 <span className="text-slate-400 font-normal">({bookLabel(gbVBook)} · {gbYear}.{gbVFrom}~{gbVTo}월) — [📒 전표관리로 저장]으로 반영</span>
+              </div>
+              <div className="overflow-x-auto max-h-64 overflow-y-auto">
+                <table className="text-[11px] w-full">
+                  <thead className="bg-slate-100 sticky top-0"><tr>{gbVKeys.map(k => <th key={k} className="px-2 py-1 text-left font-semibold text-slate-500 whitespace-nowrap border-b border-slate-200">{k}</th>)}</tr></thead>
+                  <tbody>
+                    {gbVRows.slice(0, 100).map((r, i) => (
+                      <tr key={i} className="border-b border-slate-50 hover:bg-amber-50/40">
+                        {gbVKeys.map(k => <td key={k} className="px-2 py-1 text-slate-600 whitespace-nowrap">{String(r[k] ?? '')}</td>)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {gbVRows.length > 100 && <div className="px-3 py-1 text-[10px] text-slate-400">미리보기 100건 표시 (전체 {gbVRows.length}건 저장됨)</div>}
+            </div>
+          )}
+          <p className="text-[11px] text-slate-400">· 예산은 <b className="text-slate-600">예산관리 › 예산작성</b>에, 전표는 <b className="text-slate-600">전표관리 › 전표입력</b>에 반영됩니다.</p>
         </div>
       )}
 
