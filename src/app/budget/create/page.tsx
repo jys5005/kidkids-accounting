@@ -732,46 +732,21 @@ export default function BudgetCreatePage() {
                 </div>
               )
             }
-            let prevGwan = '', prevHang = ''
-            return leaf.map((row) => {
-              // 관/항 표시 여부
-              const rowIdx = currentData.indexOf(row)
-              let gwanRow: BudgetRow | undefined, hangRow: BudgetRow | undefined
-              for (let j = rowIdx - 1; j >= 0; j--) {
-                if (!gwanRow && currentData[j].level === 0) gwanRow = currentData[j]
-                if (!hangRow && currentData[j].level === 1) hangRow = currentData[j]
-                if (gwanRow && hangRow) break
-              }
-              let showGwan = false, showHang = false
-              if (gwanRow && gwanRow.code !== prevGwan) { showGwan = true; prevGwan = gwanRow.code }
-              if (hangRow && hangRow.code !== prevHang) { showHang = true; prevHang = hangRow.code }
-
+            // 관 → 항 → 목 그룹핑 (관/항 셀병합·세로 중앙정렬)
+            const groups: { gwan: BudgetRow; hangs: { hang: BudgetRow; moks: BudgetRow[] }[] }[] = []
+            for (const r of currentData) {
+              if (r.level === 0) groups.push({ gwan: r, hangs: [] })
+              else if (r.level === 1) { const g = groups[groups.length - 1]; if (g) g.hangs.push({ hang: r, moks: [] }) }
+              else { const g = groups[groups.length - 1]; const h = g?.hangs[g.hangs.length - 1]; if (h) h.moks.push(r) }
+            }
+            const renderMok = (row: BudgetRow, mi: number) => {
               const isSub = row.level === 3
               const mokTotal = getMokTotal(row.code) || row.amount
               const items = basisState[row.code] || [{ name: '', unitPrice: 0, qty: 0, months: 0, total: 0 }]
-
               return (
-                <div key={row.code} className={`flex group/row hover:bg-blue-50/30 transition-colors ${isSub ? 'bg-slate-50/30' : ''}`}>
-                  {/* 관 */}
-                  <div className={`w-[80px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex flex-col items-center justify-center gap-0.5 ${showGwan ? 'border-t border-slate-200' : ''}`}>
-                    {showGwan && gwanRow && (
-                      <>
-                        <div className="flex items-center gap-1"><span className="text-[9px] font-bold text-violet-700 bg-violet-100 rounded px-1 py-px">관</span><span className="text-[11px] font-bold text-slate-700">{gwanRow.code.replace('E', '')}</span></div>
-                        <span className="text-[10px] font-medium text-slate-600 text-center leading-tight">{gwanRow.name}</span>
-                      </>
-                    )}
-                  </div>
-                  {/* 항 */}
-                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex flex-col items-center justify-center gap-0.5 ${showHang ? 'border-t border-slate-200' : ''}`}>
-                    {showHang && hangRow && (
-                      <>
-                        <div className="flex items-center gap-1"><span className="text-[9px] font-bold text-sky-700 bg-sky-100 rounded px-1 py-px">항</span><span className="text-[11px] font-semibold text-slate-600">{hangRow.code.replace('E', '')}</span></div>
-                        <span className="text-[10px] font-medium text-slate-600 text-center leading-tight">{hangRow.name}</span>
-                      </>
-                    )}
-                  </div>
+                <div key={row.code} className={`flex group/row hover:bg-blue-50/30 transition-colors ${mi > 0 ? 'border-t border-slate-100' : ''} ${isSub ? 'bg-slate-50/30' : ''}`}>
                   {/* 목 */}
-                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex flex-col justify-center gap-0.5 ${isSub ? 'pl-4' : ''}`}>
+                  <div className={`w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 flex flex-col justify-center gap-0.5 ${isSub ? 'pl-4' : ''}`}>
                     <div className="flex items-center gap-1">
                       <span className={`text-[9px] font-bold rounded px-1 py-px ${isSub ? 'text-slate-400 bg-slate-100' : 'text-emerald-700 bg-emerald-100'}`}>{isSub ? '세' : '목'}</span>
                       <span className={`text-[11px] font-bold ${isSub ? 'text-slate-400' : 'text-slate-700'}`}>{row.code.replace('E', '')}</span>
@@ -779,7 +754,7 @@ export default function BudgetCreatePage() {
                     <span className={`text-[10px] ${isSub ? 'text-slate-400' : 'text-slate-600'}`}>{row.name}</span>
                   </div>
                   {/* 전년도결산액 / 결산액 + 예산대비차액 */}
-                  <div className="w-[160px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex flex-col items-end justify-center">
+                  <div className="w-[160px] flex-shrink-0 border-r border-slate-200 px-2 py-2 flex flex-col items-end justify-center">
                     <span className="text-[11px] text-slate-500">{budgetType !== '본예산' ? (row.amount > 0 ? fmt(Math.round(row.amount * 0.25)) : '') : (row.prevAmount > 0 ? fmt(row.prevAmount) : '')}</span>
                     {budgetType !== '본예산' && (() => {
                       const settlement = Math.round(row.amount * 0.25)
@@ -789,11 +764,11 @@ export default function BudgetCreatePage() {
                     })()}
                   </div>
                   {/* 예산액 */}
-                  <div className="w-[140px] flex-shrink-0 border-r border-slate-200 border-t border-slate-200 px-2 py-2 flex items-center justify-end">
+                  <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-2 py-2 flex items-center justify-end">
                     <span className="text-[11px] font-bold text-slate-800">{mokTotal > 0 ? fmt(mokTotal) : ''}</span>
                   </div>
-                  {/* 세부항목 — 산출기초 전체 인라인 노출 (걸음마식), 클릭하면 입력 모달 */}
-                  <div className={`flex-1 border-t border-slate-200 flex items-stretch ${isSub ? 'bg-slate-50/30' : ''}`}>
+                  {/* 세부항목 — 산출기초 전체 인라인 노출, 클릭하면 입력 모달 */}
+                  <div className={`flex-1 flex items-stretch ${isSub ? 'bg-slate-50/30' : ''}`}>
                     <div
                       className={`flex-1 min-w-0 px-3 py-1.5 flex flex-col justify-center gap-0.5 ${locked ? 'bg-slate-50/50' : 'cursor-pointer hover:bg-teal-50/40'}`}
                       onClick={() => openBasisModal(row.code)}
@@ -834,7 +809,32 @@ export default function BudgetCreatePage() {
                   </div>
                 </div>
               )
-            })
+            }
+            return groups.map((g) => (
+              <div key={g.gwan.code} className="flex border-t border-slate-300">
+                {/* 관 — 세로 중앙정렬(셀병합) */}
+                <div className="w-[80px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex flex-col items-center justify-center gap-0.5">
+                  <div className="flex items-center gap-1"><span className="text-[9px] font-bold text-violet-700 bg-violet-100 rounded px-1 py-px">관</span><span className="text-[11px] font-bold text-slate-700">{g.gwan.code.replace('E', '')}</span></div>
+                  <span className="text-[10px] font-medium text-slate-600 text-center leading-tight">{g.gwan.name}</span>
+                </div>
+                {/* 항 그룹 */}
+                <div className="flex-1">
+                  {g.hangs.map((h, hi) => (
+                    <div key={h.hang.code} className={`flex ${hi > 0 ? 'border-t border-slate-200' : ''}`}>
+                      {/* 항 — 세로 중앙정렬(셀병합) */}
+                      <div className="w-[140px] flex-shrink-0 border-r border-slate-200 px-1.5 py-2 flex flex-col items-center justify-center gap-0.5">
+                        <div className="flex items-center gap-1"><span className="text-[9px] font-bold text-sky-700 bg-sky-100 rounded px-1 py-px">항</span><span className="text-[11px] font-semibold text-slate-600">{h.hang.code.replace('E', '')}</span></div>
+                        <span className="text-[10px] font-medium text-slate-600 text-center leading-tight">{h.hang.name}</span>
+                      </div>
+                      {/* 목 행들 */}
+                      <div className="flex-1">
+                        {h.moks.map((m, mi) => renderMok(m, mi))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
           })()}
 
         </div>

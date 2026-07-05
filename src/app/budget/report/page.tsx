@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 
 const reportSections = [
-  { id: 'cover', title: '예산서 표지', icon: '📋', desc: '어린이집 예산서 표지 (기관명, 시설명)' },
+  { id: 'cover', title: '예산서 표지', icon: '📋', desc: '예산서 표지 (기관명·시설명 자동)' },
   { id: 'general', title: '총칙', icon: '📜', desc: '예산 총칙 (예산 편성 기준, 적용 규정 등)' },
   { id: 'summary', title: '세입/세출 총괄표', icon: '📊', desc: '세입·세출 예산 총괄 요약표' },
   { id: 'income', title: '세입예산서', icon: '💰', desc: '세입 항목별 예산 내역서' },
@@ -102,7 +102,7 @@ function CoverSection() {
         </div>
         <div className="flex-1" />
         <div className="text-center pb-16">
-          <p className="text-2xl font-bold text-purple-900 tracking-widest">예인어린이집</p>
+          <p className="text-2xl font-bold text-purple-900 tracking-widest">기관명</p>
         </div>
       </div>
     </div>
@@ -142,7 +142,7 @@ function GeneralSection() {
               <td className="border border-slate-300 px-3 py-3 text-center text-slate-600">
                 <div>시설회계</div>
                 <div>보육사업비</div>
-                <div className="mt-1 text-slate-800">예인어린이집</div>
+                <div className="mt-1 text-slate-800">기관명</div>
               </td>
               <td className="border border-slate-300 px-3 py-3 text-right text-slate-700">{fmt(incomeTotal)}</td>
               <td className="border border-slate-300 px-3 py-3 text-right text-slate-700">{fmt(expenseTotal)}</td>
@@ -206,7 +206,7 @@ function SummarySection() {
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-600">예인어린이집</span>
+        <span className="text-xs text-slate-600">기관명</span>
         <span className="text-[10px] text-slate-500">금액단위:천원</span>
       </div>
 
