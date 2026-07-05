@@ -86,7 +86,7 @@ export default function Header() {
   const [editData, setEditData] = useState({ phone: '', email: '' })
   const profileRef = useRef<HTMLDivElement>(null)
   // 기본정보 모달 편집 폼
-  const [basicForm, setBasicForm] = useState({ zipCode: '', address: '', email: '', phone: '', pw: '', pw2: '' })
+  const [basicForm, setBasicForm] = useState({ name: '', bizNo: '', ownerName: '', zipCode: '', address: '', email: '', phone: '', pw: '', pw2: '' })
   const [basicMsg, setBasicMsg] = useState('')
   const [basicSaving, setBasicSaving] = useState(false)
 
@@ -113,6 +113,9 @@ export default function Header() {
           setInstitutionType(itype)
           setEditData({ phone, email })
           setBasicForm({
+            name: data.centerName || p.centerName || '',
+            bizNo: (data.bizNo as string) || p.bizNo || p.businessNo || p.regNo || '',
+            ownerName: (data.ownerName as string) || p.ownerName || p.representative || p.principalName || p.name || '',
             zipCode: p.zipCode || p.zip || p.postCode || '',
             address: p.address || (data.address as string) || '',
             email, phone, pw: '', pw2: '',
@@ -150,14 +153,14 @@ export default function Header() {
       const res = await fetch('/api/auth/me', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({
-          profile: { zipCode: basicForm.zipCode, address: basicForm.address, email: basicForm.email, phone: basicForm.phone },
+          profile: { centerName: basicForm.name, bizNo: basicForm.bizNo, ownerName: basicForm.ownerName, zipCode: basicForm.zipCode, address: basicForm.address, email: basicForm.email, phone: basicForm.phone },
           newPassword: basicForm.pw || undefined,
         }),
       })
       const j = await res.json().catch(() => ({}))
       if (j?.success) {
         setBasicMsg('✅ 저장되었습니다.')
-        setProfileData(pd => ({ ...pd, email: basicForm.email, phone: basicForm.phone, address: basicForm.address, zipCode: basicForm.zipCode }))
+        setProfileData(pd => ({ ...pd, centerName: basicForm.name, bizNo: basicForm.bizNo, ownerName: basicForm.ownerName, email: basicForm.email, phone: basicForm.phone, address: basicForm.address, zipCode: basicForm.zipCode }))
         setBasicForm(f => ({ ...f, pw: '', pw2: '' }))
       } else setBasicMsg(`❌ ${j?.error || '저장 실패'}`)
     } catch (e) { setBasicMsg(`❌ ${e instanceof Error ? e.message : '저장 오류'}`) }
@@ -452,7 +455,7 @@ export default function Header() {
                     ].map(([label, val], i) => (
                       <tr key={i} className="border-b border-slate-100">
                         <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200 w-[120px]">{label}</td>
-                        <td className="px-3 py-2.5">{label === '새 비밀번호' ? <input type="password" value={basicForm.pw} onChange={e => setBasicForm(f => ({ ...f, pw: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" placeholder="공백문자를 제외한 6 ~ 12 자, 비밀번호를 변경하고 싶으면 입력하세요" /> : label === '새 비밀번호 확인' ? <input type="password" value={basicForm.pw2} onChange={e => setBasicForm(f => ({ ...f, pw2: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" placeholder="비밀번호를 다시 한번 확인합니다." /> : val ? <span className="text-slate-700">{val}</span> : <input type="text" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" />}</td>
+                        <td className="px-3 py-2.5">{label === '새 비밀번호' ? <input type="password" value={basicForm.pw} onChange={e => setBasicForm(f => ({ ...f, pw: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" placeholder="공백문자를 제외한 6 ~ 12 자, 비밀번호를 변경하고 싶으면 입력하세요" /> : label === '새 비밀번호 확인' ? <input type="password" value={basicForm.pw2} onChange={e => setBasicForm(f => ({ ...f, pw2: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" placeholder="비밀번호를 다시 한번 확인합니다." /> : label === '이름(상호)' ? <input type="text" value={basicForm.name} onChange={e => setBasicForm(f => ({ ...f, name: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" /> : label === '사업자등록번호' ? <input type="text" value={basicForm.bizNo} onChange={e => setBasicForm(f => ({ ...f, bizNo: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" /> : label === '대표자명' ? <input type="text" value={basicForm.ownerName} onChange={e => setBasicForm(f => ({ ...f, ownerName: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" /> : label === '아이디' ? <span className="text-slate-700">{val}</span> : <input type="text" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" />}</td>
                       </tr>
                     ))}
                     <tr className="border-b border-slate-100">
