@@ -511,10 +511,32 @@ export default function DataMigrationPage() {
     window.addEventListener(BOOK_CHANGE_EVENT, onCh)
     return () => window.removeEventListener(BOOK_CHANGE_EVENT, onCh)
   }, [])
-  const loadGwinBudget = () => {
+  const [gbLoading, setGbLoading] = useState(false)
+  // 걸음마 실시간 조회 — 저장된(또는 입력된) 걸음마 아이디/비번으로 로그인 후 예산 가져오기
+  const loadGwinBudget = async () => {
+    if (!sourceId || !sourcePw) { setGbPreview(null); setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
+    setGbLoading(true); setGbPreview(null); setGbMsg('걸음마 로그인 후 예산을 가져오는 중…')
+    try {
+      const res = await fetch('/api/gwin/budget', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ id: sourceId, password: sourcePw, book: gbBook, year: gbYear }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (j?.success && j.basisByMok) {
+        setGbPreview(j.basisByMok)
+        setGbMsg(`✅ 걸음마 실시간 조회 완료 — 목 ${j.mokCount}개 (세입 ${(j.moneyIn || 0).toLocaleString()} / 세출 ${(j.moneyOut || 0).toLocaleString()}). [저장]을 눌러야 반영됩니다.`)
+      } else {
+        setGbPreview(null); setGbMsg(`❌ ${j?.error || '걸음마 조회 실패'}`)
+      }
+    } catch (e) {
+      setGbPreview(null); setGbMsg(`❌ 걸음마 조회 오류: ${e instanceof Error ? e.message : ''}`)
+    } finally { setGbLoading(false) }
+  }
+  // 저장된 데이터(정적 스냅샷)로 미리보기 — 실시간 조회 실패 시 대안
+  const loadGwinBudgetStatic = () => {
     const data = GWIN_BUDGETS[gbBook] as Record<string, { total?: number }[]> | undefined
-    if (!data || Object.keys(data).length === 0) { setGbPreview(null); setGbMsg(`걸음마에 등록된 예산이 없습니다 (${bookLabel(gbBook)}).`); return }
-    setGbPreview(data); setGbMsg('미리보기를 확인한 뒤 [저장]을 눌러야 실제 반영됩니다.')
+    if (!data || Object.keys(data).length === 0) { setGbPreview(null); setGbMsg(`저장된 스냅샷에 예산이 없습니다 (${bookLabel(gbBook)}).`); return }
+    setGbPreview(data); setGbMsg('저장된 스냅샷 미리보기입니다. [저장]을 눌러야 반영됩니다.')
   }
   const saveGwinBudget = async () => {
     if (!gbPreview) return
@@ -916,10 +938,11 @@ export default function DataMigrationPage() {
             </select>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <button onClick={loadGwinBudget} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200">📥 예산 가져오기 (미리보기)</button>
+            <button onClick={loadGwinBudget} disabled={gbLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50">{gbLoading ? '⏳ 걸음마 조회 중…' : '📥 예산 가져오기 (실시간)'}</button>
             <button onClick={saveGwinBudget} disabled={!gbPreview || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-40">💾 저장</button>
+            <button onClick={loadGwinBudgetStatic} className="px-2 py-1.5 text-[11px] font-bold text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50" title="실시간 조회 실패 시 마지막 저장된 스냅샷으로 미리보기">저장 데이터로 보기</button>
             <button disabled className="px-3 py-1.5 text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200 rounded cursor-not-allowed" title="걸음마 현금출납부 데이터 연동 후 제공">🧾 전표 가져오기 (준비중)</button>
-            {gbMsg && <span className="text-xs font-semibold text-emerald-700">{gbMsg}</span>}
+            {gbMsg && <span className={`text-xs font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}
           </div>
           {gbPreview && (() => {
             const keys = Object.keys(gbPreview)
