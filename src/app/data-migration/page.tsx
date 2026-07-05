@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import * as XLSX from 'xlsx'
+import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
+import { GWIN_BUDGETS } from '@/data/gwin-budgets'
 
 interface CashLedgerRow {
   idx: number
@@ -497,6 +499,33 @@ export default function DataMigrationPage() {
   // 목적지 명칭: 아이사랑꿈터는 통합e 회계로 이관, 그 외는 수전자장부
   const destName = isIlovechild ? '통합e 회계' : '수전자장부'
 
+  // 걸음마 예산 가져오기(아이사랑꿈터) — 상단 장부 드롭다운 + 연도, [가져오기]→미리보기→[저장]
+  const [gbBook, setGbBook] = useState('')
+  const [gbYear, setGbYear] = useState('2026')
+  const [gbPreview, setGbPreview] = useState<Record<string, { total?: number }[]> | null>(null)
+  const [gbSaving, setGbSaving] = useState(false)
+  const [gbMsg, setGbMsg] = useState('')
+  useEffect(() => {
+    setGbBook(getActiveBook())
+    const onCh = (e: Event) => { setGbBook(((e as CustomEvent).detail as string) || ''); setGbPreview(null); setGbMsg('') }
+    window.addEventListener(BOOK_CHANGE_EVENT, onCh)
+    return () => window.removeEventListener(BOOK_CHANGE_EVENT, onCh)
+  }, [])
+  const loadGwinBudget = () => {
+    const data = GWIN_BUDGETS[gbBook] as Record<string, { total?: number }[]> | undefined
+    if (!data || Object.keys(data).length === 0) { setGbPreview(null); setGbMsg(`걸음마에 등록된 예산이 없습니다 (${bookLabel(gbBook)}).`); return }
+    setGbPreview(data); setGbMsg('미리보기를 확인한 뒤 [저장]을 눌러야 실제 반영됩니다.')
+  }
+  const saveGwinBudget = async () => {
+    if (!gbPreview) return
+    setGbSaving(true)
+    try {
+      const res = await fetch('/api/budget', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ book: gbBook, year: gbYear, basisByMok: gbPreview }) })
+      const j = await res.json().catch(() => ({}))
+      setGbMsg(j?.success !== false ? `✅ 저장 완료 — ${bookLabel(gbBook)} ${gbYear}년 예산 (목 ${Object.keys(gbPreview).length}개). 예산작성에서 확인하세요.` : '저장 실패')
+    } catch { setGbMsg('저장 오류') } finally { setGbSaving(false) }
+  }
+
   // 출발지에서 데이터 가져오기
   const handleFetch = async () => {
     // 준비중 출발지(백엔드 미구현) — 조회 시도 시 404 HTML → JSON 파싱 에러 방지
@@ -874,6 +903,32 @@ export default function DataMigrationPage() {
           {currentSource.label}({currentSource.url}) → {destName}{isIlovechild ? '' : '(sunote.co.kr)'} 현금출납부 이관
         </p>
       </div>
+
+      {/* 걸음마 예산 가져오기 — 아이사랑꿈터 + 출발지 걸음마 */}
+      {isIlovechild && source === 'walk' && (
+        <div className="bg-white rounded-xl border-2 border-amber-200 p-5 space-y-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-amber-800 font-bold text-sm">🐤 걸음마 예산·전표 가져오기</span>
+            <span className="text-xs text-slate-400">· 장부: <b className="text-slate-600">{bookLabel(gbBook)}</b> (상단 장부 드롭다운에서 변경)</span>
+            <span className="ml-2 text-xs font-bold text-slate-600">회계연도</span>
+            <select value={gbYear} onChange={e => { setGbYear(e.target.value); setGbPreview(null); setGbMsg('') }} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+              <option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={loadGwinBudget} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200">📥 예산 가져오기 (미리보기)</button>
+            <button onClick={saveGwinBudget} disabled={!gbPreview || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-40">💾 저장</button>
+            <button disabled className="px-3 py-1.5 text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200 rounded cursor-not-allowed" title="걸음마 현금출납부 데이터 연동 후 제공">🧾 전표 가져오기 (준비중)</button>
+            {gbMsg && <span className="text-xs font-semibold text-emerald-700">{gbMsg}</span>}
+          </div>
+          {gbPreview && (() => {
+            const keys = Object.keys(gbPreview)
+            const total = keys.reduce((s, k) => s + (gbPreview[k] || []).reduce((a, it) => a + (it.total || 0), 0), 0)
+            return <div className="text-xs text-slate-600 bg-amber-50 rounded px-3 py-2">미리보기: <b>목 {keys.length}개</b> · 합계 <b>{total.toLocaleString('ko-KR')}원</b> — <b className="text-blue-700">[저장]</b>을 눌러야 실제 반영됩니다.</div>
+          })()}
+          <p className="text-[11px] text-slate-400">· 예산은 <b className="text-slate-600">예산관리 › 예산작성</b>에 반영됩니다. 전표(현금출납부) 가져오기는 걸음마 데이터 연동 후 제공 예정입니다.</p>
+        </div>
+      )}
 
       {/* 2열 레이아웃: 출발지 / 목적지 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

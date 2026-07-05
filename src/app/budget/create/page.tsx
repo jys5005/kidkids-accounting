@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import DraggableModal from '@/components/DraggableModal'
 import { getActiveBook, BOOK_CHANGE_EVENT, bookLabel } from '@/lib/ilovechild-books'
-import { GWIN_BUDGETS } from '@/data/gwin-budgets'
 
 interface BudgetRow {
   code: string
@@ -435,21 +434,6 @@ export default function BudgetCreatePage() {
     }))
   }
 
-  // 걸음마 예산 가져오기 — 활성 장부의 예산(금액·산출기초)을 본예산에 채움
-  const importGwinBudget = () => {
-    const data = GWIN_BUDGETS[book] as Record<string, BasisItem[]> | undefined
-    if (!data || Object.keys(data).length === 0) {
-      alert(`걸음마에 등록된 예산이 없습니다 (${bookLabel(book)}).`)
-      return
-    }
-    if (!confirm(`걸음마 「${bookLabel(book)}」 예산(2026)을 불러옵니다.\n현재 입력한 예산이 덮어써집니다. 계속할까요?`)) return
-    const seeded: Record<string, BasisItem[]> = {}
-    for (const [k, items] of Object.entries(data)) {
-      seeded[k] = items.map(it => normItem({ ...it, extras: it.extras?.map(e => ({ ...e })) }))
-    }
-    setAllBasisState({ '본예산': seeded })
-    setBudgetType('본예산')
-  }
 
   // 목 클릭 → 산출기초 모달 열기 (extras 정규화 + 비어있으면 1행 시드)
   const openBasisModal = (code: string) => {
@@ -598,12 +582,11 @@ export default function BudgetCreatePage() {
         {budgetStatus === '작성완료' && <span className="text-[10px] font-bold text-red-500">🔒 잠금</span>}
       </div>
 
-      {/* 아이사랑꿈터 — 걸음마 예산 가져오기 + 안내 */}
+      {/* 아이사랑꿈터 안내 */}
       {isIlovechild && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={importGwinBudget} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 transition-colors">🐤 걸음마 예산 가져오기</button>
-          {loadingCoa && <span className="text-[11px] text-slate-400">계정 불러오는 중…</span>}
-          <span className="text-[11px] text-slate-400">· 산출기초는 목 클릭, 계정과목은 <b className="text-slate-600">설정 › 회계계정관리</b>에서 관리</span>
+        <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400">
+          {loadingCoa && <span>계정 불러오는 중…</span>}
+          <span>· 산출기초는 목 클릭, 계정과목은 <b className="text-slate-600">설정 › 회계계정관리</b>, <b className="text-slate-600">걸음마 예산 가져오기</b>는 <b className="text-slate-600">데이터이관</b> 페이지에서</span>
         </div>
       )}
 
