@@ -41,6 +41,16 @@ class Jar {
   header() { return [...this.m].map(([k, v]) => `${k}=${v}`).join('; ') }
 }
 
+async function get(jar: Jar, path: string, referer: string) {
+  const res = await fetch(GWIN + path, {
+    method: 'GET',
+    headers: { 'User-Agent': UA, 'Referer': referer, 'Accept': 'text/html,application/xhtml+xml,*/*', ...(jar.header() ? { 'Cookie': jar.header() } : {}) },
+  })
+  jar.absorb(res)
+  await res.text().catch(() => '')
+  return { ok: res.ok, status: res.status }
+}
+
 async function post(jar: Jar, path: string, body: unknown, referer: string) {
   const res = await fetch(GWIN + path, {
     method: 'POST',
@@ -79,6 +89,9 @@ export async function POST(req: NextRequest) {
     const fcltcd = (fclt.json as Array<{ fcltcd?: string }> | null)?.[0]?.fcltcd
     if (!fcltcd) return NextResponse.json({ success: false, error: '걸음마 시설 정보를 찾을 수 없습니다.' }, { status: 200 })
 
+    // /acc 진입 페이지 GET — /acc 세션 쿠키(SSO) 확보 시도
+    const accEnter = await get(jar, '/acc/websquare/websquare.html?w2xPath=/acc/views/common/main.xml', PORTAL_REF)
+
     // HAR 실측 파라미터 (billManage/getBillList). schACCOUNT_IDX/AAV_IDX 는 페이지 컨텍스트값 → 우선 빈값 시도.
     const search: Record<string, unknown> = {
       FCLTCD: fcltcd, schBookGb: bg,
@@ -100,7 +113,7 @@ export async function POST(req: NextRequest) {
     }, ACC_REF)
     // 대조군 — 예산 getBudgetList. warmup 후 200 이면 세션 OK.
     const ctrl = await post(jar, CONTROL_ENDPOINT, { search: { FCLTCD: fcltcd, BOOK_GB: bg, ESTI_YEAR: y, ESTI_INOUT: 'I', ESTIM_GB: 'M01', DURATION_GB: 1 } }, ACC_REF)
-    const control = { warm: warm.status, status: ctrl.status, hasJson: !!ctrl.json, snippet: String(ctrl.text || '').slice(0, 120) }
+    const control = { accEnter: accEnter.status, warm: warm.status, status: ctrl.status, hasJson: !!ctrl.json, msg: String(warm.text || ctrl.text || '').slice(0, 200) }
 
     const res = await post(jar, BILL_ENDPOINTS[0], { search }, ACC_REF)
     const j = res.json as Record<string, unknown> | null

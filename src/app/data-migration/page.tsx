@@ -572,10 +572,10 @@ export default function DataMigrationPage() {
         setGbMsg(`✅ 전표 ${j.count}건 조회 (${bookLabel(book)}, endpoint: ${j.endpoint}). 아래 미리보기 확인 후 [전표관리로 저장].`)
       } else {
         setGbVRows(null)
-        const ctrl = j?.control ? ` | warmup:${j.control.warm} 예산대조군:${j.control.status}${j.control.hasJson ? ' JSON' : ''}` : ''
-        const bill = j?.billStatus !== undefined ? ` | getBillList: ${j.billStatus}` : ''
-        const snip = j?.billSnippet ? ` | ${String(j.billSnippet).slice(0, 120)}` : ''
-        setGbMsg(`❌ ${j?.error || '전표 조회 실패'}${ctrl}${bill}${snip}`)
+        const ctrl = j?.control ? ` | accEnter:${j.control.accEnter} warmup:${j.control.warm} 대조군:${j.control.status}` : ''
+        const bill = j?.billStatus !== undefined ? ` | getBillList:${j.billStatus}` : ''
+        const msg = j?.control?.msg ? ` | 메시지:${String(j.control.msg).slice(0, 140)}` : ''
+        setGbMsg(`❌ ${j?.error || '전표 조회 실패'}${ctrl}${bill}${msg}`)
       }
     } catch (e) { setGbVRows(null); setGbMsg(`❌ 전표 조회 오류: ${e instanceof Error ? e.message : ''}`) }
     finally { setGbVLoading(false) }
