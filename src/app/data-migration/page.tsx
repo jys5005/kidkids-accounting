@@ -558,6 +558,7 @@ export default function DataMigrationPage() {
   const [gbVBook, setGbVBook] = useState('')
   const [gbVSaving, setGbVSaving] = useState(false)
   const [gbVSavedBook, setGbVSavedBook] = useState('') // 저장 완료된 장부(→ 전표관리로 이동 버튼용)
+  const [gbVSavedYm, setGbVSavedYm] = useState('')     // 저장 데이터의 첫 달(YYYY-MM) — 전표입력을 그 달로 열기
   const [gbVWithReceipts, setGbVWithReceipts] = useState(true) // 영수증 사진까지 가져오기
   const loadGwinVouchers = async () => {
     if (!sourceId || !sourcePw) { setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
@@ -605,7 +606,11 @@ export default function DataMigrationPage() {
         const savedBook = gbSelBooks[0] || 'subsidy'
         setActiveBook(savedBook)       // 활성 장부를 저장한 장부로 전환 → 전표관리(전표입력)에서 바로 보이게
         setGbVSavedBook(savedBook)      // [전표관리로 이동] 버튼 노출
-        setGbMsg(`✅ 전표관리 저장 완료 — ${j.saved || gbVRows.length}건${pb}. 장부를 '${bookLabel(savedBook)}'(으)로 맞췄습니다. [→ 전표관리로 이동]에서 확인하세요.`)
+        // 저장 데이터의 첫 달(YYYY-MM) 계산 → 전표입력을 그 달로 열기(기본 2026-03 이라 안 보이던 문제 해결)
+        const dts = (gbVRows || []).map(r => String((r as Record<string, unknown>).BILL_DATE || '').replace(/[^0-9]/g, '').slice(0, 6)).filter(d => d.length === 6).sort()
+        const firstYm = dts[0] ? `${dts[0].slice(0, 4)}-${dts[0].slice(4, 6)}` : ''
+        setGbVSavedYm(firstYm)
+        setGbMsg(`✅ 전표관리 저장 완료 — ${j.saved || gbVRows.length}건${pb}. 장부 '${bookLabel(savedBook)}'${firstYm ? ` · 조회월 ${firstYm}` : ''}(으)로 맞췄습니다. [→ 전표관리로 이동]에서 확인하세요.`)
       } else { setGbMsg(`❌ ${j?.error || '전표관리 저장 실패'}`) }
     } catch (e) { setGbMsg(`❌ 전표 저장 오류: ${e instanceof Error ? e.message : ''}`) }
     finally { setGbVSaving(false) }
@@ -1065,7 +1070,7 @@ export default function DataMigrationPage() {
             </label>
             <button onClick={loadGwinVouchers} disabled={gbVLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50" title="걸음마 전표(현금출납부) 조회">{gbVLoading ? '⏳ 전표 조회 중…' : '🧾 전표 가져오기'}</button>
             <button onClick={saveGwinVouchers} disabled={!gbVRows || !gbVRows.length || gbVSaving} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded disabled:opacity-40" title="가져온 전표를 전표관리로 저장">{gbVSaving ? '저장 중…' : '📒 전표관리로 저장'}</button>
-            {gbVSavedBook && <a href="/voucher/input" className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded" title={`${bookLabel(gbVSavedBook)} 전표관리(전표입력)로 이동`}>→ 전표관리로 이동</a>}
+            {gbVSavedBook && <a href={`/voucher/input${gbVSavedYm ? `?ym=${gbVSavedYm}` : ''}`} className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded" title={`${bookLabel(gbVSavedBook)} 전표관리(전표입력)${gbVSavedYm ? ` ${gbVSavedYm}` : ''}로 이동`}>→ 전표관리로 이동</a>}
             {gbMsg && <span className={`text-xs font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}
           </div>
           {gbPreviewByBook && (

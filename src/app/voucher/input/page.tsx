@@ -194,6 +194,11 @@ export default function VoucherInputPage() {
   const [searchKey, setSearchKey] = useState<'적요' | '계정' | '결제방식' | '전표번호'>('적요')
   const [searchText, setSearchText] = useState('')
   const [filterYearMonth, setFilterYearMonth] = useState('2026-03')
+  // 데이터이관 [→ 전표관리로 이동]에서 ?ym=YYYY-MM 로 진입 시 그 달로 열기(저장 데이터가 안 보이던 문제 해결)
+  useEffect(() => {
+    const ym = new URLSearchParams(window.location.search).get('ym')
+    if (ym && /^\d{4}-\d{2}$/.test(ym)) setFilterYearMonth(ym)
+  }, [])
 
   // 아이사랑꿈터: 활성 장부의 coa 계정과목 로드 → 전표 계정 드롭다운/코드에 사용 (어린이집은 기본 accounts.ts)
   const [coaTree, setCoaTree] = useState<CoaGwan[] | null>(null)
