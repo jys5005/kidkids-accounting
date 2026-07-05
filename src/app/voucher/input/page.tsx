@@ -1415,7 +1415,7 @@ export default function VoucherInputPage() {
               </div>
             </div>
             <div className="overflow-x-auto">
-            <table className="text-xs w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
+            <table className="text-[11px] w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
               <thead>
                 <tr className="bg-teal-50 border-b border-teal-400/30">
                   {columnOrder.map(([key]) => {
@@ -1558,7 +1558,7 @@ export default function VoucherInputPage() {
           }
         `}</style>
         <div className="max-h-[calc(100vh-380px)] overflow-y-auto overflow-x-auto">
-          <table className="text-xs w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
+          <table className="text-[11px] w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
             <thead className="sticky top-0 z-10">
               <tr className="bg-teal-50 border-b border-teal-400/30">
                 <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[34px]">
@@ -1749,8 +1749,8 @@ export default function VoucherInputPage() {
                                 </div>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-1 flex-1 min-w-0">
-                                <span className="text-slate-700 text-xs truncate flex-1 py-0.5">{row.summary || '-'}</span>
+                              <div className="flex items-center gap-1 flex-1 min-w-0" title={row.summary}>
+                                <span className="w-full min-w-0 truncate text-[11px] text-slate-700 border border-slate-200 rounded bg-slate-50/60 px-2 py-1 hover:border-teal-300">{row.summary || '-'}</span>
                               </div>
                             )}
                           </td>
