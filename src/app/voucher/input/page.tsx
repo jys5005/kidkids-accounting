@@ -1082,14 +1082,22 @@ export default function VoucherInputPage() {
               <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-teal-700 bg-teal-100 rounded cursor-default">적요</span>
               <button data-tip="선택된 전표의 적요를 삭제" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">삭제</button>
               <button data-tip="선택된 전표의 적요를 치환처리" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">치환</button>
-              <button data-tip="세목지정된 전표적요에 세목내용추가" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">세목추가</button>
+              {!book && <button data-tip="세목지정된 전표적요에 세목내용추가" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">세목추가</button>}
             </div>
             <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
             {/* 매핑 그룹 */}
             <div className="flex items-center gap-1">
-              {!book && <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-pink-600 bg-pink-100 rounded cursor-default">매핑</span>}
+              <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-pink-600 bg-pink-100 rounded cursor-default">매핑</span>
               {!book && <button data-tip="아동관리에 등록아동과 전표에 아동의 필요경비를 자동 매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">원아경비</button>}
-              <button data-tip="기 설정된 조건에 부합하는 계정으로 동시매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">거래처.적요.결제방식</button>
+              {book ? (
+                <>
+                  <button data-tip="거래처 기준 동시매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">거래처</button>
+                  <button data-tip="적요 기준 동시매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">적요</button>
+                  <button data-tip="결제방식 기준 동시매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">결제방식</button>
+                </>
+              ) : (
+                <button data-tip="기 설정된 조건에 부합하는 계정으로 동시매핑" className="tip-pink px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">거래처.적요.결제방식</button>
+              )}
             </div>
             <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
             {/* 정렬 그룹 */}
