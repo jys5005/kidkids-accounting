@@ -465,7 +465,7 @@ function ExecTable({ title, rows, tone }: { title: string; rows: ERow[]; tone: '
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className={`px-4 py-2 font-bold text-sm ${head}`}>{title} <span className="text-xs font-normal text-slate-500">· 예산 {fmt(tB)} / 집행 {fmt(tE)} / 잔액 {fmt(tB - tE)}</span></div>
       <div className="overflow-x-auto">
-        <table className="w-full text-[11px] border-collapse">
+        <table className="text-[11px] border-collapse">
           <thead>
             <tr className="bg-slate-100 text-slate-600 font-bold">
               <th colSpan={3} className="px-2 py-1.5 border border-slate-200">계정과목</th>
@@ -487,9 +487,9 @@ function ExecTable({ title, rows, tone }: { title: string; rows: ERow[]; tone: '
               const rate = r.budget > 0 ? Math.round(r.exec / r.budget * 100) : 0
               return (
                 <tr key={i} className="hover:bg-slate-50/60">
-                  {firstG && <td rowSpan={gSpan} className="px-1 py-1.5 border border-slate-200 text-center align-middle bg-violet-50/40"><div className="flex flex-col items-center gap-0.5"><span className={EG}>관</span><span className="font-bold text-slate-700">{r.gwanCode}</span><span className="text-[10px] text-slate-600 leading-tight">{r.gwanName}</span></div></td>}
-                  {firstH && <td rowSpan={hSpan} className="px-1 py-1.5 border border-slate-200 text-center align-middle bg-sky-50/40"><div className="flex flex-col items-center gap-0.5"><span className={EH}>항</span><span className="font-semibold text-slate-600">{r.hangCode}</span><span className="text-[10px] text-slate-600 leading-tight">{r.hangName}</span></div></td>}
-                  <td className="px-2 py-1.5 border border-slate-200 text-center"><div className="flex items-center justify-center gap-1"><span className={EM}>목</span><span className="font-bold text-slate-700">{r.code}</span><span className="text-slate-600">{r.name}</span></div></td>
+                  {firstG && <td rowSpan={gSpan} className="px-2 py-1.5 border border-slate-200 align-middle bg-violet-50/40 whitespace-nowrap"><div className="flex items-center gap-1"><span className={EG}>관</span><span className="font-bold text-slate-700">{r.gwanCode}</span><span className="text-slate-600">{r.gwanName}</span></div></td>}
+                  {firstH && <td rowSpan={hSpan} className="px-2 py-1.5 border border-slate-200 align-middle bg-sky-50/40 whitespace-nowrap"><div className="flex items-center gap-1"><span className={EH}>항</span><span className="font-semibold text-slate-600">{r.hangCode}</span><span className="text-slate-600">{r.hangName}</span></div></td>}
+                  <td className="px-2 py-1.5 border border-slate-200 whitespace-nowrap"><div className="flex items-center gap-1"><span className={EM}>목</span><span className="font-bold text-slate-700">{r.code}</span><span className="text-slate-600">{r.name}</span></div></td>
                   <td className="px-2 py-1.5 border border-slate-200 text-right">{r.budget ? fmt(r.budget) : ''}</td>
                   <td className="px-2 py-1.5 border border-slate-200 text-right font-bold text-slate-800">{r.exec ? fmt(r.exec) : ''}</td>
                   <td className={`px-2 py-1.5 border border-slate-200 text-right ${rem < 0 ? 'text-rose-600' : 'text-slate-600'}`}>{r.budget || r.exec ? fmt(rem) : ''}</td>
