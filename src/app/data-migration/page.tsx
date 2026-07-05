@@ -572,6 +572,11 @@ export default function DataMigrationPage() {
         setGbVRows(j.rows); setGbVKeys(j.keys || []); setGbVBook(book)
         const rc = j.receiptBills ? ` · 🧾 영수증 ${j.receiptPhotos}장(${j.receiptBills}건 전표)` : ''
         setGbMsg(`✅ 전표 ${j.count}건 조회 (${bookLabel(book)})${rc}. 아래 미리보기 확인 후 [전표관리로 저장].`)
+        // 조회 결과 저장(덮어쓰기) — 새로고침/재방문 시 복원용
+        fetch('/api/gwin/vouchers/cache', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ book, year: gbYear, rows: j.rows, keys: j.keys || [], from: gbVFrom, to: gbVTo, receiptPhotos: j.receiptPhotos || 0, receiptBills: j.receiptBills || 0 }),
+        }).catch(() => {})
       } else {
         setGbVRows(null)
         const ctrl = j?.control ? ` | accEnter:${j.control.accEnter} warmup:${j.control.warm} 대조군:${j.control.status}` : ''
@@ -596,6 +601,27 @@ export default function DataMigrationPage() {
     } catch (e) { setGbMsg(`❌ 전표 저장 오류: ${e instanceof Error ? e.message : ''}`) }
     finally { setGbVSaving(false) }
   }
+  // 페이지 열 때 / 장부·연도 변경 시: 저장된 전표 조회 결과 복원
+  const activeVBook = gbSelBooks[0] || 'subsidy'
+  useEffect(() => {
+    if (!isIlovechild) return
+    let cancelled = false
+    fetch(`/api/gwin/vouchers/cache?book=${encodeURIComponent(activeVBook)}&year=${encodeURIComponent(gbYear)}`, { credentials: 'include' })
+      .then(r => r.json()).then(j => {
+        if (cancelled) return
+        const s = j?.snapshot as { rows?: Record<string, unknown>[]; keys?: string[]; from?: string; to?: string; count?: number; receiptPhotos?: number; receiptBills?: number } | null
+        if (s && Array.isArray(s.rows) && s.rows.length) {
+          setGbVRows(s.rows); setGbVKeys(s.keys || []); setGbVBook(activeVBook)
+          if (s.from) setGbVFrom(s.from); if (s.to) setGbVTo(s.to)
+          const rc = s.receiptBills ? ` · 🧾 영수증 ${s.receiptPhotos}장` : ''
+          setGbMsg(`💾 저장된 조회 결과 ${s.count || s.rows.length}건 표시 (${bookLabel(activeVBook)} · ${gbYear})${rc}. 다시 [전표 가져오기] 하면 갱신됩니다.`)
+        } else {
+          setGbVRows(null)
+        }
+      }).catch(() => {})
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeVBook, gbYear, isIlovechild])
   const saveGwinBudget = async () => {
     if (!gbPreviewByBook) return
     setGbSaving(true)
