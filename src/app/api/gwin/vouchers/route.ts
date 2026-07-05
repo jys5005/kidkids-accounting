@@ -94,9 +94,13 @@ export async function POST(req: NextRequest) {
       schSUPPORT: '', schType1: '', schAutoBill: '', schDirect: '', schAutoDirect: '',
     }
 
-    // 대조군 — 예산 getBudgetList(작동 확인됨). 세션 유효 시 200/JSON.
+    // ★ /acc 세션 초기화 — 예산과 동일하게 getEstimateSetList 를 먼저 호출(이게 acc 컨텍스트/세션 활성화로 추정)
+    const warm = await post(jar, '/acc/api/acc/acc/budgetManage/getEstimateSetList', {
+      search: { FCLTCD: fcltcd, BOOK_GB: bg, ESTI_YEAR: y, ESTI_INOUT: 'I', ESTIM_GB: 'M01', ESTIM_NUM: '0', DURATION_GB: 1, IS_LAST_SET: 'Y', ESTIM_MONEY1000: 'N' },
+    }, ACC_REF)
+    // 대조군 — 예산 getBudgetList. warmup 후 200 이면 세션 OK.
     const ctrl = await post(jar, CONTROL_ENDPOINT, { search: { FCLTCD: fcltcd, BOOK_GB: bg, ESTI_YEAR: y, ESTI_INOUT: 'I', ESTIM_GB: 'M01', DURATION_GB: 1 } }, ACC_REF)
-    const control = { status: ctrl.status, hasJson: !!ctrl.json, snippet: String(ctrl.text || '').slice(0, 120) }
+    const control = { warm: warm.status, status: ctrl.status, hasJson: !!ctrl.json, snippet: String(ctrl.text || '').slice(0, 120) }
 
     const res = await post(jar, BILL_ENDPOINTS[0], { search }, ACC_REF)
     const j = res.json as Record<string, unknown> | null
