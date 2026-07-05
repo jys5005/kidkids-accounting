@@ -228,11 +228,7 @@ export const ILOVECHILD_ONLY_HREFS = new Set<string>([
 export const ILOVECHILD_HIDDEN_HREFS = new Set<string>([
   '/monthly-report',          // 월회계보고 (어린이집 서식)
   '/monthly-report/analysis', // 재무회계분석자료
-  // 전표관리는 전표입력(일괄수정)만 사용 — 나머지 숨김
-  '/voucher/deleted',         // 삭제전표
-  '/voucher/balance',         // 잔액비교
-  '/voucher/transactions',    // 거래내역
-  '/voucher/bank',            // 계좌내역
+  // 전표관리 삭제전표/잔액비교/거래내역/계좌내역/영수증연동은 아이사랑꿈터도 사용 (숨김 해제)
   // 정산관리 — 어린이집 전용 정산서(누리/급식/필요경비/특별활동) 미사용, 정부보조금명세서·보조금정산서만
   '/reconciliation/nuri',             // 누리과정정산서
   '/reconciliation/meal',             // 급식비정산서
@@ -241,14 +237,21 @@ export const ILOVECHILD_HIDDEN_HREFS = new Set<string>([
   '/reconciliation/expense',          // 기타필요경비보고서
 ])
 
+// 아이사랑꿈터에서 CIS 게이트를 무시하고 노출하는 예외 (영수증연동은 이용료 매칭 등에 사용)
+export const ILOVECHILD_ALLOW_HREFS = new Set<string>([
+  '/voucher/receipt',         // 영수증(CIS)연동
+])
+
 /** 기관 유형에 맞는 메뉴만 반환. CIS 미사용 유형이면 CIS/검증 제거, 아이사랑꿈터 전용은 그 외 유형에서 제거. */
 export function visibleCategories(institutionType?: string | null): MenuCategory[] {
   const cisOn = isCisEnabled(institutionType)
   const ilove = institutionType === 'ilovechild'
-  const hide = (href: string) =>
-    (!cisOn && CIS_GATED_HREFS.has(href)) ||
-    (!ilove && ILOVECHILD_ONLY_HREFS.has(href)) ||
-    (ilove && ILOVECHILD_HIDDEN_HREFS.has(href))
+  const hide = (href: string) => {
+    if (ilove && ILOVECHILD_ALLOW_HREFS.has(href)) return false // 아이사랑꿈터 명시 허용(CIS 게이트 무시)
+    return (!cisOn && CIS_GATED_HREFS.has(href)) ||
+      (!ilove && ILOVECHILD_ONLY_HREFS.has(href)) ||
+      (ilove && ILOVECHILD_HIDDEN_HREFS.has(href))
+  }
   // 아이사랑꿈터 용어 치환 — 교직원/보육교직원/교사 → 종사자 (라벨 표시만, 라우팅은 href 기준이라 무관)
   const relabel = (s: string): string => {
     if (!ilove) return s
