@@ -22,7 +22,7 @@ async function getBrowser(): Promise<Browser> {
   if (_b && _b.connected) return _b
   _b = await puppeteer.launch({
     headless: true,
-    protocolTimeout: 180000,
+    protocolTimeout: 300000, // 5분 — 천천히 정확히
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   })
   return _b
@@ -39,26 +39,30 @@ export async function POST(req: NextRequest) {
 
     const b = await getBrowser()
     page = await b.newPage()
-    page.setDefaultTimeout(30000)
+    page.setDefaultTimeout(60000)
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36')
     // gwin.co.kr 오리진·쿠키 확보용 가벼운 정적 리소스로 진입 (무거운 WebSquare SPA 회피)
-    await page.goto('https://gwin.co.kr/acc/resources/images/common/common/icon-card.png', { waitUntil: 'domcontentloaded', timeout: 25000 })
+    await page.goto('https://gwin.co.kr/acc/resources/images/common/common/icon-card.png', { waitUntil: 'domcontentloaded', timeout: 40000 })
 
     // 브라우저 컨텍스트에서 로그인 → 시설 → 전표조회 (문자열 evaluate: __name 주입 회피). 각 fetch 20초 타임아웃.
     const script = `(async () => {
+      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       const j = async (path, body) => {
         try {
-          const r = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(body), signal: AbortSignal.timeout(20000) });
+          const r = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           const t = await r.text(); let json=null; try{ json=JSON.parse(t) }catch(e){}
           return { ok:r.ok, status:r.status, json, text: json?null:t.slice(0,400) };
         } catch(e) { return { ok:false, status:0, json:null, err: String(e && e.message || e) }; }
       };
+      await sleep(1500);
       const login = await j('/portal/api/cmmn/login', ${JSON.stringify({ id, password })});
-      const mberNo = login.json && login.json.mberNo;
-      if (!mberNo) return { step:'login', login };
+      if (!(login.json && login.json.mberNo)) return { step:'login', login };
+      const mberNo = login.json.mberNo;
+      await sleep(2000);
       const fclt = await j('/portal/api/cmmn/mberFclt', { mberNo });
       const fcltcd = fclt.json && fclt.json[0] && fclt.json[0].fcltcd;
       if (!fcltcd) return { step:'fclt', fclt };
+      await sleep(2000);
       const search = {
         FCLTCD: fcltcd, BOOK_GB: '${bg}',
         ESTI_YEAR: '${y}', PAPER_YEAR: '${y}', YEAR: '${y}',
@@ -70,6 +74,7 @@ export async function POST(req: NextRequest) {
       };
       const endpoints = ${JSON.stringify(BILL_ENDPOINTS)};
       for (const ep of endpoints) {
+        await sleep(1500);
         const res = await j(ep, { search });
         if (res.json) {
           const listKey = Object.keys(res.json).find(k => Array.isArray(res.json[k]));
