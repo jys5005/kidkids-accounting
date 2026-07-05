@@ -1935,7 +1935,7 @@ export default function VoucherInputPage() {
                             {/* 계정과목 */}
                             <td data-cell="account" className="text-center px-2 py-1 cursor-pointer relative" onClick={cellClick('account')}>
                               {isCell('account') ? (
-                                <div className="absolute left-full ml-2 top-0 bg-white border border-slate-200 rounded-xl shadow-lg z-[100] w-[220px] max-h-[320px] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                                <div className="absolute top-full right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-[100] w-[240px] max-h-[320px] overflow-y-auto py-1" onClick={e => e.stopPropagation()}>
                                   {(row.type === '수입' ? incomeAccounts : expenseAccounts).map(a => {
                                     const isSelected = a.isSub ? row.subAccount === a.label : row.account === a.value
                                     const color = row.type === '수입' ? 'blue' : 'red'
