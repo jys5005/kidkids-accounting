@@ -559,6 +559,8 @@ export default function DataMigrationPage() {
   const [gbVSaving, setGbVSaving] = useState(false)
   const [gbVSavedBook, setGbVSavedBook] = useState('') // 저장 완료된 장부(→ 전표관리로 이동 버튼용)
   const [gbVSavedYm, setGbVSavedYm] = useState('')     // 저장 데이터의 첫 달(YYYY-MM) — 전표입력을 그 달로 열기
+  const [gbVSavedSig, setGbVSavedSig] = useState('')   // 마지막으로 저장한 데이터 시그니처(중복 저장 방지)
+  const [gbVConfirmOpen, setGbVConfirmOpen] = useState(false) // 중복 저장 확인 팝업
   const [gbVWithReceipts, setGbVWithReceipts] = useState(true) // 영수증 사진까지 가져오기
   const loadGwinVouchers = async () => {
     if (!sourceId || !sourcePw) { setGbMsg('걸음마 아이디/비밀번호를 먼저 입력(또는 저장)하세요.'); return }
@@ -572,7 +574,7 @@ export default function DataMigrationPage() {
       })
       const j = await res.json().catch(() => ({}))
       if (j?.success && Array.isArray(j.rows)) {
-        setGbVRows(j.rows); setGbVKeys(j.keys || []); setGbVBook(cacheKey)
+        setGbVRows(j.rows); setGbVKeys(j.keys || []); setGbVBook(cacheKey); setGbVSavedSig('') // 새 조회 → 저장가드 해제
         const rc = j.receiptBills ? ` · 🧾 영수증 ${j.receiptPhotos}장(${j.receiptBills}건 전표)` : ''
         const pb = Array.isArray(j.perBook) ? ' · ' + j.perBook.map((p: { label: string; count: number }) => `${p.label} ${p.count}건`).join(' / ') : ''
         setGbMsg(`✅ 전표 ${j.count}건 조회${pb}${rc}. 아래 미리보기 확인 후 [전표관리로 저장].`)
@@ -591,8 +593,18 @@ export default function DataMigrationPage() {
     } catch (e) { setGbVRows(null); setGbMsg(`❌ 전표 조회 오류: ${e instanceof Error ? e.message : ''}`) }
     finally { setGbVLoading(false) }
   }
-  // 별도: 가져온 전표를 전표관리(voucher-input)로 저장 — 응답 필드 확인 후 매핑 확정 예정
-  const saveGwinVouchers = async () => {
+  // 현재 미리보기 데이터의 저장 시그니처(장부·연도·기간·건수) — 같으면 이미 저장한 것
+  const gbVSig = () => `${gbSelBooks[0] || 'subsidy'}|${gbYear}|${gbVFrom}|${gbVTo}|${gbVRows?.length || 0}`
+  // 저장 버튼 클릭 → 이미 저장한 데이터면 중복 확인 팝업, 아니면 바로 저장
+  const saveGwinVouchers = () => {
+    if (!gbVRows || gbVRows.length === 0) return
+    if (gbVSaving) return // 저장 중 중복 클릭 방지
+    if (gbVSavedSig && gbVSavedSig === gbVSig()) { setGbVConfirmOpen(true); return } // 이미 저장됨 → 확인 팝업
+    doSaveVouchers()
+  }
+  // 실제 저장 실행 (전표관리 voucher-input 로 반영)
+  const doSaveVouchers = async () => {
+    setGbVConfirmOpen(false)
     if (!gbVRows || gbVRows.length === 0) return
     setGbVSaving(true)
     try {
@@ -604,6 +616,7 @@ export default function DataMigrationPage() {
       const pb = Array.isArray(j?.perBook) ? ' (' + j.perBook.map((p: { book: string; saved: number }) => `${bookLabel(p.book)} ${p.saved}건`).join(' / ') + ')' : ''
       if (j?.success) {
         const savedBook = gbSelBooks[0] || 'subsidy'
+        setGbVSavedSig(gbVSig())       // 이 데이터는 저장됨 → 재클릭 시 중복 확인
         setActiveBook(savedBook)       // 활성 장부를 저장한 장부로 전환 → 전표관리(전표입력)에서 바로 보이게
         setGbVSavedBook(savedBook)      // [전표관리로 이동] 버튼 노출
         // 저장 데이터의 첫 달(YYYY-MM) 계산 → 전표입력을 그 달로 열기(기본 2026-03 이라 안 보이던 문제 해결)
@@ -1105,6 +1118,27 @@ export default function DataMigrationPage() {
             </div>
           )}
           <p className="text-[11px] text-slate-400">· 예산은 <b className="text-slate-600">예산관리 › 예산작성</b>에, 전표는 <b className="text-slate-600">전표관리 › 전표입력</b>에 반영됩니다.</p>
+
+          {/* 중복 저장 확인 팝업 */}
+          {gbVConfirmOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setGbVConfirmOpen(false)}>
+              <div className="bg-white rounded-xl shadow-2xl w-[92vw] max-w-md p-5" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">⚠️</span>
+                  <h3 className="text-base font-bold text-slate-800">이미 저장한 전표입니다</h3>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  이 전표는 방금 <b className="text-teal-700">전표관리에 저장</b>되었습니다.<br />
+                  다시 저장하면 <b className="text-rose-600">재등록되어 중복될 수 있습니다.</b><br />
+                  그래도 저장하시겠습니까?
+                </p>
+                <div className="flex justify-end gap-2 mt-5">
+                  <button onClick={() => setGbVConfirmOpen(false)} className="px-4 py-2 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded">취소</button>
+                  <button onClick={doSaveVouchers} className="px-4 py-2 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded">그래도 저장</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
