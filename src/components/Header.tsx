@@ -85,6 +85,10 @@ export default function Header() {
   const [institutionType, setInstitutionType] = useState<string>('childcare')
   const [editData, setEditData] = useState({ phone: '', email: '' })
   const profileRef = useRef<HTMLDivElement>(null)
+  // 기본정보 모달 편집 폼
+  const [basicForm, setBasicForm] = useState({ zipCode: '', address: '', email: '', phone: '', pw: '', pw2: '' })
+  const [basicMsg, setBasicMsg] = useState('')
+  const [basicSaving, setBasicSaving] = useState(false)
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -108,10 +112,57 @@ export default function Header() {
           const itype = (data.institutionType as string) || (p.institutionType as string) || 'childcare'
           setInstitutionType(itype)
           setEditData({ phone, email })
+          setBasicForm({
+            zipCode: p.zipCode || p.zip || p.postCode || '',
+            address: p.address || (data.address as string) || '',
+            email, phone, pw: '', pw2: '',
+          })
         }
       })
       .catch(() => {})
   }, [])
+
+  // 우편번호 검색 (다음 우편번호 서비스) — 클릭 시 스크립트 로드 후 팝업
+  const openPostcode = () => {
+    const run = () => {
+      const w = window as unknown as { daum?: { Postcode: new (o: unknown) => { open: () => void } } }
+      if (!w.daum?.Postcode) { setBasicMsg('우편번호 서비스를 불러오지 못했습니다.'); return }
+      new w.daum.Postcode({
+        oncomplete: (data: { zonecode: string; roadAddress: string; jibunAddress: string }) => {
+          setBasicForm(f => ({ ...f, zipCode: data.zonecode, address: data.roadAddress || data.jibunAddress }))
+        },
+      }).open()
+    }
+    const w = window as unknown as { daum?: { Postcode?: unknown } }
+    if (w.daum?.Postcode) { run(); return }
+    const s = document.createElement('script')
+    s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
+    s.onload = run
+    s.onerror = () => setBasicMsg('우편번호 서비스 로드 실패')
+    document.body.appendChild(s)
+  }
+
+  // 기본정보 저장 → 통합e 프로필 반영
+  const saveBasicInfo = async () => {
+    if (basicForm.pw && basicForm.pw !== basicForm.pw2) { setBasicMsg('새 비밀번호가 일치하지 않습니다.'); return }
+    setBasicSaving(true); setBasicMsg('저장 중…')
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({
+          profile: { zipCode: basicForm.zipCode, address: basicForm.address, email: basicForm.email, phone: basicForm.phone },
+          newPassword: basicForm.pw || undefined,
+        }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (j?.success) {
+        setBasicMsg('✅ 저장되었습니다.')
+        setProfileData(pd => ({ ...pd, email: basicForm.email, phone: basicForm.phone, address: basicForm.address, zipCode: basicForm.zipCode }))
+        setBasicForm(f => ({ ...f, pw: '', pw2: '' }))
+      } else setBasicMsg(`❌ ${j?.error || '저장 실패'}`)
+    } catch (e) { setBasicMsg(`❌ ${e instanceof Error ? e.message : '저장 오류'}`) }
+    finally { setBasicSaving(false) }
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -401,12 +452,12 @@ export default function Header() {
                     ].map(([label, val], i) => (
                       <tr key={i} className="border-b border-slate-100">
                         <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200 w-[120px]">{label}</td>
-                        <td className="px-3 py-2.5">{val ? <span className="text-slate-700">{val}</span> : <input type={label.includes('비밀') ? 'password' : 'text'} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" placeholder={label.includes('비밀번호 확인') ? '비밀번호를 다시 한번 확인합니다.' : label.includes('비밀') ? '공백문자를 제외한 6 ~ 12 자, 비밀번호를 변경하고 싶으면 입력하세요' : ''} />}</td>
+                        <td className="px-3 py-2.5">{label === '새 비밀번호' ? <input type="password" value={basicForm.pw} onChange={e => setBasicForm(f => ({ ...f, pw: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" placeholder="공백문자를 제외한 6 ~ 12 자, 비밀번호를 변경하고 싶으면 입력하세요" /> : label === '새 비밀번호 확인' ? <input type="password" value={basicForm.pw2} onChange={e => setBasicForm(f => ({ ...f, pw2: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" placeholder="비밀번호를 다시 한번 확인합니다." /> : val ? <span className="text-slate-700">{val}</span> : <input type="text" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" />}</td>
                       </tr>
                     ))}
                     <tr className="border-b border-slate-100">
                       <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">주소</td>
-                      <td className="px-3 py-2.5"><div className="flex gap-1 mb-1"><input type="text" defaultValue={profileData.zipCode} key={`zip-${profileData.zipCode}`} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-20" /><button className="px-2 py-1 text-[10px] bg-slate-100 border border-slate-300 rounded">우편번호</button></div><input type="text" defaultValue={profileData.address} key={`addr-${profileData.address}`} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-full" /></td>
+                      <td className="px-3 py-2.5"><div className="flex gap-1 mb-1"><input type="text" value={basicForm.zipCode} onChange={e => setBasicForm(f => ({ ...f, zipCode: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-20" /><button type="button" onClick={openPostcode} className="px-2 py-1 text-[10px] bg-slate-100 border border-slate-300 rounded hover:bg-slate-200">우편번호</button></div><input type="text" value={basicForm.address} onChange={e => setBasicForm(f => ({ ...f, address: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-full" placeholder="우편번호 검색 후 상세주소 입력" /></td>
                     </tr>
                     <tr className="border-b border-slate-100">
                       <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">일반전화</td>
@@ -423,7 +474,7 @@ export default function Header() {
                     ] as [string, string][]).map(([label, val]) => (
                       <tr key={`${label}-${val}`} className="border-b border-slate-100">
                         <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">{label}</td>
-                        <td className="px-3 py-2.5">{label === '제본' ? <><label className="text-[11px]"><input type="radio" name="binding" className="mr-0.5" />양면</label><label className="text-[11px] ml-2"><input type="radio" name="binding" defaultChecked className="mr-0.5" />단면</label></> : label === '원아 정원' ? <select className="border border-teal-300 rounded px-2 py-1 text-[12px]"><option>76 명</option></select> : <input type="text" defaultValue={val} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" />}</td>
+                        <td className="px-3 py-2.5">{label === '제본' ? <><label className="text-[11px]"><input type="radio" name="binding" className="mr-0.5" />양면</label><label className="text-[11px] ml-2"><input type="radio" name="binding" defaultChecked className="mr-0.5" />단면</label></> : label === '원아 정원' ? <select className="border border-teal-300 rounded px-2 py-1 text-[12px]"><option>76 명</option></select> : label === '이메일' ? <input type="text" value={basicForm.email} onChange={e => setBasicForm(f => ({ ...f, email: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" /> : <input type="text" defaultValue={val} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" />}</td>
                       </tr>
                     ))}
                     <tr className="border-b border-slate-100">
@@ -504,8 +555,9 @@ export default function Header() {
               </div>
             )}
 
-            <div className="px-4 py-3 border-t border-slate-200 flex justify-end">
-              <button className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">수정</button>
+            <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
+              {basicMsg && <span className={`text-xs font-semibold ${basicMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{basicMsg}</span>}
+              <button onClick={saveBasicInfo} disabled={basicSaving} className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-50">{basicSaving ? '저장 중…' : '수정'}</button>
             </div>
           </div>
         </div>

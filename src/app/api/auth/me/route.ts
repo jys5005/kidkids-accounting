@@ -40,3 +40,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '세션 오류' }, { status: 401 })
   }
 }
+
+// 기본정보 수정 — 통합e PUT /api/auth/me 로 전달({profile, newPassword}). updateUser 가 profile 머지.
+export async function PUT(request: NextRequest) {
+  const session = request.cookies.get('auth_session')?.value
+  if (!session) return NextResponse.json({ success: false, error: '미인증' }, { status: 401 })
+  try {
+    const body = await request.text()
+    const res = await fetch(`${PLATFORM_URL}/api/auth/me`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Cookie: `auth_session=${session}` },
+      body,
+    })
+    const j = await res.json().catch(() => ({}))
+    return NextResponse.json(j, { status: res.status })
+  } catch (e) {
+    return NextResponse.json({ success: false, error: String(e) }, { status: 500 })
+  }
+}
