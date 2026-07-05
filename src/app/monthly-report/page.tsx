@@ -322,7 +322,7 @@ export default function MonthlyReportPage() {
           <div className="px-4 py-2 border-b border-blue-200 bg-blue-50">
             <span className="text-xs font-bold text-blue-700">수입</span>
           </div>
-          <table className="w-full text-xs border-collapse">
+          <table className="w-full text-[11px] border-collapse">
             <thead>
               <tr className="bg-blue-50 border-b border-blue-200">
                 <th className={`${TH} w-8`}>관</th>
@@ -378,7 +378,7 @@ export default function MonthlyReportPage() {
           <div className="px-4 py-2 border-b border-red-200 bg-red-50">
             <span className="text-xs font-bold text-red-700">지출</span>
           </div>
-          <table className="w-full text-xs border-collapse">
+          <table className="w-full text-[11px] border-collapse">
             <thead>
               <tr className="bg-red-50 border-b border-red-200">
                 <th className={`${TH} w-8`}>관</th>
@@ -476,7 +476,7 @@ export default function MonthlyReportPage() {
               <span className="text-slate-500">집행율 <span className="font-bold">{detailAccount.rate}%</span></span>
             </div>
             <div className="overflow-auto max-h-[55vh]">
-              <table className="w-full text-xs border-collapse">
+              <table className="w-full text-[11px] border-collapse">
                 <thead className="sticky top-0">
                   <tr className="bg-teal-50 border-b border-orange-200">
                     <th className={`${TH} w-16`}>월일</th>

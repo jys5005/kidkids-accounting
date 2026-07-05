@@ -182,7 +182,7 @@ function AccountTable({ type, data, f: fmtFn }: { type: 'income' | 'expense'; da
 
   return (
     <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
-      <table className="w-full text-xs border-collapse">
+      <table className="w-full text-[11px] border-collapse">
         <thead>
           <tr className={`bg-${color}-50 border-b border-${color}-200`}>
             <th className={`${TH} w-12`}>관</th>
@@ -263,7 +263,7 @@ function SettlementMonthlyLegacy() {
 
       {/* 세입·세출 요약 */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-[11px] border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
               <th className={`${TH} w-40`}></th>
@@ -398,20 +398,20 @@ function MonthlySettleTable({ title, rows, tone }: { title: string; rows: MRow[]
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className={`px-4 py-2 font-bold text-sm ${head}`}>{title} <span className="text-xs font-normal text-slate-500">· 예산 {f(tB)} / 당월 {f(tM)} / 누적 {f(tC)} / 잔액 {f(tB - tC)}</span></div>
       <div className="overflow-x-auto">
-        <table className="w-full text-[11px] border-collapse">
+        <table className="text-[11px] border-collapse">
           <thead>
             <tr className="bg-slate-100 text-slate-600 font-bold">
-              <th colSpan={3} className="px-2 py-1.5 border border-slate-200">계정과목</th>
-              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[100px]">예산액</th>
-              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[100px]">당월결산</th>
-              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[100px]">누적결산</th>
-              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[100px]">잔액</th>
-              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-right w-[60px]">집행률</th>
+              <th colSpan={3} className="px-2 py-1.5 border border-slate-200 text-center">계정과목</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-center w-[100px]">예산액</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-center w-[100px]">당월결산</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-center w-[100px]">누적결산</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-center w-[100px]">잔액</th>
+              <th rowSpan={2} className="px-2 py-1.5 border border-slate-200 text-center w-[60px]">집행률</th>
             </tr>
             <tr className="bg-slate-50 text-slate-500 font-bold">
-              <th className="px-2 py-1.5 border border-slate-200 text-left w-[150px]">관</th>
-              <th className="px-2 py-1.5 border border-slate-200 text-left w-[160px]">항</th>
-              <th className="px-2 py-1.5 border border-slate-200 text-left">목</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-center w-[150px]">관</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-center w-[160px]">항</th>
+              <th className="px-2 py-1.5 border border-slate-200 text-center">목</th>
             </tr>
           </thead>
           <tbody>

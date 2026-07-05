@@ -125,7 +125,7 @@ export default function SettlementReconciliationPage() {
 
       {/* 보조금거래 테이블 */}
       <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-[11px] border-collapse">
           <thead>
             <tr>
               <th className={`${TH} w-8`}><input type="checkbox" checked={subsidyData.length > 0 && subsidyData.every(r => subsidyChecked.has(r.id))} onChange={e => { if (e.target.checked) setSubsidyChecked(new Set(subsidyData.map(r => r.id))); else setSubsidyChecked(new Set()) }} className="w-3 h-3 rounded" /></th>
@@ -169,7 +169,7 @@ export default function SettlementReconciliationPage() {
 
       {/* 일반거래 테이블 */}
       <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-[11px] border-collapse">
           <thead>
             <tr>
               <th className={`${TH} w-8`}><input type="checkbox" checked={generalData.length > 0 && generalData.every(r => generalChecked.has(r.id))} onChange={e => { if (e.target.checked) setGeneralChecked(new Set(generalData.map(r => r.id))); else setGeneralChecked(new Set()) }} className="w-3 h-3 rounded" /></th>

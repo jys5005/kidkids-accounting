@@ -81,7 +81,7 @@ export default function SubsidyPage() {
 
       {/* 테이블 */}
       <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-[11px] border-collapse">
           <thead>
             <tr>
               <th className={TH}>수령일자</th>

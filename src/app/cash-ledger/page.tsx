@@ -174,7 +174,7 @@ export default function CashLedgerPage() {
             <span className="text-[11px] text-slate-400">{data.length}건</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-[11px]">
               <thead>
                 <tr className="bg-slate-50 text-[11px] text-slate-500">
                   <th className="text-left px-4 py-2.5 font-semibold">일자</th>

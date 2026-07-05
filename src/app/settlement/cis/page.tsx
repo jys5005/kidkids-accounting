@@ -143,7 +143,7 @@ function CisTable({ type, data, overBudgetOnly }: { type: 'income' | 'expense'; 
   let prevGwan = '', prevHang = '', prevParentName = ''
   return (
     <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
-      <table className="w-full text-xs border-collapse">
+      <table className="w-full text-[11px] border-collapse">
         <thead>
           <tr className="bg-slate-100 border-b border-slate-200">
             <th colSpan={6} className={TH}>과목</th>

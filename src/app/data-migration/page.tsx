@@ -5,6 +5,17 @@ import * as XLSX from 'xlsx'
 import { getActiveBook, setActiveBook, BOOK_CHANGE_EVENT, bookLabel, ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
 import { GWIN_BUDGETS } from '@/data/gwin-budgets'
 
+// 걸음마 전표 원시 필드 → 한글 컬럼명(미리보기 헤더용). 매핑 없으면 원본 표시.
+const GWIN_COL_LABEL: Record<string, string> = {
+  _bookLabel: '장부', BILL_DATE: '날짜', BILL_ORDER_DATE: '거래일자', BILL_MONEY: '금액',
+  ESTI_INOUT: '수입/지출', ESTI_NAME: '계정과목(목)', ESTI_NAME_DETAIL: '계정과목상세',
+  ESTI_NAME_1: '관', ESTI_NAME_2: '항', ESTI_NAME_3: '목', ESTI_NAME_4: '세목', ESTI_DISPLAY: '목코드',
+  BILL_MEMO: '적요', BILL_BIGO: '비고', CREDITOR: '거래처', SETLE_MTHD_NAME: '결제방식',
+  ACCOUNT_NICKNAME: '통장', BILL_SUPPORT_AT: '보조금', BILL_NURI_AT: '누리', BILL_ATCH_TYPE: '첨부유형',
+  BILL_NUM: '증빙번호', BILL_NUMDETAIL: '증빙상세', BILL_IDX: '전표ID', FCLTCD: '시설코드', BOOK_GB: '장부구분',
+  _receiptImage: '영수증', _receiptImages: '영수증(전체)',
+}
+
 interface CashLedgerRow {
   idx: number
   date: string
@@ -1124,7 +1135,7 @@ export default function DataMigrationPage() {
               </div>
               <div className="overflow-x-auto max-h-64 overflow-y-auto">
                 <table className="text-[11px] w-full">
-                  <thead className="bg-slate-100 sticky top-0"><tr>{gbVKeys.map(k => <th key={k} className="px-2 py-1 text-left font-semibold text-slate-500 whitespace-nowrap border-b border-slate-200">{k}</th>)}</tr></thead>
+                  <thead className="bg-slate-100 sticky top-0"><tr>{gbVKeys.map(k => <th key={k} className="px-2 py-1 text-left font-semibold text-slate-500 whitespace-nowrap border-b border-slate-200">{GWIN_COL_LABEL[k] || k}</th>)}</tr></thead>
                   <tbody>
                     {gbVRows.slice(0, 100).map((r, i) => (
                       <tr key={i} className="border-b border-slate-50 hover:bg-amber-50/40">
@@ -1558,7 +1569,7 @@ export default function DataMigrationPage() {
                 </button>
                 {showMappings && (
                   <div className="mt-2 border border-teal-200 rounded-lg overflow-hidden">
-                    <table className="w-full text-xs">
+                    <table className="w-full text-[11px]">
                       <thead>
                         <tr className="bg-teal-50 text-teal-700">
                           <th className="px-2 py-1.5 text-left">출발지 코드</th>
@@ -1731,7 +1742,7 @@ export default function DataMigrationPage() {
           <p className="text-sm font-semibold text-teal-800 mb-2">
             매핑 안 된 계정코드 ({unmappedCodes.length}건)
           </p>
-          <table className="w-full text-sm">
+          <table className="w-full text-[11px]">
             <thead>
               <tr className="text-xs text-teal-700 border-b border-teal-200">
                 <th className="py-1 text-left">월</th>
@@ -1798,7 +1809,7 @@ export default function DataMigrationPage() {
 
               {/* 테이블 */}
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-[11px]">
                   <thead>
                     <tr className="bg-slate-50 text-xs font-semibold text-slate-500">
                       <th className="px-3 py-2 text-center w-12">일자</th>
@@ -1901,7 +1912,7 @@ export default function DataMigrationPage() {
                     {/* 수입 */}
                     <div>
                       <h4 className="text-sm font-semibold text-blue-700 mb-2">수입</h4>
-                      <table className="w-full text-xs">
+                      <table className="w-full text-[11px]">
                         <thead>
                           <tr className="bg-blue-50 text-blue-700">
                             <th className="px-2 py-1.5 text-left w-20">{currentSource.label}</th>
@@ -1931,7 +1942,7 @@ export default function DataMigrationPage() {
                     {/* 지출 */}
                     <div>
                       <h4 className="text-sm font-semibold text-red-700 mb-2">지출</h4>
-                      <table className="w-full text-xs">
+                      <table className="w-full text-[11px]">
                         <thead>
                           <tr className="bg-red-50 text-red-700">
                             <th className="px-2 py-1.5 text-left w-20">{currentSource.label}</th>

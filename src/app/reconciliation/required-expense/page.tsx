@@ -1053,7 +1053,7 @@ export default function RequiredExpensePage() {
 
       {/* 테이블 */}
       <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-[11px] border-collapse">
           <thead>
             <tr>
               <th className={`${TH} w-8`}><input type="checkbox" checked={allChecked} onChange={e => { if (e.target.checked) setChecked(new Set(data.map(r => r.id))); else setChecked(new Set()) }} className="w-3 h-3 rounded" /></th>

@@ -2448,7 +2448,7 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
 
       {/* 입력 테이블 */}
       <div>
-        <table className="w-full text-sm">
+        <table className="w-full text-[11px]">
           <thead className="sticky top-[49px] z-20">
             <tr className="bg-teal-50 border-b border-teal-400/30" style={{boxShadow: '0 2px 4px rgba(245,184,0,0.15)'}}>
 

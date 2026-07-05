@@ -141,7 +141,7 @@ export default function NuriPage() {
 
           {/* 테이블 */}
           <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
-            <table className="w-full text-xs border-collapse">
+            <table className="w-full text-[11px] border-collapse">
               <thead>
                 <tr>
                   <th className={`${TH} w-8`}><input type="checkbox" className="w-3 h-3 rounded" /></th>
@@ -173,7 +173,7 @@ export default function NuriPage() {
       ) : (
       /* 월별 테이블 */
       <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-[11px] border-collapse">
           <thead>
             <tr>
               <th className={`${TH} w-14`}>구분</th>

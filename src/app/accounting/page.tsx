@@ -282,7 +282,7 @@ function EvalSection({
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-xs">
+        <table className="w-full text-[11px]">
           <thead>
             <tr className="bg-slate-50">
               {headers.map((h, i) => (
