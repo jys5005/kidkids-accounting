@@ -54,6 +54,7 @@ const SOURCE_OPTIONS = [
   { value: 'seoul', label: '서울시어린이집관리시스템', url: '', features: [], authType: 'idpw' as const },
   { value: 'wisean', label: '와이즈안', url: 'waisn.wisearn.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
   { value: 'ifriends', label: '아이프렌즈', url: 'i-friends.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
+  { value: 'cykids', label: '꼬마집', url: 'center.cykids.net', features: [], authType: 'idpw' as const },
   { value: 'walk', label: '걸음마회계', url: '', features: [], authType: 'idpw' as const },
 ] as const
 
