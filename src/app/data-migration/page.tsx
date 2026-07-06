@@ -1081,6 +1081,7 @@ export default function DataMigrationPage() {
           password: sunotePw,
           data: [monthData],
           customMappings: Object.keys(customMappings).length > 0 ? customMappings : undefined,
+          trustCode: source === 'jangbunara', // 장부나라: 코드값만 따라감(적요 세목 추론 끔)
         }),
       })
       const json = await res.json()
@@ -1132,6 +1133,7 @@ export default function DataMigrationPage() {
             password: sunotePw,
             data: [monthData],
             customMappings: Object.keys(customMappings).length > 0 ? customMappings : undefined,
+          trustCode: source === 'jangbunara', // 장부나라: 코드값만 따라감(적요 세목 추론 끔)
           }),
         })
         const json = await res.json()
