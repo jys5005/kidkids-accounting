@@ -28,7 +28,8 @@ interface VoucherRow {
   copySelected?: boolean
   inputMethod?: '은행' | '수기' | '일괄' | '엑셀' | '분리' | '합산'
   accountCode?: string
-  receiptImage?: string  // 첨부한 영수증 사진 URL (/api/receipt-file/…)
+  receiptImage?: string  // 첨부한 영수증 사진 URL (/api/receipt-file/…) — 대표(첫 장)
+  receiptImages?: string // 여러 장(콤마 구분 URL) — 걸음마 이관 시 한 전표에 3~4장
 }
 
 const sampleData: VoucherRow[] = []
@@ -419,6 +420,13 @@ export default function VoucherInputPage() {
 
   // 영수증 사진 OCR 모달 대상 행 id
   const [receiptRowId, setReceiptRowId] = useState<number | null>(null)
+  const [galleryImages, setGalleryImages] = useState<string[] | null>(null)  // 영수증 여러 장 갤러리
+  // 행의 영수증 전체 URL 목록 (receiptImages 콤마분리 우선, 없으면 receiptImage 1장)
+  const receiptListOf = (row: VoucherRow): string[] => {
+    const multi = (row.receiptImages || '').split(',').map(s => s.trim()).filter(Boolean)
+    if (multi.length) return multi
+    return row.receiptImage ? [row.receiptImage] : []
+  }
   // OCR 결과를 해당 전표 행에 반영 (구분/적요/금액/계정과목 한 번에)
   const applyReceiptToRow = (rowId: number, r: ReceiptOcrResult) => {
     setRows(prev => prev.map(row => {
@@ -459,6 +467,26 @@ export default function VoucherInputPage() {
   return (
     <div className="space-y-4">
       <ReceiptOcrModal open={receiptRowId !== null} onClose={() => setReceiptRowId(null)} accountOptions={accountOptions} subAccountMap={subAccountMap} onApply={r => { if (receiptRowId !== null) applyReceiptToRow(receiptRowId, r) }} onAttach={url => { if (receiptRowId !== null) applyReceiptImageToRow(receiptRowId, url) }} />
+      {/* 영수증 여러 장 갤러리 */}
+      {galleryImages && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4" onClick={() => setGalleryImages(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-[92vw] max-w-3xl max-h-[88vh] overflow-y-auto p-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-800">🧾 첨부 영수증 {galleryImages.length}장</h3>
+              <button onClick={() => setGalleryImages(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {galleryImages.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noreferrer" className="block group relative">
+                  <img src={url} alt={`영수증 ${i + 1}`} className="w-full h-40 object-cover rounded-lg border border-slate-200 group-hover:ring-2 group-hover:ring-blue-400" />
+                  <span className="absolute top-1 left-1 bg-black/60 text-white text-[10px] font-bold rounded px-1.5 py-0.5">{i + 1}</span>
+                </a>
+              ))}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-3">· 사진을 클릭하면 원본이 새 창에 열립니다.</p>
+          </div>
+        </div>
+      )}
 
       {/* 장부 전환 시 저장 알림 — 아이사랑꿈터 (장부 선택은 상단 헤더) */}
       {bookSwitchMsg && (
@@ -523,11 +551,12 @@ export default function VoucherInputPage() {
                   <span>{row.date.slice(5)}</span>
                   <span>·</span>
                   <span className="truncate">{row.account}{row.subAccount ? ` / ${row.subAccount}` : ''}</span>
-                  {row.receiptImage && (
-                    <a href={row.receiptImage} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="ml-auto shrink-0" title="첨부 영수증 보기">
-                      <img src={row.receiptImage} alt="영수증" className="w-8 h-8 object-cover rounded border" />
-                    </a>
-                  )}
+                  {(() => { const rc = receiptListOf(row); return rc.length > 0 && (
+                    <button onClick={e => { e.stopPropagation(); setGalleryImages(rc) }} className="ml-auto shrink-0 relative" title={`영수증 ${rc.length}장 보기`}>
+                      <img src={rc[0]} alt="영수증" className="w-8 h-8 object-cover rounded border" />
+                      {rc.length > 1 && <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[9px] font-bold rounded-full px-1 leading-tight">{rc.length}</span>}
+                    </button>
+                  )})()}
                 </div>
                 {isEdit && (
                   <div className="px-3 pb-3 pt-1 border-t border-slate-100 space-y-2">
@@ -1849,13 +1878,15 @@ export default function VoucherInputPage() {
                             </div>
                           </td>
 
-                        case 'attach':
+                        case 'attach': {
+                          const rcpts = receiptListOf(row)
                           return <td key={key} className="text-center px-0 py-1">
                             <div className="flex items-center justify-center gap-0.5">
-                              {row.receiptImage ? (
-                                <a href={row.receiptImage} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} data-tip="첨부 영수증 보기" className="inline-block">
-                                  <img src={row.receiptImage} alt="영수증" className="w-7 h-7 object-cover rounded border border-slate-200 hover:ring-2 hover:ring-blue-400" />
-                                </a>
+                              {rcpts.length > 0 ? (
+                                <button onClick={e => { e.stopPropagation(); setGalleryImages(rcpts) }} data-tip={`영수증 ${rcpts.length}장 보기`} className="relative inline-block">
+                                  <img src={rcpts[0]} alt="영수증" className="w-7 h-7 object-cover rounded border border-slate-200 hover:ring-2 hover:ring-blue-400" />
+                                  {rcpts.length > 1 && <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[9px] font-bold rounded-full px-1 leading-tight">{rcpts.length}</span>}
+                                </button>
                               ) : row.approved ? (<>
                                 <button onClick={e => e.stopPropagation()} className="text-slate-900">
                                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
@@ -1871,6 +1902,7 @@ export default function VoucherInputPage() {
                               )}
                             </div>
                           </td>
+                        }
 
                         case 'amountGroup':
                           return <React.Fragment key={key}>
