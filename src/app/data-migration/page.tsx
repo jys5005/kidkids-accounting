@@ -45,6 +45,7 @@ interface CashLedgerResult {
 
 const SOURCE_OPTIONS = [
   { value: 'by24', label: '보육나라', url: 'by24.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
+  { value: 'jangbunara', label: '장부나라', url: 'jangbunara.com', features: ['현금출납부'], authType: 'idpw' as const },
   { value: 'prime', label: '프라임전자장부', url: '', features: [], authType: 'idpw' as const },
   { value: 'kidshome', label: '키즈홈', url: 'ikidshome.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
   { value: 'kidkids', label: '키드키즈', url: 'kidkids.net', features: [], authType: 'idpw' as const },
