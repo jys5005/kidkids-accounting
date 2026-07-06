@@ -60,6 +60,7 @@ export default function BankPage() {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [transactions, setTransactions] = useState<BankTransaction[]>([])
   const [isIlovechild, setIsIlovechild] = useState<boolean | null>(null)
+  const [myBizNo, setMyBizNo] = useState('')   // 사업장 사업자번호 자동호출
   const [queryingId, setQueryingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
@@ -76,7 +77,8 @@ export default function BankPage() {
     let cancelled = false
     fetch('/api/auth/me').then(r => r.json()).then(me => {
       const itype = (me?.institutionType || me?.profile?.institutionType || 'childcare') as string
-      if (!cancelled) setIsIlovechild(itype === 'ilovechild')
+      const biz = String(me?.profile?.bizNo || me?.bizNo || '').replace(/[^0-9]/g, '')
+      if (!cancelled) { setIsIlovechild(itype === 'ilovechild'); setMyBizNo(biz) }
     }).catch(() => { if (!cancelled) setIsIlovechild(false) })
   }, [])
 
@@ -239,7 +241,7 @@ export default function BankPage() {
   }
 
   const [newAccount, setNewAccount] = useState({
-    book: '', bankType: '법인', bankName: '국민은행', alias: '', accountNo: '', accountPw: '', bizNo: '', loginId: '', queryId: '', queryPw: '', safeAccount: '', safeAccountPw: ''
+    book: '', bankType: '법인', bankName: '국민은행', alias: '운영비', accountNo: '', accountPw: '', bizNo: '', loginId: '', queryId: '', queryPw: '', safeAccount: '', safeAccountPw: ''
   })
   const [editId, setEditId] = useState<string | null>(null)
   const reload = () => loadAccounts(!!isIlovechild)
@@ -263,7 +265,7 @@ export default function BankPage() {
 
   const openAdd = () => {
     setEditId(null)
-    setNewAccount({ book: isIlovechild ? ILOVECHILD_BOOK_CODES[0] : '', bankType: '법인', bankName: '국민은행', alias: '', accountNo: '', accountPw: '', bizNo: '', loginId: '', queryId: '', queryPw: '', safeAccount: '', safeAccountPw: '' })
+    setNewAccount({ book: isIlovechild ? ILOVECHILD_BOOK_CODES[0] : '', bankType: '법인', bankName: '국민은행', alias: '운영비', accountNo: '', accountPw: '', bizNo: myBizNo, loginId: '', queryId: '', queryPw: '', safeAccount: '', safeAccountPw: '' })
     setShowAddAccount(true)
   }
   const openEdit = (a: BankAccount) => {
@@ -592,7 +594,7 @@ export default function BankPage() {
               </div>
               <div className="flex items-center gap-3">
                 <label className="text-xs font-semibold text-slate-600 w-24 flex-shrink-0">계좌비밀번호</label>
-                <input type="password" value={newAccount.accountPw} onChange={e => setNewAccount({...newAccount, accountPw: e.target.value})} className="px-2 py-1.5 text-xs border border-teal-400/50 rounded bg-white flex-1 focus:outline-none focus:border-teal-400" placeholder="계좌 비밀번호" />
+                <input type="password" inputMode="numeric" maxLength={4} value={newAccount.accountPw} onChange={e => setNewAccount({...newAccount, accountPw: e.target.value.replace(/[^0-9]/g, '').slice(0, 4)})} className="px-2 py-1.5 text-xs border border-teal-400/50 rounded bg-white flex-1 focus:outline-none focus:border-teal-400" placeholder="숫자 4자리" />
               </div>
               <div className="flex items-center gap-3">
                 <label className="text-xs font-semibold text-slate-600 w-24 flex-shrink-0">사업자번호<br/><span className="text-[10px] text-slate-400">(주민번호)</span></label>
@@ -628,7 +630,7 @@ export default function BankPage() {
               {!['신한은행', '대구은행'].includes(newAccount.bankName) && (
                 <div className="flex items-center gap-3">
                   <label className="text-xs font-semibold text-slate-600 w-24 flex-shrink-0">인터넷뱅킹<br/>아이디</label>
-                  <input type="text" value={newAccount.loginId} onChange={e => setNewAccount({...newAccount, loginId: e.target.value})} className="px-2 py-1.5 text-xs border border-teal-400/50 rounded bg-white flex-1 focus:outline-none focus:border-teal-400" placeholder="인터넷뱅킹 아이디" />
+                  <input type="text" value={newAccount.loginId} onChange={e => setNewAccount({...newAccount, loginId: e.target.value.replace(/[^a-zA-Z0-9]/g, '')})} className="px-2 py-1.5 text-xs border border-teal-400/50 rounded bg-white flex-1 focus:outline-none focus:border-teal-400" placeholder="인터넷뱅킹 아이디 (영문)" />
                 </div>
               )}
             </div>
