@@ -588,7 +588,7 @@ export default function BankPage() {
               </div>
               <div className="flex items-center gap-3">
                 <label className="text-xs font-semibold text-slate-600 w-24 flex-shrink-0">계좌번호</label>
-                <input type="text" value={newAccount.accountNo} onChange={e => setNewAccount({...newAccount, accountNo: e.target.value})} className="px-2 py-1.5 text-xs border border-teal-400/50 rounded bg-white flex-1 focus:outline-none focus:border-teal-400" placeholder="계좌번호 입력" />
+                <input type="text" inputMode="numeric" value={newAccount.accountNo} onChange={e => setNewAccount({...newAccount, accountNo: e.target.value.replace(/[^0-9]/g, '')})} className="px-2 py-1.5 text-xs border border-teal-400/50 rounded bg-white flex-1 focus:outline-none focus:border-teal-400" placeholder="계좌번호 (숫자만)" />
               </div>
               <div className="flex items-center gap-3">
                 <label className="text-xs font-semibold text-slate-600 w-24 flex-shrink-0">계좌비밀번호</label>
@@ -596,7 +596,7 @@ export default function BankPage() {
               </div>
               <div className="flex items-center gap-3">
                 <label className="text-xs font-semibold text-slate-600 w-24 flex-shrink-0">사업자번호<br/><span className="text-[10px] text-slate-400">(주민번호)</span></label>
-                <input type="text" value={newAccount.bizNo} onChange={e => setNewAccount({...newAccount, bizNo: e.target.value})} className="px-2 py-1.5 text-xs border border-teal-400/50 rounded bg-white flex-1 focus:outline-none focus:border-teal-400" />
+                <input type="text" inputMode="numeric" value={newAccount.bizNo} onChange={e => setNewAccount({...newAccount, bizNo: e.target.value.replace(/[^0-9]/g, '')})} className="px-2 py-1.5 text-xs border border-teal-400/50 rounded bg-white flex-1 focus:outline-none focus:border-teal-400" placeholder="사업자번호 (숫자만)" />
               </div>
               {/* 신한은행: 계좌조회아이디, 계좌조회비밀번호 */}
               {newAccount.bankName === '신한은행' && (
