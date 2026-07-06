@@ -10,13 +10,7 @@ type LedgerRow = {
   income: number; expense: number; counterpart: string; note: string
 }
 
-const mockGeneral: LedgerRow[] = [
-  { id: 1, date: '2026-03-01', docNo: 'A000001', account: '전년도 이월금', summary: '전년도이월금', income: 117139911, expense: 0, counterpart: '', note: '' },
-  { id: 2, date: '2026-03-03', docNo: 'A000001', account: '정부지원 보육료', summary: 'KB78411191', income: 1289872, expense: 0, counterpart: 'KB78411191', note: '' },
-  { id: 3, date: '2026-03-03', docNo: 'A000002', account: '계정미지정', summary: '이찬용', income: 450000, expense: 0, counterpart: '이찬용', note: '' },
-  { id: 4, date: '2026-03-03', docNo: 'B000001', account: '계정미지정', summary: '도깨비식자재마트', income: 0, expense: 35860, counterpart: '도깨비식자재마트', note: '' },
-  { id: 5, date: '2026-03-03', docNo: 'A000003', account: '계정미지정', summary: '김현승', income: 180000, expense: 0, counterpart: '김현승', note: '' },
-]
+const mockGeneral: LedgerRow[] = []
 
 const TH = 'px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-slate-200 text-[11px] bg-teal-50'
 const TD = 'px-2 py-2 text-center border-b border-slate-100 text-xs'

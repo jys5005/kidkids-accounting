@@ -33,20 +33,7 @@ type LedgerRow = {
   linked: number
 }
 
-const mockData: LedgerRow[] = [
-  { date: '', summary: '전월이월', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: '', budget: 422168000, income: 263466266, expense: 0, balance: 158701734, linked: 0 },
-  { date: '02.03', summary: '롯데카드 강나윤 01월 280,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000089', budget: 0, income: 279972, expense: 0, balance: 0, linked: 0 },
-  { date: '02.04', summary: '삼성카드 김민아 01월 515,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000090', budget: 0, income: 514949, expense: 0, balance: 0, linked: 0 },
-  { date: '02.06', summary: '삼성카드 경한울 01월 426,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000091', budget: 0, income: 425958, expense: 0, balance: 0, linked: 0 },
-  { date: '02.12', summary: 'nh농협 홍하나 01월 280,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000092', budget: 0, income: 279972, expense: 0, balance: 0, linked: 0 },
-  { date: '02.13', summary: '신한카드 김소이 01월 426,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000093', budget: 0, income: 425958, expense: 0, balance: 0, linked: 0 },
-  { date: '02.23', summary: '수수료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000049', budget: 0, income: 2517, expense: 0, balance: 0, linked: 0 },
-  { date: '02.24', summary: '신협 이가은 02월 200,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000094', budget: 0, income: 199980, expense: 0, balance: 0, linked: 0 },
-  { date: '02.24', summary: 'nh농협 박도준 02월 280,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000095', budget: 0, income: 279972, expense: 0, balance: 0, linked: 0 },
-  { date: '02.24', summary: '우리카드 함시아 02월 280,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000096', budget: 0, income: 279972, expense: 0, balance: 0, linked: 0 },
-  { date: '02.24', summary: '우체국 최서하 02월 280,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000097', budget: 0, income: 279972, expense: 0, balance: 0, linked: 0 },
-  { date: '02.24', summary: 'ibk기업은행 체첼렌 02월 200,000 정부지원 보육료', receipt: false, transfer: false, bank: false, tax: false, cash: false, attach: false, docNo: 'A000098', budget: 0, income: 199980, expense: 0, balance: 0, linked: 0 },
-]
+const mockData: LedgerRow[] = []
 
 type AccountRow = {
   code: string; name: string; budget: number; income: number; accumIncome: number

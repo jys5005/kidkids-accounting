@@ -22,7 +22,7 @@ const reportData: ReportRow[] = [
   // 01 보육료
   {
     gwanCode: '01', gwanName: '보육료', hangCode: '11', hangName: '보육료', mokCode: '111', mokName: '정부지원 보육료',
-    budget: 186288000, reportedAmount: 186288000,
+    budget: 0, reportedAmount: 0,
     basis: [
       '정부지원보육료 만0세 584,000원*6명*12월=42,048,000',
       '정부지원보육료 만1세 515,000원*8명*12월=49,440,000',
@@ -76,7 +76,7 @@ const reportData: ReportRow[] = [
   // 03 보조금 및 지원금
   {
     gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '31', hangName: '인건비 보조금', mokCode: '311', mokName: '인건비 보조금',
-    budget: 103139520, reportedAmount: 103139520,
+    budget: 0, reportedAmount: 0,
     basis: [
       '보조교사 1,139,000*1명*12월=13,668,000',
       '연장교사 1,139,000*1명*12월=13,668,000',
@@ -93,7 +93,7 @@ const reportData: ReportRow[] = [
   },
   {
     mokCode: '322', mokName: '연장보육료',
-    budget: 4560000, reportedAmount: 4560000,
+    budget: 0, reportedAmount: 0,
     basis: [
       '0세 3,000*3명*20회*12월=2,160,000',
       '영아반 2,000*2명*20회*12월=960,000',
@@ -107,7 +107,7 @@ const reportData: ReportRow[] = [
   },
   {
     mokCode: '324', mokName: '그 밖의 지원금',
-    budget: 54092000, reportedAmount: 54092000,
+    budget: 0, reportedAmount: 0,
     basis: [
       '방과후과정비 100,000*2반*12월=2,400,000',
       '현장학습비 15,000*37명*12월=6,660,000',
@@ -130,7 +130,7 @@ const reportData: ReportRow[] = [
   // 04 전입금
   {
     gwanCode: '04', gwanName: '전입금', hangCode: '41', hangName: '전입금', mokCode: '411', mokName: '전입금',
-    budget: 450000000, reportedAmount: 450000000,
+    budget: 0, reportedAmount: 0,
     basis: ['전입금 450,000,000'],
   },
   {
@@ -169,7 +169,7 @@ const reportData: ReportRow[] = [
   // 08 잡수입
   {
     gwanCode: '08', gwanName: '잡수입', hangCode: '81', hangName: '잡수입', mokCode: '811', mokName: '이자수입',
-    budget: 1000000, reportedAmount: 1000000,
+    budget: 0, reportedAmount: 0,
     basis: ['이자수입 1,000,000*1회=1,000,000'],
   },
   {
@@ -180,7 +180,7 @@ const reportData: ReportRow[] = [
   // 09 전년도 이월액
   {
     gwanCode: '09', gwanName: '전년도 이월액', hangCode: '91', hangName: '전년도 이월액', mokCode: '911', mokName: '전년도 이월금',
-    budget: 20000000, reportedAmount: 20000000,
+    budget: 0, reportedAmount: 0,
     basis: ['전년도 이월금 20,000,000*1회=20,000,000'],
   },
   {

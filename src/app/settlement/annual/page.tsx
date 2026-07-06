@@ -93,33 +93,7 @@ const expenseGH: Record<string, { gwanCode: string; gwanName: string; hangCode: 
   '2991': { gwanCode: '09', gwanName: '잡지출·예비비', hangCode: '910', hangName: '잡지출·예비비' },
 }
 
-const mockAmounts: Record<string, Partial<AccountRow>> = {
-  '1111': { budget: 422168000, collected: 290187128, uncollected: 131980872 },
-  '1112': { budget: 27600000, collected: 27501918, uncollected: 98082 },
-  '1211': { budget: 64190800, collected: 30611019, uncollected: 33579781 },
-  '1221111': { budget: 5000000, collected: 334996, uncollected: 4665004 },
-  '1221112': { budget: 52942088, collected: 18104000, uncollected: 34838088 },
-  '1221113': { budget: 9600000, collected: 7355989, uncollected: 2244011 },
-  '1221121': { budget: 20667130, collected: 6636542, uncollected: 14030588 },
-  '1221131': { budget: 0, collected: 0, uncollected: 0 },
-  '1221141': { budget: 35731100, collected: 17030000, uncollected: 18701100 },
-  '1311': { budget: 140941350, collected: 140941350, uncollected: 0 },
-  '1312': { budget: 149048000, collected: 114751150, uncollected: 34296850 },
-  '1321': { budget: 22320000, collected: 19327500, uncollected: 2992500 },
-  '1323': { budget: 86280000, collected: 85335000, uncollected: 945000 },
-  '1324': { budget: 150054970, collected: 150054970, uncollected: 0 },
-  '1331': { budget: 0, collected: 0, uncollected: 0 },
-  '1411': { budget: 2364000, collected: 1680000, uncollected: 684000 },
-  '1511': { budget: 10000000, collected: 0, uncollected: 10000000 },
-  '1611': { budget: 0, collected: 0, uncollected: 0 },
-  '1612': { budget: 0, collected: 0, uncollected: 0 },
-  '1711': { budget: 6000000, collected: 4356402, uncollected: 1643598 },
-  '1811': { budget: 500000, collected: 170000, uncollected: 330000 },
-  '1911': { budget: 20000, collected: 33288, uncollected: -13288 },
-  '1921': { budget: 2000000, collected: 210340, uncollected: 1789660 },
-  '1991': { budget: 68532450, collected: 67882450, uncollected: 650000 },
-  '1992': { budget: 0, collected: 0, uncollected: 0 },
-}
+const mockAmounts: Record<string, Partial<AccountRow>> = {}
 
 // accounts.ts 기반 계정 목록
 const accountData: AccountRow[] = (() => {

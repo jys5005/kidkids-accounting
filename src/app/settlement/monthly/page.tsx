@@ -104,44 +104,7 @@ const expenseGwanHang: Record<string, { gwanCode: string; gwanName: string; hang
 }
 
 // mock 금액
-const mockAmounts: Record<string, Partial<AccountRow>> = {
-  '1111': { budget: 415512000, prevAccum: 115448356, thisMonth: 23240823, balance: 276822821 },
-  '1112': { budget: 0, prevAccum: 12047988, thisMonth: 1699936, balance: -13747924 },
-  '1211': { budget: 33936000, prevAccum: 12499000, thisMonth: 2794000, balance: 18643000 },
-  '1221': { budget: 123940318, prevAccum: 49461527, thisMonth: 0, balance: 74478791 },
-  '1221111': { budget: 5000000, prevAccum: 245000, thisMonth: 0, balance: 4755000 },
-  '1221112': { budget: 31344000, prevAccum: 7266000, thisMonth: 1612000, balance: 22466000 },
-  '1221113': { budget: 7200000, prevAccum: 3020000, thisMonth: 660000, balance: 3520000 },
-  '1221121': { budget: 14400000, prevAccum: 2384389, thisMonth: 621862, balance: 11393749 },
-  '1221131': { budget: 0, prevAccum: 0, thisMonth: 0, balance: 0 },
-  '1221141': { budget: 25920000, prevAccum: 7140000, thisMonth: 1610000, balance: 17170000 },
-  '1311': { budget: 112064400, prevAccum: 57386800, thisMonth: 12659840, balance: 42017760 },
-  '1312': { budget: 144792000, prevAccum: 44725750, thisMonth: 8756000, balance: 91310250 },
-  '1321': { budget: 10440000, prevAccum: 7629000, thisMonth: 1587500, balance: 1223500 },
-  '1323': { budget: 65280000, prevAccum: 34965000, thisMonth: 6850000, balance: 23465000 },
-  '1324': { budget: 134066930, prevAccum: 63696280, thisMonth: 13106790, balance: 57263860 },
-  '1331': { budget: 0, prevAccum: 0, thisMonth: 0, balance: 0 },
-  '1411': { budget: 2364000, prevAccum: 700000, thisMonth: 140000, balance: 1524000 },
-  '1511': { budget: 10000000, prevAccum: 0, thisMonth: 0, balance: 10000000 },
-  '1611': { budget: 0, prevAccum: 0, thisMonth: 0, balance: 0 },
-  '1612': { budget: 0, prevAccum: 0, thisMonth: 0, balance: 0 },
-  '1711': { budget: 2000000, prevAccum: 4356402, thisMonth: 0, balance: -2356402 },
-  '1811': { budget: 500000, prevAccum: 170000, thisMonth: 0, balance: 330000 },
-  '1911': { budget: 20000, prevAccum: 33288, thisMonth: 0, balance: -13288 },
-  '1921': { budget: 2000000, prevAccum: 210340, thisMonth: 1805772, balance: -16112 },
-  '1991': { budget: 68532450, prevAccum: 67882450, thisMonth: 0, balance: 650000 },
-  '1992': { budget: 0, prevAccum: 0, thisMonth: 0, balance: 0 },
-  '2111': { budget: 48000000, prevAccum: 44000000, thisMonth: 4000000, balance: 0 },
-  '2121': { budget: 180000000, prevAccum: 165000000, thisMonth: 15000000, balance: 0 },
-  '2122': { budget: 24000000, prevAccum: 22000000, thisMonth: 2000000, balance: 0 },
-  '2141': { budget: 36000000, prevAccum: 33000000, thisMonth: 3000000, balance: 0 },
-  '2142': { budget: 18000000, prevAccum: 16500000, thisMonth: 1500000, balance: 0 },
-  '2142311': { budget: 9000000, prevAccum: 8250000, thisMonth: 750000, balance: 0 },
-  '2142411': { budget: 9000000, prevAccum: 8250000, thisMonth: 750000, balance: 0 },
-  '2211': { budget: 24000000, prevAccum: 21500000, thisMonth: 2100000, balance: 400000 },
-  '2212': { budget: 18000000, prevAccum: 16800000, thisMonth: 1500000, balance: -300000 },
-  '2315': { budget: 48000000, prevAccum: 44000000, thisMonth: 4000000, balance: 0 },
-}
+const mockAmounts: Record<string, Partial<AccountRow>> = {}
 
 // accounts.ts 기반 계정 목록 생성
 const accountData: AccountRow[] = (() => {

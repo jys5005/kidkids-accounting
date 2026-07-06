@@ -535,14 +535,7 @@ export default function RequiredExpensePage() {
           const mokCols = ['합계','기타필요<br/>경비','특별활<br/>동비']
           const cols = viewLevel === 'semok' ? semokCols : mokCols
           const colCount = cols.length
-          const sampleRows = [
-            { name: 'ANARKHANGAI', birth: '2023-08-30', nursery: '2025풀일반연령혼합반(1.2세)', className: '2025풀일반연령혼합반(1.2세)', enter: '2025-03-10', status: '현원' },
-            { name: 'BAT YERUULT ANAND', birth: '2020-09-03', nursery: '예쁜들꽃2세아반', className: '예쁜들꽃2세아반', enter: '2022-07-11', status: '현원' },
-            { name: '강나윤', birth: '2019-11-17', nursery: '예쁜들꽃2세아반', className: '예쁜들꽃2세아반', enter: '2021-10-05', status: '현원' },
-            { name: '경한울', birth: '2022-10-01', nursery: '2025향기2세아반', className: '2025향기2세아반', enter: '2025-10-20', status: '현원' },
-            { name: '고나경', birth: '2020-07-13', nursery: '파란하늘반3세아반', className: '파란하늘반3세아반', enter: '2022-11-09', status: '현원' },
-            { name: '권서현', birth: '2022-07-06', nursery: '2025향기2세아반', className: '2025향기2세아반', enter: '2025-03-01', status: '현원' },
-          ]
+          const sampleRows: { name: string; birth: string; className: string; enter: string; status: string }[] = []
           return (
         <div className="bg-white rounded border border-slate-200 overflow-auto max-h-[calc(100vh-280px)]">
           <table className={`w-full text-[10px] border-collapse ${viewLevel === 'semok' ? 'min-w-[2200px]' : 'min-w-[1400px]'}`}>

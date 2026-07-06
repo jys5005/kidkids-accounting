@@ -16,7 +16,7 @@ function getYmOptions() {
 
 const mockData = {
   공동구매급식비: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  개별구매급식비: [4485710, 5037730, 4968040, 4447010, 769650, 8444630, 5200610, 546200, 5253850, 11037826, 807200, 10934020],
+  개별구매급식비: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 }
 
 const TH = 'px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px] bg-teal-50'

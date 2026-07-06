@@ -9,17 +9,17 @@ const labelCls = "text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2 b
 const cellCls = "px-3 py-2 text-[12px]"
 
 const mockEmployer = {
-  bizNo: '1234567890',
-  name: '미래클어린이집',
-  ceo: '김경미',
-  director: '최은주',
-  addr: '인천광역시 미추홀구 ○○로 12',
-  taxOffice: '남인천세무서',
-  taxOfficeCd: '137',
-  phone: '032-584-9019',
+  bizNo: '',
+  name: '',
+  ceo: '',
+  director: '',
+  addr: '',
+  taxOffice: '',
+  taxOfficeCd: '',
+  phone: '',
   email: '',
-  corpRrn: '1234567890123',
-  contact: { dept: '회계담당', name: '홍길동', phone: '01011111111' },
+  corpRrn: '',
+  contact: { dept: '', name: '', phone: '' },
 }
 
 // ===================== 공통 헬퍼 =====================
@@ -219,11 +219,7 @@ function commonBValues(o: SubmitOpts, seq: number, cCount: number, totals: Parti
 // ============ 근로소득 (자료구분 20, 9 레코드 × 2010byte) ============
 const WAGE_LEN = 2010
 type WageEmp = { rrn: string; name: string; hireDate: string; leaveDate: string; totalPay: number; nonTaxable: number; taxable: number; determinedTax: number; prepaidTax: number }
-const mockWageStatements: WageEmp[] = [
-  { rrn: '8503151111111', name: '김교사', hireDate: '20210301', leaveDate: '', totalPay: 36_000_000, nonTaxable: 1_200_000, taxable: 34_800_000, determinedTax:   840_000, prepaidTax: 1_020_000 },
-  { rrn: '9007072222222', name: '이교사', hireDate: '20230315', leaveDate: '', totalPay: 32_400_000, nonTaxable: 1_200_000, taxable: 31_200_000, determinedTax:   612_000, prepaidTax:   720_000 },
-  { rrn: '7811214444444', name: '박원장', hireDate: '20180101', leaveDate: '', totalPay: 60_000_000, nonTaxable: 1_200_000, taxable: 58_800_000, determinedTax: 3_240_000, prepaidTax: 3_400_000 },
-]
+const mockWageStatements: WageEmp[] = []
 
 function wageCValues(o: SubmitOpts, seq: number, emp: WageEmp): Record<string, string | number> {
   const startOfYear = `${o.year}0101`
@@ -262,9 +258,7 @@ function buildWageFile(opts: SubmitOpts, rows: WageEmp[]): string {
 // ============ 사업소득 (자료구분 80, 7 레코드 × 770byte) ============
 const BIZ_LEN = 770
 type BizEmp = { rrn: string; name: string; startDate: string; endDate: string; income: number; necessary: number; netIncome: number; determinedTax: number; prepaidTax: number }
-const mockBizStatements: BizEmp[] = [
-  { rrn: '8801014444444', name: '강프리', startDate: '20250101', endDate: '20251231', income: 24_000_000, necessary: 18_000_000, netIncome: 6_000_000, determinedTax: 360_000, prepaidTax: 720_000 },
-]
+const mockBizStatements: BizEmp[] = []
 function bizCValues(o: SubmitOpts, seq: number, emp: BizEmp): Record<string, string | number> {
   return {
     C3: mockEmployer.taxOfficeCd, C4: seq, C5: mockEmployer.bizNo,
@@ -286,10 +280,7 @@ function buildBizFile(opts: SubmitOpts, rows: BizEmp[]): string {
 // ============ 퇴직소득 (자료구분 25, 4 레코드 × 761byte) ============
 const RETIRE_LEN = 761
 type RetireInput = { rrn: string; name: string; isExecutive: 'Y'|'N'; hireDate: string; retireDate: string; paymentDate: string; reason: '정년퇴직'|'정리해고'|'자발적 퇴직'|'임원퇴직'|'중간정산'|'기타'; retirePay: number; nonTaxableRetirePay: number; excludedMonths: number; addedMonths: number; taxCredit: number; prepaidTax: number; pensionDeposit: number }
-const mockRetireInputs: RetireInput[] = [
-  { rrn: '7506203333333', name: '정교사', isExecutive: 'N', hireDate: '20150401', retireDate: '20250228', paymentDate: '20250307', reason: '자발적 퇴직', retirePay: 28_500_000, nonTaxableRetirePay: 0, excludedMonths: 0, addedMonths: 0, taxCredit: 0, prepaidTax: 0, pensionDeposit: 0 },
-  { rrn: '8211095555555', name: '한교사', isExecutive: 'N', hireDate: '20191001', retireDate: '20251130', paymentDate: '20251210', reason: '정리해고', retirePay: 14_200_000, nonTaxableRetirePay: 0, excludedMonths: 0, addedMonths: 0, taxCredit: 0, prepaidTax: 0, pensionDeposit: 0 },
-]
+const mockRetireInputs: RetireInput[] = []
 type RetireCalc = { serviceMonths: number; serviceYears: number; taxableRetirePay: number; serviceDeduction: number; convertedPay: number; convertedDeduction: number; taxBase: number; convertedTax: number; computedTax: number; reportTax: number; deferredTax: number; finalIncomeTax: number; finalLocalTax: number }
 function diffMonthsInclusive(start: string, end: string): number {
   if (!start || !end || start.length !== 8 || end.length !== 8) return 0

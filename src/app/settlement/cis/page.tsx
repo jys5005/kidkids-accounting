@@ -91,22 +91,7 @@ const expenseGH: Record<string, { gwanCode: string; gwanName: string; hangCode: 
   '2991': { gwanCode: '09', gwanName: '잡지출·예비비', hangCode: '910', hangName: '잡지출·예비비' },
 }
 
-const mockAmounts: Record<string, Partial<AccountRow>> = {
-  '1111': { budget: 422168000, collected: 290187128, uncollected: 131980872 },
-  '1112': { budget: 27600000, collected: 27501918, uncollected: 98082 },
-  '1211': { budget: 64190800, collected: 30611019, uncollected: 33579781 },
-  '1311': { budget: 140941350, collected: 140941350, uncollected: 0 },
-  '1312': { budget: 149048000, collected: 114751150, uncollected: 34296850 },
-  '1321': { budget: 22320000, collected: 19327500, uncollected: 2992500 },
-  '1323': { budget: 86280000, collected: 85335000, uncollected: 945000 },
-  '1324': { budget: 150054970, collected: 150054970, uncollected: 0 },
-  '1411': { budget: 2364000, collected: 1680000, uncollected: 684000 },
-  '1511': { budget: 10000000, collected: 0, uncollected: 10000000 },
-  '1711': { budget: 6000000, collected: 4356402, uncollected: 1643598 },
-  '1911': { budget: 20000, collected: 33288, uncollected: -13288 },
-  '1921': { budget: 2000000, collected: 210340, uncollected: 1789660 },
-  '1991': { budget: 68532450, collected: 67882450, uncollected: 650000 },
-}
+const mockAmounts: Record<string, Partial<AccountRow>> = {}
 
 const accountData: AccountRow[] = (() => {
   const rows: AccountRow[] = []
