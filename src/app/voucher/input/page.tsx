@@ -474,7 +474,7 @@ export default function VoucherInputPage() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4" onClick={() => setGalleryImages(null)}>
           <div className="bg-white rounded-xl shadow-2xl w-[92vw] max-w-3xl max-h-[88vh] overflow-y-auto p-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-slate-800">🧾 첨부 영수증 {galleryImages.length}장</h3>
+              <h3 className="text-[11px] font-bold text-slate-800">🧾 첨부 영수증 {galleryImages.length}장</h3>
               <button onClick={() => setGalleryImages(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
