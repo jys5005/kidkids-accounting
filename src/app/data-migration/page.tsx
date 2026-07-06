@@ -1609,8 +1609,10 @@ export default function DataMigrationPage() {
             </button>
             </>)}
 
-            {/* 저장된 데이터 불러오기 */}
-            {(source === 'kidshome' || source === 'by24' || source === 'incheon' || source === 'ifriends' || source === 'wisean' || source === 'jangbunara') && (
+            {/* 저장된 데이터 불러오기 — 매핑표(MAPPING_TABLE) 있는 출발지면 자동 노출.
+                ⚠ 새 출발지 추가 시 MAPPING_TABLE 엔트리 + /api/{source}/stored 프록시만 만들면
+                   [매핑 코드] 버튼과 [저장된 데이터 불러오기] 버튼이 함께 자동으로 뜬다(게이팅 하드코딩 금지). */}
+            {source in MAPPING_TABLE && (
               <button
                 onClick={async () => {
                   const storedUserId = currentSource.authType === 'cert' ? (programAuth?.certName || '') : sourceId
