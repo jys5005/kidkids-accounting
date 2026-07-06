@@ -1,13 +1,27 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { ILOVECHILD_BOOKS, bookLabel } from '@/lib/ilovechild-books'
+
+const ILOVECHILD_BOOK_CODES = ILOVECHILD_BOOKS.map(b => b.code)  // 보육정보센터·보조금·이용료
 
 interface BankAccount {
+  id: string
+  bankType?: string
   bankName: string
+  bankCd?: string
+  alias?: string
   accountNo: string
   bizNo: string
   status: string
   loginId: string
-  loginPw: string
+  loginPw?: string
+  queryId?: string
+  safeAccount?: string
+  hasAccountPw?: boolean
+  hasLoginPw?: boolean
+  hasQueryPw?: boolean
+  hasSafePw?: boolean
+  _book?: string   // 아이사랑꿈터 용도(장부): info-center/subsidy/fee
 }
 
 interface BankTransaction {
@@ -24,21 +38,13 @@ interface BankTransaction {
   branch: string
 }
 
-const accounts: BankAccount[] = []
-
-const sampleTransactions: BankTransaction[] = []
-
 const fmt = (n: number) => n ? n.toLocaleString('ko-KR') : '0'
+const num = (v: unknown) => Number(String(v ?? '').replace(/[^0-9.-]/g, '')) || 0
 
 export default function BankPage() {
   const [filterYm, setFilterYm] = useState('2026-03')
   const [filterAccount, setFilterAccount] = useState('전체')
   const [sortAsc, setSortAsc] = useState(true)
-
-  const filtered = [...sampleTransactions].sort((a, b) => sortAsc ? a.date.localeCompare(b.date) || a.time.localeCompare(b.time) : b.date.localeCompare(a.date) || b.time.localeCompare(a.time))
-  const totalDeposit = filtered.reduce((s, r) => s + r.depositAmt, 0)
-  const totalWithdraw = filtered.reduce((s, r) => s + r.withdrawAmt, 0)
-  const diff = totalDeposit - totalWithdraw
 
   const formatDate = (d: string) => `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`
   const formatTime = (t: string) => `${t.slice(0,2)}:${t.slice(2,4)}:${t.slice(4,6)}`
@@ -48,6 +54,43 @@ export default function BankPage() {
   const [showAddAccount, setShowAddAccount] = useState(false)
   const [showSpeedGuide, setShowSpeedGuide] = useState(false)
   const [speedBank, setSpeedBank] = useState('KB 국민은행')
+
+  // ── 실데이터 연동 (통합e 은행조회 API, DATAPLEX 게이트웨이 경유) ──
+  // 어린이집 = 단일 스코프(book='') / 아이사랑꿈터 = 3장부(보육정보센터·보조금·이용료) 통합
+  const [accounts, setAccounts] = useState<BankAccount[]>([])
+  const [transactions, setTransactions] = useState<BankTransaction[]>([])
+  const [isIlovechild, setIsIlovechild] = useState<boolean | null>(null)
+  const [queryingId, setQueryingId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  const filtered = [...transactions]
+    .filter(r => filterAccount === '전체' || r.accountNo === filterAccount)
+    .sort((a, b) => sortAsc ? a.date.localeCompare(b.date) || a.time.localeCompare(b.time) : b.date.localeCompare(a.date) || b.time.localeCompare(a.time))
+  const totalDeposit = filtered.reduce((s, r) => s + r.depositAmt, 0)
+  const totalWithdraw = filtered.reduce((s, r) => s + r.withdrawAmt, 0)
+  const diff = totalDeposit - totalWithdraw
+
+  // 기관유형 판정
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/auth/me').then(r => r.json()).then(me => {
+      const itype = (me?.institutionType || me?.profile?.institutionType || 'childcare') as string
+      if (!cancelled) setIsIlovechild(itype === 'ilovechild')
+    }).catch(() => { if (!cancelled) setIsIlovechild(false) })
+  }, [])
+
+  const loadAccounts = useCallback(async (ilove: boolean) => {
+    try {
+      const url = ilove
+        ? `/api/bank/accounts?books=${ILOVECHILD_BOOK_CODES.join(',')}`
+        : `/api/bank/accounts?book=`
+      const res = await fetch(url)
+      const j = await res.json()
+      setAccounts(Array.isArray(j.accounts) ? j.accounts : [])
+    } catch { setAccounts([]) }
+  }, [])
+  useEffect(() => { if (isIlovechild !== null) loadAccounts(isIlovechild) }, [isIlovechild, loadAccounts])
 
   const bankList = [
     { code: '04', name: 'KB 국민은행' },
@@ -196,8 +239,77 @@ export default function BankPage() {
   }
 
   const [newAccount, setNewAccount] = useState({
-    bankType: '법인', bankName: '국민은행', alias: '키즈어린이집', accountNo: '', accountPw: '', bizNo: '1378030550', loginId: '', queryId: '', queryPw: '', safeAccount: '', safeAccountPw: ''
+    book: '', bankType: '법인', bankName: '국민은행', alias: '', accountNo: '', accountPw: '', bizNo: '', loginId: '', queryId: '', queryPw: '', safeAccount: '', safeAccountPw: ''
   })
+  const [editId, setEditId] = useState<string | null>(null)
+  const reload = () => loadAccounts(!!isIlovechild)
+
+  const saveAccount = async () => {
+    if (!newAccount.bankName || !newAccount.accountNo) { setMsg('은행명과 계좌번호는 필수입니다.'); return }
+    if (isIlovechild && !newAccount.book) { setMsg('용도(장부)를 선택하세요.'); return }
+    setSaving(true); setMsg('')
+    try {
+      const res = await fetch('/api/bank/accounts', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book: isIlovechild ? newAccount.book : '', account: { ...newAccount, id: editId || undefined } }),
+      })
+      const j = await res.json()
+      if (!res.ok || j.error) { setMsg(j.error || '저장 실패'); return }
+      setShowAddAccount(false); setEditId(null)
+      await reload()
+    } catch (e) { setMsg(e instanceof Error ? e.message : String(e)) }
+    finally { setSaving(false) }
+  }
+
+  const openAdd = () => {
+    setEditId(null)
+    setNewAccount({ book: isIlovechild ? ILOVECHILD_BOOK_CODES[0] : '', bankType: '법인', bankName: '국민은행', alias: '', accountNo: '', accountPw: '', bizNo: '', loginId: '', queryId: '', queryPw: '', safeAccount: '', safeAccountPw: '' })
+    setShowAddAccount(true)
+  }
+  const openEdit = (a: BankAccount) => {
+    setEditId(a.id)
+    setNewAccount({
+      book: a._book || '', bankType: a.bankType || '법인', bankName: a.bankName, alias: a.alias || '',
+      accountNo: a.accountNo, accountPw: '', bizNo: a.bizNo || '',
+      loginId: a.loginId || '', queryId: a.queryId || '', queryPw: '',
+      safeAccount: a.safeAccount || '', safeAccountPw: '',
+    })
+    setShowAddAccount(true)
+  }
+  const deleteAccount = async (a: BankAccount) => {
+    if (!confirm(`${a.bankName} ${a.accountNo} 계좌를 삭제할까요?`)) return
+    await fetch(`/api/bank/accounts?book=${encodeURIComponent(a._book || '')}&id=${encodeURIComponent(a.id)}`, { method: 'DELETE' })
+    await reload()
+  }
+
+  const queryAccount = async (a: BankAccount) => {
+    setQueryingId(a.id); setMsg('')
+    try {
+      const res = await fetch('/api/bank/query', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book: a._book || '', accountId: a.id, ym: filterYm }),
+      })
+      const j = await res.json()
+      if (!j.success) { setMsg(`[${a.bankName} ${a.accountNo}] 조회 실패: ${j.errMsg || '알 수 없는 오류'}`); return }
+      const acctNo = j.acctNo || a.accountNo
+      const rows: BankTransaction[] = (j.rows || []).map((r: Record<string, string>, i: number) => {
+        const inAmt = num(r.inAmt), outAmt = num(r.outAmt)
+        return {
+          id: Date.now() + i,
+          accountNo: acctNo,
+          type: (inAmt > 0 ? '입금' : '출금') as '입금' | '출금',
+          date: String(r.trDt || '').replace(/[^0-9]/g, '').slice(0, 8),
+          time: String(r.trTm || '').replace(/[^0-9]/g, '').padEnd(6, '0').slice(0, 6),
+          withdrawAmt: outAmt, depositAmt: inAmt, balance: num(r.balance),
+          sender: r.trNm || '', medium: r.trTp || '', branch: r.trBr || '',
+        }
+      })
+      setTransactions(prev => [...prev.filter(t => t.accountNo !== acctNo), ...rows])
+      setFilterAccount(acctNo)
+      setMsg(rows.length === 0 ? `[${a.bankName} ${acctNo}] ${filterYm} 거래내역 0건` : `[${a.bankName} ${acctNo}] ${rows.length}건 조회 완료`)
+    } catch (e) { setMsg(e instanceof Error ? e.message : String(e)) }
+    finally { setQueryingId(null) }
+  }
 
   return (
     <div className="p-6 space-y-5">
@@ -262,7 +374,7 @@ export default function BankPage() {
             <span className="text-sm font-semibold text-slate-700">계좌정보 목록</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowAddAccount(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-[#e0a800] border border-teal-400 rounded transition-colors">
+            <button onClick={openAdd} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-[#e0a800] border border-teal-400 rounded transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
               계좌추가
             </button>
@@ -286,6 +398,7 @@ export default function BankPage() {
             </colgroup>
             <thead>
               <tr className="bg-teal-50 border-b border-teal-400/20">
+                {isIlovechild && <th className="text-center px-2 py-2.5 font-normal text-slate-600 whitespace-nowrap">용도</th>}
                 <th className="text-center px-2 py-2.5 font-normal text-slate-600 whitespace-nowrap">은행명</th>
                 <th className="text-center px-2 py-2.5 font-normal text-slate-600 whitespace-nowrap">계좌번호</th>
                 <th className="text-center px-2 py-2.5 font-normal text-slate-600 whitespace-nowrap">사업자번호(주민번호)</th>
@@ -297,23 +410,32 @@ export default function BankPage() {
               </tr>
             </thead>
             <tbody>
-              {accounts.map((a, i) => (
-                <tr key={i} className="border-b border-teal-400/10 hover:bg-teal-50">
+              {accounts.length === 0 && (
+                <tr><td colSpan={isIlovechild ? 9 : 8} className="text-center px-2 py-6 text-slate-400 text-xs">등록된 계좌가 없습니다. [계좌추가]로 빠른조회 등록 계좌를 추가하세요.</td></tr>
+              )}
+              {accounts.map((a) => (
+                <tr key={a.id} className="border-b border-teal-400/10 hover:bg-teal-50">
+                  {isIlovechild && (
+                    <td className="text-center px-2 py-2.5">
+                      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-100 text-teal-700">{bookLabel(a._book)}</span>
+                    </td>
+                  )}
                   <td className="text-center px-2 py-2.5 text-slate-700 text-xs">{a.bankName}</td>
                   <td className="text-center px-2 py-2.5 text-slate-700 font-mono text-xs">{a.accountNo}</td>
                   <td className="text-center px-2 py-2.5 text-slate-700 font-mono text-xs">{a.bizNo}</td>
                   <td className="text-center px-2 py-2.5 text-slate-500 text-xs">{a.status || '-'}</td>
-                  <td className="text-center px-2 py-2.5 text-slate-700 text-xs">{a.loginId}</td>
-                  <td className="text-center px-2 py-2.5 text-slate-700 text-xs">{a.loginPw}</td>
+                  <td className="text-center px-2 py-2.5 text-slate-700 text-xs">{a.queryId || a.loginId || '-'}</td>
+                  <td className="text-center px-2 py-2.5 text-slate-400 text-xs">{(a.hasQueryPw || a.hasLoginPw || a.hasAccountPw || a.hasSafePw) ? '••••' : '-'}</td>
                   <td className="text-center px-2 py-2.5">
-                    <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-[#e0a800] rounded border border-teal-400 transition-colors">
-                      조회
+                    <button onClick={() => queryAccount(a)} disabled={queryingId === a.id} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-[#e0a800] rounded border border-teal-400 transition-colors disabled:opacity-50">
+                      {queryingId === a.id ? '조회 중…' : '조회'}
                     </button>
                   </td>
                   <td className="text-center px-2 py-2.5">
-                    <button className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 border border-slate-300 rounded transition-colors">
-                      수정
-                    </button>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button onClick={() => openEdit(a)} className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 border border-slate-300 rounded transition-colors">수정</button>
+                      <button onClick={() => deleteAccount(a)} className="px-2 py-1.5 text-xs font-bold text-red-500 hover:text-red-700 hover:underline transition-colors">삭제</button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -339,8 +461,8 @@ export default function BankPage() {
               className="px-2 py-1.5 text-xs border border-slate-300 rounded bg-white"
             >
               <option value="전체">계좌전체</option>
-              {accounts.map((a, i) => (
-                <option key={i} value={a.accountNo}>{a.bankName} {a.accountNo}</option>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.accountNo}>{isIlovechild && a._book ? `[${bookLabel(a._book)}] ` : ''}{a.bankName} {a.accountNo}</option>
               ))}
             </select>
             <select className="px-2 py-1.5 text-xs border border-slate-300 rounded bg-white">
@@ -363,6 +485,13 @@ export default function BankPage() {
           </div>
         </div>
       </div>
+
+      {!showAddAccount && msg && (
+        <div className="px-4 py-2 rounded-lg bg-teal-50 border border-teal-200 text-xs text-teal-700 flex items-center justify-between">
+          <span>{msg}</span>
+          <button onClick={() => setMsg('')} className="text-teal-400 hover:text-teal-600">✕</button>
+        </div>
+      )}
 
       {/* 거래내역 테이블 */}
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-420px)]">
@@ -412,10 +541,18 @@ export default function BankPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowAddAccount(false)}>
           <div className="bg-white rounded-xl shadow-2xl w-[480px] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-teal-400/30 flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-700">🏦 계좌정보 신규등록</span>
+              <span className="text-sm font-bold text-slate-700">🏦 계좌정보 {editId ? '수정' : '신규등록'}</span>
               <button onClick={() => setShowAddAccount(false)} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
             </div>
             <div className="px-5 py-5 space-y-4">
+              {isIlovechild && (
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-semibold text-slate-600 w-24 flex-shrink-0">용도(장부)</label>
+                  <select value={newAccount.book} onChange={e => setNewAccount({...newAccount, book: e.target.value})} className="px-2 py-1.5 text-xs border border-teal-400/50 rounded bg-white flex-1 focus:outline-none focus:border-teal-400">
+                    {ILOVECHILD_BOOKS.map(b => <option key={b.code} value={b.code}>{b.label}</option>)}
+                  </select>
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 <label className="text-xs font-semibold text-slate-600 w-24 flex-shrink-0">은행명</label>
                 <select value={newAccount.bankType} onChange={e => setNewAccount({...newAccount, bankType: e.target.value})} className="px-2 py-1.5 text-xs border border-slate-300 rounded bg-white">
@@ -497,10 +634,12 @@ export default function BankPage() {
             </div>
             <div className="px-5 py-4 border-t border-slate-200 flex items-center justify-between">
               <div>
-                <span className="text-[11px] text-red-500 font-medium">빠른계좌조회서비스 등록필수!!</span>
+                {msg
+                  ? <span className="text-[11px] text-red-500 font-medium">{msg}</span>
+                  : <span className="text-[11px] text-red-500 font-medium">빠른계좌조회서비스 등록필수!!</span>}
               </div>
               <div className="flex items-center gap-2">
-                <button className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">신규등록</button>
+                <button onClick={saveAccount} disabled={saving} className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors disabled:opacity-50">{saving ? '저장 중…' : (editId ? '수정 저장' : '신규등록')}</button>
 <button onClick={() => setShowAddAccount(false)} className="px-4 py-2 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">취소</button>
               </div>
             </div>
