@@ -1610,7 +1610,7 @@ export default function DataMigrationPage() {
             </>)}
 
             {/* 저장된 데이터 불러오기 */}
-            {(source === 'kidshome' || source === 'by24' || source === 'incheon' || source === 'ifriends' || source === 'wisean') && (
+            {(source === 'kidshome' || source === 'by24' || source === 'incheon' || source === 'ifriends' || source === 'wisean' || source === 'jangbunara') && (
               <button
                 onClick={async () => {
                   const storedUserId = currentSource.authType === 'cert' ? (programAuth?.certName || '') : sourceId
