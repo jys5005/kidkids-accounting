@@ -63,8 +63,9 @@ function mapRow(r: Record<string, unknown>, i: number, maps: CoaMaps) {
     approved: false,
     inputMethod: '일괄' as const,
     accountCode,                                                                 // 통합e coa 코드(목/세목 기준)
-    receiptImage: String(pick(r, ['_receiptImage'])) || undefined,           // 영수증 사진(첫 장, /api/receipt-file/…)
-    receiptImages: String(pick(r, ['_receiptImages'])) || undefined,         // 영수증 여러 장(콤마 구분)
+    // ⚠ 영수증은 각각 1장씩 배열로 저장(콤마 문자열로 쭉 이어붙이지 않음)
+    receiptImage: (String(pick(r, ['_receiptImage'])) || String(pick(r, ['_receiptImages'])).split(',')[0] || '').trim() || undefined,  // 대표(첫 장)
+    receiptImages: (() => { const a = String(pick(r, ['_receiptImages'])).split(',').map(s => s.trim()).filter(Boolean); return a.length ? a : undefined })(),  // 배열(각 1장)
     payment: String(pick(r, ['SETLE_MTHD_NAME'])),                               // 결제방식(실제 컬럼)
     bankAccount: String(pick(r, ['ACCOUNT_NICKNAME'])),                          // 통장구분
     isSupport: String(pick(r, ['BILL_SUPPORT_AT'])) === 'Y',

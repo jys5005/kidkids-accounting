@@ -28,8 +28,8 @@ interface VoucherRow {
   copySelected?: boolean
   inputMethod?: '은행' | '수기' | '일괄' | '엑셀' | '분리' | '합산'
   accountCode?: string
-  receiptImage?: string  // 첨부한 영수증 사진 URL (/api/receipt-file/…) — 대표(첫 장)
-  receiptImages?: string // 여러 장(콤마 구분 URL) — 걸음마 이관 시 한 전표에 3~4장
+  receiptImage?: string    // 첨부한 영수증 사진 URL (/api/receipt-file/…) — 대표(첫 장)
+  receiptImages?: string[] // 여러 장(각 1장씩 배열) — 걸음마 이관 시 한 전표에 3~4장
 }
 
 const sampleData: VoucherRow[] = []
@@ -421,9 +421,11 @@ export default function VoucherInputPage() {
   // 영수증 사진 OCR 모달 대상 행 id
   const [receiptRowId, setReceiptRowId] = useState<number | null>(null)
   const [galleryImages, setGalleryImages] = useState<string[] | null>(null)  // 영수증 여러 장 갤러리
-  // 행의 영수증 전체 URL 목록 (receiptImages 콤마분리 우선, 없으면 receiptImage 1장)
+  // 행의 영수증 전체 URL 목록 (배열 우선. 옛 데이터의 콤마 문자열도 호환)
   const receiptListOf = (row: VoucherRow): string[] => {
-    const multi = (row.receiptImages || '').split(',').map(s => s.trim()).filter(Boolean)
+    const raw = row.receiptImages as unknown
+    const multi = Array.isArray(raw) ? raw.filter(Boolean)
+      : (typeof raw === 'string' ? raw.split(',').map(s => s.trim()).filter(Boolean) : [])
     if (multi.length) return multi
     return row.receiptImage ? [row.receiptImage] : []
   }

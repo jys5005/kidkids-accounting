@@ -1139,7 +1139,12 @@ export default function DataMigrationPage() {
                   <tbody>
                     {gbVRows.slice(0, 100).map((r, i) => (
                       <tr key={i} className="border-b border-slate-50 hover:bg-amber-50/40">
-                        {gbVKeys.map(k => <td key={k} className="px-2 py-1 text-slate-600 whitespace-nowrap">{String(r[k] ?? '')}</td>)}
+                        {gbVKeys.map(k => {
+                          // 영수증 컬럼은 긴 URL 대신 장수로 예쁘게
+                          if (k === '_receiptImages') { const n = String(r[k] ?? '').split(',').filter(Boolean).length; return <td key={k} className="px-2 py-1 whitespace-nowrap text-center">{n > 0 ? <span className="text-blue-600 font-semibold">🧾 {n}장</span> : <span className="text-slate-300">-</span>}</td> }
+                          if (k === '_receiptImage') { return <td key={k} className="px-2 py-1 whitespace-nowrap text-center">{r[k] ? <span className="text-slate-500">대표1</span> : <span className="text-slate-300">-</span>}</td> }
+                          return <td key={k} className="px-2 py-1 text-slate-600 whitespace-nowrap">{String(r[k] ?? '')}</td>
+                        })}
                       </tr>
                     ))}
                   </tbody>
