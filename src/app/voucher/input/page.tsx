@@ -2073,12 +2073,14 @@ export default function VoucherInputPage() {
                                         {a.isSub ? (
                                           <span className="flex items-center gap-1">
                                             <span className={`inline-block px-1 py-0 rounded border text-[12px] font-bold ${row.type === '수입' ? 'border-blue-400 text-blue-600' : 'border-red-400 text-red-600'}`}>세목</span>
-                                            {a.label}
+                                            <span className="flex-1 min-w-0 truncate">{a.label}</span>
+                                            <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">{subAccountCodeMap[a.label] || ''}</span>
                                           </span>
                                         ) : (
                                           <span className="flex items-center gap-1">
                                             <span className={`inline-block px-1 py-0 rounded border text-[12px] font-bold ${row.type === '수입' ? 'border-blue-300 text-blue-500' : 'border-red-300 text-red-500'}`}>목</span>
-                                            {a.label}
+                                            <span className="flex-1 min-w-0 truncate">{a.label}</span>
+                                            <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">{accountCodeMap[a.value] || ''}</span>
                                           </span>
                                         )}
                                       </button>
