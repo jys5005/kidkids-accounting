@@ -623,7 +623,6 @@ export default function BankPage() {
                   </div>
                   )
                 })
-                ))
               })()}
             </div>
             <div className="px-5 py-3 border-t border-slate-200 flex justify-between items-center">
