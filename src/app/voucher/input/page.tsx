@@ -240,7 +240,7 @@ export default function VoucherInputPage() {
   const [showColumnSettings, setShowColumnSettings] = useState(false)
   const [columnOrder, setColumnOrder] = useState<[string, string, string][]>([
     ['no', '번호', '1'], ['date', '일자', '2'], ['type', '입력방식', '3'], ['summary', '적요', '4'],
-    ['evidence', '증빙(영수/이체/은행/증빙)', '5'], ['register', '등록', '6'], ['attach', '첨부', '7'],
+    ['evidence', '증빙(은행/영수)', '5'], ['register', '등록', '6'], ['attach', '첨부', '7'],
     ['amountGroup', '금액(수입/지출/잔액)', '8'],
     ['accountGroup', '계정(복사/세목/코드/분리/반납)', '9'], ['fee', '수수료', '10'],
     ['counterpart', '거래처', '11'], ['payment', '결제방식', '12'], ['child', '원아', '13'], ['sort', '정렬', '14'],
@@ -1677,7 +1677,6 @@ export default function VoucherInputPage() {
                     case 'type': return <th key={key} className="text-center px-0.5 py-2 font-normal text-slate-700 w-[64px]">입력방식</th>
                     case 'summary': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[300px]">적요</th>
                     case 'evidence': return <React.Fragment key={key}>
-                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[43px]">영수</th>
                       <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[48px] relative group cursor-help"><span className="whitespace-nowrap">은행<span className="text-blue-400 text-[10px]">ⓘ</span></span>
                         <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-blue-100 text-blue-800 text-[10px] font-normal rounded-lg px-3 py-2 z-50 w-[170px] shadow-lg border border-blue-200 text-left">
                           <p className="flex items-center gap-1.5"><svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" /></svg>은행거래내역 (기본)</p>
@@ -1685,7 +1684,7 @@ export default function VoucherInputPage() {
                           <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-100 border-l border-t border-blue-200 rotate-45"></div>
                         </div>
                       </th>
-                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[53px] relative group cursor-help"><span className="whitespace-nowrap">증빙<span className="text-blue-400 text-[10px]">ⓘ</span></span>
+                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[53px] relative group cursor-help"><span className="whitespace-nowrap">영수<span className="text-blue-400 text-[10px]">ⓘ</span></span>
                         <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-blue-100 text-blue-800 text-[10px] font-normal rounded-lg px-3 py-2 z-50 w-[140px] shadow-lg border border-blue-200">
                           <p className="font-bold mb-1">국세청</p>
                           <p>세금계산서 · 계산서 · 현금영수증</p>
@@ -1867,15 +1866,6 @@ export default function VoucherInputPage() {
 
                         case 'evidence':
                           return <React.Fragment key={key}>
-                            {/* 영수 - 현금결제/지로 (카메라 아이콘) */}
-                            <td className="text-center px-0 py-1">
-                              {(row.note.includes('현금') || row.note.includes('지로')) && (
-                                <svg className="w-5 h-5 mx-auto text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-                                </svg>
-                              )}
-                            </td>
                             {/* 은행 - 계좌이체면 이체증(청록), 아니면 은행거래내역(파랑) — 이체 컬럼 통합 */}
                             <td className="text-center px-0 py-1">
                               {row.note.includes('이체') ? (
@@ -1888,7 +1878,7 @@ export default function VoucherInputPage() {
                                 </svg></span>
                               ) : null}
                             </td>
-                            {/* 증빙 - evidence 배열 기반 뱃지 */}
+                            {/* 영수(증빙) - evidence 배열 기반 뱃지 */}
                             <td className="text-center px-0 py-1">
                               {row.evidence && row.evidence.length > 0 && (
                                 <div className="flex flex-wrap items-center justify-center gap-0.5">
