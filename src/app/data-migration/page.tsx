@@ -996,7 +996,7 @@ export default function DataMigrationPage() {
         return results.map(r => ({
           ...r,
           rows: r.rows.map(row => {
-            if (row.accountCode && row.accountCode.length <= 8) return row
+            if (row.accountCode && !row.accountCode.includes('|') && row.accountCode.length <= 8) return row
 
             const name = row.accountName.replace(/[.\s·]/g, '')
             const match = allItems.find(m => {
@@ -1174,11 +1174,13 @@ export default function DataMigrationPage() {
         [],
         ['일자', '발행번호', '계정코드', '계정과목', '세목', '적요', '수입금액', '지출금액', '잔액'],
         ...result.rows.map((r) => {
-          let dateStr = r.date
-          if (dateStr.length >= 8) {
-            dateStr = `${dateStr.substring(0, 4)}/${dateStr.substring(4, 6)}/${dateStr.substring(6, 8)}`
+          // 날짜에 하이픈이 이미 포함된 경우(YYYY-MM-DD)와 순수 숫자(YYYYMMDD) 모두 처리
+          const digits = r.date.replace(/\D/g, '')
+          let dateStr: string
+          if (digits.length >= 8) {
+            dateStr = `${digits.substring(0, 4)}/${digits.substring(4, 6)}/${digits.substring(6, 8)}`
           } else {
-            dateStr = `${ym.substring(0, 4)}/${ym.substring(4)}/${dateStr.padStart(2, '0')}`
+            dateStr = `${ym.substring(0, 4)}/${ym.substring(4)}/${digits.padStart(2, '0')}`
           }
           return [
           dateStr,
@@ -1219,14 +1221,15 @@ export default function DataMigrationPage() {
 
     for (const result of allData) {
       for (const r of result.rows) {
-        // date: "20210309" (8자리) 또는 "9" (일자만)
-        let dateStr = r.date
-        if (dateStr.length >= 8) {
-          dateStr = `${dateStr.substring(0, 4)}/${dateStr.substring(4, 6)}/${dateStr.substring(6, 8)}`
+        // date: "20210309" (8자리, 하이픈 있을 수도 있음) 또는 "9" (일자만)
+        const digits = r.date.replace(/\D/g, '')
+        let dateStr: string
+        if (digits.length >= 8) {
+          dateStr = `${digits.substring(0, 4)}/${digits.substring(4, 6)}/${digits.substring(6, 8)}`
         } else {
           const yyyy = result.yearMonth.substring(0, 4)
           const mm = result.yearMonth.substring(4)
-          dateStr = `${yyyy}/${mm}/${dateStr.padStart(2, '0')}`
+          dateStr = `${yyyy}/${mm}/${digits.padStart(2, '0')}`
         }
         rows.push([
           dateStr,
@@ -1646,7 +1649,7 @@ export default function DataMigrationPage() {
                       const mapped = results.map(r => ({
                         ...r,
                         rows: r.rows.map(row => {
-                          if (row.accountCode && row.accountCode.length <= 8) return row
+                          if (row.accountCode && !row.accountCode.includes('|') && row.accountCode.length <= 8) return row
                           const name = row.accountName.replace(/[.\s·]/g, '')
                           const match = allItems.find(m => m.by24Name.replace(/[.\s·]/g, '').trim() === name)
                           if (!match) return row
