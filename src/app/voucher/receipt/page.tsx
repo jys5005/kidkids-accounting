@@ -236,21 +236,18 @@ export default function ReceiptPage() {
     <div className="p-6 space-y-5">
       {/* 상단 탭 메뉴 */}
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
-        <div className="flex border-b border-slate-200">
+        <div className="flex flex-wrap gap-2 px-4 py-3 border-b border-slate-200">
           {tabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 px-4 py-3.5 text-sm font-bold transition-all relative ${
+              className={`px-3.5 py-1.5 text-[11px] font-bold rounded-full border transition-all ${
                 activeTab === tab.key
-                  ? 'text-[#d4a000] bg-gradient-to-b from-[#fffbeb] to-[#fff9e0]'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                  ? 'bg-teal-500 text-white border-teal-500 shadow-sm'
+                  : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-700'
               }`}
             >
               {tab.label}
-              {activeTab === tab.key && (
-                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-teal-500 rounded-t-full" />
-              )}
             </button>
           ))}
         </div>
