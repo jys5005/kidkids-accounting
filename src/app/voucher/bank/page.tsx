@@ -82,6 +82,8 @@ export default function BankPage() {
   const totalDeposit = filtered.reduce((s, r) => s + r.depositAmt, 0)
   const totalWithdraw = filtered.reduce((s, r) => s + r.withdrawAmt, 0)
   const diff = totalDeposit - totalWithdraw
+  // 결제방식 매핑 안 된 이체매체 (조회된 것 기준)
+  const unmappedMediums = Array.from(new Set(transactions.map(t => t.medium).filter(Boolean))).filter(m => !payMap[m])
 
   // 기관유형 판정
   useEffect(() => {
@@ -402,7 +404,10 @@ export default function BankPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <button onClick={() => setShowPayMap(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-300 rounded-lg transition-colors">🔗 결제방식 매핑설정</button>
+          <button onClick={() => setShowPayMap(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-300 rounded-lg transition-colors">
+            🔗 결제방식 매핑설정
+            {unmappedMediums.length > 0 && <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold">{unmappedMediums.length}</span>}
+          </button>
           <span className="text-[11px] text-slate-400">은행 이체매체(신한체·국세·통신 등) → 장부 결제방식 매핑</span>
         </div>
         <p className="text-[11px] text-slate-400 mt-1">각각 버튼을 클릭하면 설정/해지가 변경됩니다.</p>
@@ -580,7 +585,11 @@ export default function BankPage() {
                 <td className={`text-right px-4 py-2.5 text-xs ${r.depositAmt > 0 ? 'text-red-600' : 'text-slate-400'}`}>{r.depositAmt > 0 ? fmt(r.depositAmt) : '0'}</td>
                 <td className="text-right px-4 py-2.5 text-slate-700 text-xs">{fmt(r.balance)}</td>
                 <td className="text-center px-3 py-2.5 text-slate-600 text-xs">{r.sender}</td>
-                <td className="text-center px-3 py-2.5 text-slate-500 text-xs">{r.medium}</td>
+                <td className="text-center px-3 py-2.5 text-xs">
+                  {r.medium && !payMap[r.medium]
+                    ? <span className="inline-block px-1.5 py-0.5 rounded bg-rose-100 text-rose-600 font-bold" title="결제방식 미매핑">{r.medium}<span className="ml-0.5 text-[9px]">미매핑</span></span>
+                    : <span className="text-slate-500">{r.medium}</span>}
+                </td>
                 <td className="text-center px-3 py-2.5 text-slate-500 text-xs">{r.branch}</td>
               </tr>
             ))}
