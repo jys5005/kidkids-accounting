@@ -337,8 +337,7 @@ export default function ReceiptPage() {
                     <option>2026-01</option>
                   </select>
                 </div>
-                <div className="flex items-center gap-2">
-                </div>
+                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/admin/bank-transactions`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">계좌이체증조회</button>
                 <div className="ml-auto flex items-center gap-2">
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
                   <div className="relative group">
