@@ -58,11 +58,11 @@ function useUser() {
 }
 
 const categoryIconColors: Record<string, string> = {
-  accounting: 'text-teal-500',
-  staff: 'text-teal-500',
-  children: 'text-teal-500',
-  supplies: 'text-teal-500',
-  community: 'text-teal-500',
+  accounting: 'text-blue-500',
+  staff: 'text-emerald-500',
+  children: 'text-orange-400',
+  supplies: 'text-purple-500',
+  community: 'text-rose-400',
 }
 
 const categoryIconPaths: Record<string, string> = {
@@ -192,15 +192,14 @@ export default function Header() {
     m.children?.some((c) => pathname === c.href || pathname?.startsWith(c.href + '/'))
   )
 
-  // GNB 바 — 전체 teal 통일 (색 난립 정리, 사용자 요청 2026-07-07)
   const gnbBgMap: Record<string, string> = {
-    accounting: 'bg-teal-500',
-    staff: 'bg-teal-500',
-    children: 'bg-teal-500',
-    supplies: 'bg-teal-500',
-    community: 'bg-teal-500',
+    accounting: 'bg-blue-500',
+    staff: 'bg-emerald-500',
+    children: 'bg-orange-400',
+    supplies: 'bg-purple-500',
+    community: 'bg-rose-400',
   }
-  const gnbBg = gnbBgMap[activeKey] || 'bg-teal-500'
+  const gnbBg = gnbBgMap[activeKey] || 'bg-blue-500'
 
   return (
     <div className="shrink-0">
