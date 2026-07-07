@@ -2043,14 +2043,15 @@ export default function VoucherInputPage() {
                                     <button onClick={() => setEditingCell(null)} onMouseDown={e => e.stopPropagation()} className="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">✕</button>
                                   </div>
                                   <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-1">
-                                  {(row.type === '수입' ? incomeAccounts : expenseAccounts).map(a => {
+                                  <div className="text-[10px] text-slate-300 px-3 pb-1">총 {(row.type === '수입' ? incomeAccounts : expenseAccounts).length}개</div>
+                                  {(row.type === '수입' ? incomeAccounts : expenseAccounts).map((a, idx) => {
                                     const isSelected = a.isSub ? row.subAccount === a.label : row.account === a.value
                                     const isIncome = row.type === '수입'
                                     const rowCls = isIncome
                                       ? (isSelected ? 'bg-blue-100 font-bold text-blue-700' : 'hover:bg-blue-50 text-blue-600')
                                       : (isSelected ? 'bg-red-100 font-bold text-red-700' : 'hover:bg-red-50 text-red-600')
                                     return (
-                                      <button key={a.value}
+                                      <button key={`${idx}-${a.value}`} type="button"
                                         onClick={() => {
                                           const list = row.type === '수입' ? incomeAccounts : expenseAccounts
                                           if (a.isSub) {
@@ -2068,7 +2069,7 @@ export default function VoucherInputPage() {
                                           setEditingCell(null)
                                           setRows(prev => prev.map(r => ({ ...r, copySelected: r.id === row.id })))
                                         }}
-                                        className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${rowCls} ${a.isSub ? 'pl-5' : ''}`}>
+                                        className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${rowCls} ${a.isSub ? 'pl-5' : ''}`}>
                                         {a.isSub ? (
                                           <span className="flex items-center gap-1">
                                             <span className={`inline-block px-1 py-0 rounded border text-[12px] font-bold ${row.type === '수입' ? 'border-blue-400 text-blue-600' : 'border-red-400 text-red-600'}`}>세목</span>
