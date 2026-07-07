@@ -1655,9 +1655,12 @@ export default function VoucherInputPage() {
             justify-content: center;
           }
           .single-input-mode td[data-cell="account"] > span,
-          .single-input-mode td[data-cell="sub"] > span,
           .single-input-mode td[data-cell="accountCode"] > span {
             justify-content: center;
+          }
+          .single-input-mode td[data-cell="sub"] > span {
+            justify-content: flex-start;
+            text-align: left;
           }
         `}</style>
         <div className="max-h-[calc(100vh-380px)] overflow-y-auto overflow-x-auto">
@@ -2096,11 +2099,11 @@ export default function VoucherInputPage() {
                                  </div>
                                 </div>
                               ) : null}
-                              <span className={`font-medium ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`}>{row.account}</span>
+                              <span className={`font-medium whitespace-nowrap truncate block w-full ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`}>{row.account}</span>
                             </td>
                             {/* 세목 — 목과 동일(중복)이면 세목 아님 → '-' */}
                             <td data-cell="sub" className="text-center px-0.5 py-1">
-                              <span className="text-slate-600 text-[11px]">{row.subAccount && row.subAccount !== row.account ? row.subAccount : '-'}</span>
+                              <span className="text-slate-600 text-[11px] whitespace-nowrap truncate block w-full text-left">{row.subAccount && row.subAccount !== row.account ? row.subAccount : '-'}</span>
                             </td>
                             {/* 계정코드 */}
                             <td data-cell="accountCode" className="text-center px-1 py-1" onClick={cellClick('accountCode')}>
