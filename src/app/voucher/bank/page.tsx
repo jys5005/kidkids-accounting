@@ -64,9 +64,20 @@ export default function BankPage() {
   const [queryingId, setQueryingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
+  // 결제방식 매핑 (은행 이체매체 → 장부 결제방식)
+  const [showPayMap, setShowPayMap] = useState(false)
+  const [payMap, setPayMap] = useState<Record<string, string>>({})
+  useEffect(() => {
+    try { const s = localStorage.getItem('bank-payment-map'); if (s) setPayMap(JSON.parse(s)) } catch {}
+  }, [])
+  const savePayMap = (next: Record<string, string>) => {
+    setPayMap(next)
+    try { localStorage.setItem('bank-payment-map', JSON.stringify(next)) } catch {}
+  }
 
   const filtered = [...transactions]
     .filter(r => filterAccount === '전체' || r.accountNo === filterAccount)
+    .filter(r => !filterYm || r.date.startsWith(filterYm))   // 선택한 년월(해당월)만 노출
     .sort((a, b) => sortAsc ? a.date.localeCompare(b.date) || a.time.localeCompare(b.time) : b.date.localeCompare(a.date) || b.time.localeCompare(a.time))
   const totalDeposit = filtered.reduce((s, r) => s + r.depositAmt, 0)
   const totalWithdraw = filtered.reduce((s, r) => s + r.withdrawAmt, 0)
@@ -365,6 +376,10 @@ export default function BankPage() {
             </div>
           </div>
         </div>
+        <div className="flex items-center gap-2 pt-1">
+          <button onClick={() => setShowPayMap(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-300 rounded-lg transition-colors">🔗 결제방식 매핑설정</button>
+          <span className="text-[11px] text-slate-400">은행 이체매체(신한체·국세·통신 등) → 장부 결제방식 매핑</span>
+        </div>
         <p className="text-[11px] text-slate-400 mt-1">각각 버튼을 클릭하면 설정/해지가 변경됩니다.</p>
       </div>
 
@@ -497,7 +512,7 @@ export default function BankPage() {
 
       {/* 거래내역 테이블 */}
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm overflow-auto max-h-[calc(100vh-420px)]">
-        <table className="w-full text-[11px]" style={{ minWidth: '1200px' }}>
+        <table className="w-full text-[11px] font-light" style={{ minWidth: '1200px' }}>
           <thead className="sticky top-0 z-10">
             <tr className="bg-teal-50 border-b border-teal-400/30">
               <th className="text-center px-3 py-2.5 font-normal text-slate-600 w-44">계좌번호</th>
@@ -526,9 +541,9 @@ export default function BankPage() {
                   </span>
                 </td>
                 <td className="text-center px-3 py-2.5 text-slate-700 text-xs">{formatDate(r.date)}</td>
-                <td className="text-center px-3 py-2.5 text-slate-600 text-xs font-mono">{formatTime(r.time)}</td>
+                <td className="text-center px-3 py-2.5 text-slate-600 text-xs">{formatTime(r.time)}</td>
                 <td className={`text-right px-4 py-2.5 text-xs ${r.withdrawAmt > 0 ? 'text-blue-600' : 'text-slate-400'}`}>{r.withdrawAmt > 0 ? fmt(r.withdrawAmt) : '0'}</td>
-                <td className={`text-right px-4 py-2.5 text-xs ${r.depositAmt > 0 ? 'text-red-600 font-medium' : 'text-slate-400'}`}>{r.depositAmt > 0 ? fmt(r.depositAmt) : '0'}</td>
+                <td className={`text-right px-4 py-2.5 text-xs ${r.depositAmt > 0 ? 'text-red-600' : 'text-slate-400'}`}>{r.depositAmt > 0 ? fmt(r.depositAmt) : '0'}</td>
                 <td className="text-right px-4 py-2.5 text-slate-700 text-xs">{fmt(r.balance)}</td>
                 <td className="text-center px-3 py-2.5 text-slate-600 text-xs">{r.sender}</td>
                 <td className="text-center px-3 py-2.5 text-slate-500 text-xs">{r.medium}</td>
@@ -538,6 +553,38 @@ export default function BankPage() {
           </tbody>
         </table>
       </div>
+      {/* 결제방식 매핑 팝업 */}
+      {showPayMap && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowPayMap(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-[520px] max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-teal-400/30 flex items-center justify-between">
+              <span className="text-sm font-bold text-slate-700">🔗 결제방식 매핑설정</span>
+              <button onClick={() => setShowPayMap(false)} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+            </div>
+            <div className="px-5 py-4 overflow-y-auto space-y-2">
+              {(() => {
+                const mediums = Array.from(new Set(transactions.map(t => t.medium).filter(Boolean))).sort()
+                if (mediums.length === 0) return <p className="text-xs text-slate-400 py-8 text-center">먼저 [조회]로 계좌내역을 불러오면 이체매체 목록이 나옵니다.</p>
+                return mediums.map(m => (
+                  <div key={m} className="flex items-center gap-3">
+                    <span className="text-xs text-slate-700 w-36 flex-shrink-0 font-medium truncate">{m}</span>
+                    <span className="text-slate-400">→</span>
+                    <select value={payMap[m] || ''} onChange={e => savePayMap({ ...payMap, [m]: e.target.value })} className="px-2 py-1.5 text-xs border border-slate-300 rounded bg-white flex-1">
+                      <option value="">(미지정)</option>
+                      {['계좌이체', '자동이체', '카드결제', '현금', 'CMS공동', '기타'].map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                ))
+              })()}
+            </div>
+            <div className="px-5 py-3 border-t border-slate-200 flex justify-between items-center">
+              <span className="text-[11px] text-slate-400">매핑은 자동 저장됩니다. 자동전표 생성 시 결제방식으로 적용됩니다.</span>
+              <button onClick={() => setShowPayMap(false)} className="px-4 py-2 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 계좌 신규등록 팝업 */}
       {showAddAccount && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowAddAccount(false)}>
