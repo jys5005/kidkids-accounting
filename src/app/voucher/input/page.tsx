@@ -988,28 +988,28 @@ export default function VoucherInputPage() {
       {(
       <div className="flex items-center gap-3 px-2">
         <div className="flex items-center gap-3 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
-          <span className="text-xs font-bold text-blue-700">수입</span>
-          <span className="text-xs text-slate-600">합계 <strong className="text-blue-700">{fmt(totalIncome)}</strong></span>
-          <span className="text-xs text-slate-600">전표 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입').length}</strong></span>
-          <span className="text-xs text-slate-600">정상 <strong className="text-blue-700">{filtered.filter(r => r.type === '수입' && r.amount >= 0).length}</strong></span>
-          <span className="text-xs text-slate-600">반납 <strong className="text-teal-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</strong></span>
-          <span className="text-xs text-slate-600">삭제 <strong className="text-slate-400">0</strong></span>
+          <span className="text-xs font-normal text-blue-700">수입</span>
+          <span className="text-xs text-slate-600">합계 <span className="font-normal text-blue-700">{fmt(totalIncome)}</span></span>
+          <span className="text-xs text-slate-600">전표 <span className="font-normal text-blue-700">{filtered.filter(r => r.type === '수입').length}</span></span>
+          <span className="text-xs text-slate-600">정상 <span className="font-normal text-blue-700">{filtered.filter(r => r.type === '수입' && r.amount >= 0).length}</span></span>
+          <span className="text-xs text-slate-600">반납 <span className="font-normal text-teal-600">{filtered.filter(r => r.type === '수입' && r.amount < 0).length}</span></span>
+          <span className="text-xs text-slate-600">삭제 <span className="font-normal text-slate-400">0</span></span>
         </div>
         <div className="flex items-center gap-3 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
-          <span className="text-xs font-bold text-red-600">지출</span>
-          <span className="text-xs text-slate-600">합계 <strong className="text-red-600">{fmt(totalExpense)}</strong></span>
-          <span className="text-xs text-slate-600">전표 <strong className="text-red-600">{filtered.filter(r => r.type === '지출').length}</strong></span>
-          <span className="text-xs text-slate-600">정상 <strong className="text-red-600">{filtered.filter(r => r.type === '지출' && r.amount >= 0).length}</strong></span>
-          <span className="text-xs text-slate-600">반납 <strong className="text-teal-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</strong></span>
-          <span className="text-xs text-slate-600">삭제 <strong className="text-slate-400">0</strong></span>
+          <span className="text-xs font-normal text-red-600">지출</span>
+          <span className="text-xs text-slate-600">합계 <span className="font-normal text-red-600">{fmt(totalExpense)}</span></span>
+          <span className="text-xs text-slate-600">전표 <span className="font-normal text-red-600">{filtered.filter(r => r.type === '지출').length}</span></span>
+          <span className="text-xs text-slate-600">정상 <span className="font-normal text-red-600">{filtered.filter(r => r.type === '지출' && r.amount >= 0).length}</span></span>
+          <span className="text-xs text-slate-600">반납 <span className="font-normal text-teal-600">{filtered.filter(r => r.type === '지출' && r.amount < 0).length}</span></span>
+          <span className="text-xs text-slate-600">삭제 <span className="font-normal text-slate-400">0</span></span>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-          <span className="text-xs font-bold text-emerald-700">회계잔액</span>
-          <strong className="text-sm text-emerald-700">{fmt(totalIncome - totalExpense)}</strong>
+          <span className="text-xs font-normal text-emerald-700">회계잔액</span>
+          <span className="text-sm font-normal text-emerald-700">{fmt(totalIncome - totalExpense)}</span>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
-          <span className="text-xs font-bold text-slate-700">계좌잔액</span>
-          <strong className="text-sm text-slate-700">{fmt(totalIncome - totalExpense)}</strong>
+          <span className="text-xs font-normal text-slate-700">계좌잔액</span>
+          <span className="text-sm font-normal text-slate-700">{fmt(totalIncome - totalExpense)}</span>
           <span className="text-[10px] text-sky-600 bg-sky-100 px-1.5 py-0.5 rounded-full">일치</span>
         </div>
       </div>
