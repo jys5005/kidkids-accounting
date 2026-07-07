@@ -239,7 +239,7 @@ export default function MonthlyReportPage() {
               </div>
             </div>
             {receiptSetting === '신청완료' && <button className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded transition-colors">step1. 영수증 이미지생성</button>}
-            <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">{receiptSetting === '신청완료' ? 'step2. 회계전표 전송' : 'step1. 회계전표 전송'}</button>
+            <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">{receiptSetting === '신청완료' ? 'step2. 회계전표 전송' : 'step1. 회계전표 전송'}</button>
             <div className="w-px h-5 bg-slate-200 mx-1" />
             <span className="text-[11px] text-slate-500">전표 전송 : 2026-03-13 17:42:11</span>
             <div className="w-px h-5 bg-slate-200 mx-1" />
@@ -275,7 +275,7 @@ export default function MonthlyReportPage() {
             <select value={selectedYm} onChange={e => setSelectedYm(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
               {ymOpts.map(ym => <option key={ym} value={ym}>{ym}</option>)}
             </select>
-            <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+            <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
             <label className="flex items-center gap-1 text-xs text-slate-600 cursor-pointer">
               <input type="checkbox" checked={showSupplementary} onChange={e => setShowSupplementary(e.target.checked)} className="rounded border-slate-300" />
               <span className="font-bold">추경필요경비선택</span>
@@ -424,7 +424,7 @@ export default function MonthlyReportPage() {
             </div>
             <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-end gap-2">
               <button onClick={() => setShowReceiptConfirm(false)} className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">취소</button>
-              <button onClick={() => { setReceiptSetting('미신청'); setShowReceiptConfirm(false) }} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">확인</button>
+              <button onClick={() => { setReceiptSetting('미신청'); setShowReceiptConfirm(false) }} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">확인</button>
             </div>
         </DraggableModal>
       )}
@@ -437,7 +437,7 @@ export default function MonthlyReportPage() {
             </div>
             <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-end gap-2">
               <button onClick={() => setShowReceiptApply(false)} className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">취소</button>
-              <button onClick={() => { setReceiptSetting('신청완료'); setShowReceiptApply(false) }} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">확인</button>
+              <button onClick={() => { setReceiptSetting('신청완료'); setShowReceiptApply(false) }} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">확인</button>
             </div>
         </DraggableModal>
       )}

@@ -220,7 +220,7 @@ function SettlementAnnualLegacy() {
           <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
             {yearOpts.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-          <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+          <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
         </div>
       </div>
 
@@ -241,7 +241,7 @@ function SettlementAnnualLegacy() {
               </div>
             </div>
           </div>
-          <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">저장</button>
+          <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">저장</button>
         </div>
         <div className="p-4">
           <div className="overflow-x-auto">

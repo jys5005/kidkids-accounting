@@ -237,7 +237,7 @@ export default function TransactionsPage() {
                 className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700">
                 {yearMonthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-teal-500 rounded-lg hover:bg-teal-600">조회</button>
             </div>
           ) : (activeView === '계정과목별총괄표' || activeView === '월별수입지출합계') ? (
             <div className="flex items-center gap-3">
@@ -258,7 +258,7 @@ export default function TransactionsPage() {
                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
                   className="px-3 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700 w-36" />
               </>}
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-teal-500 rounded-lg hover:bg-teal-600">조회</button>
             </div>
           ) : (activeView === '현금출납부' || activeView === '총계정원장') ? (
             <div className="flex items-center gap-1.5">
@@ -290,9 +290,9 @@ export default function TransactionsPage() {
                 <button onClick={() => { const d = new Date(); const s = new Date(d.getFullYear(), d.getMonth() - 5, 1); setRangeStartYm(`${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, '0')}`); setRangeEndYm(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`) }}
                   className="px-2 py-1 text-[10px] font-bold bg-teal-500 text-white rounded hover:bg-teal-600">6개월</button>
                 <button onClick={() => { const y = new Date().getFullYear() - 1; setRangeStartYm(`${y}-03`); setRangeEndYm(`${y + 1}-02`) }}
-                  className="px-2 py-1 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700">과년도</button>
+                  className="px-2 py-1 text-[10px] font-bold bg-teal-500 text-white rounded hover:bg-teal-600">과년도</button>
               </>}
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 ml-2">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-teal-500 rounded-lg hover:bg-teal-600 ml-2">조회</button>
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
@@ -301,11 +301,11 @@ export default function TransactionsPage() {
               <span className="text-slate-400 text-xs">~</span>
               <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={`${inputCls} w-36`} />
               <button onClick={() => { const d = new Date(); setStartDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`); setEndDate(d.toISOString().slice(0, 10)) }}
-                className="px-2 py-1 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700">이번달</button>
+                className="px-2 py-1 text-[10px] font-bold bg-teal-500 text-white rounded hover:bg-teal-600">이번달</button>
               <button onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); setStartDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`); setEndDate(new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10)) }}
-                className="px-2 py-1 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700">이전달</button>
+                className="px-2 py-1 text-[10px] font-bold bg-teal-500 text-white rounded hover:bg-teal-600">이전달</button>
               <button onClick={() => { const y = new Date().getFullYear() - 1; setStartDate(`${y}-03-01`); setEndDate(`${y + 1}-02-28`) }}
-                className="px-2 py-1 text-[10px] font-bold bg-blue-600 text-white rounded hover:bg-blue-700">과년도</button>
+                className="px-2 py-1 text-[10px] font-bold bg-teal-500 text-white rounded hover:bg-teal-600">과년도</button>
             </div>
           )}
           {activeView !== '현금출납부' && activeView !== '총계정원장' && activeView !== '계정과목별총괄표' && activeView !== '월별수입지출합계' && activeView !== '합계잔액시산표' && activeView !== '월별비교' && <div className="flex items-center gap-1.5 relative" ref={accountFilterRef}>
@@ -360,7 +360,7 @@ export default function TransactionsPage() {
             <div className="flex items-center gap-1.5">
               <span className={labelCls}>품목(적요)</span>
               <input type="text" value={searchSummary} onChange={e => setSearchSummary(e.target.value)} className={`${inputCls} w-40`} />
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-teal-500 rounded-lg hover:bg-teal-600">조회</button>
             </div>
           </>}
         </div>
@@ -556,7 +556,7 @@ export default function TransactionsPage() {
                                 <tr className="bg-slate-50/50 border-b border-teal-400/20">
                                   <td colSpan={9} className="px-4 py-1.5">
                                     <span className="flex items-center gap-1.5">
-                                      <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500'}`}>세목</span>
+                                      <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${isIncome ? 'bg-teal-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500'}`}>세목</span>
                                       <span className={`text-xs font-medium ${isIncome ? 'text-blue-600' : 'text-red-500'}`}>{subName}</span>
                                       <span className="text-[10px] text-slate-400 font-mono">({subAccountCodeMap[subName] || ''})</span>
                                     </span>
@@ -661,7 +661,7 @@ export default function TransactionsPage() {
               <td className="text-center px-4 py-2 text-slate-600 font-mono text-xs">{r.code}</td>
               <td className="text-left px-4 py-2">
                 <span className="flex items-center gap-1">
-                  <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${r.isSub ? (r.isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500') : (r.isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400')}`}>{r.isSub ? '세목' : '목'}</span>
+                  <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${r.isSub ? (r.isIncome ? 'bg-teal-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500') : (r.isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400')}`}>{r.isSub ? '세목' : '목'}</span>
                   <span className={`${r.isSub ? 'text-xs' : 'font-medium text-sm'} ${r.isIncome ? 'text-blue-700' : 'text-red-600'}`}>{r.name}</span>
                 </span>
               </td>
@@ -782,7 +782,7 @@ export default function TransactionsPage() {
                         <td className="text-center px-4 py-2.5 text-slate-600 font-mono sticky left-0 bg-inherit z-10">{acct.code}</td>
                         <td className="text-left px-4 py-2.5 sticky left-16 bg-inherit z-10 whitespace-nowrap">
                           <span className="flex items-center gap-1">
-                            <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${acct.isSub ? (acct.isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500') : (acct.isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400')}`}>{acct.isSub ? '세목' : '목'}</span>
+                            <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${acct.isSub ? (acct.isIncome ? 'bg-teal-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500') : (acct.isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400')}`}>{acct.isSub ? '세목' : '목'}</span>
                             <span className={`${acct.isSub ? 'text-xs' : 'font-medium'} ${acct.isIncome ? 'text-blue-700' : 'text-red-600'}`}>{acct.name}</span>
                           </span>
                         </td>
@@ -970,7 +970,7 @@ export default function TransactionsPage() {
                     <td className={`text-right px-4 py-2 text-slate-700 border-r border-teal-400/30 ${r.isSub ? 'text-xs text-slate-500' : ''}`}>{fmt(r.monIncome)}</td>
                     <td className="text-center px-2 py-2 border-r border-teal-400/30">
                       <span className="inline-flex items-center gap-1.5">
-                        <span className={`inline-block w-7 text-center py-0 rounded border text-[9px] font-bold ${r.isSub ? (r.isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500') : (r.isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400')}`}>{r.isSub ? '세목' : '목'}</span>
+                        <span className={`inline-block w-7 text-center py-0 rounded border text-[9px] font-bold ${r.isSub ? (r.isIncome ? 'bg-teal-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500') : (r.isIncome ? 'bg-blue-400 text-white border-blue-400' : 'bg-red-400 text-white border-red-400')}`}>{r.isSub ? '세목' : '목'}</span>
                         <span className={`${r.isSub ? 'text-xs' : 'font-medium'} ${r.isIncome ? 'text-blue-700' : 'text-red-600'}`}>{r.name}</span>
                       </span>
                     </td>
@@ -1134,13 +1134,13 @@ export default function TransactionsPage() {
                             <tr className="bg-slate-50/30 border-b border-teal-400/10">
                               <td colSpan={5} className="px-4 py-0.5 border-r-4 border-teal-400/40">
                                 <span className="flex items-center gap-1.5">
-                                  <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500'}`}>세목</span>
+                                  <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${isIncome ? 'bg-teal-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500'}`}>세목</span>
                                   <span className={`text-[11px] ${isIncome ? 'text-blue-600' : 'text-red-500'}`}>{sub}</span>
                                 </span>
                               </td>
                               <td colSpan={5} className="px-4 py-0.5">
                                 <span className="flex items-center gap-1.5">
-                                  <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${isIncome ? 'bg-blue-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500'}`}>세목</span>
+                                  <span className={`inline-block px-1 py-0 rounded border text-[9px] font-bold ${isIncome ? 'bg-teal-500 text-white border-blue-500' : 'bg-red-500 text-white border-red-500'}`}>세목</span>
                                   <span className={`text-[11px] ${isIncome ? 'text-blue-600' : 'text-red-500'}`}>{sub}</span>
                                 </span>
                               </td>
@@ -1204,7 +1204,7 @@ export default function TransactionsPage() {
                 <div className="relative">
                   <label className="text-xs font-semibold text-slate-500 mb-1 block">수입계정</label>
                   <button type="button" onClick={() => setEditDropdown(editDropdown === 'income' ? null : 'income')}
-                    className={`w-full px-3 py-2 rounded-lg text-sm text-left cursor-pointer font-bold text-white bg-blue-500 hover:bg-blue-600 ${editDropdown === 'income' ? 'ring-2 ring-blue-300' : ''}`}>
+                    className={`w-full px-3 py-2 rounded-lg text-sm text-left cursor-pointer font-bold text-white bg-teal-500 hover:bg-teal-500 ${editDropdown === 'income' ? 'ring-2 ring-blue-300' : ''}`}>
                     계정선택
                   </button>
                   {editDropdown === 'income' && (
@@ -1221,7 +1221,7 @@ export default function TransactionsPage() {
                           setEditDropdown(null)
                         }} className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-blue-50 text-blue-600 ${a.isSub ? 'pl-5' : ''}`}>
                           <span className="flex items-center gap-1">
-                            <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${a.isSub ? 'bg-blue-500 text-white border-blue-500' : 'bg-blue-400 text-white border-blue-400'}`}>{a.isSub ? '세목' : '목'}</span>
+                            <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${a.isSub ? 'bg-teal-500 text-white border-blue-500' : 'bg-blue-400 text-white border-blue-400'}`}>{a.isSub ? '세목' : '목'}</span>
                             {a.label}
                           </span>
                         </button>

@@ -216,7 +216,7 @@ export default function ChildrenStatusPage() {
             <option>만0세</option><option>만1세</option><option>만2세</option><option>만3세</option><option>만4세</option><option>만5세</option>
           </select>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="이름/보호자 검색" className="border border-teal-300 rounded px-2 py-1.5 text-xs w-40" />
-          <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+          <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
           <div className="ml-auto flex items-center gap-1.5">
             <button
               onClick={handleSyncFromPlatform}
@@ -278,7 +278,7 @@ export default function ChildrenStatusPage() {
                 <td className="px-2 py-1.5 text-slate-600 border-r border-slate-100">{c.guardian}</td>
                 <td className="px-2 py-1.5 text-slate-500 border-r border-slate-100">{c.phone}</td>
                 <td className="px-2 py-1.5 text-center border-r border-slate-100"><span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${c.status === '현원' ? 'text-blue-700 bg-blue-50' : 'text-red-600 bg-red-50'}`}>{c.status}</span></td>
-                <td className="px-2 py-1.5 text-center whitespace-nowrap"><button onClick={() => setSelectedChild(c)} className="text-[10px] font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-0.5 rounded whitespace-nowrap">보기</button></td>
+                <td className="px-2 py-1.5 text-center whitespace-nowrap"><button onClick={() => setSelectedChild(c)} className="text-[10px] font-bold text-white bg-teal-500 hover:bg-teal-500 px-3 py-0.5 rounded whitespace-nowrap">보기</button></td>
               </tr>
             ))}
           </tbody>

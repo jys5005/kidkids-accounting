@@ -58,11 +58,11 @@ function useUser() {
 }
 
 const categoryIconColors: Record<string, string> = {
-  accounting: 'text-blue-500',
-  staff: 'text-emerald-500',
-  children: 'text-orange-400',
-  supplies: 'text-purple-500',
-  community: 'text-rose-400',
+  accounting: 'text-teal-500',
+  staff: 'text-teal-500',
+  children: 'text-teal-500',
+  supplies: 'text-teal-500',
+  community: 'text-teal-500',
 }
 
 const categoryIconPaths: Record<string, string> = {
@@ -192,15 +192,15 @@ export default function Header() {
     m.children?.some((c) => pathname === c.href || pathname?.startsWith(c.href + '/'))
   )
 
-  // GNB 바 — 활성 카테고리 아이콘 색과 동일한 단색 (그라데이션 없음)
+  // GNB 바 — 전체 teal 통일 (색 난립 정리, 사용자 요청 2026-07-07)
   const gnbBgMap: Record<string, string> = {
-    accounting: 'bg-blue-500',
-    staff: 'bg-emerald-500',
-    children: 'bg-orange-400',
-    supplies: 'bg-purple-500',
-    community: 'bg-rose-400',
+    accounting: 'bg-teal-500',
+    staff: 'bg-teal-500',
+    children: 'bg-teal-500',
+    supplies: 'bg-teal-500',
+    community: 'bg-teal-500',
   }
-  const gnbBg = gnbBgMap[activeKey] || 'bg-blue-500'
+  const gnbBg = gnbBgMap[activeKey] || 'bg-teal-500'
 
   return (
     <div className="shrink-0">
@@ -560,7 +560,7 @@ export default function Header() {
 
             <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
               {basicMsg && <span className={`text-xs font-semibold ${basicMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{basicMsg}</span>}
-              <button onClick={saveBasicInfo} disabled={basicSaving} className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-50">{basicSaving ? '저장 중…' : '수정'}</button>
+              <button onClick={saveBasicInfo} disabled={basicSaving} className="px-6 py-2 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded disabled:opacity-50">{basicSaving ? '저장 중…' : '수정'}</button>
             </div>
           </div>
         </div>

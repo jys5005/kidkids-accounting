@@ -22,7 +22,7 @@ export default function SuppliesStatusPage() {
             <option>물품명</option><option>구입처</option><option>관리자</option>
           </select>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} w-40`} />
-          <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">조회</button>
+          <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">조회</button>
           <button onClick={() => setShowRegister(true)} className="px-4 py-1.5 text-xs font-bold text-white bg-slate-600 hover:bg-slate-700 rounded">비품등록</button>
           <div className="ml-auto flex items-center gap-1.5">
             <button onClick={() => window.print()} className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 rounded text-xs text-slate-600">
@@ -110,7 +110,7 @@ export default function SuppliesStatusPage() {
               </table>
             </div>
             <div className="px-4 py-3 border-t border-slate-200 flex justify-end gap-2">
-              <button className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">등록</button>
+              <button className="px-6 py-2 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">등록</button>
               <button onClick={() => setShowRegister(false)} className="px-6 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">취소</button>
             </div>
         </DraggableModal>

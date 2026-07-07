@@ -67,7 +67,7 @@ function StoreDepositTab() {
 
           <button
             onClick={() => window.open(process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000' + '/admin/cis-transactions', '_blank')}
-            className="px-3 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
+            className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors"
           >CIS조회</button>
 
         </div>
@@ -97,7 +97,7 @@ function StoreDepositTab() {
           </label>
           <button
             onClick={() => setSaved(!saved)}
-            className="px-3 py-1.5 text-xs font-bold rounded transition-colors bg-teal-500 hover:bg-orange-600 text-white"
+            className="px-3 py-1.5 text-xs font-bold rounded transition-colors bg-teal-500 hover:bg-teal-600 text-white"
           >전표저장</button>
           <div className="relative group">
             <svg className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
@@ -151,7 +151,7 @@ function StoreDepositTab() {
               <th className={`${TH} min-w-[130px] border-r-0`}>
                 <div className="flex items-center justify-center gap-1.5">
                   <span>계좌매칭</span>
-                  <button className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">매칭저장</button>
+                  <button className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">매칭저장</button>
                 </div>
               </th>
             </tr>
@@ -268,9 +268,9 @@ export default function ReceiptPage() {
                     <option>2026-01</option>
                   </select>
                 </div>
-                <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+                <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
                 <div className="ml-auto">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
+                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">일괄매칭</button>
                 </div>
               </div>
 
@@ -327,7 +327,7 @@ export default function ReceiptPage() {
                     <option>003 . 기업은행 07010312345678</option>
                     <option>011 . 농협 30112005678901</option>
                   </select>
-                  <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+                  <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-slate-600 whitespace-nowrap">조회연월</span>
@@ -337,9 +337,9 @@ export default function ReceiptPage() {
                     <option>2026-01</option>
                   </select>
                 </div>
-                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/admin/bank-transactions`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">계좌이체증조회</button>
+                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/admin/bank-transactions`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">계좌이체증조회</button>
                 <div className="ml-auto flex items-center gap-2">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
+                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">일괄매칭</button>
                   <div className="relative group">
                     <button className="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 text-xs flex items-center justify-center transition-colors">?</button>
                     <div className="absolute right-0 top-full mt-2 w-[420px] bg-white text-slate-600 border border-slate-200 text-[12px] leading-[1.8] rounded-xl px-5 py-4 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-30" style={{ fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif" }}>
@@ -417,12 +417,12 @@ export default function ReceiptPage() {
                   <input type="checkbox" className="rounded" />
                   계산서 삭제시 체크
                 </label>
-                <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
-                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/hometax`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">세금계산서조회</button>
+                <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
+                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/hometax`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">세금계산서조회</button>
                 <div className="flex items-center gap-2">
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
+                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">일괄매칭</button>
                   <div className="relative group">
                     <button className="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 text-xs flex items-center justify-center transition-colors">?</button>
                     <div className="absolute right-0 top-full mt-2 w-[420px] bg-white text-slate-600 border border-slate-200 text-[12px] leading-[1.8] rounded-xl px-5 py-4 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-30" style={{ fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif" }}>
@@ -485,10 +485,10 @@ export default function ReceiptPage() {
                     <option>2026-01</option>
                   </select>
                 </div>
-                <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
-                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/hometax`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">현금영수증조회</button>
+                <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
+                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/hometax`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">현금영수증조회</button>
                 <div className="ml-auto flex items-center gap-2">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
+                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">일괄매칭</button>
                   <div className="relative group">
                     <button className="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 text-xs flex items-center justify-center transition-colors">?</button>
                     <div className="absolute right-0 top-full mt-2 w-[420px] bg-white text-slate-600 border border-slate-200 text-[12px] leading-[1.8] rounded-xl px-5 py-4 shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-30" style={{ fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif" }}>
@@ -552,8 +552,8 @@ export default function ReceiptPage() {
                   </select>
                   <span className="text-xs text-slate-500">년 EDI 자료</span>
                 </div>
-                <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
-                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/insurance`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">EDI조회</button>
+                <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
+                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/insurance`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">EDI조회</button>
               </div>
 
               {/* 4대보험 고지서 매칭 테이블 */}
@@ -578,7 +578,7 @@ export default function ReceiptPage() {
                         <td className="px-3 py-3 text-center text-slate-500">0</td>
                         <td className="px-3 py-3 text-center text-slate-500">0</td>
                         <td className="px-3 py-3 text-center text-slate-500">0</td>
-                        <td className="px-3 py-3 text-center"><button className="px-4 py-1 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">보기</button></td>
+                        <td className="px-3 py-3 text-center"><button className="px-4 py-1 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">보기</button></td>
                         <td className="px-3 py-3 text-center"><button className="px-4 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">{`매칭하기 ('0' 매칭됨)`}</button></td>
                       </tr>
                     ))}
@@ -782,7 +782,7 @@ function ShoppingTab() {
         <div className="flex items-center gap-2 text-xs text-slate-500">
           {bizNo && <span>사업자번호: <span className="font-mono text-slate-700">{bizNo}</span></span>}
           <a href="/cp_guide.pdf" target="_blank" rel="noopener noreferrer" className="px-3 py-1 text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">쿠팡조회가이드</a>
-          <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/admin/shop-transactions`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">쇼핑몰조회</button>
+          <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/admin/shop-transactions`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">쇼핑몰조회</button>
         </div>
       </div>
 
@@ -857,7 +857,7 @@ function ShoppingTab() {
                           onClick={() => checkLogin(a)}
                           title={!scrapable ? `${a.shopType} 정상여부 체크는 준비중입니다.` : '클릭하여 로그인 정상여부 확인 (5~15초)'}
                           className={`px-3 py-1 text-xs font-bold rounded transition-colors ${
-                            scrapable ? 'text-white bg-green-600 hover:bg-green-700' : 'text-slate-400 bg-slate-100 cursor-not-allowed'
+                            scrapable ? 'text-white bg-teal-500 hover:bg-teal-600' : 'text-slate-400 bg-slate-100 cursor-not-allowed'
                           }`}
                         >정상여부</button>
                       )}
@@ -868,7 +868,7 @@ function ShoppingTab() {
                         onClick={() => setDetail({ account: a, data: d })}
                         className={`px-3 py-1 text-xs font-bold rounded transition-colors ${
                           d?.orders && d.orders.length > 0
-                            ? 'text-white bg-teal-500 hover:bg-orange-600'
+                            ? 'text-white bg-teal-500 hover:bg-teal-600'
                             : 'text-slate-400 bg-slate-100 cursor-not-allowed'
                         }`}
                       >수집자료보기</button>
@@ -892,7 +892,7 @@ function ShoppingTab() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-bold text-slate-700">수집된 쇼핑몰 거래내역 <span className="text-slate-400 font-normal">{orders.length}건</span></p>
-          <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">쇼핑몰 영수증 자동매칭하기</button>
+          <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">쇼핑몰 영수증 자동매칭하기</button>
         </div>
         <div className="overflow-x-auto border border-slate-200 rounded-lg">
           <table className="w-full text-[11px]">
@@ -1031,7 +1031,7 @@ function ShoppingDetailModal({ account, data, onClose }: {
                           ) : <p className="text-xs text-slate-400 italic">{o.receiptError || '영수증 정보 없음'}</p>}
                         </div>
                         <div className="bg-white rounded-lg border border-slate-200 p-4">
-                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5"><span className="inline-block w-1 h-3 bg-blue-500 rounded-sm" />주문확인서</h4>
+                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5"><span className="inline-block w-1 h-3 bg-teal-500 rounded-sm" />주문확인서</h4>
                           {o.confirm ? (
                             <dl className="space-y-1.5 text-xs">
                               <DR k="수령인"   v={o.confirm.receiverName} />

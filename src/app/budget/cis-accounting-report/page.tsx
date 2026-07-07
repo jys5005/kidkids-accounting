@@ -207,7 +207,7 @@ export default function CisAccountingReportPage() {
           <option>본예산</option>
         </select>
         <span className="text-[10px] text-slate-400">전송시간: {new Date().toLocaleString('ko-KR')}</span>
-        <button onClick={() => setTab('report')} className={`ml-auto px-4 py-1.5 text-xs font-bold rounded transition-colors ${tab === 'report' ? 'text-white bg-blue-600' : 'text-slate-600 bg-white border border-slate-300 hover:bg-slate-50'}`}>보육통합(CIS) 예산보고</button>
+        <button onClick={() => setTab('report')} className={`ml-auto px-4 py-1.5 text-xs font-bold rounded transition-colors ${tab === 'report' ? 'text-white bg-teal-500' : 'text-slate-600 bg-white border border-slate-300 hover:bg-slate-50'}`}>보육통합(CIS) 예산보고</button>
       </div>
 
       {tab === 'report' && (

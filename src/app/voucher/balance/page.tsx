@@ -267,7 +267,7 @@ export default function BalancePage() {
                   <button onClick={() => setCompareFilter('전체')}
                     className={`px-2 py-0.5 text-[10px] font-bold rounded ${compareFilter === '전체' ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>전체</button>
                   <button onClick={() => setCompareFilter('일치')}
-                    className={`px-2 py-0.5 text-[10px] font-bold rounded ${compareFilter === '일치' ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>일치</button>
+                    className={`px-2 py-0.5 text-[10px] font-bold rounded ${compareFilter === '일치' ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>일치</button>
                   <button onClick={() => setCompareFilter('불일치')}
                     className={`px-2 py-0.5 text-[10px] font-bold rounded ${compareFilter === '불일치' ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>불일치</button>
                 </div>

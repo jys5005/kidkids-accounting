@@ -39,7 +39,7 @@ export default function BookDropdown() {
           onClick={() => { if (b.code !== book) setActiveBook(b.code) }}
           className={`px-3.5 py-1 text-xs font-bold rounded-full border transition-colors ${
             book === b.code
-              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+              ? 'bg-teal-500 text-white border-blue-600 shadow-sm'
               : 'bg-white text-slate-500 border-slate-300 hover:border-blue-400 hover:text-blue-600'
           }`}
         >

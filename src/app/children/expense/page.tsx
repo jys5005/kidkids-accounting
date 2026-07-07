@@ -224,7 +224,7 @@ export default function ExpensePage() {
           <div className="flex items-center gap-1">
             <span className="text-[12px] font-bold text-slate-700">원아명/반</span>
             <input value={searchName} onChange={e => setSearchName(e.target.value)} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-28" />
-            <button className="px-3 py-1 text-[11px] font-bold text-white bg-blue-600 rounded">검색</button>
+            <button className="px-3 py-1 text-[11px] font-bold text-white bg-teal-500 rounded">검색</button>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <input
@@ -329,7 +329,7 @@ export default function ExpensePage() {
                     </select>
                   </td>
                   <td className="px-2 py-1.5 text-center">
-                    <button className="text-[10px] font-bold text-white bg-blue-600 px-2 py-0.5 rounded">적용</button>
+                    <button className="text-[10px] font-bold text-white bg-teal-500 px-2 py-0.5 rounded">적용</button>
                   </td>
                 </tr>
               ))}

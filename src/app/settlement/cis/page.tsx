@@ -202,7 +202,7 @@ export default function SettlementCisPage() {
         <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
           {yearOpts.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
-        <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+        <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
       </div>
 
       {/* 세입 */}
@@ -216,7 +216,7 @@ export default function SettlementCisPage() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setCisSentTime(getNow())} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">CIS 결산보고</button>
+            <button onClick={() => setCisSentTime(getNow())} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">CIS 결산보고</button>
             {cisSentTime && <span className="text-[11px] text-blue-600 font-medium">전송:{cisSentTime}</span>}
             <button onClick={() => setIncheonSentTime(getNow())} className="px-4 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded transition-colors">인천형시스템에서 결산보고</button>
             {incheonSentTime && <span className="text-[11px] text-red-600 font-medium">전송:{incheonSentTime}</span>}

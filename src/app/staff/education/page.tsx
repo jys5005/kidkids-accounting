@@ -63,7 +63,7 @@ export default function EducationPage() {
           <option value="name">{T}이름</option><option value="title">교육명</option>
         </select>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} w-36`} placeholder="검색어 입력" />
-        <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">조회</button>
+        <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">조회</button>
         <div className="ml-auto flex items-center gap-2">
           <button className="flex items-center gap-1 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded text-xs font-bold">
             + 교육등록
@@ -141,7 +141,7 @@ export default function EducationPage() {
           <span>총 {filteredData.length}건</span>
           <div className="flex items-center gap-2">
             <button className="hover:text-slate-700">이전</button>
-            <span className="px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] font-bold">1</span>
+            <span className="px-2 py-0.5 bg-teal-500 text-white rounded text-[10px] font-bold">1</span>
             <button className="hover:text-slate-700">다음</button>
           </div>
         </div>

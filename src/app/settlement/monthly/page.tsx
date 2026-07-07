@@ -219,7 +219,7 @@ function SettlementMonthlyLegacy() {
           <select value={selectedYm} onChange={e => setSelectedYm(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
             {ymOpts.map(ym => <option key={ym} value={ym}>{ym}</option>)}
           </select>
-          <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+          <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
         </div>
       </div>
 

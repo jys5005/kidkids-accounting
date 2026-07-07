@@ -65,7 +65,7 @@ export default function ChildFeePage() {
         <div className="flex items-center gap-1">
           <span className="text-[12px] font-bold text-slate-700">원아명</span>
           <input value={searchName} onChange={e => setSearchName(e.target.value)} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-28" />
-          <button className="px-3 py-1 text-[11px] font-bold text-white bg-blue-600 rounded hover:bg-blue-700">검색</button>
+          <button className="px-3 py-1 text-[11px] font-bold text-white bg-teal-500 rounded hover:bg-teal-600">검색</button>
         </div>
         <button className="px-3 py-1 text-[11px] font-bold text-white bg-slate-600 rounded hover:bg-slate-700 ml-auto">회계장부 자료가져오기</button>
       </div>
@@ -79,7 +79,7 @@ export default function ChildFeePage() {
           <input type="month" value={yearMonth} onChange={e => setYearMonth(e.target.value)} className="border border-teal-300 rounded px-2 py-1 text-[12px]" />
         </div>
         <div className="flex items-center gap-1 flex-wrap">
-          <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-blue-600 rounded">보육료 수납영수증</button>
+          <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-teal-500 rounded">보육료 수납영수증</button>
           <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-amber-600 rounded">보육료 불입통지서</button>
           <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-red-500 rounded">수익자부담금 불입통지서</button>
           <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-teal-600 rounded">특별활동비 불입통지서</button>
@@ -160,7 +160,7 @@ export default function ChildFeePage() {
       <div className="flex items-center justify-end gap-3">
         <span className="text-[12px] text-slate-600">장부 기장을 위한 납부일자 :</span>
         <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)} className="border border-teal-300 rounded px-2 py-1 text-[12px]" />
-        <button className="px-6 py-2 text-[12px] font-bold text-white bg-blue-600 rounded hover:bg-blue-700">납부 저장하기</button>
+        <button className="px-6 py-2 text-[12px] font-bold text-white bg-teal-500 rounded hover:bg-teal-600">납부 저장하기</button>
       </div>
     </div>
   )

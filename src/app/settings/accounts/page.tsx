@@ -235,7 +235,7 @@ export default function CoaSettingsPage() {
           <select value={year} onChange={e => setYear(e.target.value)} className="text-sm border rounded-lg px-2 py-1.5 bg-white">
             {YEARS.map(y => <option key={y} value={y}>{y}년</option>)}
           </select>
-          <button onClick={save} disabled={loading} className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-1.5 disabled:opacity-50">💾 저장 (24·25·26)</button>
+          <button onClick={save} disabled={loading} className="text-sm font-bold text-white bg-teal-500 hover:bg-teal-600 rounded-lg px-4 py-1.5 disabled:opacity-50">💾 저장 (24·25·26)</button>
         </div>
       </div>
 
@@ -264,7 +264,7 @@ export default function CoaSettingsPage() {
               {g.hangs.map((h, hi) => (
                 <div key={hi} className="pl-6 border-b border-slate-100 last:border-0">
                   <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-1.5">
-                    <span className="text-[10px] font-bold text-white bg-blue-500 rounded px-1.5 py-0.5 shrink-0">항</span>
+                    <span className="text-[10px] font-bold text-white bg-teal-500 rounded px-1.5 py-0.5 shrink-0">항</span>
                     <span className={roCode}>{h.code || '-'}</span>
                     <input value={h.name} onChange={e => patchHang(gi, hi, e.target.value)} onBlur={() => ensureFirstMok(gi, hi)} placeholder="항 명칭 (입력 후 기본 목 자동)" className={nameCls} />
                     <button onClick={() => addMok(gi, hi)} className={`${addBtn} text-emerald-600 border-emerald-300 hover:bg-emerald-50`}>+ 목</button>

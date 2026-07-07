@@ -1314,7 +1314,7 @@ export default function DataMigrationPage() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button onClick={loadGwinBudget} disabled={gbLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50">{gbLoading ? '⏳ 걸음마 조회 중…' : '📥 예산 가져오기 (실시간)'}</button>
-            <button onClick={saveGwinBudget} disabled={!gbPreviewByBook || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-40">💾 저장</button>
+            <button onClick={saveGwinBudget} disabled={!gbPreviewByBook || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded disabled:opacity-40">💾 저장</button>
             <button onClick={loadGwinBudgetStatic} className="px-2 py-1.5 text-[11px] font-bold text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50" title="실시간 조회 실패 시 마지막 저장된 스냅샷으로 미리보기">저장 데이터로 보기</button>
             <span className="text-[11px] font-bold text-slate-500 ml-1">전표기간</span>
             <select value={gbVFrom} onChange={e => setGbVFrom(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="시작월(회계연도 3월~익년2월)">
@@ -1329,7 +1329,7 @@ export default function DataMigrationPage() {
             </label>
             <button onClick={loadGwinVouchers} disabled={gbVLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50" title="걸음마 전표(현금출납부) 조회">{gbVLoading ? '⏳ 전표 조회 중…' : '🧾 전표 가져오기'}</button>
             <button onClick={saveGwinVouchers} disabled={!gbVRows || !gbVRows.length || gbVSaving} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded disabled:opacity-40" title="가져온 전표를 전표관리로 저장">{gbVSaving ? '저장 중…' : '📒 전표관리로 저장'}</button>
-            {gbVSavedBook && <a href={`/voucher/input${gbVSavedYm ? `?ym=${gbVSavedYm}` : ''}`} className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded" title={`${bookLabel(gbVSavedBook)} 전표관리(전표입력)${gbVSavedYm ? ` ${gbVSavedYm}` : ''}로 이동`}>→ 전표관리로 이동</a>}
+            {gbVSavedBook && <a href={`/voucher/input${gbVSavedYm ? `?ym=${gbVSavedYm}` : ''}`} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded" title={`${bookLabel(gbVSavedBook)} 전표관리(전표입력)${gbVSavedYm ? ` ${gbVSavedYm}` : ''}로 이동`}>→ 전표관리로 이동</a>}
             {gbMsg && <span className={`text-xs font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}
           </div>
           {gbPreviewByBook && (
@@ -1530,7 +1530,7 @@ export default function DataMigrationPage() {
                 onClick={() => setMode('single')}
                 className={`px-3 py-1.5 text-xs rounded-lg ${
                   mode === 'single'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-teal-500 text-white'
                     : 'bg-slate-100 text-slate-600'
                 }`}
               >
@@ -1540,7 +1540,7 @@ export default function DataMigrationPage() {
                 onClick={() => setMode('range')}
                 className={`px-3 py-1.5 text-xs rounded-lg ${
                   mode === 'range'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-teal-500 text-white'
                     : 'bg-slate-100 text-slate-600'
                 }`}
               >
@@ -1595,7 +1595,7 @@ export default function DataMigrationPage() {
             <button
               onClick={handleFetch}
               disabled={loading}
-              className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="w-full py-2.5 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 disabled:opacity-50"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -1997,7 +1997,7 @@ export default function DataMigrationPage() {
             <div className="flex gap-2">
               <button
                 onClick={handleExcelDownload}
-                className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 flex items-center gap-1"
+                className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600 flex items-center gap-1"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -2006,7 +2006,7 @@ export default function DataMigrationPage() {
               </button>
               <button
                 onClick={handleExcelDownloadAll}
-                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 flex items-center gap-1"
+                className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600 flex items-center gap-1"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

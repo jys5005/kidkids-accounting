@@ -34,7 +34,7 @@ export default function BudgetReportPage() {
         <select className="border border-slate-300 rounded px-2 py-1.5 text-xs">
           <option>본예산</option>
         </select>
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
         <div className="ml-auto flex items-center gap-1.5">
           <label className="flex items-center gap-1 text-xs text-slate-600 cursor-pointer">
             <input type="checkbox" checked={showAll} onChange={e => { setShowAll(e.target.checked); if (e.target.checked) setSelected(null) }} className="w-3.5 h-3.5 rounded border-slate-300 accent-blue-600" />

@@ -85,7 +85,7 @@ export default function RequiredExpensePage() {
                 <div className="flex items-center gap-1">
                   <span className="text-[11px] font-bold text-slate-700">원아명/반</span>
                   <input className="border border-amber-300 rounded px-2 py-1 text-[11px] w-28" />
-                  <button className="px-2 py-1 text-[10px] font-bold text-white bg-blue-600 rounded">조회</button>
+                  <button className="px-2 py-1 text-[10px] font-bold text-white bg-teal-500 rounded">조회</button>
                 </div>
                 <div className="flex items-center gap-2 ml-auto">
                   <label className="text-[11px] font-bold"><input type="radio" name="matchSplit" checked={splitMode === 'equal'} onChange={() => { setSplitMode('equal'); setSplitOverride(null) }} className="mr-0.5" />균등분할</label>
@@ -301,7 +301,7 @@ export default function RequiredExpensePage() {
             <span className="font-bold text-slate-600 ml-3">원아상태</span>
             <select className="border border-slate-300 rounded px-2 py-1.5 text-[12px]"><option>전체</option><option>현원</option><option>퇴소</option></select>
             <input className="border border-slate-300 rounded px-2 py-1.5 text-[12px] w-32 ml-2" placeholder="원아/보육반" />
-            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-blue-600 rounded">조회</button>
+            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-teal-500 rounded">조회</button>
           </div>
         </div>
         {/* 테이블 */}
@@ -427,7 +427,7 @@ export default function RequiredExpensePage() {
             <span className="font-bold text-slate-600">원아상태</span>
             <select className="border border-slate-300 rounded px-2 py-1.5 text-[12px]"><option>전체</option><option>현원</option><option>퇴소</option></select>
             <input className="border border-slate-300 rounded px-2 py-1.5 text-[12px] w-32" placeholder="원아/보육반" />
-            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-blue-600 rounded">조회</button>
+            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-teal-500 rounded">조회</button>
             <div className="flex items-center gap-1 ml-auto">
               {[
                 { icon: 'print', color: 'blue', label: '' },
@@ -619,7 +619,7 @@ export default function RequiredExpensePage() {
             <button className="px-3 py-1.5 text-[11px] font-bold text-amber-700 bg-amber-100 border border-amber-300 rounded">과년도</button>
             <span className="font-bold text-slate-600">적요</span>
             <input className="border border-slate-300 rounded px-2 py-1.5 text-[12px] w-32" />
-            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-blue-600 rounded">조회</button>
+            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-teal-500 rounded">조회</button>
             <span className="font-bold text-slate-600">원아별 매칭</span>
             {selectedLawChild && <span className="text-[11px] text-teal-700 font-bold">{selectedLawChild}</span>}
             <div className="relative">
@@ -639,7 +639,7 @@ export default function RequiredExpensePage() {
                     <label><input type="checkbox" className="mr-0.5" />법정지원아동만 노출</label>
                     <span className="font-bold ml-2">원아명</span>
                     <input className="border border-slate-300 rounded px-2 py-1 text-[11px] w-24" />
-                    <button className="px-2 py-1 text-[10px] font-bold text-white bg-blue-600 rounded">조회</button>
+                    <button className="px-2 py-1 text-[10px] font-bold text-white bg-teal-500 rounded">조회</button>
                   </div>
                   <div className="overflow-y-auto max-h-[380px]">
                     <table className="w-full text-[11px] border-collapse">
@@ -661,7 +661,7 @@ export default function RequiredExpensePage() {
                               <td className="px-2 py-1.5 text-center border-r border-slate-100">{birth}</td>
                               <td className="px-2 py-1.5 text-center border-r border-slate-100">-</td>
                               <td className="px-2 py-1.5 text-center border-r border-slate-100">-</td>
-                              <td className="px-2 py-1.5 text-center"><button onClick={() => { setSelectedLawChild(c.name); setShowLawChild(false) }} className="text-[10px] font-bold text-white bg-blue-500 px-2 py-0.5 rounded">선택</button></td>
+                              <td className="px-2 py-1.5 text-center"><button onClick={() => { setSelectedLawChild(c.name); setShowLawChild(false) }} className="text-[10px] font-bold text-white bg-teal-500 px-2 py-0.5 rounded">선택</button></td>
                             </tr>
                           )
                         })}
@@ -757,7 +757,7 @@ export default function RequiredExpensePage() {
             <input type="date" defaultValue="2026-03-24" className="border border-slate-300 rounded px-2 py-1.5 text-[12px]" />
             <span className="font-bold text-slate-600">원아명</span>
             <input className="border border-slate-300 rounded px-2 py-1.5 text-[12px] w-28" />
-            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-blue-600 rounded">조회</button>
+            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-teal-500 rounded">조회</button>
             <button className="px-4 py-1.5 text-[11px] font-bold text-slate-600 bg-slate-200 border border-slate-300 rounded">매칭삭제하기</button>
           </div>
         </div>
@@ -804,7 +804,7 @@ export default function RequiredExpensePage() {
           </div>
           <p className="text-[10px] text-red-500">* 엑셀파일이 제대로 등록되지 않을경우 엑셀파일을 여신 후 다른이름으로 저장 &gt; 저장 대화창에서 &quot;파일형식(T)&quot; 에서 &quot; Excel 97 - 2003 통합문서 (*.xls)&quot; 를 선택하신 후 저장하셔서 등록하세요.</p>
           <div className="flex justify-center gap-3">
-            <button className="px-8 py-2 text-[12px] font-bold text-white bg-blue-600 rounded">등록</button>
+            <button className="px-8 py-2 text-[12px] font-bold text-white bg-teal-500 rounded">등록</button>
             <button className="px-8 py-2 text-[12px] font-bold text-slate-600 bg-slate-200 border border-slate-300 rounded">취소</button>
           </div>
         </div>
@@ -819,7 +819,7 @@ export default function RequiredExpensePage() {
                 <span className="text-slate-500">%</span>
               </div>
             ))}
-            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-blue-600 rounded">저장</button>
+            <button className="px-4 py-1.5 text-[11px] font-bold text-white bg-teal-500 rounded">저장</button>
           </div>
           <p className="text-[10px] text-red-500 mt-1 text-center">* 24년 정산서에만 적용됩니다.</p>
         </div>
@@ -834,7 +834,7 @@ export default function RequiredExpensePage() {
           <button className="px-4 py-1.5 text-[11px] font-bold text-slate-600 bg-slate-200 border border-slate-300 rounded">삭제</button>
         </div>
         <div className="flex items-center gap-1 flex-wrap">
-          <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-blue-600 rounded">법정아동 필요경비정산서</button>
+          <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-teal-500 rounded">법정아동 필요경비정산서</button>
           <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-teal-600 rounded">만5세 필요경비정산서</button>
           <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-amber-600 rounded">24년 법정아동 필요경비정산서</button>
           <button className="px-3 py-1.5 text-[10px] font-bold text-white bg-amber-500 rounded">24년 만5세 필요경비정산서</button>
@@ -985,7 +985,7 @@ export default function RequiredExpensePage() {
                 <select className="border border-slate-300 rounded px-2 py-1 text-[11px]"><option>선택</option></select>
                 <span className="font-bold ml-2">원아명</span>
                 <input className="border border-slate-300 rounded px-2 py-1 text-[11px] w-24" />
-                <button className="px-2 py-1 text-[10px] font-bold text-white bg-blue-600 rounded">조회</button>
+                <button className="px-2 py-1 text-[10px] font-bold text-white bg-teal-500 rounded">조회</button>
               </div>
               <div className="overflow-y-auto max-h-[380px]">
                 <table className="w-full text-[11px] border-collapse">
@@ -1007,7 +1007,7 @@ export default function RequiredExpensePage() {
                           <td className="px-2 py-1.5 text-center border-r border-slate-100">{birth}</td>
                           <td className="px-2 py-1.5 text-center border-r border-slate-100">-</td>
                           <td className="px-2 py-1.5 text-center border-r border-slate-100">-</td>
-                          <td className="px-2 py-1.5 text-center"><button onClick={() => { setSelectedPersonalChild(c.name); setShowPersonalChild(false) }} className="text-[10px] font-bold text-white bg-blue-500 px-2 py-0.5 rounded">선택</button></td>
+                          <td className="px-2 py-1.5 text-center"><button onClick={() => { setSelectedPersonalChild(c.name); setShowPersonalChild(false) }} className="text-[10px] font-bold text-white bg-teal-500 px-2 py-0.5 rounded">선택</button></td>
                         </tr>
                       )
                     })}
@@ -1090,7 +1090,7 @@ export default function RequiredExpensePage() {
                     setSplitMode('equal')
                     setSplitOverride(null)
                     setMatchMode('simple')
-                  }} className="text-[10px] font-bold text-white px-1.5 py-0.5 bg-blue-500 hover:bg-blue-600 rounded transition-colors ml-0.5">일괄</button>}
+                  }} className="text-[10px] font-bold text-white px-1.5 py-0.5 bg-teal-500 hover:bg-teal-500 rounded transition-colors ml-0.5">일괄</button>}
                     </>
                   )}
                 </td>

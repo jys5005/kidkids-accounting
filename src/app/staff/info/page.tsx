@@ -88,11 +88,11 @@ export default function StaffInfoPage() {
             <option value="name">{T}이름</option><option value="staffNo">{staffNoLabel}</option>
           </select>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} w-36`} />
-          <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+          <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
         </div>
         <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-end gap-2">
-          <button onClick={() => setShowForm(true)} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">{T} 등록</button>
-          <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">{T} 엑셀 등록</button>
+          <button onClick={() => setShowForm(true)} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">{T} 등록</button>
+          <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">{T} 엑셀 등록</button>
           <button className="px-4 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 rounded transition-colors">선택 {T} 삭제</button>
         </div>
       </div>
@@ -206,7 +206,7 @@ export default function StaffInfoPage() {
 
             {/* 하단 버튼 */}
             <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
-              <button className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">등록</button>
+              <button className="px-6 py-2 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">등록</button>
               <button onClick={() => setShowForm(false)} className="px-6 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">취소</button>
               <button className="px-6 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">완전 삭제</button>
             </div>

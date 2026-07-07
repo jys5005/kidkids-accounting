@@ -195,7 +195,7 @@ export default function AnalysisPage() {
                 <span className="w-[130px] flex-shrink-0 truncate text-slate-700 font-medium">{r.code} {r.name}</span>
                 <div className="flex-1 space-y-0.5">
                   <div className="h-3 bg-slate-100 rounded overflow-hidden"><div className="h-full bg-slate-300" style={{ width: `${r.budget / max * 100}%` }} /></div>
-                  <div className="h-3 bg-slate-100 rounded overflow-hidden"><div className="h-full bg-blue-500" style={{ width: `${r.exec / max * 100}%` }} /></div>
+                  <div className="h-3 bg-slate-100 rounded overflow-hidden"><div className="h-full bg-teal-500" style={{ width: `${r.exec / max * 100}%` }} /></div>
                 </div>
                 <span className="w-[90px] text-right text-slate-500">예산 {fmt(r.budget)}</span>
                 <span className="w-[90px] text-right font-bold text-blue-700">집행 {fmt(r.exec)}</span>
@@ -218,7 +218,7 @@ export default function AnalysisPage() {
                   return (
                     <div key={mm} className="flex-1 flex flex-col items-center gap-1">
                       <span className="text-[9px] text-slate-500">{v ? fmt(v) : ''}</span>
-                      <div className="w-full bg-blue-500 rounded-t" style={{ height: `${v / maxM * 100}%`, minHeight: v ? '2px' : '0' }} />
+                      <div className="w-full bg-teal-500 rounded-t" style={{ height: `${v / maxM * 100}%`, minHeight: v ? '2px' : '0' }} />
                       <span className="text-[10px] text-slate-400">{mm}월</span>
                     </div>
                   )

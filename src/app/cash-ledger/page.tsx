@@ -123,7 +123,7 @@ export default function CashLedgerPage() {
         </div>
         <div className="flex gap-2 mt-4">
           <button onClick={handleQuery} disabled={loading}
-            className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+            className="px-5 py-2 text-sm font-medium text-white bg-teal-500 rounded-lg hover:bg-teal-600 disabled:opacity-50 transition-colors">
             {loading ? (
               <span className="flex items-center gap-2">
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">

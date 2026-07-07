@@ -139,7 +139,7 @@ export default function DeletedVoucherPage() {
             <span className={labelCls}>적요</span>
             <input type="text" value={searchSummary} onChange={e => setSearchSummary(e.target.value)} placeholder="" className={`${inputCls} w-52`} />
           </div>
-          <button className="px-5 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 ml-auto">조회</button>
+          <button className="px-5 py-1.5 bg-teal-500 text-white text-xs font-bold rounded-lg hover:bg-teal-600 ml-auto">조회</button>
         </div>
       </div>
 

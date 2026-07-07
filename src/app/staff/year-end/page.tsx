@@ -512,7 +512,7 @@ function WithholdingPanel() {
                   <span className="text-[13px] font-bold text-slate-700">{Number(m)}월</span>
                   <div className="flex gap-1">
                     <span className={`text-[9px] px-1 py-0.5 rounded font-bold ${isGen ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'}`}>{isGen ? '✓생성' : '미생성'}</span>
-                    <span className={`text-[9px] px-1 py-0.5 rounded font-bold ${isDl ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-400'}`}>{isDl ? '✓다운' : '미다운'}</span>
+                    <span className={`text-[9px] px-1 py-0.5 rounded font-bold ${isDl ? 'bg-teal-500 text-white' : 'bg-slate-200 text-slate-400'}`}>{isDl ? '✓다운' : '미다운'}</span>
                   </div>
                 </div>
                 <div className="text-[10px] text-slate-500 space-y-0.5">

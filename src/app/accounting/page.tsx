@@ -123,7 +123,7 @@ export default function AccountingPage() {
               <span className="text-sm font-semibold text-slate-700">22일</span>
               <span className="text-[10px] text-slate-400">(지도점검기준)</span>
             </div>
-            <button className="mt-1.5 px-3 py-1 text-[11px] font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors">제출</button>
+            <button className="mt-1.5 px-3 py-1 text-[11px] font-medium text-white bg-teal-500 rounded hover:bg-teal-600 transition-colors">제출</button>
           </div>
         </div>
       </div>

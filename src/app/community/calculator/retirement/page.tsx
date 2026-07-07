@@ -73,7 +73,7 @@ export default function RetirementCalculatorPage() {
           </table>
 
           <div className="flex items-center justify-center gap-3">
-            <button onClick={doCalc} className="px-8 py-2 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">계산</button>
+            <button onClick={doCalc} className="px-8 py-2 text-[13px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">계산</button>
             <button onClick={reset} className="px-8 py-2 text-[13px] font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded">초기화</button>
           </div>
 

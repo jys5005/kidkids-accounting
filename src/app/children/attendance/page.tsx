@@ -32,7 +32,7 @@ export default function AttendancePage() {
               <td className="px-3 py-2.5 w-[150px]"><input type="month" value={month} onChange={e => setMonth(e.target.value)} className={inputCls} /></td>
               <td className="font-medium text-slate-700 bg-teal-50 px-3 py-2.5 border-r border-slate-200 text-center whitespace-nowrap w-[60px]">반선택</td>
               <td className="px-3 py-2.5"><select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className={`${inputCls} w-52`}>{classNames.map(c => <option key={c}>{c}</option>)}</select></td>
-              <td className="px-3 py-2.5 text-center"><button onClick={() => window.print()} className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">출석부 출력</button></td>
+              <td className="px-3 py-2.5 text-center"><button onClick={() => window.print()} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">출석부 출력</button></td>
               <td className="font-medium text-slate-700 bg-teal-50 px-3 py-2.5 border-r border-slate-200 text-center whitespace-nowrap w-[60px]">정렬순서</td>
               <td className="px-3 py-2.5">
                 <label className="text-xs"><input type="radio" name="sort" checked={sortBy === 'name'} onChange={() => setSortBy('name')} className="mr-0.5" />원아명</label>

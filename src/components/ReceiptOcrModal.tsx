@@ -143,7 +143,7 @@ export default function ReceiptOcrModal({
             <div className="space-y-1.5">
               <div className="flex gap-2">
                 <button onClick={analyze} disabled={loading || attaching || !file}
-                  className="flex-[2] py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                  className="flex-[2] py-2.5 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 disabled:opacity-50 flex items-center justify-center gap-2">
                   {loading && <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
                   {loading ? '분석 중…' : '🔍 분석하기'}
                 </button>

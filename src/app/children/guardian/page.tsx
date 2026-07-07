@@ -19,7 +19,7 @@ export default function GuardianPage() {
             <option>보호자명</option><option>원아명</option><option>전화번호</option>
           </select>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} w-36`} />
-          <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">조회</button>
+          <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">조회</button>
           <button onClick={() => setShowRegister(true)} className="ml-auto px-4 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">보호자 등록</button>
         </div>
       </div>
@@ -90,7 +90,7 @@ export default function GuardianPage() {
               </table>
             </div>
             <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
-              <button className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">등록</button>
+              <button className="px-6 py-2 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">등록</button>
               <button onClick={() => setShowRegister(false)} className="px-6 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">취소</button>
             </div>
         </DraggableModal>

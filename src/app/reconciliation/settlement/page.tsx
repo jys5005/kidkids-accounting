@@ -76,7 +76,7 @@ export default function SettlementReconciliationPage() {
           <option>이체</option>
         </select>
         <input type="text" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="적요" className="border border-slate-300 rounded px-2 py-1.5 text-xs w-36 focus:outline-none focus:border-blue-400 placeholder:text-slate-300" />
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
       </div>
 
       {/* 요약 */}
@@ -95,7 +95,7 @@ export default function SettlementReconciliationPage() {
         </div>
         <div className="flex items-center gap-1.5">
           <input type="text" value={printTitle} onChange={e => setPrintTitle(e.target.value)} placeholder="보조금거래내역 제목" className="border border-slate-300 rounded px-2 py-1 text-xs w-36 placeholder:text-slate-300 focus:outline-none focus:border-blue-400" />
-          <button className="px-3 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">저장</button>
+          <button className="px-3 py-1 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">저장</button>
           <div className="relative group">
             <svg className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
             <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-[9999] hidden group-hover:block pointer-events-none">

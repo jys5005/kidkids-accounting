@@ -519,7 +519,7 @@ export default function VoucherInputPage() {
         </div>
 
         <button onClick={() => mobileNewRow(true)}
-          className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-base shadow-sm hover:bg-blue-700 flex items-center justify-center gap-2">
+          className="w-full py-4 bg-teal-500 text-white rounded-xl font-bold text-base shadow-sm hover:bg-teal-600 flex items-center justify-center gap-2">
           📷 영수증 촬영으로 입력
         </button>
 
@@ -556,7 +556,7 @@ export default function VoucherInputPage() {
                   {(() => { const rc = receiptListOf(row); return rc.length > 0 && (
                     <button onClick={e => { e.stopPropagation(); setGalleryImages(rc) }} className="ml-auto shrink-0 relative" title={`영수증 ${rc.length}장 보기`}>
                       <img src={rc[0]} alt="영수증" className="w-8 h-8 object-cover rounded border" />
-                      {rc.length > 1 && <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[9px] font-bold rounded-full px-1 leading-tight">{rc.length}</span>}
+                      {rc.length > 1 && <span className="absolute -top-1 -right-1 bg-teal-500 text-white text-[9px] font-bold rounded-full px-1 leading-tight">{rc.length}</span>}
                     </button>
                   )})()}
                 </div>
@@ -614,7 +614,7 @@ export default function VoucherInputPage() {
                       </div>
                     )}
                     <div className="flex gap-2 pt-1">
-                      <button onClick={() => setReceiptRowId(row.id)} className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">📷 영수증</button>
+                      <button onClick={() => setReceiptRowId(row.id)} className="flex-1 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600">📷 영수증</button>
                       <button onClick={() => mobileDeleteRow(row.id)} className="px-4 py-2 border border-rose-200 text-rose-500 rounded-lg text-sm hover:bg-rose-50">삭제</button>
                     </div>
                   </div>
@@ -904,7 +904,7 @@ export default function VoucherInputPage() {
                 placeholder="검색어 입력"
                 className="w-32 px-2 py-1.5 border border-teal-300 rounded-lg text-xs font-medium text-slate-700"
               />
-              <button className="px-5 py-1.5 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">조회</button>
+              <button className="px-5 py-1.5 text-xs font-bold text-white bg-teal-500 rounded-lg hover:bg-teal-600 transition-colors">조회</button>
               <button onClick={() => {
                 setFilterYearMonth('2026-03'); setFilterDayFrom(0); setFilterDayTo(0)
                 setFilterType('전체'); setFilterAccountGroup('전체'); setFilterAccount('전체')
@@ -954,7 +954,7 @@ export default function VoucherInputPage() {
         {inputMode === '일괄수정' && <>
         <div className="relative">
           <button onClick={() => setShowColumnSettings(!showColumnSettings)}
-            className={`px-3 py-2 rounded transition-colors flex items-center gap-1.5 text-xs font-bold ${showColumnSettings ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`} data-tip="컬럼 설정">
+            className={`px-3 py-2 rounded transition-colors flex items-center gap-1.5 text-xs font-bold ${showColumnSettings ? 'bg-teal-500 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`} data-tip="컬럼 설정">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1010,7 +1010,7 @@ export default function VoucherInputPage() {
         <button
           onClick={() => setShowToolbar(!showToolbar)}
           className={`px-3 py-2 text-xs font-bold whitespace-nowrap rounded transition-colors flex items-center gap-1.5 ${
-            showToolbar ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+            showToolbar ? 'bg-teal-500 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
           }`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1094,7 +1094,7 @@ export default function VoucherInputPage() {
                   alert('전송 오류: ' + (e instanceof Error ? e.message : String(e)))
                 }
               }}
-              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-blue-400 rounded bg-blue-500 hover:bg-blue-600 text-white sub-tab-hover"
+              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-blue-400 rounded bg-teal-500 hover:bg-teal-500 text-white sub-tab-hover"
             >
               인천시 전송
             </button>
@@ -1241,7 +1241,7 @@ export default function VoucherInputPage() {
                                   setDetailDropdown(null)
                                 }}
                                 className={`h-6 rounded text-[11px] font-medium transition-colors ${
-                                  d === cd ? 'bg-blue-600 text-white' : dow === 0 ? 'text-red-500 hover:bg-slate-100' : dow === 6 ? 'text-blue-500 hover:bg-slate-100' : 'text-slate-700 hover:bg-slate-100'
+                                  d === cd ? 'bg-teal-500 text-white' : dow === 0 ? 'text-red-500 hover:bg-slate-100' : dow === 6 ? 'text-blue-500 hover:bg-slate-100' : 'text-slate-700 hover:bg-slate-100'
                                 }`}
                               >{d}</button>
                             )
@@ -1286,7 +1286,7 @@ export default function VoucherInputPage() {
                                   setDetailDropdown(null)
                                 }}
                                 className={`h-6 rounded text-[11px] font-medium transition-colors ${
-                                  d === cd ? 'bg-blue-600 text-white' : dow === 0 ? 'text-red-500 hover:bg-slate-100' : dow === 6 ? 'text-blue-500 hover:bg-slate-100' : 'text-slate-700 hover:bg-slate-100'
+                                  d === cd ? 'bg-teal-500 text-white' : dow === 0 ? 'text-red-500 hover:bg-slate-100' : dow === 6 ? 'text-blue-500 hover:bg-slate-100' : 'text-slate-700 hover:bg-slate-100'
                                 }`}
                               >{d}</button>
                             )
@@ -1327,7 +1327,7 @@ export default function VoucherInputPage() {
                 <div className="w-40 relative">
                   <label className={labelCls}>수입계정</label>
                   <button type="button" onClick={() => setDetailDropdown(detailDropdown === 'income' ? null : 'income')}
-                    className={`w-full px-3 py-2 rounded-lg text-sm text-left cursor-pointer font-bold text-white bg-blue-500 hover:bg-blue-600 ${detailDropdown === 'income' ? 'ring-2 ring-blue-300' : ''}`}>
+                    className={`w-full px-3 py-2 rounded-lg text-sm text-left cursor-pointer font-bold text-white bg-teal-500 hover:bg-teal-500 ${detailDropdown === 'income' ? 'ring-2 ring-blue-300' : ''}`}>
                     계정선택
                   </button>
                   {detailDropdown === 'income' && (
@@ -1344,7 +1344,7 @@ export default function VoucherInputPage() {
                           setDetailDropdown(null)
                         }} className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-blue-50 text-blue-600 ${a.isSub ? 'pl-5' : ''}`}>
                           <span className="flex items-center gap-1">
-                            <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${a.isSub ? 'bg-blue-500 text-white border-blue-500' : 'bg-blue-400 text-white border-blue-400'}`}>{a.isSub ? '세목' : '목'}</span>
+                            <span className={`inline-block px-1 py-0 rounded border text-[10px] font-bold ${a.isSub ? 'bg-teal-500 text-white border-blue-500' : 'bg-blue-400 text-white border-blue-400'}`}>{a.isSub ? '세목' : '목'}</span>
                             {a.label}
                           </span>
                         </button>
@@ -1489,7 +1489,7 @@ export default function VoucherInputPage() {
                       })()}</td>
                       case 'summary': return <td key={key} className="px-1 py-1" style={{display: 'flex', alignItems: 'center'}}>
                         <button onClick={e => { e.stopPropagation(); startVoice(dr.id) }}
-                          className={`shrink-0 w-4 h-4 flex items-center justify-center rounded-full transition-all mr-1 ${listeningRowId === dr.id ? 'bg-red-500 animate-pulse' : 'bg-slate-200 hover:bg-blue-500 group'}`}>
+                          className={`shrink-0 w-4 h-4 flex items-center justify-center rounded-full transition-all mr-1 ${listeningRowId === dr.id ? 'bg-red-500 animate-pulse' : 'bg-slate-200 hover:bg-teal-500 group'}`}>
                           <svg className={`w-2.5 h-2.5 ${listeningRowId === dr.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
                           </svg>
@@ -1717,7 +1717,7 @@ export default function VoucherInputPage() {
                                             setEditingCell(null)
                                           }}
                                           className={`h-6 rounded text-[11px] font-medium transition-colors ${
-                                            d === cd ? 'bg-blue-600 text-white' : dow === 0 ? 'text-red-500 hover:bg-slate-100' : dow === 6 ? 'text-blue-500 hover:bg-slate-100' : 'text-slate-700 hover:bg-slate-100'
+                                            d === cd ? 'bg-teal-500 text-white' : dow === 0 ? 'text-red-500 hover:bg-slate-100' : dow === 6 ? 'text-blue-500 hover:bg-slate-100' : 'text-slate-700 hover:bg-slate-100'
                                           }`}
                                         >{d}</button>
                                       )
@@ -1751,7 +1751,7 @@ export default function VoucherInputPage() {
                               className={`shrink-0 w-4 h-4 flex items-center justify-center rounded-full transition-all mr-1 ${
                                 listeningRowId === row.id
                                   ? 'bg-red-500 animate-pulse'
-                                  : 'bg-slate-200 hover:bg-blue-500 group'
+                                  : 'bg-slate-200 hover:bg-teal-500 group'
                               }`}
                             >
                               <svg className={`w-2.5 h-2.5 ${listeningRowId === row.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1887,7 +1887,7 @@ export default function VoucherInputPage() {
                               {rcpts.length > 0 ? (
                                 <button onClick={e => { e.stopPropagation(); setGalleryImages(rcpts) }} data-tip={`영수증 ${rcpts.length}장 보기`} className="relative inline-block">
                                   <img src={rcpts[0]} alt="영수증" className="w-7 h-7 object-cover rounded border border-slate-200 hover:ring-2 hover:ring-blue-400" />
-                                  {rcpts.length > 1 && <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[9px] font-bold rounded-full px-1 leading-tight">{rcpts.length}</span>}
+                                  {rcpts.length > 1 && <span className="absolute -top-1 -right-1 bg-teal-500 text-white text-[9px] font-bold rounded-full px-1 leading-tight">{rcpts.length}</span>}
                                 </button>
                               ) : row.approved ? (<>
                                 <button onClick={e => e.stopPropagation()} className="text-slate-900">
@@ -2460,7 +2460,7 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
           {unsavedCount > 0 && <span className="text-xs text-teal-600 font-medium">{unsavedCount}건 입력대기</span>}
           <button onClick={saveAll} disabled={unsavedCount === 0}
             className={`px-4 py-1.5 text-xs font-bold rounded transition-colors ${
-              unsavedCount > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+              unsavedCount > 0 ? 'bg-teal-500 hover:bg-teal-600 text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'
             }`}>
             저장
           </button>
@@ -2817,7 +2817,7 @@ function SingleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
           </div>
           <button onClick={save} disabled={!canSave}
             className={`px-6 py-2 text-sm font-bold rounded-lg transition-colors ${
-              canSave ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+              canSave ? 'bg-teal-500 hover:bg-teal-600 text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'
             }`}>
             저장
           </button>
@@ -3013,7 +3013,7 @@ function DetailInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
         <div className="flex justify-end">
           <button onClick={save} disabled={!canSave}
             className={`px-6 py-2 text-sm font-bold rounded-lg transition-colors ${
-              canSave ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+              canSave ? 'bg-teal-500 hover:bg-teal-600 text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'
             }`}>
             저장
           </button>

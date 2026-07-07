@@ -67,7 +67,7 @@ export default function ResourcesPage() {
           </div>
           <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
             <button onClick={() => setMode('list')} className="px-6 py-1.5 text-[12px] font-bold text-slate-600 bg-slate-100 border border-slate-300 rounded hover:bg-slate-200">목록</button>
-            <button className="px-6 py-1.5 text-[12px] font-bold text-white bg-blue-600 rounded hover:bg-blue-700">저장</button>
+            <button className="px-6 py-1.5 text-[12px] font-bold text-white bg-teal-500 rounded hover:bg-teal-600">저장</button>
           </div>
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function ResourcesPage() {
           <option>제목</option><option>내용</option>
         </select>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} className={`${inputCls} w-40`} />
-        <button className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">조회</button>
+        <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">조회</button>
       </div>
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-[11px]">
@@ -120,7 +120,7 @@ export default function ResourcesPage() {
       </div>
       <div className="flex items-center justify-end gap-2">
         <button onClick={() => setMode('list')} className="px-6 py-1.5 text-[12px] font-bold text-slate-600 bg-slate-100 border border-slate-300 rounded hover:bg-slate-200">목록</button>
-        <button onClick={() => setMode('write')} className="px-6 py-1.5 text-[12px] font-bold text-white bg-blue-600 rounded hover:bg-blue-700">쓰기</button>
+        <button onClick={() => setMode('write')} className="px-6 py-1.5 text-[12px] font-bold text-white bg-teal-500 rounded hover:bg-teal-600">쓰기</button>
       </div>
     </div>
   )
