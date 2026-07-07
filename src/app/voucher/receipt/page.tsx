@@ -419,6 +419,7 @@ export default function ReceiptPage() {
                   계산서 삭제시 체크
                 </label>
                 <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/hometax`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">세금계산서조회</button>
                 <div className="flex items-center gap-2">
                 </div>
                 <div className="ml-auto flex items-center gap-2">
@@ -486,8 +487,7 @@ export default function ReceiptPage() {
                   </select>
                 </div>
                 <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
-                <div className="flex items-center gap-2">
-                </div>
+                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/hometax`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">현금영수증조회</button>
                 <div className="ml-auto flex items-center gap-2">
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
                   <div className="relative group">
@@ -554,6 +554,7 @@ export default function ReceiptPage() {
                   <span className="text-xs text-slate-500">년 EDI 자료</span>
                 </div>
                 <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
+                <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/insurance`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">EDI조회</button>
               </div>
 
               {/* 4대보험 고지서 매칭 테이블 */}
@@ -782,6 +783,7 @@ function ShoppingTab() {
         <div className="flex items-center gap-2 text-xs text-slate-500">
           {bizNo && <span>사업자번호: <span className="font-mono text-slate-700">{bizNo}</span></span>}
           <a href="/cp_guide.pdf" target="_blank" rel="noopener noreferrer" className="px-3 py-1 text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">쿠팡조회가이드</a>
+          <button onClick={() => window.open(`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/admin/shop-transactions`, '_blank')} className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">쇼핑몰조회</button>
         </div>
       </div>
 
