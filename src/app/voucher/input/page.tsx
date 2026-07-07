@@ -1092,20 +1092,7 @@ export default function VoucherInputPage() {
         </button>
         <div className="w-px h-7 bg-slate-300 mx-2 flex-shrink-0" />
         </>}
-        {/* 전표입력방법 — 아이사랑꿈터(book)는 일괄수정만 사용 → 숨김 */}
-        {!book && (
-        <div className="flex items-center gap-1">
-          <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-slate-500">입력방법</span>
-          {(['간편등록', '건별등록', '상세등록', '일괄수정'] as const).map(mode => (
-            <button key={mode}
-              onClick={() => { setInputMode(mode); if (mode === '간편등록') setFilterInputMethod('수기'); else setFilterInputMethod('전체') }}
-              className={`px-5 py-1.5 text-[13px] font-bold whitespace-nowrap rounded-md border border-b-2 transition-colors ${
-                inputMode === mode ? 'bg-white text-teal-900 shadow-sm border-teal-700 border-b-teal-700' : 'text-slate-400 border-slate-200 border-b-slate-200 hover:bg-white/70 hover:text-teal-600'
-              }`}
-            >{mode}</button>
-          ))}
-        </div>
-        )}
+        {/* 전표입력방법 — 일괄수정 단일 모드로 통일, 전환 UI 없음 */}
         {/* 출력 그룹 */}
         {(inputMode === '일괄수정' || inputMode === '건별등록' || inputMode === '상세등록') && (
         <div className="flex items-center gap-1 ml-auto">
@@ -1180,7 +1167,6 @@ export default function VoucherInputPage() {
             {/* 전표 그룹 */}
             <div className="flex items-center gap-1">
               <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-teal-700 bg-teal-100 rounded cursor-default">전표</span>
-              {!book && <button onClick={() => { setInputMode('간편등록'); setFilterInputMethod('수기') }} data-tip="간편등록 화면으로 이동" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">등록</button>}
               <button data-tip="동일날짜에 선택된 전표를 1개 전표로 합산" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">합산</button>
               <button data-tip="동일금액의 전표를 동일한 금액으로 분리" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">일괄분리</button>
               <button data-tip="선택된 전표를 미계정상태로 전환" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">미계정전환</button>
