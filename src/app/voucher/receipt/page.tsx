@@ -70,9 +70,6 @@ function StoreDepositTab() {
             className="px-3 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors"
           >CIS조회</button>
 
-          <div className="w-px h-5 bg-slate-200 mx-1" />
-
-          <button className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded transition-colors">수납내역보기</button>
         </div>
       </div>
 
@@ -344,8 +341,6 @@ export default function ReceiptPage() {
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회 gnb</button>
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회</button>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
@@ -428,8 +423,6 @@ export default function ReceiptPage() {
                 </label>
                 <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
                 <div className="flex items-center gap-2">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회 gnb</button>
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회</button>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
@@ -497,8 +490,6 @@ export default function ReceiptPage() {
                 </div>
                 <button className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">조회</button>
                 <div className="flex items-center gap-2">
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회 gnb</button>
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors">데이터 조회</button>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
                   <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-orange-600 rounded transition-colors">일괄매칭</button>
