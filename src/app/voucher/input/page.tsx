@@ -1642,6 +1642,7 @@ export default function VoucherInputPage() {
           .single-input-mode td[data-cell] > span,
           .single-input-mode td[data-cell] > div:not(.absolute) {
             border: 1px solid rgba(245,184,0,0.3); border-radius: 4px; padding: 4px 8px; min-height: 30px; display: flex; align-items: center; justify-content: inherit;
+            max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis;
           }
           .single-input-mode td[data-cell] > button { border: none !important; }
           .single-input-mode td[data-cell="income"] > span,
@@ -2054,20 +2055,25 @@ export default function VoucherInputPage() {
                                       <button key={`${idx}-${a.value}`} type="button"
                                         onClick={() => {
                                           const list = row.type === '수입' ? incomeAccounts : expenseAccounts
+                                          let newAccount = row.account
+                                          let newSub = ''
                                           if (a.isSub) {
                                             const idx = list.indexOf(a)
                                             let parentAccount = row.account
                                             for (let i = idx - 1; i >= 0; i--) {
                                               if (!list[i].isSub) { parentAccount = list[i].value; break }
                                             }
-                                            updateRow(row.id, 'account', parentAccount)
-                                            updateRow(row.id, 'subAccount', a.label)
+                                            newAccount = parentAccount
+                                            newSub = a.label
                                           } else {
-                                            updateRow(row.id, 'account', a.value)
-                                            updateRow(row.id, 'subAccount', '')
+                                            newAccount = a.value
+                                            newSub = ''
                                           }
+                                          const newCode = newSub ? (subAccountCodeMap[newSub] || accountCodeMap[newAccount] || '') : (accountCodeMap[newAccount] || '')
+                                          setRows(prev => prev.map(r => r.id === row.id
+                                            ? { ...r, account: newAccount, subAccount: newSub, accountCode: newCode, copySelected: true }
+                                            : { ...r, copySelected: false }))
                                           setEditingCell(null)
-                                          setRows(prev => prev.map(r => ({ ...r, copySelected: r.id === row.id })))
                                         }}
                                         className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${rowCls} ${a.isSub ? 'pl-5' : ''}`}>
                                         {a.isSub ? (
@@ -2103,12 +2109,20 @@ export default function VoucherInputPage() {
                                   defaultValue=""
                                   placeholder={(() => {
                                     const autoCode = row.subAccount ? (subAccountCodeMap[row.subAccount] || accountCodeMap[row.account] || '') : (accountCodeMap[row.account] || '')
-                                    return row.accountCode || autoCode || ''
+                                    return autoCode || row.accountCode || ''
                                   })()}
                                   ref={el => { if (el) { el.focus() } }}
                                   onClick={e => e.stopPropagation()}
                                   onChange={e => {
-                                    e.target.value = e.target.value.replace(/[^0-9]/g, '')
+                                    const val = e.target.value.replace(/[^0-9]/g, '')
+                                    e.target.value = val
+                                    if (val.length >= 4) {
+                                      const match = codeToAccount[val]
+                                      if (match) {
+                                        e.target.dataset.handled = 'true'
+                                        setRows(prev => prev.map(r => r.id === row.id ? { ...r, accountCode: val, account: match.account, subAccount: match.subAccount } : r))
+                                      }
+                                    }
                                   }}
                                   onKeyDown={e => {
                                     if (e.key === 'Enter' || e.key === 'Tab') {
@@ -2152,7 +2166,7 @@ export default function VoucherInputPage() {
                                 <span className={`text-xs cursor-pointer ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`}>
                                   {(() => {
                                     const autoCode = row.subAccount ? (subAccountCodeMap[row.subAccount] || accountCodeMap[row.account] || '') : (accountCodeMap[row.account] || '')
-                                    return row.accountCode || autoCode || '-'
+                                    return autoCode || row.accountCode || '-'
                                   })()}
                                 </span>
                               )}
