@@ -2031,7 +2031,13 @@ export default function VoucherInputPage() {
                             {/* 계정과목 */}
                             <td data-cell="account" className="text-center px-2 py-1 cursor-pointer relative" onClick={cellClick('account')}>
                               {isCell('account') ? (
-                                <div className="absolute top-full right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-[100] w-[260px] max-h-[320px] overflow-y-auto overflow-x-hidden py-1 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30" onClick={() => setEditingCell(null)}>
+                                 <div className="bg-white border border-slate-200 rounded-xl shadow-2xl w-[340px] max-h-[75vh] flex flex-col overflow-hidden whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                                  <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+                                    <span className="text-sm font-bold text-slate-700">계정과목 선택 · <span className={row.type === '수입' ? 'text-blue-600' : 'text-red-600'}>{row.type}</span></span>
+                                    <button onClick={() => setEditingCell(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">✕</button>
+                                  </div>
+                                  <div className="overflow-y-auto py-1">
                                   {(row.type === '수입' ? incomeAccounts : expenseAccounts).map(a => {
                                     const isSelected = a.isSub ? row.subAccount === a.label : row.account === a.value
                                     const color = row.type === '수입' ? 'blue' : 'red'
@@ -2071,6 +2077,8 @@ export default function VoucherInputPage() {
                                       </button>
                                     )
                                   })}
+                                  </div>
+                                 </div>
                                 </div>
                               ) : null}
                               <span className={`font-medium ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`}>{row.account}</span>
