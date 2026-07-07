@@ -30,6 +30,7 @@ interface VoucherRow {
   accountCode?: string
   receiptImage?: string    // 첨부한 영수증 사진 URL (/api/receipt-file/…) — 대표(첫 장)
   receiptImages?: string[] // 여러 장(각 1장씩 배열) — 걸음마 이관 시 한 전표에 3~4장
+  _bankKey?: string        // 은행거래 자동전표 출처키(계좌|날짜|시간|금액) — 중복 등록 방지
 }
 
 const sampleData: VoucherRow[] = []
@@ -101,6 +102,7 @@ export default function VoucherInputPage() {
   const [loaded, setLoaded] = useState(false)  // ← mount 로드 완료 전엔 자동저장 금지
   // 아이사랑꿈터 장부(계정) — 3개 장부별로 전표가 분리 저장됨. 어린이집은 '' (분리 안 함)
   const [book, setBook] = useState<string | null>(null)  // null = 아직 결정 전
+  const [bankBusy, setBankBusy] = useState(false)        // 은행미등록(은행거래→전표) 처리 중
   const [bookSwitchMsg, setBookSwitchMsg] = useState('')  // 장부 전환 저장 알림
   const bookRef = useRef('')
   // 최신 rows/loaded 를 이벤트 핸들러(mount 클로저)에서 참조하기 위한 ref
@@ -308,6 +310,61 @@ export default function VoucherInputPage() {
   }, [listeningRowId])
 
   const nextId = () => Math.max(...rows.map(r => r.id), 0) + 1
+
+  // 은행거래(저장분) → 전표 미등록분만 전표로 생성. silent=자동(전표관리 진입 시), 아니면 [은행미등록] 버튼
+  const registerBankTx = async (silent: boolean) => {
+    if (bankBusy) return
+    setBankBusy(true)
+    try {
+      const bnum = (v: unknown) => Number(String(v ?? '').replace(/[^0-9.-]/g, '')) || 0
+      // 이 장부의 계좌 목록 (어린이집=단일 / 아이사랑꿈터=해당 장부)
+      const accUrl = book ? `/api/bank/accounts?book=${encodeURIComponent(book)}` : `/api/bank/accounts?book=`
+      const accs = ((await (await fetch(accUrl)).json()).accounts || []) as { accountNo: string }[]
+      const acctNos = Array.from(new Set(accs.map(a => a.accountNo).filter(Boolean)))
+      if (acctNos.length === 0) { if (!silent) alert('등록된 계좌가 없습니다.\n(전표관리 › 계좌내역에서 계좌 등록·조회 먼저)'); return }
+      const tx = ((await (await fetch(`/api/bank/saved?ym=${encodeURIComponent(filterYearMonth)}&acctNos=${acctNos.join(',')}`)).json()).rows || []) as Record<string, string>[]
+      if (tx.length === 0) { if (!silent) alert(`${filterYearMonth} 저장된 은행거래가 없습니다.\n(계좌내역에서 조회 먼저)`); return }
+      let payMap: Record<string, string> = {}
+      try { payMap = JSON.parse(localStorage.getItem('bank-payment-map') || '{}') } catch {}
+      const memoBlank = localStorage.getItem('bank-memoBlank') === '1'          // 토글3: 적요 빈칸
+      const memoToCounterpart = localStorage.getItem('bank-tradeSync') !== '0'  // 토글2: 적요/의뢰인 → 거래처 (기본 ON)
+      const existing = new Set((rowsRef.current || []).map(r => r._bankKey).filter(Boolean))
+      const news: VoucherRow[] = []
+      let base = nextId()
+      for (const t of tx) {
+        const inAmt = bnum(t.inAmt), outAmt = bnum(t.outAmt)
+        const amt = inAmt > 0 ? inAmt : outAmt
+        if (amt === 0) continue
+        const d8 = String(t.trDt || '').replace(/[^0-9]/g, '').slice(0, 8)
+        const key = `${t.acctNo}|${d8}|${String(t.trTm || '').replace(/[^0-9]/g, '')}|${amt}`
+        if (existing.has(key)) continue
+        const date = d8.length === 8 ? `${d8.slice(0, 4)}-${d8.slice(4, 6)}-${d8.slice(6, 8)}` : `${filterYearMonth}-01`
+        const memo = t.trNm || t.trTp || ''
+        news.push({
+          id: base++, date, type: inAmt > 0 ? '수입' : '지출',
+          account: '', subAccount: '', accountCode: '',
+          summary: memoBlank ? '' : memo, amount: amt,
+          counterpart: memoToCounterpart ? (t.trNm || '') : '',
+          note: payMap[t.trTp] || '', approved: false, inputMethod: '은행',
+          _bankKey: key,
+        })
+      }
+      if (news.length === 0) { if (!silent) alert('추가할 미등록 은행거래가 없습니다. (모두 등록됨)'); return }
+      setRows(prev => [...prev, ...news].sort((a, b) => a.date.localeCompare(b.date) || (a.type === '수입' ? -1 : 1)))
+      if (!silent) alert(`${news.length}건의 은행거래를 전표로 추가했습니다.\n※ 계정과목은 직접 지정해 주세요.`)
+    } catch (e) { if (!silent) alert('은행미등록 처리 실패: ' + (e instanceof Error ? e.message : String(e))) }
+    finally { setBankBusy(false) }
+  }
+
+  // 전표관리 진입 시 자동(토글1 '거래 내역 자동저장' ON 이면) — 로드 완료 + 계좌내역 자동전표
+  const autoRanRef = useRef('')
+  useEffect(() => {
+    if (!loaded || book === null) return
+    const on = localStorage.getItem('bank-autoSave') !== '0'  // 기본 ON
+    const tag = `${book}::${filterYearMonth}`
+    if (on && autoRanRef.current !== tag) { autoRanRef.current = tag; registerBankTx(true) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, book, filterYearMonth])
 
   const filtered = rows.filter(r => {
     if (filterType !== '전체' && r.type !== filterType) return false
@@ -950,6 +1007,11 @@ export default function VoucherInputPage() {
       {/* 툴바 */}
       <div className="border-b border-teal-400/30 px-3 py-2 overflow-visible" ref={columnSettingsRef}>
         <div className="flex items-center">
+        {/* 은행미등록 — 저장된 은행거래 중 전표 미등록분을 전표로 생성 (자동 실패 시 수동) */}
+        <button onClick={() => registerBankTx(false)} disabled={bankBusy}
+          className="px-3 py-2 rounded text-xs font-bold bg-teal-100 text-teal-700 hover:bg-teal-200 border border-teal-300 disabled:opacity-50 flex items-center gap-1" data-tip="계좌내역(은행) 중 전표 미등록분 자동 등록">
+          🏦 {bankBusy ? '처리 중…' : '은행미등록'}
+        </button>
         {/* 컬럼설정/기능키 */}
         {inputMode === '일괄수정' && <>
         <div className="relative">

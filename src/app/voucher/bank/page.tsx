@@ -51,6 +51,17 @@ export default function BankPage() {
   const [autoSave, setAutoSave] = useState(true)
   const [tradeSync, setTradeSync] = useState(true)
   const [memoSync, setMemoSync] = useState(true)
+  // 토글 영속화 (전표입력의 은행미등록 자동전표가 읽음) — bank-autoSave/tradeSync/memoBlank
+  useEffect(() => {
+    try {
+      setAutoSave(localStorage.getItem('bank-autoSave') !== '0')
+      setTradeSync(localStorage.getItem('bank-tradeSync') !== '0')
+      setMemoSync(localStorage.getItem('bank-memoBlank') !== '1')  // memoBlank='1'(적요빈칸) → memoSync=false
+    } catch {}
+  }, [])
+  const toggleAutoSave = () => setAutoSave(v => { const n = !v; try { localStorage.setItem('bank-autoSave', n ? '1' : '0') } catch {}; return n })
+  const toggleTradeSync = () => setTradeSync(v => { const n = !v; try { localStorage.setItem('bank-tradeSync', n ? '1' : '0') } catch {}; return n })
+  const toggleMemoSync = () => setMemoSync(v => { const n = !v; try { localStorage.setItem('bank-memoBlank', n ? '0' : '1') } catch {}; return n })
   const [showAddAccount, setShowAddAccount] = useState(false)
   const [showSpeedGuide, setShowSpeedGuide] = useState(false)
   const [speedBank, setSpeedBank] = useState('KB 국민은행')
@@ -357,7 +368,7 @@ export default function BankPage() {
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm px-5 py-4 space-y-3">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative group">
-            <button onClick={() => setAutoSave(!autoSave)} className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg transition-all shadow-sm border ${autoSave ? 'text-white bg-teal-600 border-teal-600 hover:bg-teal-700' : 'text-slate-500 bg-gradient-to-b from-slate-50 to-slate-100 border-slate-300 hover:from-slate-100 hover:to-slate-200'}`}>
+            <button onClick={toggleAutoSave} className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg transition-all shadow-sm border ${autoSave ? 'text-white bg-teal-600 border-teal-600 hover:bg-teal-700' : 'text-slate-500 bg-gradient-to-b from-slate-50 to-slate-100 border-slate-300 hover:from-slate-100 hover:to-slate-200'}`}>
               <svg className={`w-4 h-4 ${autoSave ? 'text-white' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
               거래 내역 자동저장 {autoSave ? '해지' : '설정'}
               <svg className={`w-3.5 h-3.5 ${autoSave ? 'text-white/60' : 'text-slate-400/60'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
@@ -375,7 +386,7 @@ export default function BankPage() {
             </div>
           </div>
           <div className="relative group/trade">
-            <button onClick={() => setTradeSync(!tradeSync)} className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg transition-all shadow-sm border ${tradeSync ? 'text-white bg-teal-600 border-teal-600 hover:bg-teal-700' : 'text-slate-500 bg-gradient-to-b from-slate-50 to-slate-100 border-slate-300 hover:from-slate-100 hover:to-slate-200'}`}>
+            <button onClick={toggleTradeSync} className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg transition-all shadow-sm border ${tradeSync ? 'text-white bg-teal-600 border-teal-600 hover:bg-teal-700' : 'text-slate-500 bg-gradient-to-b from-slate-50 to-slate-100 border-slate-300 hover:from-slate-100 hover:to-slate-200'}`}>
               <svg className={`w-4 h-4 ${tradeSync ? 'text-white' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
               거래 내역 저장시 적요를 거래처에 동시 저장 {tradeSync ? '해지' : '설정'}
               <svg className={`w-3.5 h-3.5 ${tradeSync ? 'text-white/60' : 'text-slate-400/60'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
@@ -389,7 +400,7 @@ export default function BankPage() {
             </div>
           </div>
           <div className="relative group/memo">
-            <button onClick={() => setMemoSync(!memoSync)} className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg transition-all shadow-sm border ${memoSync ? 'text-white bg-teal-600 border-teal-600 hover:bg-teal-700' : 'text-slate-500 bg-gradient-to-b from-slate-50 to-slate-100 border-slate-300 hover:from-slate-100 hover:to-slate-200'}`}>
+            <button onClick={toggleMemoSync} className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg transition-all shadow-sm border ${memoSync ? 'text-white bg-teal-600 border-teal-600 hover:bg-teal-700' : 'text-slate-500 bg-gradient-to-b from-slate-50 to-slate-100 border-slate-300 hover:from-slate-100 hover:to-slate-200'}`}>
               <svg className={`w-4 h-4 ${memoSync ? 'text-white' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               적요내용 자동저장 {memoSync ? '해지' : '설정'}
               <svg className={`w-3.5 h-3.5 ${memoSync ? 'text-white/60' : 'text-slate-400/60'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
