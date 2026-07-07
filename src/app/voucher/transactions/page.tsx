@@ -39,23 +39,31 @@ interface VoucherRow {
   account: string; subAccount: string; summary: string; amount: number
   counterpart: string; note: string
 }
-/** 저장된 전표(VoucherRow) → 거래조회 Transaction 으로 변환 */
+/** 저장된 전표(VoucherRow) → 거래조회 Transaction 으로 변환.
+ *  증빙번호 = 걸음마 표준: 수입 A000001·지출 B000001 (수입/지출 별도 채번). */
 function vouchersToTransactions(rows: VoucherRow[]): Transaction[] {
+  let inSeq = 0, outSeq = 0
   return (rows || [])
     .slice()
     .sort((a, b) => String(a.date).localeCompare(String(b.date)))
-    .map((r, i) => ({
-      id: r.id ?? i + 1,
-      date: r.date || '',
-      docNo: `A${String(i + 1).padStart(6, '0')}`,
-      account: r.account || '',
-      subAccount: r.subAccount || '',
-      summary: r.summary || '',
-      income: r.type === '수입' ? Number(r.amount) || 0 : 0,
-      expense: (r.type === '지출' || r.type === '반납') ? Number(r.amount) || 0 : 0,
-      counterpart: r.counterpart || '',
-      note: r.note || '',
-    }))
+    .map((r, i) => {
+      const income = r.type === '수입' ? Number(r.amount) || 0 : 0
+      const expense = (r.type === '지출' || r.type === '반납') ? Number(r.amount) || 0 : 0
+      const isIncome = r.type === '수입'
+      const docNo = isIncome ? `A${String(++inSeq).padStart(6, '0')}` : `B${String(++outSeq).padStart(6, '0')}`
+      return {
+        id: r.id ?? i + 1,
+        date: r.date || '',
+        docNo,
+        account: r.account || '',
+        subAccount: r.subAccount || '',
+        summary: r.summary || '',
+        income,
+        expense,
+        counterpart: r.counterpart || '',
+        note: r.note || '',
+      }
+    })
 }
 
 interface Transaction {
