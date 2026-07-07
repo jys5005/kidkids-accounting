@@ -2037,15 +2037,18 @@ export default function VoucherInputPage() {
                               {isCell('account') ? (
                                 <div className="fixed inset-0 z-[100] bg-black/20" onClick={() => setEditingCell(null)}>
                                  <div style={acctPopPos ? { position: 'fixed', left: acctPopPos.x, top: acctPopPos.y } : { position: 'fixed', left: '50%', top: '4vh', transform: 'translateX(-50%)' }}
-                                   className="bg-white border border-slate-200 rounded-xl shadow-2xl w-[260px] h-[88vh] flex flex-col overflow-hidden whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                                   className="bg-white border border-slate-200 rounded-xl shadow-2xl w-[260px] h-[88vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                                   <div onMouseDown={startAcctDrag} className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between flex-shrink-0 cursor-move select-none">
-                                    <span className="text-sm font-bold text-slate-700">☰ 계정과목 선택 · <span className={row.type === '수입' ? 'text-blue-600' : 'text-red-600'}>{row.type}</span></span>
+                                    <span className="text-sm font-bold text-slate-700 whitespace-nowrap">☰ 계정과목 선택 · <span className={row.type === '수입' ? 'text-blue-600' : 'text-red-600'}>{row.type}</span></span>
                                     <button onClick={() => setEditingCell(null)} onMouseDown={e => e.stopPropagation()} className="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">✕</button>
                                   </div>
-                                  <div className="overflow-y-auto py-1">
+                                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-1">
                                   {(row.type === '수입' ? incomeAccounts : expenseAccounts).map(a => {
                                     const isSelected = a.isSub ? row.subAccount === a.label : row.account === a.value
-                                    const color = row.type === '수입' ? 'blue' : 'red'
+                                    const isIncome = row.type === '수입'
+                                    const rowCls = isIncome
+                                      ? (isSelected ? 'bg-blue-100 font-bold text-blue-700' : 'hover:bg-blue-50 text-blue-600')
+                                      : (isSelected ? 'bg-red-100 font-bold text-red-700' : 'hover:bg-red-50 text-red-600')
                                     return (
                                       <button key={a.value}
                                         onClick={() => {
@@ -2065,9 +2068,7 @@ export default function VoucherInputPage() {
                                           setEditingCell(null)
                                           setRows(prev => prev.map(r => ({ ...r, copySelected: r.id === row.id })))
                                         }}
-                                        className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
-                                          isSelected ? `bg-${color}-100 font-bold text-${color}-700` : `hover:bg-${color}-50 text-${color === 'blue' ? 'blue' : 'red'}-600`
-                                        } ${a.isSub ? 'pl-5' : ''}`}>
+                                        className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${rowCls} ${a.isSub ? 'pl-5' : ''}`}>
                                         {a.isSub ? (
                                           <span className="flex items-center gap-1">
                                             <span className={`inline-block px-1 py-0 rounded border text-[12px] font-bold ${row.type === '수입' ? 'border-blue-400 text-blue-600' : 'border-red-400 text-red-600'}`}>세목</span>
