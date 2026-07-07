@@ -509,6 +509,18 @@ const MAPPING_TABLE = {
   },
 } as const
 
+// 세목 코드(XXXX-YYY 형식) → 수전자장부 확정 5자리 코드(목4자리+세목순번1자리)
+// (src/lib/accounts.ts subAccountCodeMap 과 동일 기준, 2026-07-07 확정 규칙)
+const SUBCODE_TO_5DIGIT: Record<string, string> = {
+  '1221-111': '12211', '1221-112': '12212', '1221-113': '12213',
+  '1221-121': '12214', '1221-131': '12215', '1221-141': '12216',
+  '2142-112': '21423', '2142-121': '21424',
+  '2217-111': '22171', '2217-121': '22172',
+  '2421-111': '24211', '2421-121': '24212', '2421-131': '24213',
+  '2421-141': '24214', '2421-151': '24215', '2421-161': '24216',
+  '2721-001': '27211', '2721-002': '27212',
+}
+
 function fmtAmt(n: number): string {
   if (!n) return ''
   return n.toLocaleString()
@@ -1024,6 +1036,9 @@ export default function DataMigrationPage() {
                 else code = '2142-121' // 기본: 적립금
               }
             }
+
+            // 세목 코드는 수전자장부 확정 5자리로 최종 변환 (엑셀 업로드 바로 가능하게)
+            code = SUBCODE_TO_5DIGIT[code] || code
 
             return { ...row, accountCode: code }
           }),
@@ -1664,6 +1679,7 @@ export default function DataMigrationPage() {
                               else code = '2142-121'
                             }
                           }
+                          code = SUBCODE_TO_5DIGIT[code] || code
                           return { ...row, accountCode: code }
                         }),
                       }))
