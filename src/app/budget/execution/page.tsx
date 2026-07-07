@@ -465,7 +465,7 @@ function ExecTable({ title, rows, tone }: { title: string; rows: ERow[]; tone: '
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className={`px-4 py-2 font-bold text-sm ${head}`}>{title} <span className="text-xs font-normal text-slate-500">· 예산 {fmt(tB)} / 집행 {fmt(tE)} / 잔액 {fmt(tB - tE)}</span></div>
       <div className="overflow-x-auto">
-        <table className="text-[11px] border-collapse">
+        <table className="text-[11px] border-collapse mx-auto">
           <thead>
             <tr className="bg-slate-100 text-slate-600 font-bold">
               <th colSpan={3} className="px-2 py-1.5 border border-slate-200">계정과목</th>
