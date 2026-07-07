@@ -103,6 +103,7 @@ export default function VoucherInputPage() {
   // 아이사랑꿈터 장부(계정) — 3개 장부별로 전표가 분리 저장됨. 어린이집은 '' (분리 안 함)
   const [book, setBook] = useState<string | null>(null)  // null = 아직 결정 전
   const [bankBusy, setBankBusy] = useState(false)        // 은행미등록(은행거래→전표) 처리 중
+  const [showManualEntry, setShowManualEntry] = useState(false)  // 수기등록 팝업
   const [acctPopPos, setAcctPopPos] = useState<{ x: number; y: number } | null>(null)  // 계정과목 팝업 위치(드래그 이동)
   const startAcctDrag = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -1017,11 +1018,6 @@ export default function VoucherInputPage() {
       {/* 툴바 */}
       <div className="border-b border-teal-400/30 px-3 py-2 overflow-visible" ref={columnSettingsRef}>
         <div className="flex items-center">
-        {/* 은행미등록 — 저장된 은행거래 중 전표 미등록분을 전표로 생성 (자동 실패 시 수동) */}
-        <button onClick={() => registerBankTx(false)} disabled={bankBusy}
-          className="px-3 py-2 rounded text-xs font-bold bg-teal-100 text-teal-700 hover:bg-teal-200 border border-teal-300 disabled:opacity-50 flex items-center gap-1" data-tip="계좌내역(은행) 중 전표 미등록분 자동 등록">
-          🏦 {bankBusy ? '처리 중…' : '은행미등록'}
-        </button>
         {/* 컬럼설정/기능키 */}
         {inputMode === '일괄수정' && <>
         <div className="relative">
@@ -1167,6 +1163,11 @@ export default function VoucherInputPage() {
             {/* 전표 그룹 */}
             <div className="flex items-center gap-1">
               <span className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-teal-700 bg-teal-100 rounded cursor-default">전표</span>
+              <button onClick={() => registerBankTx(false)} disabled={bankBusy} data-tip="계좌내역(은행) 중 전표 미등록분 자동 등록"
+                className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-teal-300 rounded bg-teal-100 hover:bg-teal-200 text-teal-700 disabled:opacity-50 sub-tab-hover">
+                🏦 {bankBusy ? '처리 중…' : '은행미등록'}
+              </button>
+              <button onClick={() => setShowManualEntry(true)} data-tip="전표 수기 입력 (팝업)" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">수기등록</button>
               <button data-tip="동일날짜에 선택된 전표를 1개 전표로 합산" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">합산</button>
               <button data-tip="동일금액의 전표를 동일한 금액으로 분리" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">일괄분리</button>
               <button data-tip="선택된 전표를 미계정상태로 전환" className="px-3 py-1.5 text-[13px] font-bold whitespace-nowrap border border-slate-300 rounded bg-white hover:bg-slate-50 text-slate-700 sub-tab-hover">미계정전환</button>
@@ -1221,8 +1222,18 @@ export default function VoucherInputPage() {
         )}
       </div>
 
-      {/* 간편등록 모드 */}
-      {inputMode === '간편등록' && <SimpleInputPanel rows={rows} setRows={setRows} filterYearMonth={filterYearMonth} incomeAccounts={incomeAccounts} expenseAccounts={expenseAccounts} accountCodeMap={accountCodeMap} subAccountCodeMap={subAccountCodeMap} codeToAccount={codeToAccount} inputMethod={filterInputMethod} excelParsed={excelParsed} setExcelParsed={setExcelParsed} excelFileName={excelFileName} setExcelFileName={setExcelFileName} />}
+      {/* 수기등록 팝업 */}
+      {showManualEntry && (
+        <div className="fixed inset-0 z-[100] bg-black/30 flex items-start justify-center overflow-y-auto py-8" onClick={() => setShowManualEntry(false)}>
+          <div className="relative w-[95vw] max-w-5xl" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowManualEntry(false)}
+              className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-white border border-slate-300 shadow-md flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <SimpleInputPanel rows={rows} setRows={setRows} filterYearMonth={filterYearMonth} incomeAccounts={incomeAccounts} expenseAccounts={expenseAccounts} accountCodeMap={accountCodeMap} subAccountCodeMap={subAccountCodeMap} codeToAccount={codeToAccount} inputMethod={filterInputMethod} excelParsed={excelParsed} setExcelParsed={setExcelParsed} excelFileName={excelFileName} setExcelFileName={setExcelFileName} />
+          </div>
+        </div>
+      )}
 
       {/* 건별등록은 일괄수정과 동일한 테이블 사용 */}
 
