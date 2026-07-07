@@ -1682,14 +1682,14 @@ export default function VoucherInputPage() {
                         </div>
                       </th>
                       <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[53px] relative group cursor-help"><span className="whitespace-nowrap">영수<span className="text-blue-400 text-[10px]">ⓘ</span></span>
-                        <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-blue-100 text-blue-800 text-[10px] font-normal rounded-lg px-3 py-2 z-50 w-[140px] shadow-lg border border-blue-200">
-                          <p className="font-bold mb-1">국세청</p>
-                          <p>세금계산서 · 계산서 · 현금영수증</p>
-                          <p className="font-bold mt-1.5 mb-1">쇼핑몰</p>
-                          <p>쿠팡 · 네이버 · 11번가 · 지마켓 · 옥션 · 오아시스</p>
-                          <p className="font-bold mt-1.5 mb-1">4대보험</p>
-                          <p>국민연금 · 건강보험 · 고용보험 · 산재보험</p>
-                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-100 border-l border-t border-blue-200 rotate-45"></div>
+                        <div className="hidden group-hover:block absolute top-full right-0 mt-1 bg-blue-100 text-blue-800 text-[10px] font-normal rounded-lg px-3 py-2 z-50 w-max max-w-[280px] shadow-lg border border-blue-200 text-left">
+                          <p className="font-bold mb-0.5 whitespace-nowrap">국세청</p>
+                          <p className="whitespace-nowrap">세금계산서 · 계산서 · 현금영수증</p>
+                          <p className="font-bold mt-1 mb-0.5 whitespace-nowrap">쇼핑몰</p>
+                          <p className="whitespace-nowrap">쿠팡 · 네이버 · 11번가 · 지마켓 · 옥션 · 오아시스</p>
+                          <p className="font-bold mt-1 mb-0.5 whitespace-nowrap">4대보험</p>
+                          <p className="whitespace-nowrap">국민연금 · 건강보험 · 고용보험 · 산재보험</p>
+                          <div className="absolute -top-1 right-3 w-2 h-2 bg-blue-100 border-l border-t border-blue-200 rotate-45"></div>
                         </div>
                       </th>
                     </React.Fragment>
