@@ -2193,7 +2193,7 @@ export default function VoucherInputPage() {
                                 >선택</button>
                               </div>
                             ) : (
-                              <span className="text-slate-600 text-sm truncate block">{row.counterpart || '-'}</span>
+                              <span className="text-slate-600 text-[11px] truncate block">{row.counterpart || '-'}</span>
                             )}
                           </td>
 
@@ -2231,7 +2231,7 @@ export default function VoucherInputPage() {
                                 </>}
                               </select>
                             ) : (
-                              <span className="text-slate-400 text-sm">{row.note ? row.note.replace(/^(지출|수입)-/, '') : '-'}</span>
+                              <span className="text-slate-400 text-[11px]">{row.note ? row.note.replace(/^(지출|수입)-/, '') : '-'}</span>
                             )}
                           </td>
 
