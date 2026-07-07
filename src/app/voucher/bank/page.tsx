@@ -608,15 +608,21 @@ export default function BankPage() {
               {(() => {
                 const mediums = Array.from(new Set(transactions.map(t => t.medium).filter(Boolean))).sort()
                 if (mediums.length === 0) return <p className="text-xs text-slate-400 py-8 text-center">먼저 [조회]로 계좌내역을 불러오면 이체매체 목록이 나옵니다.</p>
-                return mediums.map(m => (
-                  <div key={m} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-700 w-36 flex-shrink-0 font-medium truncate">{m}</span>
+                // 미지정(미매핑)을 위로 정렬 → 찾기 쉽게
+                const sorted = [...mediums].sort((a, b) => (payMap[a] ? 1 : 0) - (payMap[b] ? 1 : 0) || a.localeCompare(b))
+                return sorted.map(m => {
+                  const un = !payMap[m]
+                  return (
+                  <div key={m} className={`flex items-center gap-3 rounded px-1.5 py-1 ${un ? 'bg-rose-50' : ''}`}>
+                    <span className={`text-xs w-36 flex-shrink-0 font-medium truncate ${un ? 'text-rose-600' : 'text-slate-700'}`}>{m}{un && <span className="ml-1 text-[9px] font-bold">미매핑</span>}</span>
                     <span className="text-slate-400">→</span>
-                    <select value={payMap[m] || ''} onChange={e => savePayMap({ ...payMap, [m]: e.target.value })} className="px-2 py-1.5 text-xs border border-slate-300 rounded bg-white flex-1">
+                    <select value={payMap[m] || ''} onChange={e => savePayMap({ ...payMap, [m]: e.target.value })} className={`px-2 py-1.5 text-xs border rounded flex-1 ${un ? 'border-rose-400 bg-rose-50 text-rose-600 font-bold' : 'border-slate-300 bg-white'}`}>
                       <option value="">(미지정)</option>
                       {['계좌이체', '자동이체', '카드결제', '현금', 'CMS공동', '기타'].map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                   </div>
+                  )
+                })
                 ))
               })()}
             </div>
