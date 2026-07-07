@@ -437,7 +437,7 @@ export default function TransactionsPage() {
                     <span className={`font-medium ${isIncomeAccount(row.account) ? 'text-blue-700' : 'text-red-600'}`}>{row.account}</span>
                   </td>
                   <td className="text-center px-4 py-2.5">
-                    <span className="text-slate-600 text-sm">{row.subAccount || '-'}</span>
+                    <span className="text-slate-600 text-[11px]">{row.subAccount && row.subAccount !== row.account ? row.subAccount : '-'}</span>
                   </td>
                   <td className="text-left px-4 py-2.5 text-slate-600">{row.summary}</td>
                   <td className="text-right px-6 py-2.5 text-blue-600 font-medium">{fmt(row.income)}</td>

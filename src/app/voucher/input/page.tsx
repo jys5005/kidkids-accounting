@@ -552,7 +552,7 @@ export default function VoucherInputPage() {
                 <div className="px-3 pb-1.5 flex items-center gap-2 text-xs text-slate-400">
                   <span>{row.date.slice(5)}</span>
                   <span>·</span>
-                  <span className="truncate">{row.account}{row.subAccount ? ` / ${row.subAccount}` : ''}</span>
+                  <span className="truncate">{row.account}{row.subAccount && row.subAccount !== row.account ? ` / ${row.subAccount}` : ''}</span>
                   {(() => { const rc = receiptListOf(row); return rc.length > 0 && (
                     <button onClick={e => { e.stopPropagation(); setGalleryImages(rc) }} className="ml-auto shrink-0 relative" title={`영수증 ${rc.length}장 보기`}>
                       <img src={rc[0]} alt="영수증" className="w-8 h-8 object-cover rounded border" />
@@ -2013,9 +2013,9 @@ export default function VoucherInputPage() {
                               ) : null}
                               <span className={`font-medium ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`}>{row.account}</span>
                             </td>
-                            {/* 세목 */}
+                            {/* 세목 — 목과 동일(중복)이면 세목 아님 → '-' */}
                             <td data-cell="sub" className="text-center px-0.5 py-1">
-                              <span className="text-slate-600 text-sm">{row.subAccount || '-'}</span>
+                              <span className="text-slate-600 text-[11px]">{row.subAccount && row.subAccount !== row.account ? row.subAccount : '-'}</span>
                             </td>
                             {/* 계정코드 */}
                             <td data-cell="accountCode" className="text-center px-1 py-1" onClick={cellClick('accountCode')}>
