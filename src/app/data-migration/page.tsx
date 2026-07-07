@@ -52,6 +52,7 @@ const SOURCE_OPTIONS = [
   { value: 'easys', label: '이편한시스템', url: '', features: [], authType: 'idpw' as const },
   { value: 'mores', label: '더편한시스템', url: '', features: [], authType: 'idpw' as const },
   { value: 'incheon', label: '인천시어린이집관리시스템', url: 'aincheon.co.kr', features: ['현금출납부'], authType: 'cert' as const },
+  { value: 'gyeonggi', label: '경기도어린이집관리시스템', url: 'accgg.co.kr', features: [], authType: 'cert' as const },
   { value: 'seoul', label: '서울시어린이집관리시스템', url: '', features: [], authType: 'idpw' as const },
   { value: 'wisean', label: '와이즈안', url: 'waisn.wisearn.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
   { value: 'ifriends', label: '아이프렌즈', url: 'i-friends.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
