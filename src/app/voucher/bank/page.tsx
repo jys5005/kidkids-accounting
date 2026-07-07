@@ -512,7 +512,16 @@ export default function BankPage() {
               <option>환불</option>
             </select>
             <button onClick={() => loadSavedTx(filterYm, accounts)} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">검색</button>
-            <button className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 border border-slate-300 rounded transition-colors">삭제</button>
+            <button onClick={async () => {
+              const acctNos = filterAccount !== '전체' ? [filterAccount] : Array.from(new Set(accounts.map(a => a.accountNo).filter(Boolean)))
+              if (acctNos.length === 0) return
+              if (!confirm(`${filterYm} 저장된 계좌내역을 삭제할까요? (재조회 전까지 안 보입니다)`)) return
+              try {
+                await fetch(`/api/bank/saved?ym=${encodeURIComponent(filterYm)}&acctNos=${acctNos.join(',')}`, { method: 'DELETE' })
+                setTransactions([])
+                setMsg(`${filterYm} 저장 계좌내역 삭제됨`)
+              } catch { setMsg('삭제 실패') }
+            }} className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 border border-slate-300 rounded transition-colors">삭제</button>
             <button className="px-2.5 py-1.5 text-slate-600 bg-white hover:bg-slate-50 border border-slate-300 rounded transition-colors" title="인쇄">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18.75 12h.008v.008h-.008V12zm-3 0h.008v.008h-.008V12z" /></svg>
             </button>

@@ -13,3 +13,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ rows: [] }, { status: 502 })
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const s = req.cookies.get('auth_session')?.value
+  const qs = req.nextUrl.searchParams.toString()
+  try {
+    const res = await fetch(`${PLATFORM_URL}/api/bank/saved?${qs}`, { method: 'DELETE', headers: { Cookie: s ? `auth_session=${s}` : '' } })
+    return NextResponse.json(await res.json(), { status: res.status })
+  } catch {
+    return NextResponse.json({ success: false }, { status: 502 })
+  }
+}
