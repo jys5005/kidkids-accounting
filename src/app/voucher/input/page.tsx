@@ -2078,14 +2078,14 @@ export default function VoucherInputPage() {
                                         className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${rowCls} ${a.isSub ? 'pl-5' : ''}`}>
                                         {a.isSub ? (
                                           <span className="flex items-center gap-1">
-                                            <span className={`inline-block px-1 py-0 rounded border text-[12px] font-bold ${row.type === '수입' ? 'border-blue-400 text-blue-600' : 'border-red-400 text-red-600'}`}>세목</span>
-                                            <span className="flex-1 min-w-0 truncate">{a.label}</span>
+                                            <span className="inline-block px-1.5 py-0 rounded bg-slate-400 text-white text-[12px] font-bold flex-shrink-0">세목</span>
+                                            <span className="flex-1 min-w-0 truncate text-slate-700">{a.label}</span>
                                             <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">{subAccountCodeMap[a.label] || ''}</span>
                                           </span>
                                         ) : (
                                           <span className="flex items-center gap-1">
-                                            <span className={`inline-block px-1 py-0 rounded border text-[12px] font-bold ${row.type === '수입' ? 'border-blue-300 text-blue-500' : 'border-red-300 text-red-500'}`}>목</span>
-                                            <span className="flex-1 min-w-0 truncate">{a.label}</span>
+                                            <span className="inline-block px-1.5 py-0 rounded bg-slate-600 text-white text-[12px] font-bold flex-shrink-0">목</span>
+                                            <span className="flex-1 min-w-0 truncate text-slate-700">{a.label}</span>
                                             <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">{accountCodeMap[a.value] || ''}</span>
                                           </span>
                                         )}
