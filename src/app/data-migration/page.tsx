@@ -1008,7 +1008,10 @@ export default function DataMigrationPage() {
         return results.map(r => ({
           ...r,
           rows: r.rows.map(row => {
-            if (row.accountCode && !row.accountCode.includes('|') && row.accountCode.length <= 8) return row
+            if (row.accountCode && !row.accountCode.includes('|') && row.accountCode.length <= 8) {
+              // 세목 코드(XXXX-YYY)는 이미 매핑되어 있어도 확정 5자리로 변환
+              return { ...row, accountCode: SUBCODE_TO_5DIGIT[row.accountCode] || row.accountCode }
+            }
 
             const name = row.accountName.replace(/[.\s·]/g, '')
             const match = allItems.find(m => {
@@ -1664,7 +1667,9 @@ export default function DataMigrationPage() {
                       const mapped = results.map(r => ({
                         ...r,
                         rows: r.rows.map(row => {
-                          if (row.accountCode && !row.accountCode.includes('|') && row.accountCode.length <= 8) return row
+                          if (row.accountCode && !row.accountCode.includes('|') && row.accountCode.length <= 8) {
+                            return { ...row, accountCode: SUBCODE_TO_5DIGIT[row.accountCode] || row.accountCode }
+                          }
                           const name = row.accountName.replace(/[.\s·]/g, '')
                           const match = allItems.find(m => m.by24Name.replace(/[.\s·]/g, '').trim() === name)
                           if (!match) return row
