@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import * as XLSX from 'xlsx'
 import { getActiveBook, setActiveBook, BOOK_CHANGE_EVENT, bookLabel, ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
 import { GWIN_BUDGETS } from '@/data/gwin-budgets'
@@ -597,6 +597,17 @@ export default function DataMigrationPage() {
   const [deleteStartYm, setDeleteStartYm] = useState('')
   const [deleteEndYm, setDeleteEndYm] = useState('')
   const [deleting, setDeleting] = useState(false)
+  // 삭제 모달 조회월 옵션 — 2021년 3월(장부나라 초기 데이터 기준)부터 현재월까지, 최신순
+  const deleteMonthOptions = useMemo(() => {
+    const now = new Date()
+    const opts: string[] = []
+    let y = now.getFullYear(), m = now.getMonth() + 1
+    while (y > 2021 || (y === 2021 && m >= 3)) {
+      opts.push(`${y}${String(m).padStart(2, '0')}`)
+      m--; if (m < 1) { m = 12; y-- }
+    }
+    return opts
+  }, [])
   const [deleteResult, setDeleteResult] = useState('')
   const [mode, setMode] = useState<'single' | 'range'>('single')
   const [startYm, setStartYm] = useState('')
@@ -2246,11 +2257,9 @@ export default function DataMigrationPage() {
                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
                       >
                         <option value="">선택</option>
-                        {Array.from({ length: 36 }, (_, i) => {
-                          const d = new Date(); d.setMonth(d.getMonth() - i)
-                          const v = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`
-                          return <option key={v} value={v}>{d.getFullYear()}년 {d.getMonth() + 1}월</option>
-                        })}
+                        {deleteMonthOptions.map((v) => (
+                          <option key={v} value={v}>{v.substring(0, 4)}년 {parseInt(v.substring(4, 6))}월</option>
+                        ))}
                       </select>
                     </div>
                     <div className="flex-1">
@@ -2261,11 +2270,9 @@ export default function DataMigrationPage() {
                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
                       >
                         <option value="">선택</option>
-                        {Array.from({ length: 36 }, (_, i) => {
-                          const d = new Date(); d.setMonth(d.getMonth() - i)
-                          const v = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`
-                          return <option key={v} value={v}>{d.getFullYear()}년 {d.getMonth() + 1}월</option>
-                        })}
+                        {deleteMonthOptions.map((v) => (
+                          <option key={v} value={v}>{v.substring(0, 4)}년 {parseInt(v.substring(4, 6))}월</option>
+                        ))}
                       </select>
                     </div>
                   </div>
