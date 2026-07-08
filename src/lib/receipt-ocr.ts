@@ -1,7 +1,9 @@
 // 영수증 OCR + 어린이집 계정과목 자동분류 (서버 전용)
-// 엔진 전환: RECEIPT_OCR_ENGINE=claude(기본) | clova
-//   - claude: ANTHROPIC_API_KEY 재사용 (바로 동작)
-//   - clova : CLOVA_OCR_URL / CLOVA_OCR_SECRET (네이버클라우드 영수증 도메인)
+// 엔진 전환: RECEIPT_OCR_ENGINE=claude(기본) | clova | tesseract
+//   - claude    : ANTHROPIC_API_KEY 재사용 (바로 동작, 유료)
+//   - clova     : CLOVA_OCR_URL / CLOVA_OCR_SECRET (네이버클라우드 영수증 도메인, 유료)
+//   - tesseract : 완전 무료 오픈소스(tesseract.js) — 상호/날짜/총액은 정규식 휴리스틱 파싱이라
+//                 claude/clova 대비 정확도 낮음(특히 흐릿한 사진·손글씨). 품목(items)은 시도만 함.
 
 export interface ReceiptItem { name: string; price: number }
 export interface ReceiptResult {
@@ -105,10 +107,75 @@ async function ocrClova(base64: string, format: string): Promise<Omit<ReceiptRes
   }
 }
 
+// ── Tesseract(무료, 오픈소스) — raw text 뽑아서 정규식으로 상호/날짜/총액 추출 ──
+const DATE_PATTERNS = [
+  /(20\d{2})[.\-/년]\s?(\d{1,2})[.\-/월]\s?(\d{1,2})/, // 2026-07-08 / 2026.07.08 / 2026년 07월 08일
+  /(\d{2})[.\-/](\d{1,2})[.\-/](\d{1,2})/,               // 26-07-08
+]
+
+function extractDate(text: string): string {
+  for (const re of DATE_PATTERNS) {
+    const m = text.match(re)
+    if (!m) continue
+    let y = m[1]
+    if (y.length === 2) y = (Number(y) >= 70 ? '19' : '20') + y
+    const mm = String(m[2]).padStart(2, '0')
+    const dd = String(m[3]).padStart(2, '0')
+    if (Number(mm) >= 1 && Number(mm) <= 12 && Number(dd) >= 1 && Number(dd) <= 31) return `${y}-${mm}-${dd}`
+  }
+  return ''
+}
+
+const TOTAL_KEYWORDS = ['합계금액', '총결제금액', '결제금액', '판매금액', '받을금액', '카드승인금액', '승인금액', '총액', '합계']
+
+function extractTotal(lines: string[]): number {
+  for (const kw of TOTAL_KEYWORDS) {
+    for (const line of lines) {
+      if (!line.includes(kw)) continue
+      const n = onlyNum(line)
+      if (n > 0) return n
+    }
+  }
+  // 키워드 매칭 실패 시 — 본문 전체에서 가장 큰 금액을 총액으로 추정(휴리스틱)
+  let max = 0
+  for (const line of lines) {
+    const n = onlyNum(line)
+    if (n > max) max = n
+  }
+  return max
+}
+
+function extractStore(lines: string[]): string {
+  for (const line of lines) {
+    const clean = line.replace(/\s+/g, '')
+    if (clean.length < 2) continue
+    if (/^\d[\d.\-/]*$/.test(clean)) continue // 날짜/숫자만 있는 줄 스킵
+    if (/사업자|등록번호|대표자|전화|TEL|영수증/.test(clean)) continue
+    return line.trim()
+  }
+  return ''
+}
+
+async function ocrTesseract(base64: string): Promise<Omit<ReceiptResult, 'account' | 'subAccount'>> {
+  const Tesseract = await import('tesseract.js')
+  const buf = Buffer.from(base64, 'base64')
+  const { data } = await Tesseract.recognize(buf, 'kor+eng')
+  const text: string = data?.text || ''
+  const lines = text.split('\n').map((l: string) => l.trim()).filter(Boolean)
+  return {
+    store: extractStore(lines),
+    date: extractDate(text),
+    total: extractTotal(lines),
+    items: [], // 품목별 라인 파싱은 정확도가 낮아 생략(총액/상호 기반 세목 분류만 사용)
+  }
+}
+
 /** 영수증 이미지 → OCR + 계정과목 자동분류 */
 export async function ocrReceipt(base64: string, mediaType: string, format: string): Promise<ReceiptResult> {
   const engine = (process.env.RECEIPT_OCR_ENGINE || 'claude').toLowerCase()
-  const r = engine === 'clova' ? await ocrClova(base64, format) : await ocrClaude(base64, mediaType)
+  const r = engine === 'clova' ? await ocrClova(base64, format)
+    : engine === 'tesseract' ? await ocrTesseract(base64)
+    : await ocrClaude(base64, mediaType)
   const cls = classifyReceipt(r.store, r.items)
   return { ...r, ...cls }
 }
