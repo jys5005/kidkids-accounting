@@ -632,6 +632,26 @@ export default function DataMigrationPage() {
   const [startYm, setStartYm] = useState('')
   const [endYm, setEndYm] = useState('')
 
+  // 로컬 에이전트 상태 — 화면 상단에 항상 노출 (10초 주기 갱신)
+  const [agentAlive, setAgentAlive] = useState<boolean | null>(null)  // null=확인 전
+  const [agentSecondsAgo, setAgentSecondsAgo] = useState<number | null>(null)
+  useEffect(() => {
+    let stop = false
+    const check = () => {
+      fetch('/api/agent-health', { cache: 'no-store' })
+        .then(r => r.json())
+        .then(j => {
+          if (stop) return
+          setAgentAlive(!!j.alive)
+          setAgentSecondsAgo(typeof j.secondsAgo === 'number' ? j.secondsAgo : null)
+        })
+        .catch(() => { if (!stop) setAgentAlive(false) })
+    }
+    check()
+    const id = setInterval(check, 10000)
+    return () => { stop = true; clearInterval(id) }
+  }, [])
+
   // 프로그램 인증 정보 (등록된 정보 자동 로드)
   const [programAuth, setProgramAuth] = useState<{ authType: string; hasUserId?: boolean; hasUserPw?: boolean; certName?: string; hasCertPw?: boolean; savedAt?: string } | null>(null)
   const [authLoading, setAuthLoading] = useState(false)
@@ -1333,12 +1353,34 @@ export default function DataMigrationPage() {
         <a href="/data-migration" className="px-4 py-2 text-[12px] font-bold whitespace-nowrap border-b-2 text-teal-700 border-teal-500">데이터이관</a>
         <a href="/data-migration/auto-login" className="px-4 py-2 text-[12px] font-bold whitespace-nowrap border-b-2 text-slate-400 border-transparent hover:text-slate-600 hover:border-slate-300">자동로그인</a>
       </div>
-      {/* 제목 */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">데이터 이관</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          {currentSource.label}({currentSource.url}) → {destName}{isIlovechild ? '' : '(sunote.co.kr)'} 현금출납부 이관
-        </p>
+      {/* 제목 + 로컬 에이전트 상태(항상 노출) */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">데이터 이관</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {currentSource.label}({currentSource.url}) → {destName}{isIlovechild ? '' : '(sunote.co.kr)'} 현금출납부 이관
+          </p>
+        </div>
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+          agentAlive === null ? 'bg-slate-100 text-slate-500'
+          : agentAlive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+          : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          <span className={`w-2 h-2 rounded-full ${
+            agentAlive === null ? 'bg-slate-400' : agentAlive ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'
+          }`} />
+          {agentAlive === null ? '로컬 에이전트 확인 중...'
+            : agentAlive ? `로컬 에이전트 실행 중 (${agentSecondsAgo}초 전 응답)`
+            : '로컬 에이전트 꺼짐'}
+          {!agentAlive && (
+            <a
+              href="childcare-agent://start"
+              className="ml-1 inline-flex items-center gap-1 px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg"
+            >
+              🔌 에이전트 실행
+            </a>
+          )}
+        </div>
       </div>
 
       {/* 걸음마 예산 가져오기 — 아이사랑꿈터 + 출발지 걸음마 */}
