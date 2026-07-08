@@ -5,6 +5,25 @@ import * as XLSX from 'xlsx'
 import { getActiveBook, setActiveBook, BOOK_CHANGE_EVENT, bookLabel, ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
 import { GWIN_BUDGETS } from '@/data/gwin-budgets'
 
+// 로컬 에이전트 꺼짐 오류 메시지 안에 "🔌 에이전트 실행" 원클릭 버튼을 끼워 넣어 표시.
+// 설치 시 등록된 childcare-agent:// 커스텀 프로토콜을 호출 — 사용자 PC 에 없으면 아무 반응 없음(안전).
+function AgentAwareMessage({ text, className }: { text: string; className?: string }) {
+  const isAgentOffline = text.includes('에이전트가 실행 중이 아닙니다')
+  return (
+    <div className={className}>
+      <div>{text}</div>
+      {isAgentOffline && (
+        <a
+          href="childcare-agent://start"
+          className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg"
+        >
+          🔌 에이전트 실행
+        </a>
+      )}
+    </div>
+  )
+}
+
 // 걸음마 전표 원시 필드 → 한글 컬럼명(미리보기 헤더용). 매핑 없으면 원본 표시.
 const GWIN_COL_LABEL: Record<string, string> = {
   _bookLabel: '장부', BILL_DATE: '날짜', BILL_ORDER_DATE: '거래일자', BILL_MONEY: '금액',
@@ -1982,16 +2001,12 @@ export default function DataMigrationPage() {
 
       {/* 에러 */}
       {error && (
-        <div className="bg-red-50 border border-red-100 rounded-lg p-3">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
+        <AgentAwareMessage text={error} className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-red-600" />
       )}
 
       {/* 이관 결과 */}
       {transferResult && (
-        <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-          <p className="text-sm text-emerald-700 font-medium">{transferResult}</p>
-        </div>
+        <AgentAwareMessage text={transferResult} className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-sm text-emerald-700 font-medium" />
       )}
 
       {/* 매핑 실패 계정코드 */}
@@ -2277,9 +2292,10 @@ export default function DataMigrationPage() {
                     </div>
                   </div>
                   {deleteResult && (
-                    <div className={`p-3 rounded-lg text-sm ${deleteResult.includes('실패') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-                      {deleteResult}
-                    </div>
+                    <AgentAwareMessage
+                      text={deleteResult}
+                      className={`p-3 rounded-lg text-sm ${deleteResult.includes('실패') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}
+                    />
                   )}
                   <button
                     disabled={!deleteStartYm || !deleteEndYm || deleting}
