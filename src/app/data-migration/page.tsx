@@ -825,11 +825,10 @@ function parseAccggChits(rawRows: unknown[]): CashLedgerResult[] {
   return results
 }
 
-// 미리보기 셀 — accgg 영수증 이미지 썸네일 + 카드매핑 정보
+// 미리보기 셀 — accgg 영수증 이미지 썸네일 (카드매핑은 별도 컬럼)
 function GgRowExtra({ row, onOpen }: { row: CashLedgerRow; onOpen: (urls: string[], i: number) => void }) {
   const imgs = row._receiptImages || []
-  const cards = row._cardInfo || []
-  if (!imgs.length && !cards.length) return null
+  if (!imgs.length) return null
   return (
     <div className="flex flex-wrap items-center gap-1 mt-1">
       {imgs.map((u, i) => (
@@ -838,14 +837,7 @@ function GgRowExtra({ row, onOpen }: { row: CashLedgerRow; onOpen: (urls: string
           loading="lazy" />
       ))}
       {imgs.length > 0 && <span className="text-[9px] text-slate-400">🧾{imgs.length}</span>}
-      {cards.map((c, i) => (
-        // 지역형 시스템의 빨간 Ⓒ 아이콘(=카드매핑 완료)과 동일 의미
-        <span key={i} title={`카드매핑 완료 — ${c.cardBank || ''} ${c.crdNo || ''} 승인 ${c.approvalNo || ''} ${c.industry || ''} ${c.merchant || ''}`}
-          className="inline-flex items-center gap-0.5 text-[9px] text-red-600 font-bold">
-          <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm bg-red-600 text-white text-[8px] leading-none">C</span>
-          {c.merchant || c.cardBank || '카드매핑'}
-        </span>
-      ))}
+      {/* 카드매핑 표시는 별도 '카드매핑' 컬럼(빨간 C)으로 이동 */}
     </div>
   )
 }
@@ -2736,8 +2728,8 @@ export default function DataMigrationPage() {
                 </span>
                 <span className="text-slate-400">|</span>
                 <span className="text-slate-500">전월이월: {fmtAmt(result.summary.monthStart)}원</span>
-                <span className="text-blue-600">수입: {fmtAmt(result.summary.monthIncome)}원</span>
-                <span className="text-red-600">지출: {fmtAmt(result.summary.monthExpense)}원</span>
+                <span className="text-blue-600">수입: {fmtAmt(result.summary.monthIncome)}원 ({result.rows.filter(r => r.income > 0).length}건)</span>
+                <span className="text-red-600">지출: {fmtAmt(result.summary.monthExpense)}원 ({result.rows.filter(r => r.expense > 0).length}건)</span>
                 {result.summary.bankBalance !== undefined && (
                   <span className="text-rose-600 font-semibold" title="accgg 월말 기준 총 계좌잔액 / 회계잔액">
                     계좌잔액: {fmtAmt(result.summary.bankBalance)}원 · 회계잔액: {fmtAmt(result.summary.acctBalance ?? 0)}원
@@ -2756,6 +2748,7 @@ export default function DataMigrationPage() {
                       <th className="px-3 py-2 text-left">계정과목</th>
                       <th className="px-3 py-2 text-left">세목</th>
                       <th className="px-3 py-2 text-left">적요</th>
+                      <th className="px-3 py-2 text-center w-16">카드매핑</th>
                       <th className="px-3 py-2 text-right w-28">수입금액</th>
                       <th className="px-3 py-2 text-right w-28">지출금액</th>
                       <th className="px-3 py-2 text-right w-28">잔액</th>
@@ -2802,8 +2795,19 @@ export default function DataMigrationPage() {
                           )}
                         </td>
                         <td className="px-3 py-2 text-slate-700">{row.accountName}</td>
-                        <td className="px-3 py-2 text-slate-500 text-[11px]">{(row as any).subAccountName || ''}</td>
+                        {/* 세목이 계정과목(목)과 동일 명칭이면 숨김 */}
+                        <td className="px-3 py-2 text-slate-500 text-[11px]">{row.subAccountName && row.subAccountName !== row.accountName ? row.subAccountName : ''}</td>
                         <td className="px-3 py-2 text-slate-600">{row.summary}<GgRowExtra row={row} onOpen={(urls, i) => setGallery({ urls, idx: i })} /></td>
+                        {/* 카드매핑 컬럼 — 매핑된 전표만 빨간 C (지역형 시스템과 동일) */}
+                        <td className="px-3 py-2 text-center">
+                          {row._cardInfo?.length ? (
+                            <span
+                              title={row._cardInfo.map(c => `${c.cardBank || ''} ${c.crdNo || ''} 승인 ${c.approvalNo || ''} ${c.merchant || ''} ${c.industry || ''}`).join('\n')}
+                              className="inline-flex items-center justify-center w-4 h-4 rounded-sm bg-red-600 text-white text-[9px] font-bold leading-none cursor-default">
+                              C
+                            </span>
+                          ) : ''}
+                        </td>
                         <td className="px-3 py-2 text-right text-blue-600 font-medium">
                           {row.income ? fmtAmt(row.income) : ''}
                         </td>
