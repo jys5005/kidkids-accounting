@@ -35,6 +35,10 @@ const GWIN_COL_LABEL: Record<string, string> = {
   _receiptImage: '영수증', _receiptImages: '영수증(전체)',
 }
 
+interface GgCardInfo {
+  crdNo?: string; cardBank?: string; approvalNo?: string; approvalDate?: string
+  approvalTime?: string; amount?: number; merchant?: string; merchantBzno?: string; industry?: string; purchaseDate?: string
+}
 interface CashLedgerRow {
   idx: number
   date: string
@@ -47,6 +51,9 @@ interface CashLedgerRow {
   expense: number
   balance: number
   agreeDate: string
+  _receiptImages?: string[]     // accgg 영수증 이미지 URL
+  _cardInfo?: GgCardInfo[]       // accgg 카드매핑 정보
+  _payMethod?: string           // 결제방식 코드(stlmMtcd)
 }
 
 interface CashLedgerSummary {
@@ -770,6 +777,9 @@ function parseAccggChits(rawRows: unknown[]): CashLedgerResult[] {
       accountCode: codeFor(isInc ? 'income' : 'expense', mok, semok),
       accountName: mok, subAccountName: semok, summary: String(r.chitMemo ?? '').trim(),
       income: isInc ? amount : 0, expense: isInc ? 0 : amount, balance: 0, agreeDate: `${y}-${mo}-${d}`,
+      _receiptImages: Array.isArray(r._receiptImages) ? (r._receiptImages as string[]) : undefined,
+      _cardInfo: Array.isArray(r._cardMappings) ? (r._cardMappings as GgCardInfo[]) : undefined,
+      _payMethod: r.stlmMtcd ? String(r.stlmMtcd) : undefined,
     }
     if (!byMonth.has(ym)) byMonth.set(ym, [])
     byMonth.get(ym)!.push(row)
@@ -786,9 +796,34 @@ function parseAccggChits(rawRows: unknown[]): CashLedgerResult[] {
   return results
 }
 
+// 미리보기 셀 — accgg 영수증 이미지 썸네일 + 카드매핑 정보
+function GgRowExtra({ row, onOpen }: { row: CashLedgerRow; onOpen: (urls: string[], i: number) => void }) {
+  const imgs = row._receiptImages || []
+  const cards = row._cardInfo || []
+  if (!imgs.length && !cards.length) return null
+  return (
+    <div className="flex flex-wrap items-center gap-1 mt-1">
+      {imgs.map((u, i) => (
+        <img key={i} src={u} alt="영수증" onClick={() => onOpen(imgs, i)}
+          className="w-8 h-8 object-cover rounded border border-slate-200 cursor-pointer hover:ring-2 hover:ring-indigo-400"
+          loading="lazy" />
+      ))}
+      {imgs.length > 0 && <span className="text-[9px] text-slate-400">🧾{imgs.length}</span>}
+      {cards.map((c, i) => (
+        <span key={i} title={`${c.cardBank || ''} ${c.crdNo || ''} 승인 ${c.approvalNo || ''} ${c.industry || ''}`}
+          className="text-[9px] bg-amber-50 border border-amber-200 text-amber-700 rounded px-1 py-0.5">
+          💳 {c.merchant || c.cardBank || '카드'}{c.approvalNo ? ` (${c.approvalNo})` : ''}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 export default function DataMigrationPage() {
   // 출발지
   const [source, setSource] = useState<SourceType>('by24')
+  // 영수증 갤러리 모달
+  const [gallery, setGallery] = useState<{ urls: string[]; idx: number } | null>(null)
   // 걸음마회계 출발지는 아이사랑꿈터 유형만 노출 (어린이집은 기존 목록 그대로)
   const [isIlovechild, setIsIlovechild] = useState(false)
   const [centerName, setCenterName] = useState('')  // 로그인 시설명 (경기도 캐시/수집 키)
@@ -2693,7 +2728,7 @@ export default function DataMigrationPage() {
                         </td>
                         <td className="px-3 py-2 text-slate-700">{row.accountName}</td>
                         <td className="px-3 py-2 text-slate-500 text-[11px]">{(row as any).subAccountName || ''}</td>
-                        <td className="px-3 py-2 text-slate-600">{row.summary}</td>
+                        <td className="px-3 py-2 text-slate-600">{row.summary}<GgRowExtra row={row} onOpen={(urls, i) => setGallery({ urls, idx: i })} /></td>
                         <td className="px-3 py-2 text-right text-blue-600 font-medium">
                           {row.income ? fmtAmt(row.income) : ''}
                         </td>
@@ -2887,6 +2922,23 @@ export default function DataMigrationPage() {
                 </>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 영수증 갤러리 모달 */}
+      {gallery && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setGallery(null)}>
+          <div className="relative max-w-3xl max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <img src={gallery.urls[gallery.idx]} alt="영수증" className="max-w-full max-h-[80vh] object-contain rounded-lg bg-white" />
+            <div className="flex items-center justify-between mt-2 text-white text-[12px]">
+              <button onClick={() => setGallery(g => g ? { ...g, idx: (g.idx - 1 + g.urls.length) % g.urls.length } : g)}
+                disabled={gallery.urls.length <= 1} className="px-3 py-1 bg-white/20 rounded disabled:opacity-30">← 이전</button>
+              <span>{gallery.idx + 1} / {gallery.urls.length}</span>
+              <button onClick={() => setGallery(g => g ? { ...g, idx: (g.idx + 1) % g.urls.length } : g)}
+                disabled={gallery.urls.length <= 1} className="px-3 py-1 bg-white/20 rounded disabled:opacity-30">다음 →</button>
+            </div>
+            <button onClick={() => setGallery(null)} className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full text-slate-700 font-bold shadow">✕</button>
           </div>
         </div>
       )}
