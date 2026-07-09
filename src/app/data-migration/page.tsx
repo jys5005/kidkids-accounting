@@ -2745,10 +2745,10 @@ export default function DataMigrationPage() {
                       <th className="px-3 py-2 text-center w-12">일자</th>
                       <th className="px-3 py-2 text-center w-20">발행번호</th>
                       <th className="px-3 py-2 text-center w-20">코드</th>
-                      <th className="px-3 py-2 text-left">계정과목</th>
-                      <th className="px-3 py-2 text-left">세목</th>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">계정과목</th>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">세목</th>
                       <th className="px-3 py-2 text-left">적요</th>
-                      <th className="px-3 py-2 text-center w-16">카드매핑</th>
+                      <th className="px-3 py-2 text-center w-20 whitespace-nowrap">카드매핑</th>
                       <th className="px-3 py-2 text-right w-28">수입금액</th>
                       <th className="px-3 py-2 text-right w-28">지출금액</th>
                       <th className="px-3 py-2 text-right w-28">잔액</th>
@@ -2794,16 +2794,16 @@ export default function DataMigrationPage() {
                             />
                           )}
                         </td>
-                        <td className="px-3 py-2 text-slate-700">{row.accountName}</td>
+                        <td className="px-3 py-2 text-slate-700 whitespace-nowrap">{row.accountName}</td>
                         {/* 세목이 계정과목(목)과 동일 명칭이면 숨김 */}
-                        <td className="px-3 py-2 text-slate-500 text-[11px]">{row.subAccountName && row.subAccountName !== row.accountName ? row.subAccountName : ''}</td>
+                        <td className="px-3 py-2 text-slate-500 text-[11px] whitespace-nowrap">{row.subAccountName && row.subAccountName !== row.accountName ? row.subAccountName : ''}</td>
                         <td className="px-3 py-2 text-slate-600">{row.summary}<GgRowExtra row={row} onOpen={(urls, i) => setGallery({ urls, idx: i })} /></td>
                         {/* 카드매핑 컬럼 — 매핑된 전표만 빨간 C (지역형 시스템과 동일) */}
                         <td className="px-3 py-2 text-center">
                           {row._cardInfo?.length ? (
                             <span
                               title={row._cardInfo.map(c => `${c.cardBank || ''} ${c.crdNo || ''} 승인 ${c.approvalNo || ''} ${c.merchant || ''} ${c.industry || ''}`).join('\n')}
-                              className="inline-flex items-center justify-center w-4 h-4 rounded-sm bg-red-600 text-white text-[9px] font-bold leading-none cursor-default">
+                              className="inline-flex items-center justify-center w-4 h-4 rounded-sm bg-white border border-red-600 text-red-600 text-[9px] font-bold leading-none cursor-default">
                               C
                             </span>
                           ) : ''}
