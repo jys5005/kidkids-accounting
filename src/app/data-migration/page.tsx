@@ -1314,7 +1314,9 @@ export default function DataMigrationPage() {
       if (!results.length) throw new Error('저장된 전표가 없습니다. [데이터 수집]을 먼저 눌러주세요.')
       if (results.length === 1) setData(results[0]); else setMultiData(results)
       const total = results.reduce((s, r) => s + r.rows.length, 0)
-      setTransferResult(`저장된 전표 불러옴: ${results.length}개월, ${total}건`)
+      const yms = results.map(r => r.yearMonth).sort()
+      const span = yms.length ? `${yms[0]}${yms.length > 1 ? `~${yms[yms.length - 1]}` : ''}` : ''
+      setTransferResult(`📂 저장된 전표: ${span} · ${results.length}개월 ${total}건 (선택 기간과 다르면 [데이터 수집]을 다시 누르세요)`)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally { setLoading(false) }
@@ -1327,6 +1329,11 @@ export default function DataMigrationPage() {
   const [ggMonthFrom, setGgMonthFrom] = useState('03')
   const [ggMonthTo, setGgMonthTo] = useState('02')
   const [ggCollecting, setGgCollecting] = useState(false)
+  // 기간(연도/월) 바꾸면 화면에 남은 옛 데이터 즉시 지움 — 선택연도와 표시연도 불일치 혼동 방지
+  const clearGgShown = () => {
+    setData(null); setMultiData([]); setTransferResult('')
+    setError('')
+  }
   const handleGgCollect = async () => {
     setGgCollecting(true); setLoading(true); setError(''); setData(null); setMultiData([]); setTransferResult('')
     try {
@@ -1361,7 +1368,9 @@ export default function DataMigrationPage() {
               const results = parseAccggChits(raw)
               if (results.length === 1) setData(results[0]); else setMultiData(results)
               const total = results.reduce((a, r) => a + r.rows.length, 0)
-              setTransferResult(`✅ 수집 완료: ${total}건 (${i > 0 ? '백그라운드' : ''}) — 미리보기 표시됨`)
+              const yms = results.map(r => r.yearMonth).sort()
+              const span = yms.length ? `${yms[0]}${yms.length > 1 ? `~${yms[yms.length - 1]}` : ''}` : ''
+              setTransferResult(`✅ 수집 완료: ${span} · ${total}건 — 미리보기 표시됨`)
               return
             }
           } catch { /* 계속 폴링 */ }
@@ -2098,16 +2107,17 @@ export default function DataMigrationPage() {
                 </div>
                 <p className="text-[10px] text-slate-500 mb-2">기간만 정하고 [데이터 수집]을 누르면 자동로그인 → 전표 수집 → 저장까지 한 번에.</p>
                 <div className="flex items-center gap-1.5 mb-2 text-[11px]">
-                  <select value={ggYear} onChange={e => setGgYear(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1">
+                  <select value={ggYear} onChange={e => { setGgYear(e.target.value); clearGgShown() }} className="border border-slate-300 rounded px-1.5 py-1">
                     {Array.from({ length: 6 }, (_, i) => String(curFiscalYear - i)).map(y => <option key={y} value={y}>{y}년도</option>)}
                   </select>
-                  <select value={ggMonthFrom} onChange={e => setGgMonthFrom(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1">
+                  <select value={ggMonthFrom} onChange={e => { setGgMonthFrom(e.target.value); clearGgShown() }} className="border border-slate-300 rounded px-1.5 py-1">
                     {['03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '01', '02'].map(m => <option key={m} value={m}>{m}월</option>)}
                   </select>
                   <span className="text-slate-400">~</span>
-                  <select value={ggMonthTo} onChange={e => setGgMonthTo(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1">
+                  <select value={ggMonthTo} onChange={e => { setGgMonthTo(e.target.value); clearGgShown() }} className="border border-slate-300 rounded px-1.5 py-1">
                     {['03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '01', '02'].map(m => <option key={m} value={m}>{m}월</option>)}
                   </select>
+                  <span className="text-[10px] text-slate-400">← 회계연도 {ggYear}</span>
                 </div>
                 <button type="button" disabled={ggCollecting || loading} onClick={handleGgCollect}
                   className={`w-full py-2.5 rounded-lg text-[11px] font-bold text-white ${ggCollecting || loading ? 'bg-indigo-300' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
