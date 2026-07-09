@@ -62,6 +62,8 @@ interface CashLedgerSummary {
   monthStart: number
   monthIncome: number
   monthExpense: number
+  bankBalance?: number   // accgg 월말 총 계좌잔액 (allCcnBlce)
+  acctBalance?: number   // accgg 월말 회계잔액 (actgBlce)
 }
 
 interface CashLedgerResult {
@@ -777,8 +779,15 @@ function parseAccggChits(rawRows: unknown[]): CashLedgerResult[] {
     return ''
   }
   const byMonth = new Map<string, CashLedgerRow[]>()
+  // 월별 잔액 meta (에이전트가 /api/blce 로 수집한 총계좌잔액/회계잔액)
+  const blceByYm = new Map<string, { bank: number; acct: number }>()
   for (const raw of rawRows) {
     const r = raw as Record<string, unknown>
+    if (r._meta === 'blce') {
+      const ymM = String(r._ym || '')
+      if (ymM) blceByYm.set(ymM, { bank: Number(r.allCcnBlce ?? 0) || 0, acct: Number(r.actgBlce ?? 0) || 0 })
+      continue
+    }
     const de = String(r.chitDe ?? '').replace(/[^0-9]/g, '')
     if (de.length < 8) continue
     const y = de.slice(0, 4), mo = de.slice(4, 6), d = de.slice(6, 8)
@@ -803,9 +812,14 @@ function parseAccggChits(rawRows: unknown[]): CashLedgerResult[] {
   for (const ym of Array.from(byMonth.keys()).sort()) {
     const rows = byMonth.get(ym)!.sort((a, b) => a.date.localeCompare(b.date))
     rows.forEach((r, i) => { r.idx = i + 1 })
+    const blce = blceByYm.get(ym)
     results.push({
       yearMonth: ym, rows,
-      summary: { prevIncome: 0, prevExpense: 0, monthStart: 0, monthIncome: rows.reduce((s, r) => s + r.income, 0), monthExpense: rows.reduce((s, r) => s + r.expense, 0) },
+      summary: {
+        prevIncome: 0, prevExpense: 0, monthStart: 0,
+        monthIncome: rows.reduce((s, r) => s + r.income, 0), monthExpense: rows.reduce((s, r) => s + r.expense, 0),
+        bankBalance: blce?.bank, acctBalance: blce?.acct,
+      },
     })
   }
   return results
@@ -825,9 +839,11 @@ function GgRowExtra({ row, onOpen }: { row: CashLedgerRow; onOpen: (urls: string
       ))}
       {imgs.length > 0 && <span className="text-[9px] text-slate-400">🧾{imgs.length}</span>}
       {cards.map((c, i) => (
+        // 지역형 시스템의 빨간 Ⓒ 아이콘(=카드매핑 완료)과 동일 의미
         <span key={i} title={`카드매핑 완료 — ${c.cardBank || ''} ${c.crdNo || ''} 승인 ${c.approvalNo || ''} ${c.industry || ''} ${c.merchant || ''}`}
-          className="text-[9px] bg-amber-50 border border-amber-300 text-amber-700 rounded px-1 py-0.5 font-semibold">
-          Ⓒ 카드매핑 · {c.merchant || c.cardBank || '카드'}
+          className="inline-flex items-center gap-0.5 text-[9px] text-red-600 font-bold">
+          <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm bg-red-600 text-white text-[8px] leading-none">C</span>
+          {c.merchant || c.cardBank || '카드매핑'}
         </span>
       ))}
     </div>
@@ -2722,6 +2738,11 @@ export default function DataMigrationPage() {
                 <span className="text-slate-500">전월이월: {fmtAmt(result.summary.monthStart)}원</span>
                 <span className="text-blue-600">수입: {fmtAmt(result.summary.monthIncome)}원</span>
                 <span className="text-red-600">지출: {fmtAmt(result.summary.monthExpense)}원</span>
+                {result.summary.bankBalance !== undefined && (
+                  <span className="text-rose-600 font-semibold" title="accgg 월말 기준 총 계좌잔액 / 회계잔액">
+                    계좌잔액: {fmtAmt(result.summary.bankBalance)}원 · 회계잔액: {fmtAmt(result.summary.acctBalance ?? 0)}원
+                  </span>
+                )}
               </div>
 
               {/* 테이블 */}
