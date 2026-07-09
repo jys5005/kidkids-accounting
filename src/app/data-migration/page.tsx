@@ -577,6 +577,7 @@ const MAPPING_TABLE = {
       { by24: '', by24Name: '복리후생비', sunote: '2216', sunoteNote: '' },
       { by24: '', by24Name: '기타운영비', sunote: '2217', sunoteNote: '' },
       { by24: '', by24Name: '업무추진비', sunote: '2221', sunoteNote: '' },
+      { by24: '223', by24Name: '회의비', sunote: '2223', sunoteNote: 'accgg 코드 223' },
       { by24: '', by24Name: '교직원연수·연구비', sunote: '2311', sunoteNote: '' },
       { by24: '', by24Name: '교재.교구구입비', sunote: '2312', sunoteNote: '' },
       { by24: '', by24Name: '행사비', sunote: '2313', sunoteNote: '' },
@@ -824,9 +825,9 @@ function GgRowExtra({ row, onOpen }: { row: CashLedgerRow; onOpen: (urls: string
       ))}
       {imgs.length > 0 && <span className="text-[9px] text-slate-400">🧾{imgs.length}</span>}
       {cards.map((c, i) => (
-        <span key={i} title={`${c.cardBank || ''} ${c.crdNo || ''} 승인 ${c.approvalNo || ''} ${c.industry || ''}`}
-          className="text-[9px] bg-amber-50 border border-amber-200 text-amber-700 rounded px-1 py-0.5">
-          💳 {c.merchant || c.cardBank || '카드'}{c.approvalNo ? ` (${c.approvalNo})` : ''}
+        <span key={i} title={`카드매핑 완료 — ${c.cardBank || ''} ${c.crdNo || ''} 승인 ${c.approvalNo || ''} ${c.industry || ''} ${c.merchant || ''}`}
+          className="text-[9px] bg-amber-50 border border-amber-300 text-amber-700 rounded px-1 py-0.5 font-semibold">
+          Ⓒ 카드매핑 · {c.merchant || c.cardBank || '카드'}
         </span>
       ))}
     </div>
