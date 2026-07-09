@@ -41,6 +41,7 @@ interface CashLedgerRow {
   docNo: string
   accountCode: string
   accountName: string
+  subAccountName?: string
   summary: string
   income: number
   expense: number
@@ -526,6 +527,72 @@ const MAPPING_TABLE = {
     ],
     pattern: '와이즈안 계정과목명 → sunote 코드 (수입=목 앞1·지출=앞2). 세목 5계정만 세분화: 기타필요경비(수입/지출)·기타운영비·자산취득비·퇴직적립금 → 세목코드, 나머지 목 4자리',
   },
+  gyeonggi: {
+    income: [
+      { by24: '', by24Name: '정부지원보육료', sunote: '1111', sunoteNote: '' },
+      { by24: '', by24Name: '부모부담보육료', sunote: '1112', sunoteNote: '' },
+      { by24: '', by24Name: '특별활동비', sunote: '1211', sunoteNote: '' },
+      { by24: '', by24Name: '기타필요경비', sunote: '1221', sunoteNote: '', group: true },
+      { by24: '', by24Name: '  입학준비금', sunote: '1221-111', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  현장학습비', sunote: '1221-112', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  차량운행비', sunote: '1221-113', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  부모부담행사비', sunote: '1221-121', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  조석식비', sunote: '1221-131', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  특성화비', sunote: '1221-141', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '인건비보조금', sunote: '1311', sunoteNote: '' },
+      { by24: '', by24Name: '기관보육료', sunote: '1321', sunoteNote: '' },
+      { by24: '', by24Name: '연장보육료', sunote: '1322', sunoteNote: '' },
+      { by24: '', by24Name: '공공형운영비', sunote: '1323', sunoteNote: '' },
+      { by24: '', by24Name: '그밖의지원금', sunote: '1324', sunoteNote: '' },
+      { by24: '', by24Name: '전입금', sunote: '1411', sunoteNote: '' },
+      { by24: '', by24Name: '단기차입금', sunote: '1421', sunoteNote: '' },
+      { by24: '', by24Name: '장기차입금', sunote: '1422', sunoteNote: '' },
+      { by24: '', by24Name: '이자수입', sunote: '1811', sunoteNote: '' },
+      { by24: '', by24Name: '그밖의잡수입', sunote: '1812', sunoteNote: '' },
+      { by24: '', by24Name: '잡수입', sunote: '1812', sunoteNote: '' },
+      { by24: '', by24Name: '전년도이월금', sunote: '1911', sunoteNote: '이관 시 스킵' },
+    ],
+    expense: [
+      { by24: '', by24Name: '원장급여', sunote: '2111', sunoteNote: '' },
+      { by24: '', by24Name: '원장수당', sunote: '2112', sunoteNote: '' },
+      { by24: '', by24Name: '보육교직원급여', sunote: '2121', sunoteNote: '' },
+      { by24: '', by24Name: '보육교직원수당', sunote: '2122', sunoteNote: '' },
+      { by24: '', by24Name: '기타인건비', sunote: '2131', sunoteNote: '' },
+      { by24: '', by24Name: '법정부담금', sunote: '2141', sunoteNote: '' },
+      { by24: '', by24Name: '퇴직금및퇴직적립금', sunote: '2142', sunoteNote: '', group: true },
+      { by24: '', by24Name: '  퇴직금', sunote: '2142-112', sunoteNote: '적요 키워드 자동', sub: true },
+      { by24: '', by24Name: '  퇴직적립금', sunote: '2142-121', sunoteNote: '적요 키워드 자동', sub: true },
+      { by24: '', by24Name: '수용비및수수료', sunote: '2211', sunoteNote: '' },
+      { by24: '', by24Name: '공공요금및제세공과금', sunote: '2212', sunoteNote: '' },
+      { by24: '', by24Name: '연료비', sunote: '2213', sunoteNote: '' },
+      { by24: '', by24Name: '여비', sunote: '2214', sunoteNote: '' },
+      { by24: '', by24Name: '차량비', sunote: '2215', sunoteNote: '' },
+      { by24: '', by24Name: '복리후생비', sunote: '2216', sunoteNote: '' },
+      { by24: '', by24Name: '기타운영비', sunote: '2217', sunoteNote: '' },
+      { by24: '', by24Name: '업무추진비', sunote: '2221', sunoteNote: '' },
+      { by24: '', by24Name: '교직원연수·연구비', sunote: '2311', sunoteNote: '' },
+      { by24: '', by24Name: '교재.교구구입비', sunote: '2312', sunoteNote: '' },
+      { by24: '', by24Name: '행사비', sunote: '2313', sunoteNote: '' },
+      { by24: '', by24Name: '영유아복리비', sunote: '2314', sunoteNote: '' },
+      { by24: '', by24Name: '급식.간식재료비', sunote: '2315', sunoteNote: '' },
+      { by24: '', by24Name: '특별활동비지출', sunote: '2411', sunoteNote: '' },
+      { by24: '', by24Name: '기타필요경비지출', sunote: '2421', sunoteNote: '', group: true },
+      { by24: '', by24Name: '  입학준비금', sunote: '2421-111', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  현장학습비', sunote: '2421-121', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  차량운행비', sunote: '2421-131', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  부모부담행사비', sunote: '2421-141', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  조석식비', sunote: '2421-151', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '  특성화비', sunote: '2421-161', sunoteNote: '계정과목 [세목]명 기반', sub: true },
+      { by24: '', by24Name: '단기차입금상환', sunote: '2611', sunoteNote: '' },
+      { by24: '', by24Name: '장기차입금상환', sunote: '2612', sunoteNote: '' },
+      { by24: '', by24Name: '시설비', sunote: '2711', sunoteNote: '' },
+      { by24: '', by24Name: '시설장비유지비', sunote: '2712', sunoteNote: '' },
+      { by24: '', by24Name: '자산취득비', sunote: '2721', sunoteNote: '' },
+      { by24: '', by24Name: '과년도지출', sunote: '2811', sunoteNote: '' },
+      { by24: '', by24Name: '잡지출', sunote: '2911', sunoteNote: '' },
+    ],
+    pattern: '경기도(accgg) 계정과목명(목 [세목]) → sunote 코드. [전표 목록 출력] 엑셀 업로드. 계정과목에서 [세목] 추출·수입/지출은 계정명으로 자동 판정.',
+  },
 } as const
 
 // 세목 코드(XXXX-YYY 형식) → 수전자장부 확정 5자리 코드(목4자리+세목순번1자리)
@@ -543,6 +610,101 @@ const SUBCODE_TO_5DIGIT: Record<string, string> = {
 function fmtAmt(n: number): string {
   if (!n) return ''
   return n.toLocaleString()
+}
+
+/**
+ * 경기도(accgg) [전표 목록 출력] 엑셀(aoa) → CashLedgerResult[].
+ * 헤더 2줄(일자/증빙번호/계정과목/금액/적요/비고/거래처…) + 하단 세입합계/세출합계/합계.
+ * 계정과목 "기타 필요경비 지출 [부모부담행사비]" → 목명(기타필요경비지출)·세목([부모부담행사비]) 분리.
+ * 수입/지출은 계정명이 MAPPING_TABLE.gyeonggi.income/expense 중 어디에 있는지로 판정.
+ */
+function parseAccggRows(aoa: unknown[][]): CashLedgerResult[] {
+  const norm = (s: string) => s.replace(/[.\s·[\]]/g, '').trim()
+  type MapItem = { by24Name: string; sunote: string; sub?: boolean }
+  const inc = MAPPING_TABLE.gyeonggi.income as ReadonlyArray<MapItem>
+  const exp = MAPPING_TABLE.gyeonggi.expense as ReadonlyArray<MapItem>
+
+  const subMap: Record<string, Record<string, string>> = {
+    '1221': { '입학': '1221-111', '현장학습': '1221-112', '차량': '1221-113', '행사': '1221-121', '조석': '1221-131', '특성화': '1221-141' },
+    '2421': { '입학': '2421-111', '현장학습': '2421-121', '차량': '2421-131', '행사': '2421-141', '조석': '2421-151', '특성화': '2421-161' },
+    '2142': { '퇴직적립': '2142-121', '퇴직연금': '2142-121', '퇴직금': '2142-112' },
+  }
+
+  const classify = (acctRaw: string, subName: string): { dir: 'income' | 'expense'; code: string } => {
+    const base = norm(acctRaw.replace(/\[[^\]]*\]/g, ''))
+    let dir: 'income' | 'expense' = 'expense'
+    let item = inc.find(m => !(m as { sub?: boolean }).sub && norm(m.by24Name) === base)
+    if (item) dir = 'income'
+    else {
+      item = exp.find(m => !(m as { sub?: boolean }).sub && norm(m.by24Name) === base)
+      if (item) dir = 'expense'
+    }
+    if (!item) {
+      const isInc = /(수입|보육료|보조금|지원금|전입금|이월금|이자|후원)/.test(acctRaw) && !/(지출|상환|적립|부담금)/.test(acctRaw)
+      return { dir: isInc ? 'income' : 'expense', code: '' }
+    }
+    let code: string = item.sunote
+    const sm = subMap[code]
+    if (sm && subName) {
+      for (const [kw, sub] of Object.entries(sm)) { if (subName.includes(kw)) { code = sub; break } }
+    }
+    code = SUBCODE_TO_5DIGIT[code] || code
+    return { dir, code }
+  }
+
+  // 헤더 행 탐색 (일자 & 계정과목 & 금액)
+  let hIdx = -1
+  for (let i = 0; i < Math.min(aoa.length, 6); i++) {
+    const j = (aoa[i] || []).map(c => String(c ?? ''))
+    if (j.some(x => x.includes('일자')) && j.some(x => x.includes('계정과목')) && j.some(x => x.includes('금액'))) { hIdx = i; break }
+  }
+  const hdr = (hIdx >= 0 ? aoa[hIdx] : []).map(c => String(c ?? '').trim())
+  const colOf = (kw: string, dflt: number) => { const i = hdr.findIndex(h => h.includes(kw)); return i >= 0 ? i : dflt }
+  const cDate = colOf('일자', 0), cDoc = colOf('증빙', 1), cAcct = colOf('계정과목', 2)
+  const cAmt = colOf('금액', 3), cMemo = colOf('적요', 4), cPartner = colOf('거래처', 6)
+
+  // 데이터 시작: 헤더 다음, 병합 2줄 헤더면 한 줄 더 스킵
+  let start = hIdx >= 0 ? hIdx + 1 : 0
+  if (hIdx >= 0 && aoa[start] && String((aoa[start] as unknown[])[cDate] ?? '').includes('일자')) start += 1
+
+  const byMonth = new Map<string, CashLedgerRow[]>()
+  for (let i = start; i < aoa.length; i++) {
+    const row = (aoa[i] || []) as unknown[]
+    const dateRaw = String(row[cDate] ?? '').trim()
+    if (!dateRaw || /합계/.test(dateRaw)) continue
+    const m = dateRaw.match(/(\d{4})-(\d{2})-(\d{2})/)
+    if (!m) continue
+    const acctRaw = String(row[cAcct] ?? '').trim()
+    if (!acctRaw) continue
+    const ym = `${m[1]}-${m[2]}`
+    const amount = Math.round(Number(String(row[cAmt] ?? '0').replace(/[^0-9.-]/g, '')) || 0)
+    let summary = String(row[cMemo] ?? '').trim()
+    const br = acctRaw.match(/\[([^\]]+)\]/)
+    const subName = br ? br[1].trim() : ''
+    const acctName = acctRaw.replace(/\[[^\]]*\]/g, '').replace(/\s+/g, ' ').trim()
+    const partner = String(row[cPartner] ?? '').trim()
+    if (partner) summary = `${summary}${summary ? ' ' : ''}(${partner})`
+    const { dir, code } = classify(acctRaw, subName)
+    const r: CashLedgerRow = {
+      idx: 0, date: `${m[1]}-${m[2]}-${m[3]}`, docNo: String(row[cDoc] ?? '').trim(),
+      accountCode: code, accountName: acctName, subAccountName: subName, summary,
+      income: dir === 'income' ? amount : 0, expense: dir === 'expense' ? amount : 0,
+      balance: 0, agreeDate: `${m[1]}-${m[2]}-${m[3]}`,
+    }
+    if (!byMonth.has(ym)) byMonth.set(ym, [])
+    byMonth.get(ym)!.push(r)
+  }
+
+  const results: CashLedgerResult[] = []
+  for (const ym of Array.from(byMonth.keys()).sort()) {
+    const rows = byMonth.get(ym)!.sort((a, b) => a.date.localeCompare(b.date))
+    rows.forEach((r, i) => { r.idx = i + 1 })
+    results.push({
+      yearMonth: ym, rows,
+      summary: { prevIncome: 0, prevExpense: 0, monthStart: 0, monthIncome: rows.reduce((s, r) => s + r.income, 0), monthExpense: rows.reduce((s, r) => s + r.expense, 0) },
+    })
+  }
+  return results
 }
 
 export default function DataMigrationPage() {
@@ -983,6 +1145,39 @@ export default function DataMigrationPage() {
     }
     setGbSaving(false)
     setGbMsg(`✅ 저장: ${saved.join(', ') || '없음'}${errs.length ? ` / 실패: ${errs.join(', ')}` : ''} (${gbYear}년). 예산작성에서 확인하세요.`)
+  }
+
+  // 경기도(accgg): [전표 목록 출력] 엑셀 업로드 → 파싱 → 미리보기
+  const handleGyeonggiFile = async (file?: File | null) => {
+    if (!file) return
+    setLoading(true)
+    setError('')
+    setData(null)
+    setMultiData([])
+    setTransferResult('')
+    try {
+      const buf = await file.arrayBuffer()
+      const wb = XLSX.read(buf, { type: 'array' })
+      const ws = wb.Sheets[wb.SheetNames[0]]
+      const aoa = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: '' }) as unknown[][]
+      const results = parseAccggRows(aoa)
+      if (results.length === 0) {
+        setError('엑셀에서 전표를 찾지 못했습니다. accgg [전표 목록 출력]로 저장한 파일이 맞는지, 전표를 전체 선택했는지 확인하세요.')
+        return
+      }
+      if (results.length === 1) setData(results[0])
+      else setMultiData(results)
+      const total = results.reduce((s, r) => s + r.rows.length, 0)
+      const unmatched = results.flatMap(r => r.rows).filter(r => !r.accountCode)
+      setTransferResult(
+        `엑셀 파싱 완료: ${results.length}개월, ${total}건` +
+        (unmatched.length ? ` · ⚠ 계정코드 미매칭 ${unmatched.length}건 (미리보기에서 계정과목 확인 후 이관)` : ''),
+      )
+    } catch (err) {
+      setError('엑셀 파싱 실패: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setLoading(false)
+    }
   }
 
   // 출발지에서 데이터 가져오기
@@ -1544,6 +1739,8 @@ export default function DataMigrationPage() {
                   currentSource.features.map((f) => (
                     <span key={f} className="text-[11px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">{f}</span>
                   ))
+                ) : source === 'gyeonggi' ? (
+                  <span className="text-[11px] px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded font-medium">엑셀 업로드</span>
                 ) : (
                   <span className="text-[11px] px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded">준비중</span>
                 )}
@@ -1641,7 +1838,32 @@ export default function DataMigrationPage() {
             )}
 
             {/* 조회 모드 — 어린이집 현금출납부 이관 전용. 아이사랑꿈터는 상단 걸음마 예산·전표 패널 사용 → 숨김 */}
-            {!isIlovechild && (<>
+            {!isIlovechild && (source === 'gyeonggi' ? (
+            <div className="space-y-2">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-[11px] text-teal-800 leading-relaxed">
+                <b>📥 accgg 엑셀 업로드 방식</b> — 에이전트·설치 불필요, 휴대폰에서도 가능
+                <ol className="list-decimal ml-4 mt-1 space-y-0.5 text-slate-600">
+                  <li>accgg 로그인 → <b>회계 &gt; 전표관리</b></li>
+                  <li>연도·월(또는 [기간별조회]) 선택 후 좌측 상단 <b>전체 체크</b></li>
+                  <li>우측 하단 <b>[전표 목록 출력]</b> → 뷰어 좌측 <b>💾 저장 → Excel</b></li>
+                  <li>저장된 엑셀 파일을 아래에 올리기</li>
+                </ol>
+              </div>
+              <label className={`w-full py-2.5 rounded-lg text-[11px] font-medium flex items-center justify-center gap-2 cursor-pointer text-white ${loading ? 'bg-teal-300' : 'bg-teal-500 hover:bg-teal-600'}`}>
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    엑셀 분석 중...
+                  </span>
+                ) : '📊 accgg 전표 엑셀 올리기'}
+                <input type="file" accept=".xlsx,.xls" className="hidden" disabled={loading}
+                  onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; handleGyeonggiFile(f) }} />
+              </label>
+            </div>
+            ) : (<>
             <div className="flex gap-2">
               <button
                 onClick={() => setMode('single')}
@@ -1726,12 +1948,13 @@ export default function DataMigrationPage() {
                 '데이터 가져오기'
               )}
             </button>
-            </>)}
+            </>))}
 
             {/* 저장된 데이터 불러오기 — 매핑표(MAPPING_TABLE) 있는 출발지면 자동 노출.
                 ⚠ 새 출발지 추가 시 MAPPING_TABLE 엔트리 + /api/{source}/stored 프록시만 만들면
                    [매핑 코드] 버튼과 [저장된 데이터 불러오기] 버튼이 함께 자동으로 뜬다(게이팅 하드코딩 금지). */}
-            {source in MAPPING_TABLE && (
+            {/* 경기도(gyeonggi)는 엑셀 업로드 방식이라 서버 스크래핑 저장분(/stored) 없음 → 이 버튼 숨김 */}
+            {source in MAPPING_TABLE && source !== 'gyeonggi' && (
               <button
                 onClick={async () => {
                   const storedUserId = currentSource.authType === 'cert' ? (programAuth?.certName || '') : sourceId
