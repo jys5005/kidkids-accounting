@@ -1330,6 +1330,12 @@ export default function DataMigrationPage() {
   const handleGgCollect = async () => {
     setGgCollecting(true); setLoading(true); setError(''); setData(null); setMultiData([]); setTransferResult('')
     try {
+      // 수집 전 저장시각 — 새 저장(에이전트 자체저장) 이 반영됐는지 폴링 판별용
+      let prevSavedAt = ''
+      try {
+        const s0 = await fetch(`/api/gyeonggi/stored?${centerName ? `userId=${encodeURIComponent(centerName)}&` : ''}latest=1`).then(r => r.json())
+        prevSavedAt = s0.savedAt || ''
+      } catch {}
       // facilityKey 는 서버(통합e)가 세션 시설명으로 자동 해석 — 클라이언트 값 있으면 전달
       const res = await fetch('/api/gyeonggi/cash-ledger', {
         method: 'POST', headers: { 'content-type': 'application/json' },
@@ -1340,9 +1346,32 @@ export default function DataMigrationPage() {
         if (json.agentOffline) throw new Error('로컬 에이전트가 꺼져 있습니다. 상단 배지의 [에이전트 실행]을 눌러 켠 뒤 다시 시도하세요.')
         throw new Error(json.error || '수집 실패')
       }
+      await reloadGgCache()  // 첫 수집 후 캐시 등록됨으로 갱신
+      const key = json.facilityKey
+      if (json.pending) {
+        // 백그라운드 수집(영수증 이미지 다운로드로 오래 걸림) — 에이전트 자체저장을 폴링
+        setTransferResult('⏳ 백그라운드 수집 중… (영수증 이미지 다운로드로 최대 몇 분 소요)')
+        for (let i = 0; i < 40; i++) {   // 최대 ~8분 폴링
+          await new Promise(r => setTimeout(r, 12000))
+          try {
+            const s = await fetch(`/api/gyeonggi/stored?${key ? `userId=${encodeURIComponent(key)}&` : ''}latest=1`).then(r => r.json())
+            const raw: unknown[] = s.list || []
+            // 새 저장(savedAt 변경) 이 반영됐을 때만 완료 처리 (옛 데이터 오인 방지)
+            if (raw.length && s.savedAt && s.savedAt !== prevSavedAt) {
+              const results = parseAccggChits(raw)
+              if (results.length === 1) setData(results[0]); else setMultiData(results)
+              const total = results.reduce((a, r) => a + r.rows.length, 0)
+              setTransferResult(`✅ 수집 완료: ${total}건 (${i > 0 ? '백그라운드' : ''}) — 미리보기 표시됨`)
+              return
+            }
+          } catch { /* 계속 폴링 */ }
+          setTransferResult(`⏳ 백그라운드 수집 중… (${(i + 1) * 12}초 경과, 이미지 다운로드 중)`)
+        }
+        setTransferResult('⏳ 수집이 오래 걸립니다. 잠시 후 [저장된 데이터 불러오기]를 눌러 확인하세요.')
+        return
+      }
       setTransferResult(`✅ 수집 완료: ${json.count}건${json.partial ? ' (일부 월 실패)' : ''} — 표 불러오는 중…`)
-      await reloadGgCache()                          // 첫 수집 후 캐시 등록됨으로 갱신
-      await handleGgScrapeLoad(json.facilityKey)     // 방금 저장된 전표 표로 표시 (서버 확정 키)
+      await handleGgScrapeLoad(key)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally { setGgCollecting(false); setLoading(false) }
