@@ -613,6 +613,31 @@ function fmtAmt(n: number): string {
 }
 
 /**
+ * 경기도(accgg) 브라우저 스크래퍼 (북마클릿/콘솔용).
+ * accgg 로그인 브라우저에서 실행 → 전표 API 응답(가장 큰 객체배열)을 가로채 통합e 서버로 POST.
+ * '__KEY__' 는 런타임에 collectKey(인증서명)로 치환. 패널 메시지는 href ASCII 안전을 위해 영문.
+ */
+const GG_SCRAPER =
+  "javascript:(function(){var K='__KEY__',EP='https://www.cert24.kr/api/gyeonggi/browser-collect';" +
+  "function pnl(h){var p=document.getElementById('gg-p');if(!p){p=document.createElement('div');p.id='gg-p';" +
+  "p.style.cssText='position:fixed;top:12px;right:12px;z-index:2147483647;background:#0f172a;color:#fff;font:13px sans-serif;padding:12px 14px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.4);width:290px';document.body.appendChild(p);}p.innerHTML=h;}" +
+  "function big(j){var b=null;(function v(x){if(x&&typeof x==='object'){if(Array.isArray(x)){if(x.length&&x[0]&&typeof x[0]==='object'&&!Array.isArray(x[0])&&(!b||x.length>b.length))b=x;for(var i=0;i<x.length;i++)v(x[i]);}else{for(var k in x){try{v(x[k]);}catch(e){}}}}})(j);return b;}" +
+  "function post(a){pnl('sending '+a.length+' rows...');fetch(EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({collectKey:K,ccctNm:document.title||'',rows:a})}).then(function(r){return r.json();}).then(function(d){pnl(d.success?('<b>OK</b> - '+d.count+' rows sent to server. go back to data-migration.'):('FAIL: '+(d.error||'')));}).catch(function(e){pnl('ERROR: '+e);});}" +
+  "function scan(t){if(!t)return;var j;try{j=JSON.parse(t);}catch(e){return;}var a=big(j);if(a&&a.length&&Object.keys(a[0]).length>=4)post(a);}" +
+  "var XS=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.send=function(){var s=this;s.addEventListener('load',function(){try{var t=s.responseText;if(!t&&s.response)t=JSON.stringify(s.response);scan(t);}catch(e){}});return XS.apply(this,arguments);};" +
+  "var OF=window.fetch;window.fetch=function(){var a=arguments;return OF.apply(this,a).then(function(r){try{r.clone().text().then(scan);}catch(e){}return r;});};" +
+  "pnl('READY - now click the Search button on accgg (jo-hoe)');})();"
+
+/** certName 등 비ASCII를 \\uXXXX 로 이스케이프해 javascript: URL 을 ASCII 안전하게 유지 */
+function ggScraperCode(collectKey: string): string {
+  const esc = Array.from(collectKey || '')
+    .map(c => { const h = c.charCodeAt(0); return h < 128 ? c : '\\u' + h.toString(16).padStart(4, '0') })
+    .join('')
+    .replace(/'/g, '')
+  return GG_SCRAPER.replace('__KEY__', esc)
+}
+
+/**
  * 경기도(accgg) [전표 목록 출력] 엑셀(aoa) → CashLedgerResult[].
  * 헤더 2줄(일자/증빙번호/계정과목/금액/적요/비고/거래처…) + 하단 세입합계/세출합계/합계.
  * 계정과목 "기타 필요경비 지출 [부모부담행사비]" → 목명(기타필요경비지출)·세목([부모부담행사비]) 분리.
@@ -1145,6 +1170,43 @@ export default function DataMigrationPage() {
     }
     setGbSaving(false)
     setGbMsg(`✅ 저장: ${saved.join(', ') || '없음'}${errs.length ? ` / 실패: ${errs.join(', ')}` : ''} (${gbYear}년). 예산작성에서 확인하세요.`)
+  }
+
+  // 경기도(accgg) 스크래핑 방식 토글/피드백
+  const [ggScrapeOpen, setGgScrapeOpen] = useState(false)
+  const [ggScrapeMsg, setGgScrapeMsg] = useState('')
+
+  // 스크래퍼 코드 복사 + accgg 새 탭 열기
+  const handleGgScraperCopy = async () => {
+    const key = programAuth?.certName || ''
+    if (!key) { setGgScrapeMsg('먼저 통합e 인증서가 등록되어야 합니다.'); return }
+    const code = ggScraperCode(key)
+    try {
+      await navigator.clipboard.writeText(code)
+      setGgScrapeMsg('✅ 스크래퍼 복사됨! accgg 탭에서 F12 콘솔에 붙여넣고 [조회]를 누르세요.')
+    } catch {
+      setGgScrapeMsg('복사 실패 — 아래 코드를 길게 눌러 직접 복사하세요.')
+    }
+    window.open('https://www.accgg.co.kr/', '_blank')
+  }
+
+  // 스크래핑 수집분 불러오기 (통합e page_data[certName]['gyeonggi-vouchers-raw'] → CashLedgerResult)
+  const handleGgScrapeLoad = async () => {
+    const key = programAuth?.certName || ''
+    if (!key) { setError('등록된 인증서가 없습니다.'); return }
+    setLoading(true); setError(''); setData(null); setMultiData([]); setTransferResult('')
+    try {
+      const res = await fetch(`/api/gyeonggi/stored?userId=${encodeURIComponent(key)}&latest=1`)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || '수집 데이터 없음')
+      const results: CashLedgerResult[] = json.results || json.data || []
+      if (!results.length) throw new Error('스크래핑된 전표가 없습니다. accgg에서 스크래퍼 실행 후 [조회]를 눌렀는지 확인하세요.')
+      if (results.length === 1) setData(results[0]); else setMultiData(results)
+      const total = results.reduce((s, r) => s + r.rows.length, 0)
+      setTransferResult(`스크래핑 데이터 불러옴: ${results.length}개월, ${total}건`)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally { setLoading(false) }
   }
 
   // 경기도(accgg): [전표 목록 출력] 엑셀 업로드 → 파싱 → 미리보기
@@ -1862,6 +1924,51 @@ export default function DataMigrationPage() {
                 <input type="file" accept=".xlsx,.xls" className="hidden" disabled={loading}
                   onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; handleGyeonggiFile(f) }} />
               </label>
+
+              {/* 또는 — 엑셀 없이 스크래핑 (고급) */}
+              <button
+                type="button"
+                onClick={() => setGgScrapeOpen(v => !v)}
+                className="w-full text-[11px] text-slate-500 hover:text-slate-700 py-1"
+              >
+                {ggScrapeOpen ? '▲ 접기' : '🔖 또는 — 엑셀 없이 스크래핑으로 (고급)'}
+              </button>
+              {ggScrapeOpen && (
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+                  <div className="text-[11px] text-slate-600 leading-relaxed">
+                    엑셀 다운로드 없이 accgg 화면에서 바로 긁어옵니다. (accgg 방화벽 때문에 서버가 아닌 <b>원장님 브라우저</b>에서 실행)
+                    <ol className="list-decimal ml-4 mt-1 space-y-0.5">
+                      <li><b>[스크래퍼 복사 + accgg 열기]</b> 클릭 (코드 복사 + accgg 새 탭)</li>
+                      <li>accgg 전표관리에서 <b>F12 → Console</b> → <b>붙여넣기(Ctrl+V) → Enter</b></li>
+                      <li>화면에서 <b>[조회]</b> 클릭 → 우측 위 "OK - N rows sent" 뜨면 성공</li>
+                      <li>여기로 돌아와 <b>[스크래핑 전표 가져오기]</b> 클릭</li>
+                    </ol>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleGgScraperCopy}
+                      className="w-full py-2 rounded-lg text-[11px] font-medium bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                      📋 스크래퍼 복사 + accgg 열기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGgScrapeLoad}
+                      disabled={loading}
+                      className="w-full py-2 rounded-lg text-[11px] font-medium bg-teal-500 hover:bg-teal-600 disabled:opacity-50 text-white"
+                    >
+                      🔖 스크래핑 전표 가져오기
+                    </button>
+                  </div>
+                  {ggScrapeMsg && <p className="text-[11px] text-slate-600">{ggScrapeMsg}</p>}
+                  <details className="text-[11px] text-slate-400">
+                    <summary className="cursor-pointer">복사가 안 되면 — 코드 직접 복사</summary>
+                    <textarea readOnly value={ggScraperCode(programAuth?.certName || '')} onFocus={e => e.currentTarget.select()}
+                      className="w-full h-16 mt-1 p-1 border border-slate-200 rounded text-[10px] font-mono" />
+                  </details>
+                </div>
+              )}
             </div>
             ) : (<>
             <div className="flex gap-2">
