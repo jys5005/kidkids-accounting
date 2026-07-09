@@ -732,17 +732,73 @@ function parseAccggRows(aoa: unknown[][]): CashLedgerResult[] {
   return results
 }
 
+// 경기도(accgg) 에이전트 수집분: raw 전표(chit JSON) → CashLedgerResult[]
+// 필드: chitDe(날짜) / accgIppSecd(I수입·O지출) / chitAmt(금액) / mokAccgNm·semokAccgNm(목·세목) / chitMemo(적요)
+function parseAccggChits(rawRows: unknown[]): CashLedgerResult[] {
+  const norm = (s: string) => s.replace(/[.\s·[\]]/g, '').trim()
+  type MapItem = { by24Name: string; sunote: string; sub?: boolean }
+  const inc = MAPPING_TABLE.gyeonggi.income as ReadonlyArray<MapItem>
+  const exp = MAPPING_TABLE.gyeonggi.expense as ReadonlyArray<MapItem>
+  const subMap: Record<string, Record<string, string>> = {
+    '1221': { '입학': '1221-111', '현장학습': '1221-112', '차량': '1221-113', '행사': '1221-121', '조석': '1221-131', '특성화': '1221-141' },
+    '2421': { '입학': '2421-111', '현장학습': '2421-121', '차량': '2421-131', '행사': '2421-141', '조석': '2421-151', '특성화': '2421-161' },
+    '2142': { '퇴직적립': '2142-121', '퇴직연금': '2142-121', '퇴직금': '2142-112' },
+  }
+  const codeFor = (dir: 'income' | 'expense', mok: string, semok: string): string => {
+    const base = norm(mok)
+    const pool = dir === 'income' ? inc : exp
+    const item = pool.find(m => !m.sub && norm(m.by24Name) === base)
+    if (!item) return ''
+    let code: string = item.sunote
+    const sm = subMap[code]
+    if (sm && semok) { for (const [kw, sub] of Object.entries(sm)) { if (semok.includes(kw)) { code = sub; break } } }
+    return SUBCODE_TO_5DIGIT[code] || code
+  }
+  const byMonth = new Map<string, CashLedgerRow[]>()
+  for (const raw of rawRows) {
+    const r = raw as Record<string, unknown>
+    const de = String(r.chitDe ?? '').replace(/[^0-9]/g, '')
+    if (de.length < 8) continue
+    const y = de.slice(0, 4), mo = de.slice(4, 6), d = de.slice(6, 8)
+    const ym = `${y}-${mo}`
+    const isInc = String(r.accgIppSecd ?? '') === 'I'
+    const amount = Math.round(Number(String(r.chitAmt ?? '0').replace(/[^0-9.-]/g, '')) || 0)
+    const mok = String(r.mokAccgNm ?? r.hangAccgNm ?? '').trim()
+    const semok = String(r.semokAccgNm ?? '').trim()
+    const row: CashLedgerRow = {
+      idx: 0, date: `${y}-${mo}-${d}`, docNo: String(r.prufNo ?? '').trim(),
+      accountCode: codeFor(isInc ? 'income' : 'expense', mok, semok),
+      accountName: mok, subAccountName: semok, summary: String(r.chitMemo ?? '').trim(),
+      income: isInc ? amount : 0, expense: isInc ? 0 : amount, balance: 0, agreeDate: `${y}-${mo}-${d}`,
+    }
+    if (!byMonth.has(ym)) byMonth.set(ym, [])
+    byMonth.get(ym)!.push(row)
+  }
+  const results: CashLedgerResult[] = []
+  for (const ym of Array.from(byMonth.keys()).sort()) {
+    const rows = byMonth.get(ym)!.sort((a, b) => a.date.localeCompare(b.date))
+    rows.forEach((r, i) => { r.idx = i + 1 })
+    results.push({
+      yearMonth: ym, rows,
+      summary: { prevIncome: 0, prevExpense: 0, monthStart: 0, monthIncome: rows.reduce((s, r) => s + r.income, 0), monthExpense: rows.reduce((s, r) => s + r.expense, 0) },
+    })
+  }
+  return results
+}
+
 export default function DataMigrationPage() {
   // 출발지
   const [source, setSource] = useState<SourceType>('by24')
   // 걸음마회계 출발지는 아이사랑꿈터 유형만 노출 (어린이집은 기존 목록 그대로)
   const [isIlovechild, setIsIlovechild] = useState(false)
+  const [centerName, setCenterName] = useState('')  // 로그인 시설명 (경기도 캐시/수집 키)
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json())
       .then(d => {
         const ilove = ((d?.institutionType || d?.profile?.institutionType || 'childcare') as string) === 'ilovechild'
         setIsIlovechild(ilove)
         if (ilove) setSource('walk') // 아이사랑꿈터는 걸음마만 사용
+        setCenterName(String(d?.centerName || d?.profile?.centerName || '').trim())
       })
       .catch(() => {})
   }, [])
@@ -862,14 +918,14 @@ export default function DataMigrationPage() {
   const [ggCache, setGgCache] = useState<{ exists: boolean; updatedAt?: string } | null>(null)
   const [ggCacheLoading, setGgCacheLoading] = useState(false)
   const reloadGgCache = useCallback(async () => {
-    if (source !== 'gyeonggi' || !programAuth?.certName) { setGgCache(null); return }
+    if (source !== 'gyeonggi' || !centerName) { setGgCache(null); return }
     setGgCacheLoading(true)
     try {
-      const j = await fetch(`/api/gyeonggi/cert-creds?facilityKey=${encodeURIComponent(programAuth.certName)}`).then(r => r.json())
+      const j = await fetch(`/api/gyeonggi/cert-creds?facilityKey=${encodeURIComponent(centerName)}`).then(r => r.json())
       setGgCache(j.success ? { exists: !!j.exists, updatedAt: j.updatedAt } : { exists: false })
     } catch { setGgCache({ exists: false }) }
     finally { setGgCacheLoading(false) }
-  }, [source, programAuth?.certName])
+  }, [source, centerName])
   useEffect(() => { reloadGgCache() }, [reloadGgCache])
 
   // [통합e 인증서 가져오기] — 통합e 등록 인증서를 이 출발지 인증으로 복사 (비번은 서버에서만)
@@ -1203,23 +1259,53 @@ export default function DataMigrationPage() {
     }
   }
 
-  // 스크래핑 수집분 불러오기 (통합e page_data[certName]['gyeonggi-vouchers-raw'] → CashLedgerResult)
+  // 저장된(수집된) 경기도 전표 불러오기 (통합e page_data[시설명]['gyeonggi-vouchers-raw'] → 표 변환)
   const handleGgScrapeLoad = async () => {
-    const key = programAuth?.certName || ''
-    if (!key) { setError('등록된 인증서가 없습니다.'); return }
+    const key = centerName || programAuth?.certName || ''
+    if (!key) { setError('로그인 시설명을 확인할 수 없습니다.'); return }
     setLoading(true); setError(''); setData(null); setMultiData([]); setTransferResult('')
     try {
       const res = await fetch(`/api/gyeonggi/stored?userId=${encodeURIComponent(key)}&latest=1`)
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || '수집 데이터 없음')
-      const results: CashLedgerResult[] = json.results || json.data || []
-      if (!results.length) throw new Error('스크래핑된 전표가 없습니다. accgg에서 스크래퍼 실행 후 [조회]를 눌렀는지 확인하세요.')
+      const raw: unknown[] = json.list || []
+      const results = parseAccggChits(raw)
+      if (!results.length) throw new Error('저장된 전표가 없습니다. [데이터 수집]을 먼저 눌러주세요.')
       if (results.length === 1) setData(results[0]); else setMultiData(results)
       const total = results.reduce((s, r) => s + r.rows.length, 0)
-      setTransferResult(`스크래핑 데이터 불러옴: ${results.length}개월, ${total}건`)
+      setTransferResult(`저장된 전표 불러옴: ${results.length}개월, ${total}건`)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally { setLoading(false) }
+  }
+
+  // 경기도(accgg) 원클릭 수집 — 기간 설정 + [데이터 수집] → 에이전트 자동로그인+수집→DB저장→표시
+  const now = new Date()
+  const curFiscalYear = now.getMonth() + 1 >= 3 ? now.getFullYear() : now.getFullYear() - 1
+  const [ggYear, setGgYear] = useState(String(curFiscalYear))
+  const [ggMonthFrom, setGgMonthFrom] = useState('03')
+  const [ggMonthTo, setGgMonthTo] = useState('02')
+  const [ggCollecting, setGgCollecting] = useState(false)
+  const handleGgCollect = async () => {
+    const key = centerName || ''
+    if (!key) { setError('로그인 시설명을 확인할 수 없습니다.'); return }
+    setGgCollecting(true); setLoading(true); setError(''); setData(null); setMultiData([]); setTransferResult('')
+    try {
+      const res = await fetch('/api/gyeonggi/cash-ledger', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ facilityKey: key, year: ggYear, monthFrom: ggMonthFrom, monthTo: ggMonthTo }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json.success) {
+        if (json.agentOffline) throw new Error('로컬 에이전트가 꺼져 있습니다. 상단 배지의 [에이전트 실행]을 눌러 켠 뒤 다시 시도하세요.')
+        throw new Error(json.error || '수집 실패')
+      }
+      setTransferResult(`✅ 수집 완료: ${json.count}건${json.partial ? ' (일부 월 실패)' : ''} — 표 불러오는 중…`)
+      await reloadGgCache()           // 첫 수집 후 캐시 등록됨으로 갱신
+      await handleGgScrapeLoad()      // 방금 저장된 전표 표로 표시
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally { setGgCollecting(false); setLoading(false) }
   }
 
   // 경기도(accgg): [전표 목록 출력] 엑셀 업로드 → 파싱 → 미리보기
@@ -1931,6 +2017,38 @@ export default function DataMigrationPage() {
             {/* 조회 모드 — 어린이집 현금출납부 이관 전용. 아이사랑꿈터는 상단 걸음마 예산·전표 패널 사용 → 숨김 */}
             {!isIlovechild && (source === 'gyeonggi' ? (
             <div className="space-y-2">
+              {/* 🚀 자동 수집 (권장) — 캐시된 인증서로 자동로그인 → 전표 수집 → 저장 */}
+              <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <b className="text-[11px] text-indigo-800">🚀 자동 수집 (권장)</b>
+                  {ggCache?.exists
+                    ? <span className="text-[10px] text-emerald-700 font-semibold">🔑 자동로그인 준비됨</span>
+                    : <span className="text-[10px] text-amber-600 font-semibold">🔑 첫 수집 시 인증서 1회 확인</span>}
+                </div>
+                <p className="text-[10px] text-slate-500 mb-2">기간만 정하고 [데이터 수집]을 누르면 자동로그인 → 전표 수집 → 저장까지 한 번에.</p>
+                <div className="flex items-center gap-1.5 mb-2 text-[11px]">
+                  <select value={ggYear} onChange={e => setGgYear(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1">
+                    {Array.from({ length: 6 }, (_, i) => String(curFiscalYear - i)).map(y => <option key={y} value={y}>{y}년도</option>)}
+                  </select>
+                  <select value={ggMonthFrom} onChange={e => setGgMonthFrom(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1">
+                    {['03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '01', '02'].map(m => <option key={m} value={m}>{m}월</option>)}
+                  </select>
+                  <span className="text-slate-400">~</span>
+                  <select value={ggMonthTo} onChange={e => setGgMonthTo(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1">
+                    {['03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '01', '02'].map(m => <option key={m} value={m}>{m}월</option>)}
+                  </select>
+                </div>
+                <button type="button" disabled={ggCollecting || loading} onClick={handleGgCollect}
+                  className={`w-full py-2.5 rounded-lg text-[11px] font-bold text-white ${ggCollecting || loading ? 'bg-indigo-300' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
+                  {ggCollecting ? '수집 중… (자동로그인 → 전표 조회)' : '📥 데이터 수집'}
+                </button>
+                <button type="button" onClick={handleGgScrapeLoad} className="w-full mt-1 py-1 text-[10px] text-indigo-600 hover:underline">
+                  저장된 데이터 불러오기
+                </button>
+              </div>
+
+              <div className="text-[10px] text-slate-400 text-center py-0.5">또는 — 수동 방식 (엑셀/스크래핑) ▾</div>
+
               <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-[11px] text-teal-800 leading-relaxed">
                 <b>📥 accgg 엑셀 업로드 방식</b> — 에이전트·설치 불필요, 휴대폰에서도 가능
                 <ol className="list-decimal ml-4 mt-1 space-y-0.5 text-slate-600">
