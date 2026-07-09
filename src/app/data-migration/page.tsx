@@ -761,6 +761,20 @@ function parseAccggChits(rawRows: unknown[]): CashLedgerResult[] {
     if (sm && semok) { for (const [kw, sub] of Object.entries(sm)) { if (semok.includes(kw)) { code = sub; break } } }
     return SUBCODE_TO_5DIGIT[code] || code
   }
+  // accgg 자체 계정코드(scrnNdctAccgVal: "223"/"911"/"421-111") → sunote 코드
+  //   와이즈안 룰과 동일: 수입=1/지출=2 접두. 세목(3-3)은 SUBCODE_TO_5DIGIT 로 5자리.
+  //   이름 매핑에 없는 계정(회의비 등)도 코드로 자동 매핑됨. 실패 시 이름 매핑 폴백.
+  const codeFromScrn = (isInc: boolean, scrnRaw: unknown): string => {
+    let s = String(scrnRaw ?? '').trim()
+    if (/^\d{6}$/.test(s)) s = `${s.slice(0, 3)}-${s.slice(3)}`  // 421111 → 421-111
+    const pre = isInc ? '1' : '2'
+    if (/^\d{3}$/.test(s)) return pre + s                          // 223 → 2223
+    if (/^\d{3}-\d{3}$/.test(s)) {
+      const full = pre + s                                          // 421-111 → 2421-111
+      return SUBCODE_TO_5DIGIT[full] || full
+    }
+    return ''
+  }
   const byMonth = new Map<string, CashLedgerRow[]>()
   for (const raw of rawRows) {
     const r = raw as Record<string, unknown>
@@ -774,7 +788,7 @@ function parseAccggChits(rawRows: unknown[]): CashLedgerResult[] {
     const semok = String(r.semokAccgNm ?? '').trim()
     const row: CashLedgerRow = {
       idx: 0, date: `${y}-${mo}-${d}`, docNo: String(r.prufNo ?? '').trim(),
-      accountCode: codeFor(isInc ? 'income' : 'expense', mok, semok),
+      accountCode: codeFromScrn(isInc, r.scrnNdctAccgVal) || codeFor(isInc ? 'income' : 'expense', mok, semok),
       accountName: mok, subAccountName: semok, summary: String(r.chitMemo ?? '').trim(),
       income: isInc ? amount : 0, expense: isInc ? 0 : amount, balance: 0, agreeDate: `${y}-${mo}-${d}`,
       _receiptImages: Array.isArray(r._receiptImages) ? (r._receiptImages as string[]) : undefined,
