@@ -918,10 +918,12 @@ export default function DataMigrationPage() {
   const [ggCache, setGgCache] = useState<{ exists: boolean; updatedAt?: string } | null>(null)
   const [ggCacheLoading, setGgCacheLoading] = useState(false)
   const reloadGgCache = useCallback(async () => {
-    if (source !== 'gyeonggi' || !centerName) { setGgCache(null); return }
+    if (source !== 'gyeonggi') { setGgCache(null); return }
     setGgCacheLoading(true)
     try {
-      const j = await fetch(`/api/gyeonggi/cert-creds?facilityKey=${encodeURIComponent(centerName)}`).then(r => r.json())
+      // facilityKey 미전달 → 프록시가 세션 시설명(centerName)으로 자동 해석
+      const q = centerName ? `?facilityKey=${encodeURIComponent(centerName)}` : ''
+      const j = await fetch(`/api/gyeonggi/cert-creds${q}`).then(r => r.json())
       setGgCache(j.success ? { exists: !!j.exists, updatedAt: j.updatedAt } : { exists: false })
     } catch { setGgCache({ exists: false }) }
     finally { setGgCacheLoading(false) }
@@ -1260,12 +1262,12 @@ export default function DataMigrationPage() {
   }
 
   // 저장된(수집된) 경기도 전표 불러오기 (통합e page_data[시설명]['gyeonggi-vouchers-raw'] → 표 변환)
-  const handleGgScrapeLoad = async () => {
-    const key = centerName || programAuth?.certName || ''
-    if (!key) { setError('로그인 시설명을 확인할 수 없습니다.'); return }
+  const handleGgScrapeLoad = async (keyOverride?: string) => {
+    // key 없으면 프록시가 세션 시설명으로 자동 해석
+    const key = keyOverride || centerName || ''
     setLoading(true); setError(''); setData(null); setMultiData([]); setTransferResult('')
     try {
-      const res = await fetch(`/api/gyeonggi/stored?userId=${encodeURIComponent(key)}&latest=1`)
+      const res = await fetch(`/api/gyeonggi/stored?${key ? `userId=${encodeURIComponent(key)}&` : ''}latest=1`)
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || '수집 데이터 없음')
       const raw: unknown[] = json.list || []
@@ -1287,13 +1289,12 @@ export default function DataMigrationPage() {
   const [ggMonthTo, setGgMonthTo] = useState('02')
   const [ggCollecting, setGgCollecting] = useState(false)
   const handleGgCollect = async () => {
-    const key = centerName || ''
-    if (!key) { setError('로그인 시설명을 확인할 수 없습니다.'); return }
     setGgCollecting(true); setLoading(true); setError(''); setData(null); setMultiData([]); setTransferResult('')
     try {
+      // facilityKey 는 서버(통합e)가 세션 시설명으로 자동 해석 — 클라이언트 값 있으면 전달
       const res = await fetch('/api/gyeonggi/cash-ledger', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ facilityKey: key, year: ggYear, monthFrom: ggMonthFrom, monthTo: ggMonthTo }),
+        body: JSON.stringify({ ...(centerName ? { facilityKey: centerName } : {}), year: ggYear, monthFrom: ggMonthFrom, monthTo: ggMonthTo }),
       })
       const json = await res.json()
       if (!res.ok || !json.success) {
@@ -1301,8 +1302,8 @@ export default function DataMigrationPage() {
         throw new Error(json.error || '수집 실패')
       }
       setTransferResult(`✅ 수집 완료: ${json.count}건${json.partial ? ' (일부 월 실패)' : ''} — 표 불러오는 중…`)
-      await reloadGgCache()           // 첫 수집 후 캐시 등록됨으로 갱신
-      await handleGgScrapeLoad()      // 방금 저장된 전표 표로 표시
+      await reloadGgCache()                          // 첫 수집 후 캐시 등록됨으로 갱신
+      await handleGgScrapeLoad(json.facilityKey)     // 방금 저장된 전표 표로 표시 (서버 확정 키)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally { setGgCollecting(false); setLoading(false) }
@@ -2042,7 +2043,7 @@ export default function DataMigrationPage() {
                   className={`w-full py-2.5 rounded-lg text-[11px] font-bold text-white ${ggCollecting || loading ? 'bg-indigo-300' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
                   {ggCollecting ? '수집 중… (자동로그인 → 전표 조회)' : '📥 데이터 수집'}
                 </button>
-                <button type="button" onClick={handleGgScrapeLoad} className="w-full mt-1 py-1 text-[10px] text-indigo-600 hover:underline">
+                <button type="button" onClick={() => handleGgScrapeLoad()} className="w-full mt-1 py-1 text-[10px] text-indigo-600 hover:underline">
                   저장된 데이터 불러오기
                 </button>
               </div>
@@ -2102,7 +2103,7 @@ export default function DataMigrationPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={handleGgScrapeLoad}
+                      onClick={() => handleGgScrapeLoad()}
                       disabled={loading}
                       className="w-full py-2 rounded-lg text-[11px] font-medium bg-teal-500 hover:bg-teal-600 disabled:opacity-50 text-white"
                     >
