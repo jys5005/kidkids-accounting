@@ -1247,6 +1247,10 @@ export default function DataMigrationPage() {
   // 경기도(accgg) 스크래핑 방식 토글/피드백
   const [ggScrapeOpen, setGgScrapeOpen] = useState(false)
   const [ggScrapeMsg, setGgScrapeMsg] = useState('')
+  // 경기도 수동 방식(엑셀/스크래핑) 섹션 접기 — 자동 수집이 기본이라 기본 접힘
+  const [ggManualOpen, setGgManualOpen] = useState(false)
+  // 엑셀 파싱 전용 busy (자동 수집 loading 과 분리 — "엑셀 분석 중" 오표시 방지)
+  const [ggExcelBusy, setGgExcelBusy] = useState(false)
 
   // 스크래퍼 코드 복사 (새 탭 안 엶 — 이미 로그인된 accgg 탭에서 실행해야 함)
   const handleGgScraperCopy = async () => {
@@ -1313,6 +1317,7 @@ export default function DataMigrationPage() {
   const handleGyeonggiFile = async (file?: File | null) => {
     if (!file) return
     setLoading(true)
+    setGgExcelBusy(true)
     setError('')
     setData(null)
     setMultiData([])
@@ -1339,6 +1344,7 @@ export default function DataMigrationPage() {
       setError('엑셀 파싱 실패: ' + (err instanceof Error ? err.message : String(err)))
     } finally {
       setLoading(false)
+      setGgExcelBusy(false)
     }
   }
 
@@ -2048,8 +2054,12 @@ export default function DataMigrationPage() {
                 </button>
               </div>
 
-              <div className="text-[10px] text-slate-400 text-center py-0.5">또는 — 수동 방식 (엑셀/스크래핑) ▾</div>
+              <button type="button" onClick={() => setGgManualOpen(v => !v)}
+                className="w-full text-[10px] text-slate-400 hover:text-slate-600 text-center py-0.5">
+                {ggManualOpen ? '▲ 수동 방식 접기' : '또는 — 수동 방식 (엑셀/스크래핑) ▾'}
+              </button>
 
+              {ggManualOpen && (<>
               <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-[11px] text-teal-800 leading-relaxed">
                 <b>📥 accgg 엑셀 업로드 방식</b> — 에이전트·설치 불필요, 휴대폰에서도 가능
                 <ol className="list-decimal ml-4 mt-1 space-y-0.5 text-slate-600">
@@ -2059,8 +2069,8 @@ export default function DataMigrationPage() {
                   <li>저장된 엑셀 파일을 아래에 올리기</li>
                 </ol>
               </div>
-              <label className={`w-full py-2.5 rounded-lg text-[11px] font-medium flex items-center justify-center gap-2 cursor-pointer text-white ${loading ? 'bg-teal-300' : 'bg-teal-500 hover:bg-teal-600'}`}>
-                {loading ? (
+              <label className={`w-full py-2.5 rounded-lg text-[11px] font-medium flex items-center justify-center gap-2 cursor-pointer text-white ${ggExcelBusy ? 'bg-teal-300' : 'bg-teal-500 hover:bg-teal-600'}`}>
+                {ggExcelBusy ? (
                   <span className="flex items-center justify-center gap-2">
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -2118,6 +2128,7 @@ export default function DataMigrationPage() {
                   </details>
                 </div>
               )}
+              </>)}
             </div>
             ) : (<>
             <div className="flex gap-2">
