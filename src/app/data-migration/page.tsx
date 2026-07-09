@@ -858,6 +858,20 @@ export default function DataMigrationPage() {
   }, [source])
   useEffect(() => { setProgramAuth(null); reloadProgramAuth() }, [source, reloadProgramAuth])
 
+  // 경기도(accgg) 자동로그인 자격증명 캐시 등록 여부 (등록돼 있으면 CROSSCERT 없이 빠른 로그인)
+  const [ggCache, setGgCache] = useState<{ exists: boolean; updatedAt?: string } | null>(null)
+  const [ggCacheLoading, setGgCacheLoading] = useState(false)
+  const reloadGgCache = useCallback(async () => {
+    if (source !== 'gyeonggi' || !programAuth?.certName) { setGgCache(null); return }
+    setGgCacheLoading(true)
+    try {
+      const j = await fetch(`/api/gyeonggi/cert-creds?facilityKey=${encodeURIComponent(programAuth.certName)}`).then(r => r.json())
+      setGgCache(j.success ? { exists: !!j.exists, updatedAt: j.updatedAt } : { exists: false })
+    } catch { setGgCache({ exists: false }) }
+    finally { setGgCacheLoading(false) }
+  }, [source, programAuth?.certName])
+  useEffect(() => { reloadGgCache() }, [reloadGgCache])
+
   // [통합e 인증서 가져오기] — 통합e 등록 인증서를 이 출발지 인증으로 복사 (비번은 서버에서만)
   const [certImporting, setCertImporting] = useState(false)
   const [certImportMsg, setCertImportMsg] = useState('')
@@ -1827,6 +1841,22 @@ export default function DataMigrationPage() {
                       통합e 인증설정에서 등록 · 바로 사용 가능
                       {programAuth.savedAt && ` · ${new Date(programAuth.savedAt).toLocaleDateString('ko-KR')}`}
                     </p>
+                    {source === 'gyeonggi' && programAuth.authType === 'cert' && (
+                      <p className="text-[11px] mt-1">
+                        {ggCacheLoading ? (
+                          <span className="text-slate-400">🔑 자동로그인 캐시 확인 중…</span>
+                        ) : ggCache?.exists ? (
+                          <span className="font-semibold text-emerald-700">
+                            🔑 자동로그인 캐시: ✓ 등록됨 (CROSSCERT 없이 빠른 로그인)
+                            {ggCache.updatedAt && ` · ${new Date(ggCache.updatedAt).toLocaleDateString('ko-KR')}`}
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-amber-600">
+                            🔑 자동로그인 캐시: ✗ 미등록 (첫 수집 시 인증서로 1회 로그인 → 자동 캐시)
+                          </span>
+                        )}
+                      </p>
+                    )}
                   </div>
                   <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
                     target="_blank" rel="noopener noreferrer"
