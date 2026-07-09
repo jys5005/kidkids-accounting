@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const res = await fetch(`${PLATFORM_URL}/api/settings/program-auth`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', cookie: req.headers.get('cookie') || '' },
       body: JSON.stringify(body),
     })
     const data = await res.json()

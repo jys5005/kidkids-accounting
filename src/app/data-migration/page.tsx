@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import * as XLSX from 'xlsx'
 import { getActiveBook, setActiveBook, BOOK_CHANGE_EVENT, bookLabel, ILOVECHILD_BOOKS } from '@/lib/ilovechild-books'
 import { GWIN_BUDGETS } from '@/data/gwin-budgets'
@@ -661,19 +661,32 @@ export default function DataMigrationPage() {
   const [authSaveMsg, setAuthSaveMsg] = useState('')
 
   // 소스 변경 시 등록된 인증 정보 자동 로드
-  useEffect(() => {
+  const reloadProgramAuth = useCallback(async () => {
     setAuthLoading(true)
-    setProgramAuth(null)
-    fetch(`/api/settings/program-auth?programId=${source}`)
-      .then(res => res.json())
-      .then(json => {
-        if (json.success && json.data) {
-          setProgramAuth(json.data)
-        }
-      })
-      .catch(() => {})
-      .finally(() => setAuthLoading(false))
+    try {
+      const json = await fetch(`/api/settings/program-auth?programId=${source}`).then(r => r.json())
+      setProgramAuth(json.success && json.data ? json.data : null)
+    } catch { /* 무시 */ }
+    finally { setAuthLoading(false) }
   }, [source])
+  useEffect(() => { setProgramAuth(null); reloadProgramAuth() }, [source, reloadProgramAuth])
+
+  // [통합e 인증서 가져오기] — 통합e 등록 인증서를 이 출발지 인증으로 복사 (비번은 서버에서만)
+  const [certImporting, setCertImporting] = useState(false)
+  const [certImportMsg, setCertImportMsg] = useState('')
+  const handleImportCert = useCallback(async () => {
+    setCertImporting(true); setCertImportMsg('')
+    try {
+      const res = await fetch('/api/settings/program-auth', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ programId: source, copyFromCert: true }),
+      })
+      const j = await res.json()
+      if (j.success) { setCertImportMsg(`✅ ${j.certName || '인증서'} 가져옴`); await reloadProgramAuth() }
+      else setCertImportMsg(`❌ ${j.message || '가져오기 실패'}`)
+    } catch { setCertImportMsg('❌ 통합e 서버 연결 실패') }
+    finally { setCertImporting(false) }
+  }, [source, reloadProgramAuth])
 
   // 소스 변경 시 업체별 저장 인증정보 자동 입력
   useEffect(() => {
@@ -1567,11 +1580,21 @@ export default function DataMigrationPage() {
             ) : currentSource.authType === 'cert' ? (
               <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
                 <p className="text-xs text-teal-700 font-medium">인증서가 등록되지 않았습니다.</p>
-                <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-2 text-xs text-teal-700 font-medium underline">
-                  통합e 인증설정에서 등록하기
-                </a>
+                <p className="text-[11px] text-slate-500 mt-1">통합e에 등록된 인증서를 이 출발지로 바로 가져올 수 있습니다.</p>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <button
+                    onClick={handleImportCert}
+                    disabled={certImporting}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg">
+                    {certImporting ? '가져오는 중...' : '📥 통합e 인증서 가져오기'}
+                  </button>
+                  <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-teal-700 font-medium underline">
+                    또는 인증설정에서 등록
+                  </a>
+                </div>
+                {certImportMsg && <p className="text-[11px] mt-1.5 text-slate-600">{certImportMsg}</p>}
               </div>
             ) : (
               <>
