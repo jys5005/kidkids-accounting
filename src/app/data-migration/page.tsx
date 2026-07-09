@@ -1176,18 +1176,17 @@ export default function DataMigrationPage() {
   const [ggScrapeOpen, setGgScrapeOpen] = useState(false)
   const [ggScrapeMsg, setGgScrapeMsg] = useState('')
 
-  // 스크래퍼 코드 복사 + accgg 새 탭 열기
+  // 스크래퍼 코드 복사 (새 탭 안 엶 — 이미 로그인된 accgg 탭에서 실행해야 함)
   const handleGgScraperCopy = async () => {
     const key = programAuth?.certName || ''
     if (!key) { setGgScrapeMsg('먼저 통합e 인증서가 등록되어야 합니다.'); return }
     const code = ggScraperCode(key)
     try {
       await navigator.clipboard.writeText(code)
-      setGgScrapeMsg('✅ 스크래퍼 복사됨! accgg 탭에서 F12 콘솔에 붙여넣고 [조회]를 누르세요.')
+      setGgScrapeMsg('✅ 복사됨! ⚠ 로그인 화면 말고, 이미 로그인된 accgg [전표관리] 화면에서 F12 콘솔에 붙여넣고 [조회]를 누르세요.')
     } catch {
-      setGgScrapeMsg('복사 실패 — 아래 코드를 길게 눌러 직접 복사하세요.')
+      setGgScrapeMsg('복사 실패 — 아래 "코드 직접 복사"를 펼쳐 코드를 복사하세요.')
     }
-    window.open('https://www.accgg.co.kr/', '_blank')
   }
 
   // 스크래핑 수집분 불러오기 (통합e page_data[certName]['gyeonggi-vouchers-raw'] → CashLedgerResult)
@@ -1938,8 +1937,9 @@ export default function DataMigrationPage() {
                   <div className="text-[11px] text-slate-600 leading-relaxed">
                     엑셀 다운로드 없이 accgg 화면에서 바로 긁어옵니다. (accgg 방화벽 때문에 서버가 아닌 <b>원장님 브라우저</b>에서 실행)
                     <ol className="list-decimal ml-4 mt-1 space-y-0.5">
-                      <li><b>[스크래퍼 복사 + accgg 열기]</b> 클릭 (코드 복사 + accgg 새 탭)</li>
-                      <li>accgg 전표관리에서 <b>F12 → Console</b> → <b>붙여넣기(Ctrl+V) → Enter</b></li>
+                      <li>accgg에 <b>로그인 → 회계 &gt; 전표관리</b> 화면까지 이동 (⚠ 로그인 화면에서 실행 금지)</li>
+                      <li><b>[스크래퍼 코드 복사]</b> 클릭</li>
+                      <li>그 전표관리 화면에서 <b>F12 → Console</b> → <b>붙여넣기(Ctrl+V) → Enter</b></li>
                       <li>화면에서 <b>[조회]</b> 클릭 → 우측 위 "OK - N rows sent" 뜨면 성공</li>
                       <li>여기로 돌아와 <b>[스크래핑 전표 가져오기]</b> 클릭</li>
                     </ol>
@@ -1950,7 +1950,7 @@ export default function DataMigrationPage() {
                       onClick={handleGgScraperCopy}
                       className="w-full py-2 rounded-lg text-[11px] font-medium bg-indigo-600 hover:bg-indigo-700 text-white"
                     >
-                      📋 스크래퍼 복사 + accgg 열기
+                      📋 스크래퍼 코드 복사
                     </button>
                     <button
                       type="button"
