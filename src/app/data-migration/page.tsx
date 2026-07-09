@@ -15,7 +15,7 @@ function AgentAwareMessage({ text, className }: { text: string; className?: stri
       {isAgentOffline && (
         <a
           href="childcare-agent://start"
-          className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg"
+          className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-semibold rounded-lg"
         >
           🔌 에이전트 실행
         </a>
@@ -1363,18 +1363,18 @@ export default function DataMigrationPage() {
     <div className="space-y-6">
       {/* 언더바 탭 */}
       <div className="flex items-center gap-0 border-b border-slate-200">
-        <a href="/data-migration" className="px-4 py-2 text-[12px] font-bold whitespace-nowrap border-b-2 text-teal-700 border-teal-500">데이터이관</a>
-        <a href="/data-migration/auto-login" className="px-4 py-2 text-[12px] font-bold whitespace-nowrap border-b-2 text-slate-400 border-transparent hover:text-slate-600 hover:border-slate-300">자동로그인</a>
+        <a href="/data-migration" className="px-4 py-2 text-[11px] font-bold whitespace-nowrap border-b-2 text-teal-700 border-teal-500">데이터이관</a>
+        <a href="/data-migration/auto-login" className="px-4 py-2 text-[11px] font-bold whitespace-nowrap border-b-2 text-slate-400 border-transparent hover:text-slate-600 hover:border-slate-300">자동로그인</a>
       </div>
       {/* 제목 + 로컬 에이전트 상태(항상 노출) */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">데이터 이관</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-500 mt-1">
             {currentSource.label}({currentSource.url}) → {destName}{isIlovechild ? '' : '(sunote.co.kr)'} 현금출납부 이관
           </p>
         </div>
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium ${
           agentAlive === null ? 'bg-slate-100 text-slate-500'
           : agentAlive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
           : 'bg-red-50 text-red-700 border border-red-200'
@@ -1388,7 +1388,7 @@ export default function DataMigrationPage() {
           {!agentAlive && (
             <a
               href="childcare-agent://start"
-              className="ml-1 inline-flex items-center gap-1 px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg"
+              className="ml-1 inline-flex items-center gap-1 px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-semibold rounded-lg"
             >
               🔌 에이전트 실행
             </a>
@@ -1400,47 +1400,47 @@ export default function DataMigrationPage() {
       {isIlovechild && source === 'walk' && (
         <div className="bg-white rounded-xl border-2 border-amber-200 p-5 space-y-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-amber-800 font-bold text-sm">🐤 걸음마 예산·전표 가져오기</span>
-            <span className="ml-2 text-xs font-bold text-slate-600">회계연도</span>
-            <select value={gbYear} onChange={e => { setGbYear(e.target.value); setGbPreviewByBook(null); setGbMsg('') }} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
+            <span className="text-amber-800 font-bold text-[11px]">🐤 걸음마 예산·전표 가져오기</span>
+            <span className="ml-2 text-[11px] font-bold text-slate-600">회계연도</span>
+            <select value={gbYear} onChange={e => { setGbYear(e.target.value); setGbPreviewByBook(null); setGbMsg('') }} className="border border-slate-300 rounded px-2 py-1.5 text-[11px]">
               <option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option>
             </select>
           </div>
           {/* 장부 선택 — 단일 선택(한 장부씩 조회·저장). 여러 장부는 장부를 바꿔가며 각각 진행 */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-bold text-slate-500">가져올 장부 <span className="text-slate-400 font-normal">(한 개씩)</span></span>
+            <span className="text-[11px] font-bold text-slate-500">가져올 장부 <span className="text-slate-400 font-normal">(한 개씩)</span></span>
             {ILOVECHILD_BOOKS.map(b => {
               const on = gbSelBooks.includes(b.code)
               return (
                 <button key={b.code} onClick={() => toggleGbBook(b.code)}
-                  className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors ${on ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-300 hover:border-amber-400'}`}>
+                  className={`px-3 py-1 text-[11px] font-bold rounded-full border transition-colors ${on ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-300 hover:border-amber-400'}`}>
                   {on ? '✓ ' : ''}{b.label}
                 </button>
               )
             })}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <button onClick={loadGwinBudget} disabled={gbLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50">{gbLoading ? '⏳ 걸음마 조회 중…' : '📥 예산 가져오기 (실시간)'}</button>
-            <button onClick={saveGwinBudget} disabled={!gbPreviewByBook || gbSaving} className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded disabled:opacity-40">💾 저장</button>
+            <button onClick={loadGwinBudget} disabled={gbLoading} className="px-3 py-1.5 text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50">{gbLoading ? '⏳ 걸음마 조회 중…' : '📥 예산 가져오기 (실시간)'}</button>
+            <button onClick={saveGwinBudget} disabled={!gbPreviewByBook || gbSaving} className="px-4 py-1.5 text-[11px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded disabled:opacity-40">💾 저장</button>
             <button onClick={loadGwinBudgetStatic} className="px-2 py-1.5 text-[11px] font-bold text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50" title="실시간 조회 실패 시 마지막 저장된 스냅샷으로 미리보기">저장 데이터로 보기</button>
             <span className="text-[11px] font-bold text-slate-500 ml-1">전표기간</span>
-            <select value={gbVFrom} onChange={e => setGbVFrom(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="시작월(회계연도 3월~익년2월)">
+            <select value={gbVFrom} onChange={e => setGbVFrom(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-[11px]" title="시작월(회계연도 3월~익년2월)">
               {FISCAL_MONTHS.map(m => <option key={m} value={m}>{Number(m)}월{Number(m) < 3 ? '(익년)' : ''}</option>)}
             </select>
-            <span className="text-slate-400 text-xs">~</span>
-            <select value={gbVTo} onChange={e => setGbVTo(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-xs" title="종료월(회계연도 3월~익년2월)">
+            <span className="text-slate-400 text-[11px]">~</span>
+            <select value={gbVTo} onChange={e => setGbVTo(e.target.value)} className="border border-slate-300 rounded px-1.5 py-1.5 text-[11px]" title="종료월(회계연도 3월~익년2월)">
               {FISCAL_MONTHS.map(m => <option key={m} value={m}>{Number(m)}월{Number(m) < 3 ? '(익년)' : ''}</option>)}
             </select>
-            <label className="flex items-center gap-1 text-xs text-slate-600 select-none cursor-pointer" title="첨부된 영수증 사진까지 함께 가져와 전표에 붙입니다(시간이 더 걸립니다)">
+            <label className="flex items-center gap-1 text-[11px] text-slate-600 select-none cursor-pointer" title="첨부된 영수증 사진까지 함께 가져와 전표에 붙입니다(시간이 더 걸립니다)">
               <input type="checkbox" checked={gbVWithReceipts} onChange={e => setGbVWithReceipts(e.target.checked)} /> 🧾 영수증 사진 포함
             </label>
-            <button onClick={loadGwinVouchers} disabled={gbVLoading} className="px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50" title="걸음마 전표(현금출납부) 조회">{gbVLoading ? '⏳ 전표 조회 중…' : '🧾 전표 가져오기'}</button>
-            <button onClick={saveGwinVouchers} disabled={!gbVRows || !gbVRows.length || gbVSaving} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded disabled:opacity-40" title="가져온 전표를 전표관리로 저장">{gbVSaving ? '저장 중…' : '📒 전표관리로 저장'}</button>
-            {gbVSavedBook && <a href={`/voucher/input${gbVSavedYm ? `?ym=${gbVSavedYm}` : ''}`} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded" title={`${bookLabel(gbVSavedBook)} 전표관리(전표입력)${gbVSavedYm ? ` ${gbVSavedYm}` : ''}로 이동`}>→ 전표관리로 이동</a>}
-            {gbMsg && <span className={`text-xs font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}
+            <button onClick={loadGwinVouchers} disabled={gbVLoading} className="px-3 py-1.5 text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded hover:bg-amber-200 disabled:opacity-50" title="걸음마 전표(현금출납부) 조회">{gbVLoading ? '⏳ 전표 조회 중…' : '🧾 전표 가져오기'}</button>
+            <button onClick={saveGwinVouchers} disabled={!gbVRows || !gbVRows.length || gbVSaving} className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 rounded disabled:opacity-40" title="가져온 전표를 전표관리로 저장">{gbVSaving ? '저장 중…' : '📒 전표관리로 저장'}</button>
+            {gbVSavedBook && <a href={`/voucher/input${gbVSavedYm ? `?ym=${gbVSavedYm}` : ''}`} className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded" title={`${bookLabel(gbVSavedBook)} 전표관리(전표입력)${gbVSavedYm ? ` ${gbVSavedYm}` : ''}로 이동`}>→ 전표관리로 이동</a>}
+            {gbMsg && <span className={`text-[11px] font-semibold ${gbMsg.startsWith('❌') ? 'text-rose-600' : 'text-emerald-700'}`}>{gbMsg}</span>}
           </div>
           {gbPreviewByBook && (
-            <div className="text-xs text-slate-600 bg-amber-50 rounded px-3 py-2 space-y-0.5">
+            <div className="text-[11px] text-slate-600 bg-amber-50 rounded px-3 py-2 space-y-0.5">
               {Object.entries(gbPreviewByBook).map(([book, basis]) => {
                 const keys = Object.keys(basis)
                 const total = keys.reduce((s, k) => s + (basis[k] || []).reduce((a, it) => a + (it.total || 0), 0), 0)
@@ -1452,7 +1452,7 @@ export default function DataMigrationPage() {
           {/* 가져온 전표 미리보기 (여기에 표시) */}
           {gbVRows && gbVRows.length > 0 && (
             <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <div className="bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 flex items-center gap-2">
+              <div className="bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-600 flex items-center gap-2">
                 🧾 가져온 전표 {gbVRows.length}건 <span className="text-slate-400 font-normal">({gbVBook.split(',').map(bookLabel).join('·')} · {gbYear}.{gbVFrom}~{gbVTo}월) — [📒 전표관리로 저장]으로 반영</span>
               </div>
               <div className="overflow-x-auto max-h-64 overflow-y-auto">
@@ -1472,7 +1472,7 @@ export default function DataMigrationPage() {
                   </tbody>
                 </table>
               </div>
-              {gbVRows.length > 100 && <div className="px-3 py-1 text-[10px] text-slate-400">미리보기 100건 표시 (전체 {gbVRows.length}건 저장됨)</div>}
+              {gbVRows.length > 100 && <div className="px-3 py-1 text-[11px] text-slate-400">미리보기 100건 표시 (전체 {gbVRows.length}건 저장됨)</div>}
             </div>
           )}
           <p className="text-[11px] text-slate-400">· 예산은 <b className="text-slate-600">예산관리 › 예산작성</b>에, 전표는 <b className="text-slate-600">전표관리 › 전표입력</b>에 반영됩니다.</p>
@@ -1485,14 +1485,14 @@ export default function DataMigrationPage() {
                   <span className="text-2xl">⚠️</span>
                   <h3 className="text-base font-bold text-slate-800">이미 저장한 전표입니다</h3>
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-[11px] text-slate-600 leading-relaxed">
                   이 전표는 방금 <b className="text-teal-700">전표관리에 저장</b>되었습니다.<br />
                   다시 저장하면 <b className="text-rose-600">재등록되어 중복될 수 있습니다.</b><br />
                   그래도 저장하시겠습니까?
                 </p>
                 <div className="flex justify-end gap-2 mt-5">
-                  <button onClick={() => setGbVConfirmOpen(false)} className="px-4 py-2 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded">취소</button>
-                  <button onClick={doSaveVouchers} className="px-4 py-2 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded">그래도 저장</button>
+                  <button onClick={() => setGbVConfirmOpen(false)} className="px-4 py-2 text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded">취소</button>
+                  <button onClick={doSaveVouchers} className="px-4 py-2 text-[11px] font-bold text-white bg-rose-600 hover:bg-rose-700 rounded">그래도 저장</button>
                 </div>
               </div>
             </div>
@@ -1506,7 +1506,7 @@ export default function DataMigrationPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-blue-600 font-bold text-sm">1</span>
+              <span className="text-blue-600 font-bold text-[11px]">1</span>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
@@ -1520,7 +1520,7 @@ export default function DataMigrationPage() {
                     setError('')
                     setTransferResult('')
                   }}
-                  className="px-2 py-1 border border-slate-200 rounded-lg text-sm font-medium text-blue-700 bg-blue-50"
+                  className="px-2 py-1 border border-slate-200 rounded-lg text-[11px] font-medium text-blue-700 bg-blue-50"
                 >
                   {/* 아이사랑꿈터는 걸음마만(어린이집 이관원 제외), 어린이집은 걸음마 제외 */}
                   {SOURCE_OPTIONS.filter((o) => isIlovechild ? o.value === 'walk' : o.value !== 'walk').map((o) => (
@@ -1530,22 +1530,22 @@ export default function DataMigrationPage() {
                 {source in MAPPING_TABLE && (
                   <button
                     onClick={() => setShowMappingModal(true)}
-                    className="px-2 py-1 text-xs bg-violet-50 text-violet-700 border border-violet-200 rounded-lg hover:bg-violet-100 font-medium"
+                    className="px-2 py-1 text-[11px] bg-violet-50 text-violet-700 border border-violet-200 rounded-lg hover:bg-violet-100 font-medium"
                   >
                     매핑 코드
                   </button>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
-                <p className="text-xs text-slate-400">{currentSource.url}</p>
+                <p className="text-[11px] text-slate-400">{currentSource.url}</p>
                 {isIlovechild && source === 'walk' ? (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">예산 실시간</span>
+                  <span className="text-[11px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">예산 실시간</span>
                 ) : currentSource.features.length > 0 ? (
                   currentSource.features.map((f) => (
-                    <span key={f} className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">{f}</span>
+                    <span key={f} className="text-[11px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium">{f}</span>
                   ))
                 ) : (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded">준비중</span>
+                  <span className="text-[11px] px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded">준비중</span>
                 )}
               </div>
             </div>
@@ -1554,43 +1554,43 @@ export default function DataMigrationPage() {
           <div className="space-y-3">
             {/* 인증 정보 영역 */}
             {authLoading ? (
-              <div className="text-xs text-slate-400 py-2">인증 정보 확인 중...</div>
+              <div className="text-[11px] text-slate-400 py-2">인증 정보 확인 중...</div>
             ) : programAuth ? (
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
                 <div className="flex items-center gap-2">
                   <span className="text-emerald-600 text-lg">&#x2713;</span>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-emerald-800">
+                    <p className="text-[11px] font-semibold text-emerald-800">
                       {programAuth.authType === 'cert'
                         ? `인증서 등록됨: ${programAuth.certName}`
                         : '아이디/비밀번호 등록됨'}
                     </p>
-                    <p className="text-xs text-emerald-600 mt-0.5">
+                    <p className="text-[11px] text-emerald-600 mt-0.5">
                       통합e 인증설정에서 등록 · 바로 사용 가능
                       {programAuth.savedAt && ` · ${new Date(programAuth.savedAt).toLocaleDateString('ko-KR')}`}
                     </p>
                   </div>
                   <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
                     target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50">
+                    className="text-[11px] text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50">
                     수정
                   </a>
                 </div>
               </div>
             ) : currentSource.authType === 'cert' ? (
               <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-                <p className="text-xs text-teal-700 font-medium">인증서가 등록되지 않았습니다.</p>
+                <p className="text-[11px] text-teal-700 font-medium">인증서가 등록되지 않았습니다.</p>
                 <p className="text-[11px] text-slate-500 mt-1">통합e에 등록된 인증서를 이 출발지로 바로 가져올 수 있습니다.</p>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <button
                     onClick={handleImportCert}
                     disabled={certImporting}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg">
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white text-[11px] font-semibold rounded-lg">
                     {certImporting ? '가져오는 중...' : '📥 통합e 인증서 가져오기'}
                   </button>
                   <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
                     target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-teal-700 font-medium underline">
+                    className="text-[11px] text-teal-700 font-medium underline">
                     또는 인증설정에서 등록
                   </a>
                 </div>
@@ -1599,22 +1599,22 @@ export default function DataMigrationPage() {
             ) : (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">아이디</label>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">아이디</label>
                   <input
                     type="text"
                     value={sourceId}
                     onChange={(e) => setSourceId(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
                     placeholder={`${currentSource.label} 아이디`}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">비밀번호</label>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">비밀번호</label>
                   <input
                     type="password"
                     value={sourcePw}
                     onChange={(e) => setSourcePw(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
                     placeholder="비밀번호"
                   />
                 </div>
@@ -1623,16 +1623,16 @@ export default function DataMigrationPage() {
                     type="button"
                     onClick={saveMigrationAuth}
                     disabled={authSaving}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
+                    className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
                   >
                     {authSaving ? '저장 중…' : '💾 이 업체 로그인정보 저장'}
                   </button>
                   {savedAuthAt && (
-                    <span className="text-xs text-emerald-600">
+                    <span className="text-[11px] text-emerald-600">
                       저장됨 · {new Date(savedAuthAt).toLocaleDateString('ko-KR')}
                     </span>
                   )}
-                  {authSaveMsg && <span className="text-xs text-slate-500">{authSaveMsg}</span>}
+                  {authSaveMsg && <span className="text-[11px] text-slate-500">{authSaveMsg}</span>}
                 </div>
                 <p className="text-[11px] text-slate-400">
                   이 업체 계정으로 로그인한 상태에서 저장하면, 다음에 이 화면 열 때 자동으로 채워집니다. (업체별로 따로 저장)
@@ -1645,7 +1645,7 @@ export default function DataMigrationPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setMode('single')}
-                className={`px-3 py-1.5 text-xs rounded-lg ${
+                className={`px-3 py-1.5 text-[11px] rounded-lg ${
                   mode === 'single'
                     ? 'bg-teal-500 text-white'
                     : 'bg-slate-100 text-slate-600'
@@ -1655,7 +1655,7 @@ export default function DataMigrationPage() {
               </button>
               <button
                 onClick={() => setMode('range')}
-                className={`px-3 py-1.5 text-xs rounded-lg ${
+                className={`px-3 py-1.5 text-[11px] rounded-lg ${
                   mode === 'range'
                     ? 'bg-teal-500 text-white'
                     : 'bg-slate-100 text-slate-600'
@@ -1667,11 +1667,11 @@ export default function DataMigrationPage() {
 
             {mode === 'single' ? (
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">조회월</label>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">조회월</label>
                 <select
                   value={yearMonth}
                   onChange={(e) => setYearMonth(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
                 >
                   {monthOptions.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
@@ -1681,11 +1681,11 @@ export default function DataMigrationPage() {
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">시작월</label>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">시작월</label>
                   <select
                     value={startYm}
                     onChange={(e) => setStartYm(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
                   >
                     <option value="">선택</option>
                     {monthOptions.map((o) => (
@@ -1694,11 +1694,11 @@ export default function DataMigrationPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">종료월</label>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">종료월</label>
                   <select
                     value={endYm}
                     onChange={(e) => setEndYm(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
                   >
                     <option value="">선택</option>
                     {monthOptions.map((o) => (
@@ -1712,7 +1712,7 @@ export default function DataMigrationPage() {
             <button
               onClick={handleFetch}
               disabled={loading}
-              className="w-full py-2.5 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 disabled:opacity-50"
+              className="w-full py-2.5 bg-teal-500 text-white rounded-lg text-[11px] font-medium hover:bg-teal-600 disabled:opacity-50"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -1796,7 +1796,7 @@ export default function DataMigrationPage() {
                   finally { setLoading(false) }
                 }}
                 disabled={loading}
-                className="w-full py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 disabled:opacity-50"
+                className="w-full py-2 bg-teal-500 text-white rounded-lg text-[11px] font-medium hover:bg-teal-600 disabled:opacity-50"
               >
                 저장된 데이터 불러오기
               </button>
@@ -1809,11 +1809,11 @@ export default function DataMigrationPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <span className="text-emerald-600 font-bold text-sm">2</span>
+              <span className="text-emerald-600 font-bold text-[11px]">2</span>
             </div>
             <div className="flex-1">
               <h2 className="font-semibold text-slate-800">{destName} (목적지)</h2>
-              <p className="text-xs text-slate-400">{isIlovechild ? '통합e 회계앱' : 'sunote.co.kr'}</p>
+              <p className="text-[11px] text-slate-400">{isIlovechild ? '통합e 회계앱' : 'sunote.co.kr'}</p>
             </div>
             <button
               onClick={() => {
@@ -1822,7 +1822,7 @@ export default function DataMigrationPage() {
                 setDeleteResult('')
                 setShowDeleteModal(true)
               }}
-              className="px-3 py-1.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium"
+              className="px-3 py-1.5 text-[11px] bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium"
             >
               현금출납부 삭제
             </button>
@@ -1830,22 +1830,22 @@ export default function DataMigrationPage() {
 
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">아이디</label>
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">아이디</label>
               <input
                 type="text"
                 value={sunoteId}
                 onChange={(e) => setSunoteId(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
                 placeholder={`${destName} 아이디`}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">비밀번호</label>
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">비밀번호</label>
               <input
                 type="password"
                 value={sunotePw}
                 onChange={(e) => setSunotePw(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
                 placeholder="비밀번호"
               />
             </div>
@@ -1856,30 +1856,30 @@ export default function DataMigrationPage() {
                 type="button"
                 onClick={saveSunoteAuth}
                 disabled={sunoteSaving}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
+                className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
               >
                 {sunoteSaving ? '저장 중…' : '💾 이 업체 로그인정보 저장'}
               </button>
               {sunoteSavedAt && (
-                <span className="text-xs text-emerald-600">저장됨 · {new Date(sunoteSavedAt).toLocaleDateString('ko-KR')}</span>
+                <span className="text-[11px] text-emerald-600">저장됨 · {new Date(sunoteSavedAt).toLocaleDateString('ko-KR')}</span>
               )}
-              {sunoteSaveMsg && <span className="text-xs text-slate-500">{sunoteSaveMsg}</span>}
+              {sunoteSaveMsg && <span className="text-[11px] text-slate-500">{sunoteSaveMsg}</span>}
             </div>
 
             {/* 에러 알림 */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 animate-pulse">
-                <p className="text-sm text-red-600 font-medium">{error}</p>
+                <p className="text-[11px] text-red-600 font-medium">{error}</p>
               </div>
             )}
 
             {/* 이관 요약 */}
             {totalRows > 0 && (
               <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                <p className="text-sm text-blue-700 font-medium">
+                <p className="text-[11px] text-blue-700 font-medium">
                   이관 대상: {displayData.length}개월, {totalRows}건
                 </p>
-                <ul className="text-xs text-blue-600 mt-1 space-y-0.5">
+                <ul className="text-[11px] text-blue-600 mt-1 space-y-0.5">
                   {displayData.map((d) => (
                     <li key={d.yearMonth}>
                       {d.yearMonth.substring(0, 4)}년 {d.yearMonth.substring(4)}월: {d.rows.length}건
@@ -1895,12 +1895,12 @@ export default function DataMigrationPage() {
               <div>
                 <button
                   onClick={() => setShowMappings(!showMappings)}
-                  className="w-full flex items-center justify-between px-3 py-2 bg-teal-50 border border-teal-200 rounded-lg text-sm text-teal-800 hover:bg-teal-100"
+                  className="w-full flex items-center justify-between px-3 py-2 bg-teal-50 border border-teal-200 rounded-lg text-[11px] text-teal-800 hover:bg-teal-100"
                 >
                   <span className="font-medium">
                     계정코드 매핑 설정 ({uniqueAccounts.length}개)
                     {Object.keys(customMappings).length > 0 && (
-                      <span className="ml-1 text-xs text-teal-600">
+                      <span className="ml-1 text-[11px] text-teal-600">
                         (커스텀 {Object.keys(customMappings).length}건)
                       </span>
                     )}
@@ -1942,7 +1942,7 @@ export default function DataMigrationPage() {
                                     return next
                                   })
                                 }}
-                                className="w-20 px-1.5 py-0.5 border border-slate-200 rounded text-xs font-mono text-center focus:border-teal-400 focus:outline-none"
+                                className="w-20 px-1.5 py-0.5 border border-slate-200 rounded text-[11px] font-mono text-center focus:border-teal-400 focus:outline-none"
                                 placeholder="자동"
                               />
                             </td>
@@ -1955,12 +1955,12 @@ export default function DataMigrationPage() {
                         type="button"
                         onClick={saveMappings}
                         disabled={mapSaving}
-                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
+                        className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
                       >
                         {mapSaving ? '저장 중…' : '💾 이 업체 매핑 저장'}
                       </button>
-                      {mapSavedAt && <span className="text-xs text-emerald-600">저장됨 · {new Date(mapSavedAt).toLocaleDateString('ko-KR')}</span>}
-                      {mapSaveMsg && <span className="text-xs text-slate-500">{mapSaveMsg}</span>}
+                      {mapSavedAt && <span className="text-[11px] text-emerald-600">저장됨 · {new Date(mapSavedAt).toLocaleDateString('ko-KR')}</span>}
+                      {mapSaveMsg && <span className="text-[11px] text-slate-500">{mapSaveMsg}</span>}
                       <span className="ml-auto text-[11px] text-slate-400">저장하면 다음에 이 업체·출발지로 열 때 자동 적용</span>
                     </div>
                   </div>
@@ -1981,7 +1981,7 @@ export default function DataMigrationPage() {
           <button
             onClick={handleTransferAll}
             disabled={transferring}
-            className="w-full py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-2.5 bg-emerald-600 text-white rounded-lg text-[11px] font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {transferring && (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -1994,12 +1994,12 @@ export default function DataMigrationPage() {
           {transferring && (
             <button
               onClick={handleStop}
-              className="w-full py-2 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700"
+              className="w-full py-2 bg-red-600 text-white rounded-lg text-[11px] font-medium hover:bg-red-700"
             >
               중지
             </button>
           )}
-          <p className="text-xs font-medium text-slate-500 pt-1">또는 월별 개별 이관</p>
+          <p className="text-[11px] font-medium text-slate-500 pt-1">또는 월별 개별 이관</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {displayData.map((d) => {
               const ym = d.yearMonth
@@ -2014,7 +2014,7 @@ export default function DataMigrationPage() {
                   <button
                     onClick={() => handleTransferMonth(ym)}
                     disabled={transferring || !!isDone}
-                    className={`flex-1 py-2 rounded-lg text-xs font-medium ${
+                    className={`flex-1 py-2 rounded-lg text-[11px] font-medium ${
                       isDone
                         ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                         : isFailed
@@ -2039,7 +2039,7 @@ export default function DataMigrationPage() {
                   {isThisTransferring && (
                     <button
                       onClick={handleStop}
-                      className="px-2 py-2 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700"
+                      className="px-2 py-2 bg-red-600 text-white rounded-lg text-[11px] font-medium hover:bg-red-700"
                     >
                       중지
                     </button>
@@ -2051,7 +2051,7 @@ export default function DataMigrationPage() {
                         delete next[ym]
                         return next
                       })}
-                      className="px-2 py-2 bg-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-300"
+                      className="px-2 py-2 bg-slate-200 text-slate-600 rounded-lg text-[11px] font-medium hover:bg-slate-300"
                       title="리셋"
                     >
                       ↺
@@ -2066,23 +2066,23 @@ export default function DataMigrationPage() {
 
       {/* 에러 */}
       {error && (
-        <AgentAwareMessage text={error} className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-red-600" />
+        <AgentAwareMessage text={error} className="bg-red-50 border border-red-100 rounded-lg p-3 text-[11px] text-red-600" />
       )}
 
       {/* 이관 결과 */}
       {transferResult && (
-        <AgentAwareMessage text={transferResult} className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-sm text-emerald-700 font-medium" />
+        <AgentAwareMessage text={transferResult} className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-[11px] text-emerald-700 font-medium" />
       )}
 
       {/* 매핑 실패 계정코드 */}
       {unmappedCodes.length > 0 && (
         <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-          <p className="text-sm font-semibold text-teal-800 mb-2">
+          <p className="text-[11px] font-semibold text-teal-800 mb-2">
             매핑 안 된 계정코드 ({unmappedCodes.length}건)
           </p>
           <table className="w-full text-[11px]">
             <thead>
-              <tr className="text-xs text-teal-700 border-b border-teal-200">
+              <tr className="text-[11px] text-teal-700 border-b border-teal-200">
                 <th className="py-1 text-left">월</th>
                 <th className="py-1 text-left">코드</th>
                 <th className="py-1 text-left">계정과목</th>
@@ -2113,7 +2113,7 @@ export default function DataMigrationPage() {
             <div className="flex gap-2">
               <button
                 onClick={handleExcelDownload}
-                className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600 flex items-center gap-1"
+                className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-[11px] font-medium hover:bg-teal-600 flex items-center gap-1"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -2122,7 +2122,7 @@ export default function DataMigrationPage() {
               </button>
               <button
                 onClick={handleExcelDownloadAll}
-                className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600 flex items-center gap-1"
+                className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-[11px] font-medium hover:bg-teal-600 flex items-center gap-1"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -2135,7 +2135,7 @@ export default function DataMigrationPage() {
           {displayData.map((result, di) => (
             <div key={`${result.yearMonth}-${result.rows.length}-${di}`} className="border-b border-slate-100 last:border-0">
               {/* 월별 요약 */}
-              <div className="px-6 py-3 bg-slate-50 flex items-center gap-4 text-sm">
+              <div className="px-6 py-3 bg-slate-50 flex items-center gap-4 text-[11px]">
                 <span className="font-medium text-slate-700">
                   {result.yearMonth.substring(0, 4)}년 {result.yearMonth.substring(4)}월
                 </span>
@@ -2149,7 +2149,7 @@ export default function DataMigrationPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-[11px]">
                   <thead>
-                    <tr className="bg-slate-50 text-xs font-semibold text-slate-500">
+                    <tr className="bg-slate-50 text-[11px] font-semibold text-slate-500">
                       <th className="px-3 py-2 text-center w-12">일자</th>
                       <th className="px-3 py-2 text-center w-20">발행번호</th>
                       <th className="px-3 py-2 text-center w-20">코드</th>
@@ -2166,7 +2166,7 @@ export default function DataMigrationPage() {
                       <tr key={`${result.yearMonth}-${row.idx}`} className="border-t border-slate-100 hover:bg-slate-50">
                         <td className="px-3 py-2 text-center text-slate-600">{row.date}</td>
                         <td className="px-3 py-2 text-center text-slate-500">{row.docNo}</td>
-                        <td className="px-3 py-2 text-center font-mono text-xs">
+                        <td className="px-3 py-2 text-center font-mono text-[11px]">
                           {row.accountCode ? (
                             <span className={`font-medium px-1.5 py-0.5 rounded ${
                               row.accountCode.length >= 4
@@ -2176,7 +2176,7 @@ export default function DataMigrationPage() {
                           ) : (
                             <input
                               type="text"
-                              className="w-16 px-1 py-0.5 border border-red-300 rounded text-center text-xs bg-red-50"
+                              className="w-16 px-1 py-0.5 border border-red-300 rounded text-center text-[11px] bg-red-50"
                               placeholder="코드"
                               onChange={(e) => {
                                 const val = e.target.value.trim()
@@ -2202,7 +2202,7 @@ export default function DataMigrationPage() {
                           )}
                         </td>
                         <td className="px-3 py-2 text-slate-700">{row.accountName}</td>
-                        <td className="px-3 py-2 text-slate-500 text-xs">{(row as any).subAccountName || ''}</td>
+                        <td className="px-3 py-2 text-slate-500 text-[11px]">{(row as any).subAccountName || ''}</td>
                         <td className="px-3 py-2 text-slate-600">{row.summary}</td>
                         <td className="px-3 py-2 text-right text-blue-600 font-medium">
                           {row.income ? fmtAmt(row.income) : ''}
@@ -2230,7 +2230,7 @@ export default function DataMigrationPage() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
               <div>
                 <h3 className="font-bold text-slate-800">계정코드 매핑표</h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-[11px] text-slate-500 mt-0.5">
                   {currentSource.label} → 수전자장부 | {MAPPING_TABLE[source as keyof typeof MAPPING_TABLE].pattern}
                 </p>
               </div>
@@ -2249,7 +2249,7 @@ export default function DataMigrationPage() {
                   <>
                     {/* 수입 */}
                     <div>
-                      <h4 className="text-sm font-semibold text-blue-700 mb-2">수입</h4>
+                      <h4 className="text-[11px] font-semibold text-blue-700 mb-2">수입</h4>
                       <table className="w-full text-[11px]">
                         <thead>
                           <tr className="bg-blue-50 text-blue-700">
@@ -2279,7 +2279,7 @@ export default function DataMigrationPage() {
 
                     {/* 지출 */}
                     <div>
-                      <h4 className="text-sm font-semibold text-red-700 mb-2">지출</h4>
+                      <h4 className="text-[11px] font-semibold text-red-700 mb-2">지출</h4>
                       <table className="w-full text-[11px]">
                         <thead>
                           <tr className="bg-red-50 text-red-700">
@@ -2325,16 +2325,16 @@ export default function DataMigrationPage() {
             </div>
             <div className="px-6 py-4 space-y-4">
               {!sunoteId || !sunotePw ? (
-                <p className="text-sm text-red-600">수전자장부 아이디/비밀번호를 먼저 입력하세요.</p>
+                <p className="text-[11px] text-red-600">수전자장부 아이디/비밀번호를 먼저 입력하세요.</p>
               ) : (
                 <>
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="block text-xs font-medium text-slate-600 mb-1">시작월</label>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">시작월</label>
                       <select
                         value={deleteStartYm}
                         onChange={(e) => { setDeleteStartYm(e.target.value); if (!deleteEndYm) setDeleteEndYm(e.target.value) }}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
                       >
                         <option value="">선택</option>
                         {deleteMonthOptions.map((v) => (
@@ -2343,11 +2343,11 @@ export default function DataMigrationPage() {
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs font-medium text-slate-600 mb-1">종료월</label>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">종료월</label>
                       <select
                         value={deleteEndYm}
                         onChange={(e) => setDeleteEndYm(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
                       >
                         <option value="">선택</option>
                         {deleteMonthOptions.map((v) => (
@@ -2359,7 +2359,7 @@ export default function DataMigrationPage() {
                   {deleteResult && (
                     <AgentAwareMessage
                       text={deleteResult}
-                      className={`p-3 rounded-lg text-sm ${deleteResult.includes('실패') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}
+                      className={`p-3 rounded-lg text-[11px] ${deleteResult.includes('실패') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}
                     />
                   )}
                   <button
@@ -2390,7 +2390,7 @@ export default function DataMigrationPage() {
                         setDeleting(false)
                       }
                     }}
-                    className="w-full py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                    className="w-full py-2.5 bg-red-600 text-white rounded-lg text-[11px] font-medium hover:bg-red-700 disabled:opacity-50"
                   >
                     {deleting ? '삭제 중...' : '삭제 실행'}
                   </button>
