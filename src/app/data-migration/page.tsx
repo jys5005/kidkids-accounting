@@ -970,7 +970,7 @@ export default function DataMigrationPage() {
     } catch { /* 무시 */ }
     finally { setAuthLoading(false) }
   }, [source])
-  useEffect(() => { setProgramAuth(null); reloadProgramAuth() }, [source, reloadProgramAuth])
+  useEffect(() => { setProgramAuth(null); setError(''); reloadProgramAuth() }, [source, reloadProgramAuth])
 
   // 경기도(accgg) 자동로그인 자격증명 캐시 등록 여부 (등록돼 있으면 CROSSCERT 없이 빠른 로그인)
   const [ggCache, setGgCache] = useState<{ exists: boolean; updatedAt?: string } | null>(null)
@@ -999,7 +999,7 @@ export default function DataMigrationPage() {
         body: JSON.stringify({ programId: source, copyFromCert: true }),
       })
       const j = await res.json()
-      if (j.success) { setCertImportMsg(`✅ ${j.certName || '인증서'} 가져옴`); await reloadProgramAuth() }
+      if (j.success) { setCertImportMsg(`✅ ${j.certName || '인증서'} 가져옴`); setError(''); await reloadProgramAuth() }
       else setCertImportMsg(`❌ ${j.message || '가져오기 실패'}`)
     } catch { setCertImportMsg('❌ 통합e 서버 연결 실패') }
     finally { setCertImporting(false) }
