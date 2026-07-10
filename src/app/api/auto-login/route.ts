@@ -419,7 +419,9 @@ async function loginIncheonViaPlatform(certName: string, certPw: string, cookie:
     method: 'POST',
     headers: { 'Content-Type': 'application/json', cookie },
     body: JSON.stringify({ certName, certPw, useSavedCert: !certName || !certPw }),
-    signal: AbortSignal.timeout(120000),
+    // 통합e 라우트가 로컬 에이전트 잡을 최대 280초 폴링 — 그보다 짧으면 (특히 인증서 수천 건
+    // 환경에서 UniSign 최초 로그인이 느릴 때) 여기서 먼저 끊겨버림
+    signal: AbortSignal.timeout(300000),
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok || !data.success) {
