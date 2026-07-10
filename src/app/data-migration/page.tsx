@@ -988,6 +988,45 @@ export default function DataMigrationPage() {
   }, [source, centerName])
   useEffect(() => { reloadGgCache() }, [reloadGgCache])
 
+  // 인천시(aincheon) 로그인 세션쿠키 캐시 등록 여부 ("로그인세션등록" 버튼 상태 배지)
+  const [incheonSession, setIncheonSession] = useState<{ exists: boolean; savedAt?: string } | null>(null)
+  const [incheonSessionLoading, setIncheonSessionLoading] = useState(false)
+  const reloadIncheonSession = useCallback(async () => {
+    if (source !== 'incheon') { setIncheonSession(null); return }
+    setIncheonSessionLoading(true)
+    try {
+      const j = await fetch('/api/incheon/session-status').then(r => r.json())
+      setIncheonSession(j.success ? { exists: !!j.exists, savedAt: j.savedAt } : { exists: false })
+    } catch { setIncheonSession({ exists: false }) }
+    finally { setIncheonSessionLoading(false) }
+  }, [source])
+  useEffect(() => { reloadIncheonSession() }, [reloadIncheonSession])
+
+  // [로그인세션등록] — 인증서로 UniSign 로그인 1회 실행(에이전트 경유) → 성공 시 세션쿠키 자동 캐시.
+  // 등록 후에는 아래 [데이터 가져오기]가 캐시된 세션을 재사용해 인증서 선택 과정을 건너뜀.
+  const [incheonRegistering, setIncheonRegistering] = useState(false)
+  const [incheonRegisterMsg, setIncheonRegisterMsg] = useState('')
+  const handleIncheonRegisterSession = useCallback(async () => {
+    setIncheonRegistering(true); setIncheonRegisterMsg(''); setError('')
+    try {
+      const res = await fetch('/api/incheon/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ useSavedCert: true }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (j.success) {
+        setIncheonRegisterMsg('✅ 세션 확보 완료')
+        await reloadIncheonSession()
+      } else {
+        setIncheonRegisterMsg(`❌ ${j.error || '로그인 실패'}`)
+      }
+    } catch (e) {
+      setIncheonRegisterMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
+    } finally {
+      setIncheonRegistering(false)
+    }
+  }, [reloadIncheonSession])
+
   // [통합e 인증서 가져오기] — 통합e 등록 인증서를 이 출발지 인증으로 복사 (비번은 서버에서만)
   const [certImporting, setCertImporting] = useState(false)
   const [certImportMsg, setCertImportMsg] = useState('')
@@ -2228,6 +2267,30 @@ export default function DataMigrationPage() {
               </>)}
             </div>
             ) : (<>
+            {source === 'incheon' && (
+              <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <b className="text-[11px] text-indigo-800">🔐 로그인세션등록</b>
+                  {incheonSessionLoading ? (
+                    <span className="text-[10px] text-slate-400">확인 중…</span>
+                  ) : incheonSession?.exists ? (
+                    <span className="text-[10px] text-emerald-700 font-semibold">
+                      ✓ 세션완료{incheonSession.savedAt && ` · ${new Date(incheonSession.savedAt).toLocaleString('ko-KR')}`}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-amber-600 font-semibold">✗ 미등록</span>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-500 mb-2">
+                  인증서로 1회 로그인해 세션을 확보해두면, 아래 [데이터 가져오기]가 인증서 선택 과정 없이 바로 조회합니다.
+                </p>
+                <button type="button" disabled={incheonRegistering} onClick={handleIncheonRegisterSession}
+                  className={`w-full py-2.5 rounded-lg text-[11px] font-bold text-white ${incheonRegistering ? 'bg-indigo-300' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
+                  {incheonRegistering ? '로그인 세션 등록 중… (인증서 목록 확인, 최대 5분)' : (incheonSession?.exists ? '🔄 세션 다시 등록' : '🔐 로그인세션등록')}
+                </button>
+                {incheonRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{incheonRegisterMsg}</p>}
+              </div>
+            )}
             <div className="flex gap-2">
               <button
                 onClick={() => setMode('single')}
