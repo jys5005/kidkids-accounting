@@ -1537,7 +1537,18 @@ export default function DataMigrationPage() {
       if (!res.ok) throw new Error(json.error || '조회 실패')
 
       // 계정명(+적요 세목) → sunote 코드 자동 매핑
-      const autoMap = (results: CashLedgerResult[]) => {
+      const autoMap = (rawResults: CashLedgerResult[]) => {
+        // 카드매핑/영수증 필드명 통일 — 백엔드(인천시 등)는 _cardMappings(accgg-vouchers.ts 와 동일
+        // 관례)로 보내는데, 화면 렌더링은 _cardInfo 를 읽음(accgg 저장분 파서 규칙과 동일하게 맞춤).
+        // 모든 출발지에 적용(MAPPING_TABLE 등록 여부 무관) — 여기서 못 해두면 카드/영수증 데이터가
+        // 있어도 화면에 안 보임.
+        const results = rawResults.map(r => ({
+          ...r,
+          rows: r.rows.map(row => {
+            const raw = row as unknown as CashLedgerRow & { _cardMappings?: GgCardInfo[] }
+            return raw._cardMappings ? { ...row, _cardInfo: raw._cardMappings } : row
+          }),
+        }))
         if (!(source in MAPPING_TABLE)) return results
         const mapping = MAPPING_TABLE[source as keyof typeof MAPPING_TABLE]
         const allItems = [...mapping.income, ...mapping.expense]
