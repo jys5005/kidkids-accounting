@@ -87,6 +87,7 @@ const SOURCE_OPTIONS = [
   { value: 'ifriends', label: '아이프렌즈', url: 'i-friends.co.kr', features: ['현금출납부'], authType: 'idpw' as const },
   { value: 'cykids', label: '꼬마집', url: 'center.cykids.net', features: [], authType: 'idpw' as const },
   { value: 'walk', label: '걸음마회계', url: '', features: [], authType: 'idpw' as const },
+  { value: 'gbccm', label: '경상북도어린이집관리시스템', url: 'gbccm.co.kr', features: ['현금출납부'], authType: 'session' as const },
 ] as const
 
 type SourceType = typeof SOURCE_OPTIONS[number]['value']
@@ -535,6 +536,70 @@ const MAPPING_TABLE = {
       { by24: '2911', by24Name: '잡지출', sunote: '2911', sunoteNote: '' },
     ],
     pattern: '와이즈안 계정과목명 → sunote 코드 (수입=목 앞1·지출=앞2). 세목 5계정만 세분화: 기타필요경비(수입/지출)·기타운영비·자산취득비·퇴직적립금 → 세목코드, 나머지 목 4자리',
+  },
+  gbccm: {
+    income: [
+      { by24: '111', by24Name: '정부지원 보육료', sunote: '1111', sunoteNote: '' },
+      { by24: '112', by24Name: '부모부담 보육료', sunote: '1112', sunoteNote: '' },
+      { by24: '121', by24Name: '특별활동비', sunote: '1211', sunoteNote: '' },
+      { by24: '221', by24Name: '기타필요경비', sunote: '1221', sunoteNote: '4자리 기본', group: true },
+      { by24: '  221', by24Name: '  입학준비금', sunote: '1221-111', sunoteNote: '입학 키워드', sub: true },
+      { by24: '  221', by24Name: '  현장학습비', sunote: '1221-112', sunoteNote: '현장학습 키워드', sub: true },
+      { by24: '  221', by24Name: '  차량운행비', sunote: '1221-113', sunoteNote: '차량 키워드', sub: true },
+      { by24: '  221', by24Name: '  부모부담행사비', sunote: '1221-121', sunoteNote: '행사 키워드', sub: true },
+      { by24: '  221', by24Name: '  조석식비', sunote: '1221-131', sunoteNote: '조석/급식 키워드', sub: true },
+      { by24: '  221', by24Name: '  특성화비', sunote: '1221-141', sunoteNote: '특성화 키워드, 기본값', sub: true },
+      { by24: '311', by24Name: '인건비보조금', sunote: '1311', sunoteNote: '' },
+      { by24: '321', by24Name: '기관보육료', sunote: '1321', sunoteNote: '' },
+      { by24: '322', by24Name: '연장보육료', sunote: '1322', sunoteNote: '' },
+      { by24: '324', by24Name: '그밖의지원금', sunote: '1324', sunoteNote: '' },
+      { by24: '411', by24Name: '전입금', sunote: '1411', sunoteNote: '' },
+      { by24: '811', by24Name: '이자수입', sunote: '1811', sunoteNote: '' },
+      { by24: '812', by24Name: '그밖의잡수입', sunote: '1812', sunoteNote: '' },
+      { by24: '911', by24Name: '전년도이월금', sunote: '1911', sunoteNote: '이관 시 스킵' },
+    ],
+    expense: [
+      { by24: '111', by24Name: '원장급여', sunote: '2111', sunoteNote: '' },
+      { by24: '112', by24Name: '원장수당', sunote: '2112', sunoteNote: '' },
+      { by24: '121', by24Name: '보육교직원급여', sunote: '2121', sunoteNote: '' },
+      { by24: '122', by24Name: '보육교직원수당', sunote: '2122', sunoteNote: '' },
+      { by24: '131', by24Name: '기타인건비', sunote: '2131', sunoteNote: '' },
+      { by24: '141', by24Name: '법정부담금', sunote: '2141', sunoteNote: '' },
+      { by24: '142', by24Name: '퇴직금및퇴직적립금', sunote: '2142', sunoteNote: '4자리 기본', group: true },
+      { by24: '  142', by24Name: '  퇴직금', sunote: '2142-112', sunoteNote: '퇴직금 키워드', sub: true },
+      { by24: '  142', by24Name: '  퇴직적립금', sunote: '2142-121', sunoteNote: '기본값', sub: true },
+      { by24: '211', by24Name: '수용비 및 수수료', sunote: '2211', sunoteNote: '실측 확인' },
+      { by24: '212', by24Name: '공공요금 및 제세공과금', sunote: '2212', sunoteNote: '실측 확인' },
+      { by24: '213', by24Name: '연료비', sunote: '2213', sunoteNote: '' },
+      { by24: '214', by24Name: '여비', sunote: '2214', sunoteNote: '' },
+      { by24: '215', by24Name: '차량비', sunote: '2215', sunoteNote: '' },
+      { by24: '216', by24Name: '복리후생비', sunote: '2216', sunoteNote: '' },
+      { by24: '217', by24Name: '기타운영비', sunote: '2217', sunoteNote: '4자리 기본', group: true },
+      { by24: '  217', by24Name: '  임대료', sunote: '2217-111', sunoteNote: '임대/임차 키워드, 기본값', sub: true },
+      { by24: '  217', by24Name: '  건물융자이자', sunote: '2217-121', sunoteNote: '융자/이자 키워드', sub: true },
+      { by24: '221', by24Name: '업무추진비', sunote: '2221', sunoteNote: '' },
+      { by24: '311', by24Name: '교직원연수·연구비', sunote: '2311', sunoteNote: '' },
+      { by24: '312', by24Name: '교재·교구구입비', sunote: '2312', sunoteNote: '' },
+      { by24: '313', by24Name: '행사비', sunote: '2313', sunoteNote: '' },
+      { by24: '314', by24Name: '영유아복리비', sunote: '2314', sunoteNote: '' },
+      { by24: '315', by24Name: '급식·간식 재료비', sunote: '2315', sunoteNote: '실측 확인' },
+      { by24: '411', by24Name: '특별활동비지출', sunote: '2411', sunoteNote: '' },
+      { by24: '421', by24Name: '기타필요경비지출', sunote: '2421', sunoteNote: '4자리 기본', group: true },
+      { by24: '  421', by24Name: '  입학준비금', sunote: '2421-111', sunoteNote: '입학 키워드', sub: true },
+      { by24: '  421', by24Name: '  현장학습비', sunote: '2421-121', sunoteNote: '현장학습 키워드', sub: true },
+      { by24: '  421', by24Name: '  차량운행비', sunote: '2421-131', sunoteNote: '차량 키워드', sub: true },
+      { by24: '  421', by24Name: '  부모부담행사비', sunote: '2421-141', sunoteNote: '행사 키워드', sub: true },
+      { by24: '  421', by24Name: '  조석식비', sunote: '2421-151', sunoteNote: '조석/급식 키워드', sub: true },
+      { by24: '  421', by24Name: '  특성화비', sunote: '2421-161', sunoteNote: '특성화 키워드, 기본값', sub: true },
+      { by24: '711', by24Name: '시설비', sunote: '2711', sunoteNote: '' },
+      { by24: '712', by24Name: '시설장비유지비', sunote: '2712', sunoteNote: '' },
+      { by24: '721', by24Name: '자산취득비', sunote: '2721', sunoteNote: '4자리 기본', group: true },
+      { by24: '  721', by24Name: '  차량할부금', sunote: '2721-001', sunoteNote: '차량/할부 키워드', sub: true },
+      { by24: '  721', by24Name: '  자산취득비', sunote: '2721-002', sunoteNote: '기본값', sub: true },
+      { by24: '811', by24Name: '과년도지출', sunote: '2811', sunoteNote: '' },
+      { by24: '911', by24Name: '잡지출', sunote: '2911', sunoteNote: '' },
+    ],
+    pattern: '경상북도(gbccm) SCRN_MKNM(3자리) → sunote 코드 (수입=앞에1·지출=앞에2, 와이즈안과 동일 체계). "실측 확인" 표시된 3개(111/211/212/315)만 실 데이터로 검증됨, 나머지는 같은 체계 유추 — 이관 전 계정과목별 매핑 확인 필요. 세목 5계정(기타필요경비 수입/지출·퇴직적립금·기타운영비·자산취득비)은 적요 키워드로 세분화.',
   },
   gyeonggi: {
     income: [
@@ -1027,6 +1092,48 @@ export default function DataMigrationPage() {
     }
   }, [reloadIncheonSession])
 
+  // 경상북도(gbccm) 세션쿠키 등록 여부 — 이 시스템은 로컬 보안프로그램(npPfs) 의존성 때문에
+  // 자동 로그인이 안 됨(2026-07-10 확인) → 원장이 실제 브라우저로 로그인 후 DCPU_SSID 쿠키값을 1회 붙여넣기.
+  const [gbccmSession, setGbccmSession] = useState<{ exists: boolean; savedAt?: string } | null>(null)
+  const [gbccmSessionLoading, setGbccmSessionLoading] = useState(false)
+  const gbccmSessionRegistered = !!gbccmSession?.exists
+  const reloadGbccmSession = useCallback(async () => {
+    if (source !== 'gbccm') { setGbccmSession(null); return }
+    setGbccmSessionLoading(true)
+    try {
+      const j = await fetch('/api/gbccm/register-session').then(r => r.json())
+      setGbccmSession({ exists: !!j.exists, savedAt: j.savedAt })
+    } catch { setGbccmSession({ exists: false }) }
+    finally { setGbccmSessionLoading(false) }
+  }, [source])
+  useEffect(() => { reloadGbccmSession() }, [reloadGbccmSession])
+
+  const [gbccmCookieInput, setGbccmCookieInput] = useState('')
+  const [gbccmRegistering, setGbccmRegistering] = useState(false)
+  const [gbccmRegisterMsg, setGbccmRegisterMsg] = useState('')
+  const handleGbccmRegisterSession = useCallback(async () => {
+    if (!gbccmCookieInput.trim()) { setGbccmRegisterMsg('❌ 쿠키값을 입력하세요'); return }
+    setGbccmRegistering(true); setGbccmRegisterMsg(''); setError('')
+    try {
+      const res = await fetch('/api/gbccm/register-session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionCookie: gbccmCookieInput.trim() }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (j.success) {
+        setGbccmRegisterMsg('✅ 세션 등록 완료')
+        setGbccmCookieInput('')
+        await reloadGbccmSession()
+      } else {
+        setGbccmRegisterMsg(`❌ ${j.error || '등록 실패'}`)
+      }
+    } catch (e) {
+      setGbccmRegisterMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
+    } finally {
+      setGbccmRegistering(false)
+    }
+  }, [gbccmCookieInput, reloadGbccmSession])
+
   // [통합e 인증서 가져오기] — 통합e 등록 인증서를 이 출발지 인증으로 복사 (비번은 서버에서만)
   const [certImporting, setCertImporting] = useState(false)
   const [certImportMsg, setCertImportMsg] = useState('')
@@ -1495,6 +1602,11 @@ export default function DataMigrationPage() {
       if (currentSource.authType === 'cert') {
         setError('인증서가 등록되지 않았습니다. 통합e 인증설정에서 등록하세요.')
         return
+      } else if (currentSource.authType === 'session') {
+        if (!gbccmSessionRegistered) {
+          setError('세션쿠키가 등록되지 않았습니다. 아래에서 먼저 등록해주세요.')
+          return
+        }
       } else if (!sourceId || !sourcePw) {
         setError(`${currentSource.label} 아이디/비밀번호를 입력하세요.`)
         return
@@ -1511,7 +1623,9 @@ export default function DataMigrationPage() {
         ? (currentSource.authType === 'cert' ? { useSavedCert: true } : { useSavedAuth: true })
         : currentSource.authType === 'cert'
           ? { useSavedCert: true }
-          : { userId: sourceId, password: sourcePw }
+          : currentSource.authType === 'session'
+            ? {}
+            : { userId: sourceId, password: sourcePw }
       const body =
         mode === 'single'
           ? { ...authFields, yearMonth }
@@ -2123,6 +2237,67 @@ export default function DataMigrationPage() {
                 </div>
                 {certImportMsg && <p className="text-[11px] mt-1.5 text-slate-600">{certImportMsg}</p>}
               </div>
+            ) : currentSource.authType === 'session' ? (
+              gbccmSessionRegistered ? (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-600 text-lg">&#x2713;</span>
+                    <div className="flex-1">
+                      <p className="text-[11px] font-semibold text-emerald-800">세션쿠키 등록됨</p>
+                      <p className="text-[11px] text-emerald-600 mt-0.5">
+                        {gbccmSession?.savedAt && `${new Date(gbccmSession.savedAt).toLocaleString('ko-KR')} 등록`}
+                        {' '}· 세션 유효시간(약 60분) 동안 재사용됩니다. 만료되면 재등록하세요.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={gbccmCookieInput}
+                      onChange={(e) => setGbccmCookieInput(e.target.value)}
+                      className="flex-1 px-2 py-1.5 border border-emerald-200 rounded-lg text-[11px]"
+                      placeholder="세션이 만료됐으면 새 DCPU_SSID 값을 여기에 붙여넣고 재등록"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGbccmRegisterSession}
+                      disabled={gbccmRegistering}
+                      className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white"
+                    >
+                      {gbccmRegistering ? '등록 중…' : '재등록'}
+                    </button>
+                  </div>
+                  {gbccmRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{gbccmRegisterMsg}</p>}
+                </div>
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-[11px] text-amber-700 font-medium">세션쿠키가 등록되지 않았습니다.</p>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                    이 시스템은 로컬 보안프로그램 때문에 자동 로그인이 안 됩니다. 아래 순서로 1회만 등록하면 됩니다:<br />
+                    1) 실제 브라우저로 <a href="https://www.gbccm.co.kr" target="_blank" rel="noopener noreferrer" className="underline">gbccm.co.kr</a>에 로그인<br />
+                    2) F12(개발자도구) → Application → Cookies → gbccm.co.kr → <b>DCPU_SSID</b> 값 복사<br />
+                    3) 아래에 붙여넣고 [등록]
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={gbccmCookieInput}
+                      onChange={(e) => setGbccmCookieInput(e.target.value)}
+                      className="flex-1 px-2 py-1.5 border border-amber-200 rounded-lg text-[11px]"
+                      placeholder="DCPU_SSID 쿠키값 붙여넣기"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGbccmRegisterSession}
+                      disabled={gbccmRegistering}
+                      className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white"
+                    >
+                      {gbccmRegistering ? '등록 중…' : '등록'}
+                    </button>
+                  </div>
+                  {gbccmRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{gbccmRegisterMsg}</p>}
+                </div>
+              )
             ) : (
               <>
                 <div>
