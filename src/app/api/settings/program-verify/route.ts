@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const res = await fetch(`${PLATFORM_URL}/api/settings/program-verify`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', cookie: req.headers.get('cookie') || '' },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(2 * 60 * 1000),
     })

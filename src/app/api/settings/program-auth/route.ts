@@ -6,7 +6,10 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const qs = searchParams.toString()
-    const res = await fetch(`${PLATFORM_URL}/api/settings/program-auth${qs ? `?${qs}` : ''}`)
+    // 쿠키 전달 필수 — 통합e 측이 로그인한 시설(ownerKey) 기준으로 격리된 데이터만 반환한다.
+    const res = await fetch(`${PLATFORM_URL}/api/settings/program-auth${qs ? `?${qs}` : ''}`, {
+      headers: { cookie: req.headers.get('cookie') || '' },
+    })
     const data = await res.json()
     return NextResponse.json(data, { status: res.status })
   } catch {
@@ -33,7 +36,10 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const qs = searchParams.toString()
-    const res = await fetch(`${PLATFORM_URL}/api/settings/program-auth${qs ? `?${qs}` : ''}`, { method: 'DELETE' })
+    const res = await fetch(`${PLATFORM_URL}/api/settings/program-auth${qs ? `?${qs}` : ''}`, {
+      method: 'DELETE',
+      headers: { cookie: req.headers.get('cookie') || '' },
+    })
     const data = await res.json()
     return NextResponse.json(data, { status: res.status })
   } catch {

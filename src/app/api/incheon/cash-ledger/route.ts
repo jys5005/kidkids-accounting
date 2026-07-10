@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const res = await fetch(`${PLATFORM_URL}/api/incheon/cash-ledger`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', cookie: req.headers.get('cookie') || '' },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(10 * 60 * 1000),
     })

@@ -414,10 +414,10 @@ async function openAndLogin(company: string, authType: string, id: string, pw: s
 }
 
 /** 인천시는 통합e의 loginAincheon(UniSign 브릿지)을 재사용 */
-async function loginIncheonViaPlatform(certName: string, certPw: string) {
+async function loginIncheonViaPlatform(certName: string, certPw: string, cookie: string) {
   const res = await fetch(`${PLATFORM_URL}/api/incheon/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', cookie },
     body: JSON.stringify({ certName, certPw, useSavedCert: !certName || !certPw }),
     signal: AbortSignal.timeout(120000),
   })
@@ -444,7 +444,7 @@ export async function POST(req: NextRequest) {
       try {
         const res = await fetch(`${PLATFORM_URL}/api/incheon/navigate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', cookie: req.headers.get('cookie') || '' },
           body: JSON.stringify({ menuName: body.menuName, targetMonth: body.targetMonth, certName, certPw, facilityKey: body.facilityKey }),
           signal: AbortSignal.timeout(300000),
         })
@@ -460,7 +460,7 @@ export async function POST(req: NextRequest) {
       try {
         // 인천시는 통합e의 UniSign 로그인 파이프라인을 사용 (인증서 선택/비번 입력 자동)
         if (company === '인천시어린이집관리시스템') {
-          const result = await loginIncheonViaPlatform(certName || '', certPw || '')
+          const result = await loginIncheonViaPlatform(certName || '', certPw || '', req.headers.get('cookie') || '')
           return NextResponse.json(result)
         }
         const result = await openAndLogin(company, authType, id, pw, certPw, certName)
@@ -478,7 +478,7 @@ export async function POST(req: NextRequest) {
 
       const res = await fetch(`${PLATFORM_URL}/api/settings/program-verify`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', cookie: req.headers.get('cookie') || '' },
         body: JSON.stringify(verifyBody),
         signal: AbortSignal.timeout(60000),
       })
@@ -486,14 +486,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(data, { status: res.status })
     }
 
-    // 저장 요청
+    // 저장 요청 — 시설별로 격리되어야 하므로 반드시 쿠키 전달 (통합e 측이 owner 로 스코프)
     const saveBody = authType === 'cert'
       ? { programId, authType: 'cert', certName, certPw }
       : { programId, authType: 'idpw', userId: id, userPw: pw }
 
     const res = await fetch(`${PLATFORM_URL}/api/settings/program-auth`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', cookie: req.headers.get('cookie') || '' },
       body: JSON.stringify(saveBody),
     })
     const data = await res.json()
@@ -503,10 +503,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** GET: 전체 인증 상태 조회 */
-export async function GET() {
+/** GET: 전체 인증 상태 조회 (본인 시설만 — 반드시 쿠키 전달) */
+export async function GET(req: NextRequest) {
   try {
-    const res = await fetch(`${PLATFORM_URL}/api/settings/program-auth`)
+    const res = await fetch(`${PLATFORM_URL}/api/settings/program-auth`, {
+      headers: { cookie: req.headers.get('cookie') || '' },
+    })
     const data = await res.json()
     return NextResponse.json(data, { status: res.status })
   } catch {
@@ -514,13 +516,14 @@ export async function GET() {
   }
 }
 
-/** DELETE: 인증 정보 삭제 */
+/** DELETE: 인증 정보 삭제 (본인 시설 것만) */
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl
     const programId = searchParams.get('programId')
     const res = await fetch(`${PLATFORM_URL}/api/settings/program-auth?programId=${programId}`, {
       method: 'DELETE',
+      headers: { cookie: req.headers.get('cookie') || '' },
     })
     const data = await res.json()
     return NextResponse.json(data, { status: res.status })
