@@ -533,12 +533,14 @@ export default function VoucherInputPage() {
   const [receiptRowId, setReceiptRowId] = useState<number | null>(null)
   const [galleryImages, setGalleryImages] = useState<string[] | null>(null)  // 영수증 여러 장 갤러리
 
-  // 전표수정(경상북도 gbccm) — 원본번호(srcNo) 있는 행의 결제방식/적요를 실제 지역형 시스템에 반영
+  // 전표수정(경상북도 gbccm) — 원본번호(srcNo) 있는 행의 결제방식/적요/계정과목을 실제 지역형 시스템에 반영
   const [gbccmEditRow, setGbccmEditRow] = useState<VoucherRow | null>(null)
   const [gbccmMethod, setGbccmMethod] = useState('300')
   const [gbccmMethodEnabled, setGbccmMethodEnabled] = useState(true)
   const [gbccmMemo, setGbccmMemo] = useState('')
   const [gbccmMemoEnabled, setGbccmMemoEnabled] = useState(false)
+  const [gbccmAccount, setGbccmAccount] = useState('')
+  const [gbccmAccountEnabled, setGbccmAccountEnabled] = useState(false)
   const [gbccmSaving, setGbccmSaving] = useState(false)
   const [gbccmMsg, setGbccmMsg] = useState('')
   const GBCCM_METHODS: { code: string; label: string }[] = [
@@ -549,16 +551,18 @@ export default function VoucherInputPage() {
     setGbccmEditRow(row)
     setGbccmMethod('300'); setGbccmMethodEnabled(true)
     setGbccmMemo(row.summary || ''); setGbccmMemoEnabled(false)
+    setGbccmAccount(row.account || ''); setGbccmAccountEnabled(false)
     setGbccmMsg('')
   }
   const submitGbccmEdit = async () => {
     if (!gbccmEditRow?.srcNo) return
-    if (!gbccmMethodEnabled && !gbccmMemoEnabled) { setGbccmMsg('❌ 결제방식/적요 중 하나는 선택해주세요.'); return }
+    if (!gbccmMethodEnabled && !gbccmMemoEnabled && !gbccmAccountEnabled) { setGbccmMsg('❌ 결제방식/적요/계정과목 중 하나는 선택해주세요.'); return }
     setGbccmSaving(true); setGbccmMsg('')
     try {
       const body: Record<string, string> = { prfNo: gbccmEditRow.srcNo }
       if (gbccmMethodEnabled) body.sttlMethod = gbccmMethod
       if (gbccmMemoEnabled) body.memo = gbccmMemo
+      if (gbccmAccountEnabled) body.accountName = gbccmAccount
       const res = await fetch('/api/gbccm/vouchers/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -574,6 +578,7 @@ export default function VoucherInputPage() {
             ...r,
             note: gbccmMethodEnabled ? (GBCCM_METHODS.find(m => m.code === gbccmMethod)?.label || r.note) : r.note,
             summary: gbccmMemoEnabled ? gbccmMemo : r.summary,
+            account: gbccmAccountEnabled ? gbccmAccount : r.account,
           }
         }))
       } else {
@@ -691,6 +696,19 @@ export default function VoucherInputPage() {
               placeholder="새 적요"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-4 disabled:bg-slate-50 disabled:text-slate-300"
             />
+            <label className="flex items-center gap-2 mb-1">
+              <input type="checkbox" checked={gbccmAccountEnabled} onChange={e => setGbccmAccountEnabled(e.target.checked)} />
+              <span className="text-xs font-semibold text-slate-500">계정과목 변경</span>
+            </label>
+            <input
+              type="text"
+              value={gbccmAccount}
+              onChange={e => setGbccmAccount(e.target.value)}
+              disabled={!gbccmAccountEnabled}
+              placeholder="예: 연료비, 수용비 및 수수료"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-1 disabled:bg-slate-50 disabled:text-slate-300"
+            />
+            <p className="text-[10px] text-slate-400 mb-4">경상북도 계정과목명 일부를 입력하면 일치하는 계정을 찾아 선택합니다.</p>
             {gbccmMsg && <p className="text-xs font-medium mb-3">{gbccmMsg}</p>}
             <div className="flex justify-end gap-2">
               <button onClick={() => setGbccmEditRow(null)} disabled={gbccmSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-50">닫기</button>
