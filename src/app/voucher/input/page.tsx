@@ -1729,22 +1729,22 @@ export default function VoucherInputPage() {
                     case 'summary': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[300px]">적요</th>
                     case 'srcNo': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[70px]">원본번호</th>
                     case 'evidence': return <React.Fragment key={key}>
-                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[48px] relative group cursor-help"><span className="whitespace-nowrap">은행<span className="text-blue-400 text-[10px]">ⓘ</span></span>
-                        <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-blue-100 text-blue-800 text-[10px] font-normal rounded-lg px-3 py-2 z-50 w-[170px] shadow-lg border border-blue-200 text-left">
-                          <p className="flex items-center gap-1.5"><svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" /></svg>은행거래내역 (기본)</p>
-                          <p className="flex items-center gap-1.5 mt-1"><svg className="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>이체증 (계좌이체 매핑 시)</p>
-                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-100 border-l border-t border-blue-200 rotate-45"></div>
+                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[48px] relative group cursor-help"><span className="whitespace-nowrap">은행<span className="text-blue-500 text-[11px] font-bold">ⓘ</span></span>
+                        <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-slate-800 text-white text-[11px] font-semibold rounded-lg px-3 py-2 z-50 w-[190px] shadow-xl border border-slate-700 text-left">
+                          <p className="flex items-center gap-1.5"><svg className="w-4 h-4 text-sky-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" /></svg>은행거래내역 (기본)</p>
+                          <p className="flex items-center gap-1.5 mt-1.5"><svg className="w-4 h-4 text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>이체증 (계좌이체 매핑 시)</p>
+                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 border-l border-t border-slate-700 rotate-45"></div>
                         </div>
                       </th>
-                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[53px] relative group cursor-help"><span className="whitespace-nowrap">영수<span className="text-blue-400 text-[10px]">ⓘ</span></span>
-                        <div className="hidden group-hover:block absolute top-full right-0 mt-1 bg-blue-100 text-blue-800 text-[10px] font-normal rounded-lg px-3 py-2 z-50 w-max max-w-[280px] shadow-lg border border-blue-200 text-left">
-                          <p className="font-bold mb-0.5 whitespace-nowrap">국세청</p>
+                      <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[53px] relative group cursor-help"><span className="whitespace-nowrap">영수<span className="text-blue-500 text-[11px] font-bold">ⓘ</span></span>
+                        <div className="hidden group-hover:block absolute top-full right-0 mt-1 bg-slate-800 text-white text-[11px] font-semibold rounded-lg px-3 py-2 z-50 w-max max-w-[280px] shadow-xl border border-slate-700 text-left">
+                          <p className="font-bold text-amber-300 mb-0.5 whitespace-nowrap">국세청</p>
                           <p className="whitespace-nowrap">세금계산서 · 계산서 · 현금영수증</p>
-                          <p className="font-bold mt-1 mb-0.5 whitespace-nowrap">쇼핑몰</p>
+                          <p className="font-bold text-amber-300 mt-1.5 mb-0.5 whitespace-nowrap">쇼핑몰</p>
                           <p className="whitespace-nowrap">쿠팡 · 네이버 · 11번가 · 지마켓 · 옥션 · 오아시스</p>
-                          <p className="font-bold mt-1 mb-0.5 whitespace-nowrap">4대보험</p>
+                          <p className="font-bold text-amber-300 mt-1.5 mb-0.5 whitespace-nowrap">4대보험</p>
                           <p className="whitespace-nowrap">국민연금 · 건강보험 · 고용보험 · 산재보험</p>
-                          <div className="absolute -top-1 right-3 w-2 h-2 bg-blue-100 border-l border-t border-blue-200 rotate-45"></div>
+                          <div className="absolute -top-1 right-3 w-2 h-2 bg-slate-800 border-l border-t border-slate-700 rotate-45"></div>
                         </div>
                       </th>
                     </React.Fragment>
