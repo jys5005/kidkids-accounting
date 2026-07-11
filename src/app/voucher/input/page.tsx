@@ -468,8 +468,29 @@ export default function VoucherInputPage() {
     setEditingCell({ rowId: newRow.id, field: 'summary' })
   }
 
+  // 삭제 전 휴지통(voucher-deleted)에 보관 — 실패해도 삭제 자체는 진행(휴지통은 best-effort)
+  const archiveDeleted = async (removed: VoucherRow[]) => {
+    if (removed.length === 0) return
+    try {
+      const cur = await fetch(`/api/voucher/deleted-list?book=${encodeURIComponent(bookRef.current || '')}`, { credentials: 'include' })
+        .then(r => r.json()).catch(() => ({ list: [] }))
+      const existing = Array.isArray(cur.list) ? cur.list : []
+      const stamped = removed.map(r => ({ ...r, deletedAt: new Date().toISOString() }))
+      await fetch('/api/voucher/deleted-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ list: [...existing, ...stamped], book: bookRef.current || '' }),
+      })
+    } catch (e) {
+      console.error('[voucher deleted archive] 실패:', e)
+    }
+  }
+
   const deleteRows = () => {
     if (checked.size === 0) return
+    const removed = rows.filter(r => checked.has(r.id))
+    void archiveDeleted(removed)
     setRows(prev => prev.filter(r => !checked.has(r.id)))
     setChecked(new Set())
   }
@@ -530,6 +551,8 @@ export default function VoucherInputPage() {
     else setMobileEditId(newRow.id)
   }
   const mobileDeleteRow = (id: number) => {
+    const removed = rows.filter(r => r.id === id)
+    void archiveDeleted(removed)
     setRows(prev => prev.filter(r => r.id !== id))
     if (mobileEditId === id) setMobileEditId(null)
   }

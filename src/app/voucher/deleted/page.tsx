@@ -1,29 +1,62 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, isIncomeAccount } from '@/lib/accounts'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { incomeAccounts, expenseAccounts, isIncomeAccount } from '@/lib/accounts'
+import { getActiveBook } from '@/lib/ilovechild-books'
 
 interface DeletedVoucher {
   id: number
   date: string
+  type?: '수입' | '지출' | '반납'
   account: string
   subAccount: string
   summary: string
-  income: number
-  expense: number
+  amount?: number   // 원본 VoucherRow 형태(type+amount)
+  income?: number   // 구버전 호환(있으면 그대로 사용)
+  expense?: number
   counterpart: string
   note: string
   deletedAt: string
 }
 
-const sampleData: DeletedVoucher[] = []
-
 const fmt = (n: number) => n ? n.toLocaleString('ko-KR') : ''
 
+/** row 하나에서 수입액/지출액 계산 — amount+type 형태 우선, income/expense 형태는 호환용 */
+function incomeOf(r: DeletedVoucher): number {
+  if (typeof r.income === 'number') return r.income
+  return r.type === '수입' && (r.amount || 0) > 0 ? r.amount! : 0
+}
+function expenseOf(r: DeletedVoucher): number {
+  if (typeof r.expense === 'number') return r.expense
+  return r.type === '지출' && (r.amount || 0) > 0 ? r.amount! : 0
+}
+
 export default function DeletedVoucherPage() {
-  const [data] = useState<DeletedVoucher[]>(sampleData)
+  const [data, setData] = useState<DeletedVoucher[]>([])
+  const [loading, setLoading] = useState(true)
+  const [restoring, setRestoring] = useState(false)
+  const [resultMsg, setResultMsg] = useState('')
+  const bookRef = useRef('')
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const me = await fetch('/api/auth/me').then(r => r.json()).catch(() => null)
+      const itype = me?.institutionType || me?.profile?.institutionType || 'childcare'
+      const book = itype === 'ilovechild' ? getActiveBook() : ''
+      bookRef.current = book
+      const j = await fetch(`/api/voucher/deleted-list?book=${encodeURIComponent(book)}`, { credentials: 'include' }).then(r => r.json())
+      setData(j.success && Array.isArray(j.list) ? (j.list as DeletedVoucher[]) : [])
+    } catch {
+      setData([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
   const [checked, setChecked] = useState<Set<number>>(new Set())
-  const [filterYearMonth, setFilterYearMonth] = useState('2026-03')
   const [startDate, setStartDate] = useState(() => {
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
@@ -67,14 +100,53 @@ export default function DeletedVoucherPage() {
     else setChecked(new Set(filtered.map(r => r.id)))
   }
 
-  const allAccountsWithSub = [...incomeAccounts, ...expenseAccounts]
+  /** 체크된 삭제 전표를 전표관리(voucher-input) 목록으로 되돌리고, 삭제목록에서 제거 */
+  const handleRestore = async () => {
+    if (checked.size === 0) return
+    setRestoring(true)
+    setResultMsg('')
+    try {
+      const book = bookRef.current
+      const toRestore = data.filter(r => checked.has(r.id))
+      const remaining = data.filter(r => !checked.has(r.id))
 
-  const yearMonthOptions: { value: string; label: string }[] = []
-  for (let y = 2024; y <= 2028; y++) {
-    for (let m = 1; m <= 12; m++) {
-      yearMonthOptions.push({ value: `${y}-${String(m).padStart(2, '0')}`, label: `${y}년 ${m}월` })
+      const activeJ = await fetch(`/api/voucher/list?book=${encodeURIComponent(book)}`, { credentials: 'include' }).then(r => r.json())
+      const activeList: Array<{ id: number } & Record<string, unknown>> = activeJ.success && Array.isArray(activeJ.list) ? activeJ.list : []
+      const maxId = activeList.reduce((m, r) => Math.max(m, Number(r.id) || 0), 0)
+
+      const restoredRows = toRestore.map((r, i) => {
+        const { deletedAt: _deletedAt, income, expense, ...rest } = r as DeletedVoucher & Record<string, unknown>
+        void _deletedAt
+        const type = rest.type || (typeof income === 'number' && income > 0 ? '수입' : '지출')
+        const amount = typeof rest.amount === 'number' ? rest.amount : (type === '수입' ? (income || 0) : (expense || 0))
+        return { ...rest, id: maxId + i + 1, type, amount }
+      })
+
+      await fetch('/api/voucher/list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ list: [...activeList, ...restoredRows], book }),
+      })
+      await fetch('/api/voucher/deleted-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ list: remaining, book }),
+      })
+
+      setData(remaining)
+      setChecked(new Set())
+      setResultMsg(`✅ ${toRestore.length}건 복구 완료 — 전표관리에서 확인하세요.`)
+    } catch {
+      setResultMsg('❌ 복구 중 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setRestoring(false)
+      setTimeout(() => setResultMsg(''), 4000)
     }
   }
+
+  const allAccountsWithSub = [...incomeAccounts, ...expenseAccounts]
 
   const inputCls = "px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-medium text-slate-700"
   const labelCls = "text-xs text-slate-500 font-medium whitespace-nowrap"
@@ -139,19 +211,28 @@ export default function DeletedVoucherPage() {
             <span className={labelCls}>적요</span>
             <input type="text" value={searchSummary} onChange={e => setSearchSummary(e.target.value)} placeholder="" className={`${inputCls} w-52`} />
           </div>
-          <button className="px-5 py-1.5 bg-teal-500 text-white text-xs font-bold rounded-lg hover:bg-teal-600 ml-auto">조회</button>
+          <button onClick={load} className="px-5 py-1.5 bg-teal-500 text-white text-xs font-bold rounded-lg hover:bg-teal-600 ml-auto">
+            {loading ? '조회 중…' : '조회'}
+          </button>
         </div>
       </div>
+
+      {resultMsg && (
+        <div className={`px-4 py-2 rounded-lg text-xs font-medium ${resultMsg.startsWith('✅') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          {resultMsg}
+        </div>
+      )}
 
       {/* 테이블 */}
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-teal-400/20">
-          <span className="text-xs text-slate-400">{filtered.length}건</span>
+          <span className="text-xs text-slate-400">{loading ? '불러오는 중…' : `${filtered.length}건`}</span>
           <button
-            disabled={checked.size === 0}
-            className={`px-5 py-1.5 text-xs font-bold rounded-lg ${checked.size > 0 ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+            disabled={checked.size === 0 || restoring}
+            onClick={handleRestore}
+            className={`px-5 py-1.5 text-xs font-bold rounded-lg ${checked.size > 0 && !restoring ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
           >
-            복구하기
+            {restoring ? '복구 중…' : '복구하기'}
           </button>
         </div>
         <div className="overflow-x-auto">
@@ -174,13 +255,13 @@ export default function DeletedVoucherPage() {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={10} className="text-center py-12 text-slate-400">삭제된 전표가 없습니다</td></tr>
+                <tr><td colSpan={10} className="text-center py-12 text-slate-400">{loading ? '불러오는 중…' : '삭제된 전표가 없습니다'}</td></tr>
               ) : filtered.map((row, idx) => (
                 <tr key={row.id} className={`transition-colors hover:bg-teal-50 ${checked.has(row.id) ? 'bg-teal-50/60' : idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'} border-b border-slate-50`}>
                   <td className="text-center px-3 py-2">
                     <input type="checkbox" className="rounded border-slate-300 w-4 h-4" checked={checked.has(row.id)} onChange={() => toggleCheck(row.id)} />
                   </td>
-                  <td className="text-center px-4 py-2.5 text-slate-600">{row.date.slice(5)}</td>
+                  <td className="text-center px-4 py-2.5 text-slate-600">{row.date?.slice(5)}</td>
                   <td className="text-center px-4 py-2.5">
                     <span className={`font-medium ${isIncomeAccount(row.account) ? 'text-blue-700' : 'text-red-600'}`}>{row.account}</span>
                   </td>
@@ -188,11 +269,11 @@ export default function DeletedVoucherPage() {
                     <span className="text-slate-600 text-sm">{row.subAccount || '-'}</span>
                   </td>
                   <td className="text-left px-4 py-2.5 text-slate-600">{row.summary}</td>
-                  <td className="text-right px-6 py-2.5 text-blue-600 font-medium">{fmt(row.income)}</td>
-                  <td className="text-right px-6 py-2.5 text-red-600 font-medium pr-[50px]">{fmt(row.expense)}</td>
+                  <td className="text-right px-6 py-2.5 text-blue-600 font-medium">{fmt(incomeOf(row))}</td>
+                  <td className="text-right px-6 py-2.5 text-red-600 font-medium pr-[50px]">{fmt(expenseOf(row))}</td>
                   <td className="text-left px-6 py-2.5 text-slate-500">{row.counterpart || '-'}</td>
                   <td className="text-left px-4 py-2.5 text-slate-400 text-xs">{row.note || '-'}</td>
-                  <td className="text-center px-4 py-2.5 text-slate-400">{row.deletedAt.slice(5)}</td>
+                  <td className="text-center px-4 py-2.5 text-slate-400">{row.deletedAt?.slice(5, 16).replace('T', ' ')}</td>
                 </tr>
               ))}
             </tbody>
