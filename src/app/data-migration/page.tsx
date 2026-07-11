@@ -2878,9 +2878,10 @@ export default function DataMigrationPage() {
         </div>
       )}
 
-      {displayData.length > 0 && currentSource.authType !== 'session' && (
+      {/* sunote 이관은 출발지 authType 과 무관 — 목적지(sunote) 아이디/비번만 있으면 어떤 소스든 가능 */}
+      {displayData.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-2">
-          <h3 className="font-semibold text-slate-800 mb-3">이관 실행</h3>
+          <h3 className="font-semibold text-slate-800 mb-3">sunote(수전자장부)로 이관</h3>
           {/* 전체 일괄 이관 */}
           <button
             onClick={handleTransferAll}
