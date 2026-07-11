@@ -31,6 +31,7 @@ interface VoucherRow {
   receiptImage?: string    // 첨부한 영수증 사진 URL (/api/receipt-file/…) — 대표(첫 장)
   receiptImages?: string[] // 여러 장(각 1장씩 배열) — 걸음마 이관 시 한 전표에 3~4장
   _bankKey?: string        // 은행거래 자동전표 출처키(계좌|날짜|시간|금액) — 중복 등록 방지
+  srcNo?: string           // 데이터이관 출처 시스템의 원본 전표번호(예: 인천/경상북도 증빙번호) — 추적용
 }
 
 const sampleData: VoucherRow[] = []
@@ -94,6 +95,14 @@ function buildAccountModel(tree: CoaGwan[] | null): AccountModel {
 }
 
 const fmt = (n: number) => n.toLocaleString('ko-KR')
+
+/** 계정과목/세목 표시 — 공백 없이 붙여서 + 길면 폰트를 낮춰 셀 안에 들어가도록 */
+function acctDisplay(name: string): { text: string; sizeCls: string } {
+  const text = (name || '').replace(/\s+/g, '')
+  const len = text.length
+  const sizeCls = len >= 11 ? 'text-[9px]' : len >= 8 ? 'text-[10px]' : 'text-[11px]'
+  return { text, sizeCls }
+}
 
 export default function VoucherInputPage() {
   const [rows, setRows] = useState<VoucherRow[]>(sampleData)
@@ -241,6 +250,7 @@ export default function VoucherInputPage() {
   const [showColumnSettings, setShowColumnSettings] = useState(false)
   const [columnOrder, setColumnOrder] = useState<[string, string, string][]>([
     ['no', '번호', '1'], ['date', '일자', '2'], ['type', '입력방식', '3'], ['summary', '적요', '4'],
+    ['srcNo', '원본번호', '4b'],
     ['evidence', '증빙(은행/영수)', '5'], ['register', '등록', '6'], ['attach', '첨부', '7'],
     ['amountGroup', '금액(수입/지출/잔액)', '8'],
     ['accountGroup', '계정(복사/세목/코드/분리/반납)', '9'], ['fee', '수수료', '10'],
@@ -248,7 +258,7 @@ export default function VoucherInputPage() {
   ])
   const columnSettingsRef = useRef<HTMLDivElement>(null)
   const [visibleColumns, setVisibleColumns] = useState({
-    no: true, date: true, type: true, summary: true,
+    no: true, date: true, type: true, summary: true, srcNo: true,
     evidence: true, register: true, attach: true,
     amountGroup: true, accountGroup: true, fee: true,
     counterpart: true, payment: true, child: true, sort: true,
@@ -408,6 +418,14 @@ export default function VoucherInputPage() {
       const val = `${y}-${String(m).padStart(2, '0')}`
       yearMonthOptions.push({ value: val, label: `${y}년 ${m}월` })
     }
+  }
+
+  // 출납년월 이전달/다음달 이동 (드롭다운 열지 않고 클릭 한 번으로 인접 월 이동)
+  const shiftYearMonth = (delta: number) => {
+    const [y, m] = filterYearMonth.split('-').map(Number)
+    const d = new Date(y, m - 1 + delta, 1)
+    setFilterYearMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+    setFilterDayFrom(0); setFilterDayTo(0)
   }
 
   // 해당 월의 일수 계산
@@ -643,7 +661,7 @@ export default function VoucherInputPage() {
                 <div className="px-3 pb-1.5 flex items-center gap-2 text-xs text-slate-400">
                   <span>{row.date.slice(5)}</span>
                   <span>·</span>
-                  <span className="truncate">{row.account}{row.subAccount && row.subAccount !== row.account ? ` / ${row.subAccount}` : ''}</span>
+                  <span className="truncate">{acctDisplay(row.account).text}{row.subAccount && row.subAccount !== row.account ? ` / ${acctDisplay(row.subAccount).text}` : ''}</span>
                   {(() => { const rc = receiptListOf(row); return rc.length > 0 && (
                     <button onClick={e => { e.stopPropagation(); setGalleryImages(rc) }} className="ml-auto shrink-0 relative" title={`영수증 ${rc.length}장 보기`}>
                       <img src={rc[0]} alt="영수증" className="w-8 h-8 object-cover rounded border" />
@@ -732,6 +750,10 @@ export default function VoucherInputPage() {
         <div className="px-4 py-3 flex items-end gap-4 flex-wrap">
             <div className="flex items-center gap-1.5">
               <label className="text-xs text-slate-500 font-medium whitespace-nowrap">출납년월</label>
+              <button type="button" onClick={() => shiftYearMonth(-1)} title="이전달"
+                className="w-6 h-6 flex items-center justify-center rounded-md border border-teal-300 text-teal-600 hover:bg-teal-50">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+              </button>
               <select
                 value={filterYearMonth}
                 onChange={e => { setFilterYearMonth(e.target.value); setFilterDayFrom(0); setFilterDayTo(0) }}
@@ -741,6 +763,10 @@ export default function VoucherInputPage() {
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
+              <button type="button" onClick={() => shiftYearMonth(1)} title="다음달"
+                className="w-6 h-6 flex items-center justify-center rounded-md border border-teal-300 text-teal-600 hover:bg-teal-50">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+              </button>
             </div>
             <div className="flex items-center gap-1.5">
               <label className="text-xs text-slate-500 font-medium whitespace-nowrap">입력구분</label>
@@ -1549,6 +1575,7 @@ export default function VoucherInputPage() {
                       case 'date': return <th key={key} className={`${thCls} w-[62px]`}>일자</th>
                       case 'type': return <th key={key} className={`${thCls} w-[64px]`}>입력방식</th>
                       case 'summary': return <th key={key} className={`${thCls} w-[300px]`}>적요</th>
+                      case 'srcNo': return <th key={key} className={`${thCls} w-[70px]`}>원본번호</th>
                       case 'evidence': return <React.Fragment key={key}><th className={`${thCls} w-[43px]`}>영수</th><th className={`${thCls} w-[43px]`}>이체</th><th className={`${thCls} w-[43px]`}>은행</th><th className={`${thCls} w-[53px]`}>증빙</th></React.Fragment>
                       case 'register': return <th key={key} className={`${thCls} w-[43px]`}>등록</th>
                       case 'attach': return <th key={key} className={`${thCls} w-[43px]`}>첨부</th>
@@ -1700,6 +1727,7 @@ export default function VoucherInputPage() {
                     case 'date': return <th key={key} className="text-center px-1 py-2 font-normal text-slate-700 w-[62px]">일자</th>
                     case 'type': return <th key={key} className="text-center px-0.5 py-2 font-normal text-slate-700 w-[64px]">입력방식</th>
                     case 'summary': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[300px]">적요</th>
+                    case 'srcNo': return <th key={key} className="text-center px-1.5 py-2 font-normal text-slate-700 w-[70px]">원본번호</th>
                     case 'evidence': return <React.Fragment key={key}>
                       <th className="text-center px-1.5 py-2 font-normal text-slate-700 w-[48px] relative group cursor-help"><span className="whitespace-nowrap">은행<span className="text-blue-400 text-[10px]">ⓘ</span></span>
                         <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-blue-100 text-blue-800 text-[10px] font-normal rounded-lg px-3 py-2 z-50 w-[170px] shadow-lg border border-blue-200 text-left">
@@ -1886,6 +1914,11 @@ export default function VoucherInputPage() {
                                 <span className="w-full min-w-0 truncate text-[11px] text-slate-700 border border-slate-200 rounded bg-slate-50/60 px-2 py-1 hover:border-teal-300">{row.summary || '-'}</span>
                               </div>
                             )}
+                          </td>
+
+                        case 'srcNo':
+                          return <td key={key} className="text-center px-1.5 py-1">
+                            <span className="text-[10px] text-slate-400 font-mono" title={row.srcNo ? `이관 출처 시스템의 원본 전표번호: ${row.srcNo}` : undefined}>{row.srcNo || '-'}</span>
                           </td>
 
                         case 'evidence':
@@ -2122,11 +2155,11 @@ export default function VoucherInputPage() {
                                  </div>
                                 </div>
                               ) : null}
-                              <span className={`font-medium whitespace-nowrap truncate block w-full ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'}`}>{row.account}</span>
+                              <span className={`font-medium whitespace-nowrap truncate block w-full ${row.type === '수입' ? 'text-blue-700' : 'text-red-600'} ${acctDisplay(row.account).sizeCls}`}>{acctDisplay(row.account).text}</span>
                             </td>
                             {/* 세목 — 목과 동일(중복)이면 세목 아님 → '-' */}
                             <td data-cell="sub" className="text-center px-0.5 py-1">
-                              <span className="text-slate-600 text-[11px] whitespace-nowrap truncate block w-full text-left">{row.subAccount && row.subAccount !== row.account ? row.subAccount : '-'}</span>
+                              <span className={`text-slate-600 whitespace-nowrap truncate block w-full text-left ${acctDisplay(row.subAccount && row.subAccount !== row.account ? row.subAccount : '-').sizeCls}`}>{row.subAccount && row.subAccount !== row.account ? acctDisplay(row.subAccount).text : '-'}</span>
                             </td>
                             {/* 계정코드 */}
                             <td data-cell="accountCode" className="text-center px-1 py-1" onClick={cellClick('accountCode')}>

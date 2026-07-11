@@ -17,6 +17,15 @@ interface DeletedVoucher {
   counterpart: string
   note: string
   deletedAt: string
+  srcNo?: string   // 데이터이관 출처 시스템의 원본 전표번호(추적용)
+}
+
+/** 계정과목/세목 표시 — 공백 없이 붙여서 + 길면 폰트를 낮춰 셀 안에 들어가도록 */
+function acctDisplay(name: string): { text: string; sizeCls: string } {
+  const text = (name || '').replace(/\s+/g, '')
+  const len = text.length
+  const sizeCls = len >= 11 ? 'text-[9px]' : len >= 8 ? 'text-[10px]' : 'text-sm'
+  return { text, sizeCls }
 }
 
 const fmt = (n: number) => n ? n.toLocaleString('ko-KR') : ''
@@ -146,6 +155,32 @@ export default function DeletedVoucherPage() {
     }
   }
 
+  /** 체크된 삭제 전표를 휴지통(deleted-list)에서 영구히 지움 — DB 에서 완전히 사라짐, 복구 불가 */
+  const handlePurge = async () => {
+    if (checked.size === 0) return
+    if (!confirm(`선택한 ${checked.size}건을 완전히 삭제합니다.\n삭제하면 다시 복구할 수 없습니다. 계속할까요?`)) return
+    setRestoring(true)
+    setResultMsg('')
+    try {
+      const book = bookRef.current
+      const remaining = data.filter(r => !checked.has(r.id))
+      await fetch('/api/voucher/deleted-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ list: remaining, book }),
+      })
+      setData(remaining)
+      setChecked(new Set())
+      setResultMsg(`✅ ${data.length - remaining.length}건 완전 삭제 완료`)
+    } catch {
+      setResultMsg('❌ 완전 삭제 중 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setRestoring(false)
+      setTimeout(() => setResultMsg(''), 4000)
+    }
+  }
+
   const allAccountsWithSub = [...incomeAccounts, ...expenseAccounts]
 
   const inputCls = "px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-medium text-slate-700"
@@ -227,13 +262,23 @@ export default function DeletedVoucherPage() {
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-teal-400/20">
           <span className="text-xs text-slate-400">{loading ? '불러오는 중…' : `${filtered.length}건`}</span>
-          <button
-            disabled={checked.size === 0 || restoring}
-            onClick={handleRestore}
-            className={`px-5 py-1.5 text-xs font-bold rounded-lg ${checked.size > 0 && !restoring ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
-          >
-            {restoring ? '복구 중…' : '복구하기'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={checked.size === 0 || restoring}
+              onClick={handleRestore}
+              className={`px-5 py-1.5 text-xs font-bold rounded-lg ${checked.size > 0 && !restoring ? 'bg-teal-500 hover:bg-teal-600 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+            >
+              {restoring ? '복구 중…' : '복구하기'}
+            </button>
+            <button
+              disabled={checked.size === 0 || restoring}
+              onClick={handlePurge}
+              className={`px-5 py-1.5 text-xs font-bold rounded-lg ${checked.size > 0 && !restoring ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+              title="휴지통에서 완전히 삭제(복구 불가)"
+            >
+              완전삭제
+            </button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-[11px]">
@@ -246,6 +291,7 @@ export default function DeletedVoucherPage() {
                 <th className="text-center px-4 py-2.5 font-normal text-slate-700 w-40">계정과목</th>
                 <th className="text-center px-4 py-2.5 font-normal text-slate-700 w-28">세목</th>
                 <th className="text-left px-4 py-2.5 font-normal text-slate-700">적요</th>
+                <th className="text-center px-3 py-2.5 font-normal text-slate-700 w-20">원본번호</th>
                 <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-36">수입액</th>
                 <th className="text-right px-6 py-2.5 font-normal text-slate-700 w-36 pr-[50px]">지출액</th>
                 <th className="text-left px-6 py-2.5 font-normal text-slate-700 w-32">거래처</th>
@@ -255,7 +301,7 @@ export default function DeletedVoucherPage() {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={10} className="text-center py-12 text-slate-400">{loading ? '불러오는 중…' : '삭제된 전표가 없습니다'}</td></tr>
+                <tr><td colSpan={11} className="text-center py-12 text-slate-400">{loading ? '불러오는 중…' : '삭제된 전표가 없습니다'}</td></tr>
               ) : filtered.map((row, idx) => (
                 <tr key={row.id} className={`transition-colors hover:bg-teal-50 ${checked.has(row.id) ? 'bg-teal-50/60' : idx % 2 === 1 ? 'bg-teal-50/30' : 'bg-white'} border-b border-slate-50`}>
                   <td className="text-center px-3 py-2">
@@ -263,12 +309,13 @@ export default function DeletedVoucherPage() {
                   </td>
                   <td className="text-center px-4 py-2.5 text-slate-600">{row.date?.slice(5)}</td>
                   <td className="text-center px-4 py-2.5">
-                    <span className={`font-medium ${isIncomeAccount(row.account) ? 'text-blue-700' : 'text-red-600'}`}>{row.account}</span>
+                    <span className={`font-medium ${isIncomeAccount(row.account) ? 'text-blue-700' : 'text-red-600'} ${acctDisplay(row.account).sizeCls}`}>{acctDisplay(row.account).text}</span>
                   </td>
                   <td className="text-center px-4 py-2.5">
-                    <span className="text-slate-600 text-sm">{row.subAccount || '-'}</span>
+                    <span className={`text-slate-600 ${acctDisplay(row.subAccount || '-').sizeCls}`}>{row.subAccount ? acctDisplay(row.subAccount).text : '-'}</span>
                   </td>
                   <td className="text-left px-4 py-2.5 text-slate-600">{row.summary}</td>
+                  <td className="text-center px-3 py-2.5 text-[10px] text-slate-400 font-mono">{row.srcNo || '-'}</td>
                   <td className="text-right px-6 py-2.5 text-blue-600 font-medium">{fmt(incomeOf(row))}</td>
                   <td className="text-right px-6 py-2.5 text-red-600 font-medium pr-[50px]">{fmt(expenseOf(row))}</td>
                   <td className="text-left px-6 py-2.5 text-slate-500">{row.counterpart || '-'}</td>
