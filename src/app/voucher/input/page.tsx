@@ -508,9 +508,12 @@ export default function VoucherInputPage() {
 
   const deleteRows = () => {
     if (checked.size === 0) return
-    const removed = rows.filter(r => checked.has(r.id))
+    // ⚠ id 로만 매칭하면 다른 달 전표와 우연히 같은 id(이관 배치마다 1번부터 재사용됨)를 가진 행까지
+    // 같이 지워질 위험이 있음 — 먼저 현재 보이는(filtered) 행으로 좁힌 뒤, 그 정확한 객체 참조로만 제거.
+    const removed = filtered.filter(r => checked.has(r.id))
+    const removedSet = new Set(removed)
     void archiveDeleted(removed)
-    setRows(prev => prev.filter(r => !checked.has(r.id)))
+    setRows(prev => prev.filter(r => !removedSet.has(r)))
     setChecked(new Set())
   }
 
@@ -602,11 +605,11 @@ export default function VoucherInputPage() {
     if (openReceipt) setReceiptRowId(newRow.id)
     else setMobileEditId(newRow.id)
   }
-  const mobileDeleteRow = (id: number) => {
-    const removed = rows.filter(r => r.id === id)
-    void archiveDeleted(removed)
-    setRows(prev => prev.filter(r => r.id !== id))
-    if (mobileEditId === id) setMobileEditId(null)
+  const mobileDeleteRow = (target: VoucherRow) => {
+    // ⚠ id 만으로 매칭하면 다른 달의 동일 id 행까지 같이 지워질 수 있어 정확한 객체 참조로 제거.
+    void archiveDeleted([target])
+    setRows(prev => prev.filter(r => r !== target))
+    if (mobileEditId === target.id) setMobileEditId(null)
   }
 
   return (
@@ -788,7 +791,7 @@ export default function VoucherInputPage() {
                     )}
                     <div className="flex gap-2 pt-1">
                       <button onClick={() => setReceiptRowId(row.id)} className="flex-1 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600">📷 영수증</button>
-                      <button onClick={() => mobileDeleteRow(row.id)} className="px-4 py-2 border border-rose-200 text-rose-500 rounded-lg text-sm hover:bg-rose-50">삭제</button>
+                      <button onClick={() => mobileDeleteRow(row)} className="px-4 py-2 border border-rose-200 text-rose-500 rounded-lg text-sm hover:bg-rose-50">삭제</button>
                     </div>
                   </div>
                 )}
@@ -1232,7 +1235,10 @@ export default function VoucherInputPage() {
             <button
               data-tip="선택된 전표 또는 화면의 전체 전표를 인천시 시스템(전표관리 - 수기입력)에 반영"
               onClick={async () => {
-                const targets = checked.size > 0 ? rows.filter(r => checked.has(r.id)) : filtered
+                // ⚠ rows(전체, 월 무관) 가 아니라 filtered(현재 조회월에 보이는 행)에서만 매칭해야 함 —
+                // id 는 이관 배치마다 1번부터 다시 매겨지므로(mapRow), 다른 달의 행과 우연히 같은 id 를
+                // 가질 수 있어 rows.filter 로 찾으면 화면에 안 보이는 엉뚱한 전표가 targets 에 섞여 들어옴.
+                const targets = checked.size > 0 ? filtered.filter(r => checked.has(r.id)) : filtered
                 if (targets.length === 0) { alert('처리할 전표가 없습니다.'); return }
                 // ⚠ 데이터이관으로 들어온 전표는 출발지 시스템이 다를 수 있음 — 인천시가 아닌 출처(예: 경상북도 gbccm)를
                 // 인천시로 잘못 전송하지 않게 차단. _srcSystem 없는 행(수기입력 등)은 기존처럼 허용.
