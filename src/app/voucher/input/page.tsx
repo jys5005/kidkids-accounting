@@ -533,53 +533,38 @@ export default function VoucherInputPage() {
   const [receiptRowId, setReceiptRowId] = useState<number | null>(null)
   const [galleryImages, setGalleryImages] = useState<string[] | null>(null)  // 영수증 여러 장 갤러리
 
-  // 전표수정(경상북도 gbccm) — 원본번호(srcNo) 있는 행의 결제방식/적요/계정과목을 실제 지역형 시스템에 반영
+  // 전표수정(경상북도 gbccm) — 팝업에서 값을 다시 입력받지 않고, 통합e 전표관리 표에서 "이미 수정해둔"
+  // 결제방식(row.note)/적요(row.summary)/계정과목(row.account) 현재 값을 그대로 실제 시스템에 반영한다.
   const [gbccmEditRow, setGbccmEditRow] = useState<VoucherRow | null>(null)
-  const [gbccmMethod, setGbccmMethod] = useState('300')
-  const [gbccmMethodEnabled, setGbccmMethodEnabled] = useState(true)
-  const [gbccmMemo, setGbccmMemo] = useState('')
-  const [gbccmMemoEnabled, setGbccmMemoEnabled] = useState(false)
-  const [gbccmAccount, setGbccmAccount] = useState('')
-  const [gbccmAccountEnabled, setGbccmAccountEnabled] = useState(false)
   const [gbccmSaving, setGbccmSaving] = useState(false)
   const [gbccmMsg, setGbccmMsg] = useState('')
-  // 경상북도(gbccm) "계정코드검색" 팝업 실측 목록 — 자유 텍스트 입력 시 오타로 조용히 실패할 위험이 있어
-  // 드롭다운으로 고정(2026-07-11 gbccm 실측, sel_acc_sqno_3 옵션 그대로, (+)/(-) 표시만 제거).
-  const GBCCM_ACCOUNTS = {
-    수입: [
-      '정부지원 보육료', '부모부담 보육료', '특별활동비', '기타 필요경비', '인건비 보조금', '기관보육료', '연장보육료',
-      '공공형 운영비', '그 밖의 지원금', '자본보조금', '전입금', '단기차입금', '장기차입금', '지정후원금', '비지정후원금',
-      '적립금 처분 수입', '과년도 수입', '이자수입', '그 밖의 잡수입', '전년도 이월금', '전년도 이월사업비',
-    ],
-    지출: [
-      '원장급여', '원장수당', '보육교직원급여', '보육교직원수당', '기타 인건비', '법정부담금', '퇴직금 및 퇴직적립금',
-      '수용비 및 수수료', '공공요금 및 제세공과금', '연료비', '여비', '차량비', '복리후생비', '기타 운영비', '업무추진비',
-      '직책급', '회의비', '교직원연수·연구비', '교재·교구 구입비', '행사비', '영유아복리비', '급식·간식 재료비',
-      '특별활동비지출', '기타 필요경비 지출', '적립금', '단기 차입금 상환', '장기 차입금 상환', '보조금 반환금',
-      '보호자 반환금', '법인회계 전출금', '시설비', '시설장비 유지비', '자산취득비', '과년도 지출', '잡지출', '예비비',
-    ],
-  }
+  // 경상북도(gbccm) 실제 시스템의 유효 계정과목/결제방식 목록(2026-07-11 실측) — row 의 현재 값이 이 목록과
+  // 정확히 일치할 때만 그 항목을 전송(안 맞으면 조용히 스킵해 오작동 방지, 화면에 매칭 여부 표시).
+  const GBCCM_ACCOUNTS_ALL = [
+    '정부지원 보육료', '부모부담 보육료', '특별활동비', '기타 필요경비', '인건비 보조금', '기관보육료', '연장보육료',
+    '공공형 운영비', '그 밖의 지원금', '자본보조금', '전입금', '단기차입금', '장기차입금', '지정후원금', '비지정후원금',
+    '적립금 처분 수입', '과년도 수입', '이자수입', '그 밖의 잡수입', '전년도 이월금', '전년도 이월사업비',
+    '원장급여', '원장수당', '보육교직원급여', '보육교직원수당', '기타 인건비', '법정부담금', '퇴직금 및 퇴직적립금',
+    '수용비 및 수수료', '공공요금 및 제세공과금', '연료비', '여비', '차량비', '복리후생비', '기타 운영비', '업무추진비',
+    '직책급', '회의비', '교직원연수·연구비', '교재·교구 구입비', '행사비', '영유아복리비', '급식·간식 재료비',
+    '특별활동비지출', '기타 필요경비 지출', '적립금', '단기 차입금 상환', '장기 차입금 상환', '보조금 반환금',
+    '보호자 반환금', '법인회계 전출금', '시설비', '시설장비 유지비', '자산취득비', '과년도 지출', '잡지출', '예비비',
+  ]
   const GBCCM_METHODS: { code: string; label: string }[] = [
     { code: '100', label: '카드결제' }, { code: '200', label: '국민행복카드' }, { code: '300', label: '계좌이체' },
     { code: '400', label: '자동이체' }, { code: '500', label: '지로' }, { code: '600', label: '현금결제' }, { code: '700', label: '기타' },
   ]
-  const openGbccmEdit = (row: VoucherRow) => {
-    setGbccmEditRow(row)
-    setGbccmMethod('300'); setGbccmMethodEnabled(true)
-    setGbccmMemo(row.summary || ''); setGbccmMemoEnabled(false)
-    setGbccmAccount(row.account || ''); setGbccmAccountEnabled(false)
-    setGbccmMsg('')
-  }
+  const openGbccmEdit = (row: VoucherRow) => { setGbccmEditRow(row); setGbccmMsg('') }
   const submitGbccmEdit = async () => {
     if (!gbccmEditRow?.srcNo) return
-    if (!gbccmMethodEnabled && !gbccmMemoEnabled && !gbccmAccountEnabled) { setGbccmMsg('❌ 결제방식/적요/계정과목 중 하나는 선택해주세요.'); return }
-    if (gbccmAccountEnabled && !gbccmAccount) { setGbccmMsg('❌ 계정과목을 목록에서 선택해주세요.'); return }
+    const methodMatch = GBCCM_METHODS.find(m => m.label === gbccmEditRow.note)
+    const accountMatch = GBCCM_ACCOUNTS_ALL.includes(gbccmEditRow.account) ? gbccmEditRow.account : null
+    if (!methodMatch && !accountMatch) { setGbccmMsg('❌ 결제방식/계정과목 둘 다 경상북도 목록과 일치하지 않아 적요만으로는 보낼 항목이 없습니다.'); return }
     setGbccmSaving(true); setGbccmMsg('')
     try {
-      const body: Record<string, string> = { prfNo: gbccmEditRow.srcNo }
-      if (gbccmMethodEnabled) body.sttlMethod = gbccmMethod
-      if (gbccmMemoEnabled) body.memo = gbccmMemo
-      if (gbccmAccountEnabled) body.accountName = gbccmAccount
+      const body: Record<string, string> = { prfNo: gbccmEditRow.srcNo, memo: gbccmEditRow.summary || '' }
+      if (methodMatch) body.sttlMethod = methodMatch.code
+      if (accountMatch) body.accountName = accountMatch
       const res = await fetch('/api/gbccm/vouchers/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -589,15 +574,6 @@ export default function VoucherInputPage() {
       const j = await res.json()
       if (j.success) {
         setGbccmMsg('✅ 전표수정 완료')
-        setRows(prev => prev.map(r => {
-          if (r.id !== gbccmEditRow.id) return r
-          return {
-            ...r,
-            note: gbccmMethodEnabled ? (GBCCM_METHODS.find(m => m.code === gbccmMethod)?.label || r.note) : r.note,
-            summary: gbccmMemoEnabled ? gbccmMemo : r.summary,
-            account: gbccmAccountEnabled ? gbccmAccount : r.account,
-          }
-        }))
       } else {
         setGbccmMsg(`❌ ${j.error || '전표수정 실패'}`)
       }
@@ -687,51 +663,28 @@ export default function VoucherInputPage() {
               <button onClick={() => !gbccmSaving && setGbccmEditRow(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
             </div>
             <p className="text-[11px] text-slate-400 mb-3">
-              통합e 화면이 아니라 <b>경상북도 어린이집관리시스템 실제 전표</b>를 원본번호로 찾아 수정합니다. 바꿀 항목만 체크해주세요.
+              통합e 전표관리 표에서 <b>이미 수정해두신 현재 값</b> 그대로 경상북도 어린이집관리시스템 실제 전표에 반영합니다.
+              (값을 바꾸시려면 이 창을 닫고 표에서 직접 수정 후 다시 눌러주세요)
             </p>
-            <label className="flex items-center gap-2 mb-1">
-              <input type="checkbox" checked={gbccmMethodEnabled} onChange={e => setGbccmMethodEnabled(e.target.checked)} />
-              <span className="text-xs font-semibold text-slate-500">결제방식 변경</span>
-            </label>
-            <select
-              value={gbccmMethod}
-              onChange={e => setGbccmMethod(e.target.value)}
-              disabled={!gbccmMethodEnabled}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-4 disabled:bg-slate-50 disabled:text-slate-300"
-            >
-              {GBCCM_METHODS.map(m => <option key={m.code} value={m.code}>{m.label}</option>)}
-            </select>
-            <label className="flex items-center gap-2 mb-1">
-              <input type="checkbox" checked={gbccmMemoEnabled} onChange={e => setGbccmMemoEnabled(e.target.checked)} />
-              <span className="text-xs font-semibold text-slate-500">적요 변경</span>
-            </label>
-            <input
-              type="text"
-              value={gbccmMemo}
-              onChange={e => setGbccmMemo(e.target.value)}
-              disabled={!gbccmMemoEnabled}
-              placeholder="새 적요"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-4 disabled:bg-slate-50 disabled:text-slate-300"
-            />
-            <label className="flex items-center gap-2 mb-1">
-              <input type="checkbox" checked={gbccmAccountEnabled} onChange={e => setGbccmAccountEnabled(e.target.checked)} />
-              <span className="text-xs font-semibold text-slate-500">계정과목 변경</span>
-            </label>
-            <select
-              value={gbccmAccount}
-              onChange={e => setGbccmAccount(e.target.value)}
-              disabled={!gbccmAccountEnabled}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-1 disabled:bg-slate-50 disabled:text-slate-300"
-            >
-              <option value="">::선택::</option>
-              <optgroup label="수입">
-                {GBCCM_ACCOUNTS.수입.map(a => <option key={a} value={a}>{a}</option>)}
-              </optgroup>
-              <optgroup label="지출">
-                {GBCCM_ACCOUNTS.지출.map(a => <option key={a} value={a}>{a}</option>)}
-              </optgroup>
-            </select>
-            <p className="text-[10px] text-slate-400 mb-4">경상북도 시스템에 등록된 계정과목 목록에서만 선택 가능합니다.</p>
+            {(() => {
+              const methodMatch = GBCCM_METHODS.find(m => m.label === gbccmEditRow.note)
+              const accountOk = GBCCM_ACCOUNTS_ALL.includes(gbccmEditRow.account)
+              const Row = ({ label, value, ok }: { label: string; value: string; ok: boolean }) => (
+                <div className="flex items-start justify-between gap-3 py-1.5 border-b border-slate-100">
+                  <span className="text-xs text-slate-400 shrink-0">{label}</span>
+                  <span className={`text-sm font-medium text-right ${ok ? 'text-slate-700' : 'text-rose-400'}`}>
+                    {value || '(빈 값)'}{!ok && ' — 경상북도 목록과 불일치, 전송 안 됨'}
+                  </span>
+                </div>
+              )
+              return (
+                <div className="mb-4">
+                  <Row label="결제방식" value={gbccmEditRow.note} ok={!!methodMatch} />
+                  <Row label="적요" value={gbccmEditRow.summary} ok={true} />
+                  <Row label="계정과목" value={gbccmEditRow.account} ok={accountOk} />
+                </div>
+              )
+            })()}
             {gbccmMsg && <p className="text-xs font-medium mb-3">{gbccmMsg}</p>}
             <div className="flex justify-end gap-2">
               <button onClick={() => setGbccmEditRow(null)} disabled={gbccmSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-50">닫기</button>
