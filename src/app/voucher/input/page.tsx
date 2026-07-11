@@ -535,9 +535,11 @@ export default function VoucherInputPage() {
 
   // 전표수정(경상북도 gbccm) — 팝업에서 값을 다시 입력받지 않고, 통합e 전표관리 표에서 "이미 수정해둔"
   // 결제방식(row.note)/적요(row.summary)/계정과목(row.account) 현재 값을 그대로 실제 시스템에 반영한다.
-  const [gbccmEditRow, setGbccmEditRow] = useState<VoucherRow | null>(null)
+  // 체크한 전표 여러 건을 한 번에 담아 순차 처리(한 건씩 gbccm 화면을 조작해야 해서 동시 처리는 불가).
+  const [gbccmEditRows, setGbccmEditRows] = useState<VoucherRow[]>([])
   const [gbccmSaving, setGbccmSaving] = useState(false)
-  const [gbccmMsg, setGbccmMsg] = useState('')
+  const [gbccmProgressIdx, setGbccmProgressIdx] = useState(-1) // 현재 처리 중인 gbccmEditRows 인덱스
+  const [gbccmResults, setGbccmResults] = useState<Record<number, string>>({}) // row.id → 결과 메시지
   // 경상북도(gbccm) 실제 시스템의 유효 계정과목/결제방식 목록(2026-07-11 실측) — row 의 현재 값이 이 목록과
   // 정확히 일치할 때만 그 항목을 전송(안 맞으면 조용히 스킵해 오작동 방지, 화면에 매칭 여부 표시).
   const GBCCM_ACCOUNTS_ALL = [
@@ -573,7 +575,8 @@ export default function VoucherInputPage() {
     '27211': { search: '[ 721-001 ]', label: '차량할부금' },
     '27212': { search: '[ 721-002 ]', label: '자산취득비' },
   }
-  const openGbccmEdit = (row: VoucherRow) => { setGbccmEditRow(row); setGbccmMsg('') }
+  const openGbccmEdit = (rows: VoucherRow[]) => { setGbccmEditRows(rows); setGbccmResults({}); setGbccmProgressIdx(-1) }
+  const closeGbccmEdit = () => { setGbccmEditRows([]); setGbccmResults({}); setGbccmProgressIdx(-1) }
   // 공백 차이(예: "정부지원 보육료" vs "정부지원보육료")로 인한 오탐 매칭 실패 방지 — 공백 제거 후 비교
   const gbccmNorm = (s: string) => (s || '').replace(/\s+/g, '').trim()
   // 계정과목 전송값 결정 — 세목 있는 계정(accountCode 로 판별)은 leaf 대괄호코드로 찾되, 선택 후 확인은
@@ -584,14 +587,14 @@ export default function VoucherInputPage() {
     const found = GBCCM_ACCOUNTS_ALL.find(a => gbccmNorm(a) === gbccmNorm(row.account))
     return found ? { search: found, verify: found, display: found } : null
   }
-  const submitGbccmEdit = async () => {
-    if (!gbccmEditRow?.srcNo) return
-    const methodMatch = GBCCM_METHODS.find(m => gbccmNorm(m.label) === gbccmNorm(gbccmEditRow.note))
-    const accountMatch = resolveGbccmAccount(gbccmEditRow)
-    if (!methodMatch && !accountMatch) { setGbccmMsg('❌ 결제방식/계정과목 둘 다 경상북도 목록과 일치하지 않아 적요만으로는 보낼 항목이 없습니다.'); return }
-    setGbccmSaving(true); setGbccmMsg('')
+  // 전표 한 건에 대한 gbccm 반영 — 결과 메시지 문자열 반환(호출부가 gbccmResults 에 기록)
+  const submitOneGbccmEdit = async (row: VoucherRow): Promise<string> => {
+    if (!row.srcNo) return '❌ 원본번호 없음'
+    const methodMatch = GBCCM_METHODS.find(m => gbccmNorm(m.label) === gbccmNorm(row.note))
+    const accountMatch = resolveGbccmAccount(row)
+    if (!methodMatch && !accountMatch) return '❌ 결제방식/계정과목 둘 다 목록 불일치 — 전송 항목 없음'
     try {
-      const body: Record<string, string> = { prfNo: gbccmEditRow.srcNo, memo: gbccmEditRow.summary || '' }
+      const body: Record<string, string> = { prfNo: row.srcNo, memo: row.summary || '' }
       if (methodMatch) body.sttlMethod = methodMatch.code
       if (accountMatch) { body.accountName = accountMatch.search; body.accountVerifyText = accountMatch.verify }
       const res = await fetch('/api/gbccm/vouchers/update', {
@@ -601,16 +604,25 @@ export default function VoucherInputPage() {
         body: JSON.stringify(body),
       })
       const j = await res.json()
-      if (j.success) {
-        setGbccmMsg('✅ 전표수정 완료')
-      } else {
-        setGbccmMsg(`❌ ${j.error || j.message || '전표수정 실패'}`)
-      }
+      if (j.success) return '✅ 전표수정 완료'
+      return `❌ ${j.error || j.message || '전표수정 실패'}`
     } catch (e) {
-      setGbccmMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
-    } finally {
-      setGbccmSaving(false)
+      return `❌ ${e instanceof Error ? e.message : '연결 실패'}`
     }
+  }
+  // 체크된 전표 여러 건을 순차 처리(gbccm 은 화면조작 방식이라 동시에 여러 건 처리 불가) — 진행중 인덱스/
+  // 결과를 실시간으로 갱신해 모달에서 진행 상황을 볼 수 있게 함.
+  const submitGbccmEdit = async () => {
+    if (gbccmEditRows.length === 0) return
+    setGbccmSaving(true)
+    for (let i = 0; i < gbccmEditRows.length; i++) {
+      setGbccmProgressIdx(i)
+      const row = gbccmEditRows[i]
+      const msg = await submitOneGbccmEdit(row)
+      setGbccmResults(prev => ({ ...prev, [row.id]: msg }))
+    }
+    setGbccmProgressIdx(-1)
+    setGbccmSaving(false)
   }
   // 행의 영수증 전체 URL 목록 (배열 우선. 옛 데이터의 콤마 문자열도 호환)
   const receiptListOf = (row: VoucherRow): string[] => {
@@ -683,46 +695,47 @@ export default function VoucherInputPage() {
         </div>
       )}
 
-      {/* 전표수정 — 원본번호(srcNo) 기준으로 경상북도(gbccm) 시스템에 결제방식/적요 반영 */}
-      {gbccmEditRow && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4" onClick={() => !gbccmSaving && setGbccmEditRow(null)}>
-          <div className="bg-white rounded-xl shadow-2xl w-[92vw] max-w-sm p-5" onClick={e => e.stopPropagation()}>
+      {/* 전표수정 — 원본번호(srcNo) 기준으로 경상북도(gbccm) 시스템에 결제방식/적요/계정과목 반영.
+          체크한 전표가 여러 건이면 한 건씩 순차 처리(gbccm 은 화면조작 방식이라 동시처리 불가). */}
+      {gbccmEditRows.length > 0 && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4" onClick={() => !gbccmSaving && closeGbccmEdit()}>
+          <div className="bg-white rounded-xl shadow-2xl w-[92vw] max-w-lg max-h-[85vh] overflow-y-auto p-5" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-slate-800">전표수정 · 원본번호 {gbccmEditRow.srcNo}</h3>
-              <button onClick={() => !gbccmSaving && setGbccmEditRow(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
+              <h3 className="text-sm font-bold text-slate-800">전표수정 · {gbccmEditRows.length}건</h3>
+              <button onClick={() => !gbccmSaving && closeGbccmEdit()} className="text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
             </div>
             <p className="text-[11px] text-slate-400 mb-3">
-              통합e 전표관리 표에서 <b>이미 수정해두신 현재 값</b> 그대로 경상북도 어린이집관리시스템 실제 전표에 반영합니다.
+              통합e 전표관리 표에서 <b>이미 수정해두신 현재 값</b> 그대로 경상북도 어린이집관리시스템 실제 전표에 순서대로 반영합니다.
               (값을 바꾸시려면 이 창을 닫고 표에서 직접 수정 후 다시 눌러주세요)
             </p>
-            {(() => {
-              const methodMatch = GBCCM_METHODS.find(m => gbccmNorm(m.label) === gbccmNorm(gbccmEditRow.note))
-              const accountMatch = resolveGbccmAccount(gbccmEditRow)
-              const leaf = GBCCM_LEAF_CODE_MAP[gbccmEditRow.accountCode || '']
-              const Row = ({ label, value, ok }: { label: string; value: string; ok: boolean }) => (
-                <div className="flex items-start justify-between gap-3 py-1.5 border-b border-slate-100">
-                  <span className="text-xs text-slate-400 shrink-0">{label}</span>
-                  <span className={`text-sm font-medium text-right ${ok ? 'text-slate-700' : 'text-rose-400'}`}>
-                    {value || '(빈 값)'}{!ok && ' — 경상북도 목록과 불일치, 전송 안 됨'}
-                  </span>
-                </div>
-              )
-              return (
-                <div className="mb-4">
-                  <Row label="결제방식" value={gbccmEditRow.note} ok={!!methodMatch} />
-                  <Row label="적요" value={gbccmEditRow.summary} ok={true} />
-                  <Row label="계정과목" value={gbccmEditRow.account} ok={!!accountMatch} />
-                  {gbccmEditRow.subAccount && (
-                    <Row label="세목" value={gbccmEditRow.subAccount} ok={!!leaf} />
-                  )}
-                </div>
-              )
-            })()}
-            {gbccmMsg && <p className="text-xs font-medium mb-3">{gbccmMsg}</p>}
+            <div className="mb-4 divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
+              {gbccmEditRows.map((row, i) => {
+                const methodMatch = GBCCM_METHODS.find(m => gbccmNorm(m.label) === gbccmNorm(row.note))
+                const accountMatch = resolveGbccmAccount(row)
+                const leaf = GBCCM_LEAF_CODE_MAP[row.accountCode || '']
+                const result = gbccmResults[row.id]
+                const isCurrent = gbccmSaving && gbccmProgressIdx === i
+                return (
+                  <div key={row.id} className={`p-2.5 ${isCurrent ? 'bg-teal-50' : ''}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-700">원본번호 {row.srcNo}</span>
+                      {isCurrent && <span className="text-[11px] font-bold text-teal-600">처리 중…</span>}
+                      {result && <span className={`text-[11px] font-bold ${result.startsWith('✅') ? 'text-emerald-600' : 'text-rose-500'}`}>{result}</span>}
+                    </div>
+                    <div className="text-[11px] text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
+                      <span className={methodMatch ? '' : 'text-rose-400'}>결제방식: {row.note || '(빈 값)'}{!methodMatch && ' ⚠'}</span>
+                      <span>적요: {row.summary}</span>
+                      <span className={accountMatch ? '' : 'text-rose-400'}>계정과목: {row.account}{!accountMatch && ' ⚠'}</span>
+                      {row.subAccount && <span className={leaf ? '' : 'text-rose-400'}>세목: {row.subAccount}{!leaf && ' ⚠'}</span>}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setGbccmEditRow(null)} disabled={gbccmSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-50">닫기</button>
+              <button onClick={() => !gbccmSaving && closeGbccmEdit()} disabled={gbccmSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-50">닫기</button>
               <button onClick={submitGbccmEdit} disabled={gbccmSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-teal-500 hover:bg-teal-600 text-white disabled:opacity-50">
-                {gbccmSaving ? '처리 중… (최대 1분)' : '전표수정'}
+                {gbccmSaving ? `처리 중… (${gbccmProgressIdx + 1}/${gbccmEditRows.length})` : `전표수정 (${gbccmEditRows.length}건)`}
               </button>
             </div>
           </div>
@@ -1355,13 +1368,12 @@ export default function VoucherInputPage() {
           {!book && inputMode !== '건별등록' && inputMode !== '상세등록' && filtered.length > 0
             && filtered.some(r => r._srcSystem === 'gbccm') && (
             <button
-              data-tip="체크한 전표 1건의 결제방식을 경상북도 어린이집관리시스템 실제 전표에 반영(원본번호 기준)"
+              data-tip="체크한 전표들의 결제방식/적요/계정과목을 경상북도 어린이집관리시스템 실제 전표에 순서대로 반영(원본번호 기준)"
               onClick={() => {
                 const gbccmTargets = filtered.filter(r => r._srcSystem === 'gbccm')
-                const checkedTargets = checked.size > 0 ? gbccmTargets.filter(r => checked.has(r.id)) : gbccmTargets
-                if (checkedTargets.length === 0) { alert('경상북도 출처 전표가 없습니다.'); return }
-                if (checkedTargets.length > 1) { alert('한 번에 한 건만 수정할 수 있습니다. 전표 1건만 체크해주세요.'); return }
-                openGbccmEdit(checkedTargets[0])
+                const checkedTargets = gbccmTargets.filter(r => checked.has(r.id))
+                if (checkedTargets.length === 0) { alert('경상북도 전표수정 대상으로 체크된 전표가 없습니다. 표에서 전표를 먼저 체크해주세요.'); return }
+                openGbccmEdit(checkedTargets)
               }}
               className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover"
             >
@@ -2087,7 +2099,7 @@ export default function VoucherInputPage() {
                               <div className="flex items-center justify-center gap-1">
                                 <span className="text-[10px] text-slate-400 font-mono" title={`이관 출처 시스템의 원본 전표번호: ${row.srcNo}`}>{row.srcNo}</span>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); openGbccmEdit(row) }}
+                                  onClick={(e) => { e.stopPropagation(); openGbccmEdit([row]) }}
                                   title="전표수정 — 원본 시스템에 반영"
                                   className="text-[10px] text-teal-500 hover:text-teal-700"
                                 >✎</button>
