@@ -1230,18 +1230,18 @@ export default function VoucherInputPage() {
           {inputMode !== '건별등록' && inputMode !== '상세등록' && <button onClick={deleteRows} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>}
           {!book && inputMode !== '건별등록' && inputMode !== '상세등록' && (
             <button
-              data-tip="선택된 전표 또는 화면의 전체 전표를 인천시 시스템(전표관리 - 수기입력) 으로 자동 등록"
+              data-tip="선택된 전표 또는 화면의 전체 전표를 인천시 시스템(전표관리 - 수기입력)에 반영"
               onClick={async () => {
                 const targets = checked.size > 0 ? rows.filter(r => checked.has(r.id)) : filtered
-                if (targets.length === 0) { alert('전송할 전표가 없습니다.'); return }
+                if (targets.length === 0) { alert('처리할 전표가 없습니다.'); return }
                 // ⚠ 데이터이관으로 들어온 전표는 출발지 시스템이 다를 수 있음 — 인천시가 아닌 출처(예: 경상북도 gbccm)를
                 // 인천시로 잘못 전송하지 않게 차단. _srcSystem 없는 행(수기입력 등)은 기존처럼 허용.
                 const wrongSource = targets.find(r => r._srcSystem && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon')
                 if (wrongSource) {
-                  alert(`선택한 전표 중 인천시 출처가 아닌 전표가 있습니다(원본번호 ${wrongSource.srcNo || '-'}, 출처: ${wrongSource._srcSystem}).\n인천시 전송은 인천시 시스템에서 이관된 전표만 가능합니다.`)
+                  alert(`선택한 전표 중 인천시 출처가 아닌 전표가 있습니다(원본번호 ${wrongSource.srcNo || '-'}, 출처: ${wrongSource._srcSystem}).\n인천시 전표수정은 인천시 시스템에서 이관된 전표만 가능합니다.`)
                   return
                 }
-                if (!confirm(`인천시 시스템에 ${targets.length}건 전송 (수기입력 + 저장)?\n본인 PC 에이전트가 Puppeteer 로 자동 진행합니다.`)) return
+                if (!confirm(`인천시 시스템에 ${targets.length}건 반영(전표수정)?\n본인 PC 에이전트가 Puppeteer 로 자동 진행합니다.`)) return
                 const vouchers = targets.map(r => ({
                   date:        r.date.replace(/[^0-9]/g, ''),
                   summary:     r.summary || '',
@@ -1260,18 +1260,18 @@ export default function VoucherInputPage() {
                   })
                   const j = await res.json()
                   if (j.success) {
-                    alert(`인천시 전송 완료 — ${j.ok}/${j.total}건 성공\n실패 건은 콘솔(F12)에서 확인`)
-                    console.log('[인천시 전송 결과]', j.results)
+                    alert(`인천시 전표수정 완료 — ${j.ok}/${j.total}건 성공\n실패 건은 콘솔(F12)에서 확인`)
+                    console.log('[인천시 전표수정 결과]', j.results)
                   } else {
-                    alert(`전송 실패: ${j.error || j.errMsg || '알 수 없음'}`)
+                    alert(`처리 실패: ${j.error || j.errMsg || '알 수 없음'}`)
                   }
                 } catch (e) {
-                  alert('전송 오류: ' + (e instanceof Error ? e.message : String(e)))
+                  alert('처리 오류: ' + (e instanceof Error ? e.message : String(e)))
                 }
               }}
               className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-blue-400 rounded bg-teal-500 hover:bg-teal-500 text-white sub-tab-hover"
             >
-              인천시 전송
+              인천시 전표수정
             </button>
           )}
         </div>
