@@ -576,12 +576,13 @@ export default function VoucherInputPage() {
   const openGbccmEdit = (row: VoucherRow) => { setGbccmEditRow(row); setGbccmMsg('') }
   // 공백 차이(예: "정부지원 보육료" vs "정부지원보육료")로 인한 오탐 매칭 실패 방지 — 공백 제거 후 비교
   const gbccmNorm = (s: string) => (s || '').replace(/\s+/g, '').trim()
-  // 계정과목 전송값 결정 — 세목 있는 계정(accountCode 로 판별)은 leaf 대괄호코드, 없으면 부모명 그대로 비교
-  const resolveGbccmAccount = (row: VoucherRow): { search: string; display: string } | null => {
+  // 계정과목 전송값 결정 — 세목 있는 계정(accountCode 로 판별)은 leaf 대괄호코드로 찾되, 선택 후 확인은
+  // 코드 없이 순수 이름(예: "퇴직금")만 남으므로 verify 텍스트를 따로 둠. 세목 없으면 부모명 그대로 비교.
+  const resolveGbccmAccount = (row: VoucherRow): { search: string; verify: string; display: string } | null => {
     const leaf = GBCCM_LEAF_CODE_MAP[row.accountCode || '']
-    if (leaf) return { search: leaf.search, display: `${row.account} · ${leaf.label}` }
+    if (leaf) return { search: leaf.search, verify: leaf.label, display: `${row.account} · ${leaf.label}` }
     const found = GBCCM_ACCOUNTS_ALL.find(a => gbccmNorm(a) === gbccmNorm(row.account))
-    return found ? { search: found, display: found } : null
+    return found ? { search: found, verify: found, display: found } : null
   }
   const submitGbccmEdit = async () => {
     if (!gbccmEditRow?.srcNo) return
@@ -592,7 +593,7 @@ export default function VoucherInputPage() {
     try {
       const body: Record<string, string> = { prfNo: gbccmEditRow.srcNo, memo: gbccmEditRow.summary || '' }
       if (methodMatch) body.sttlMethod = methodMatch.code
-      if (accountMatch) body.accountName = accountMatch.search
+      if (accountMatch) { body.accountName = accountMatch.search; body.accountVerifyText = accountMatch.verify }
       const res = await fetch('/api/gbccm/vouchers/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
