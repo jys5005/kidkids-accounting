@@ -528,6 +528,39 @@ export default function VoucherInputPage() {
   // 영수증 사진 OCR 모달 대상 행 id
   const [receiptRowId, setReceiptRowId] = useState<number | null>(null)
   const [galleryImages, setGalleryImages] = useState<string[] | null>(null)  // 영수증 여러 장 갤러리
+
+  // 전표수정(경상북도 gbccm) — 원본번호(srcNo) 있는 행의 결제방식을 실제 지역형 시스템에 반영
+  const [gbccmEditRow, setGbccmEditRow] = useState<VoucherRow | null>(null)
+  const [gbccmMethod, setGbccmMethod] = useState('300')
+  const [gbccmSaving, setGbccmSaving] = useState(false)
+  const [gbccmMsg, setGbccmMsg] = useState('')
+  const GBCCM_METHODS: { code: string; label: string }[] = [
+    { code: '100', label: '카드결제' }, { code: '200', label: '국민행복카드' }, { code: '300', label: '계좌이체' },
+    { code: '400', label: '자동이체' }, { code: '500', label: '지로' }, { code: '600', label: '현금결제' }, { code: '700', label: '기타' },
+  ]
+  const submitGbccmEdit = async () => {
+    if (!gbccmEditRow?.srcNo) return
+    setGbccmSaving(true); setGbccmMsg('')
+    try {
+      const res = await fetch('/api/gbccm/vouchers/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ prfNo: gbccmEditRow.srcNo, sttlMethod: gbccmMethod }),
+      })
+      const j = await res.json()
+      if (j.success) {
+        setGbccmMsg('✅ 전표수정 완료')
+        setRows(prev => prev.map(r => r.id === gbccmEditRow.id ? { ...r, note: GBCCM_METHODS.find(m => m.code === gbccmMethod)?.label || r.note } : r))
+      } else {
+        setGbccmMsg(`❌ ${j.error || '전표수정 실패'}`)
+      }
+    } catch (e) {
+      setGbccmMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
+    } finally {
+      setGbccmSaving(false)
+    }
+  }
   // 행의 영수증 전체 URL 목록 (배열 우선. 옛 데이터의 콤마 문자열도 호환)
   const receiptListOf = (row: VoucherRow): string[] => {
     const raw = row.receiptImages as unknown
@@ -595,6 +628,36 @@ export default function VoucherInputPage() {
               ))}
             </div>
             <p className="text-[11px] text-slate-400 mt-3">· 사진을 클릭하면 원본이 새 창에 열립니다.</p>
+          </div>
+        </div>
+      )}
+
+      {/* 전표수정 — 원본번호(srcNo) 기준으로 경상북도(gbccm) 시스템에 결제방식 반영 */}
+      {gbccmEditRow && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4" onClick={() => !gbccmSaving && setGbccmEditRow(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-[92vw] max-w-sm p-5" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-800">전표수정 · 원본번호 {gbccmEditRow.srcNo}</h3>
+              <button onClick={() => !gbccmSaving && setGbccmEditRow(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
+            </div>
+            <p className="text-[11px] text-slate-400 mb-3">
+              통합e 화면이 아니라 <b>경상북도 어린이집관리시스템 실제 전표</b>를 원본번호로 찾아 결제방식을 수정합니다.
+            </p>
+            <label className="text-xs font-semibold text-slate-500 mb-1 block">결제방식</label>
+            <select
+              value={gbccmMethod}
+              onChange={e => setGbccmMethod(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-4"
+            >
+              {GBCCM_METHODS.map(m => <option key={m.code} value={m.code}>{m.label}</option>)}
+            </select>
+            {gbccmMsg && <p className="text-xs font-medium mb-3">{gbccmMsg}</p>}
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setGbccmEditRow(null)} disabled={gbccmSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-50">닫기</button>
+              <button onClick={submitGbccmEdit} disabled={gbccmSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-teal-500 hover:bg-teal-600 text-white disabled:opacity-50">
+                {gbccmSaving ? '처리 중… (최대 1분)' : '전표수정'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1918,7 +1981,16 @@ export default function VoucherInputPage() {
 
                         case 'srcNo':
                           return <td key={key} className="text-center px-1.5 py-1">
-                            <span className="text-[10px] text-slate-400 font-mono" title={row.srcNo ? `이관 출처 시스템의 원본 전표번호: ${row.srcNo}` : undefined}>{row.srcNo || '-'}</span>
+                            {row.srcNo ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <span className="text-[10px] text-slate-400 font-mono" title={`이관 출처 시스템의 원본 전표번호: ${row.srcNo}`}>{row.srcNo}</span>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setGbccmEditRow(row); setGbccmMethod('300'); setGbccmMsg('') }}
+                                  title="전표수정 — 원본 시스템에 반영"
+                                  className="text-[10px] text-teal-500 hover:text-teal-700"
+                                >✎</button>
+                              </div>
+                            ) : <span className="text-[10px] text-slate-300">-</span>}
                           </td>
 
                         case 'evidence':
