@@ -543,6 +543,22 @@ export default function VoucherInputPage() {
   const [gbccmAccountEnabled, setGbccmAccountEnabled] = useState(false)
   const [gbccmSaving, setGbccmSaving] = useState(false)
   const [gbccmMsg, setGbccmMsg] = useState('')
+  // 경상북도(gbccm) "계정코드검색" 팝업 실측 목록 — 자유 텍스트 입력 시 오타로 조용히 실패할 위험이 있어
+  // 드롭다운으로 고정(2026-07-11 gbccm 실측, sel_acc_sqno_3 옵션 그대로, (+)/(-) 표시만 제거).
+  const GBCCM_ACCOUNTS = {
+    수입: [
+      '정부지원 보육료', '부모부담 보육료', '특별활동비', '기타 필요경비', '인건비 보조금', '기관보육료', '연장보육료',
+      '공공형 운영비', '그 밖의 지원금', '자본보조금', '전입금', '단기차입금', '장기차입금', '지정후원금', '비지정후원금',
+      '적립금 처분 수입', '과년도 수입', '이자수입', '그 밖의 잡수입', '전년도 이월금', '전년도 이월사업비',
+    ],
+    지출: [
+      '원장급여', '원장수당', '보육교직원급여', '보육교직원수당', '기타 인건비', '법정부담금', '퇴직금 및 퇴직적립금',
+      '수용비 및 수수료', '공공요금 및 제세공과금', '연료비', '여비', '차량비', '복리후생비', '기타 운영비', '업무추진비',
+      '직책급', '회의비', '교직원연수·연구비', '교재·교구 구입비', '행사비', '영유아복리비', '급식·간식 재료비',
+      '특별활동비지출', '기타 필요경비 지출', '적립금', '단기 차입금 상환', '장기 차입금 상환', '보조금 반환금',
+      '보호자 반환금', '법인회계 전출금', '시설비', '시설장비 유지비', '자산취득비', '과년도 지출', '잡지출', '예비비',
+    ],
+  }
   const GBCCM_METHODS: { code: string; label: string }[] = [
     { code: '100', label: '카드결제' }, { code: '200', label: '국민행복카드' }, { code: '300', label: '계좌이체' },
     { code: '400', label: '자동이체' }, { code: '500', label: '지로' }, { code: '600', label: '현금결제' }, { code: '700', label: '기타' },
@@ -557,6 +573,7 @@ export default function VoucherInputPage() {
   const submitGbccmEdit = async () => {
     if (!gbccmEditRow?.srcNo) return
     if (!gbccmMethodEnabled && !gbccmMemoEnabled && !gbccmAccountEnabled) { setGbccmMsg('❌ 결제방식/적요/계정과목 중 하나는 선택해주세요.'); return }
+    if (gbccmAccountEnabled && !gbccmAccount) { setGbccmMsg('❌ 계정과목을 목록에서 선택해주세요.'); return }
     setGbccmSaving(true); setGbccmMsg('')
     try {
       const body: Record<string, string> = { prfNo: gbccmEditRow.srcNo }
@@ -700,15 +717,21 @@ export default function VoucherInputPage() {
               <input type="checkbox" checked={gbccmAccountEnabled} onChange={e => setGbccmAccountEnabled(e.target.checked)} />
               <span className="text-xs font-semibold text-slate-500">계정과목 변경</span>
             </label>
-            <input
-              type="text"
+            <select
               value={gbccmAccount}
               onChange={e => setGbccmAccount(e.target.value)}
               disabled={!gbccmAccountEnabled}
-              placeholder="예: 연료비, 수용비 및 수수료"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-1 disabled:bg-slate-50 disabled:text-slate-300"
-            />
-            <p className="text-[10px] text-slate-400 mb-4">경상북도 계정과목명 일부를 입력하면 일치하는 계정을 찾아 선택합니다.</p>
+            >
+              <option value="">::선택::</option>
+              <optgroup label="수입">
+                {GBCCM_ACCOUNTS.수입.map(a => <option key={a} value={a}>{a}</option>)}
+              </optgroup>
+              <optgroup label="지출">
+                {GBCCM_ACCOUNTS.지출.map(a => <option key={a} value={a}>{a}</option>)}
+              </optgroup>
+            </select>
+            <p className="text-[10px] text-slate-400 mb-4">경상북도 시스템에 등록된 계정과목 목록에서만 선택 가능합니다.</p>
             {gbccmMsg && <p className="text-xs font-medium mb-3">{gbccmMsg}</p>}
             <div className="flex justify-end gap-2">
               <button onClick={() => setGbccmEditRow(null)} disabled={gbccmSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-50">닫기</button>
