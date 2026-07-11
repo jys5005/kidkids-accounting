@@ -1231,7 +1231,8 @@ export default function VoucherInputPage() {
             </button>
           )}
           {inputMode !== '건별등록' && inputMode !== '상세등록' && <button onClick={deleteRows} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>}
-          {!book && inputMode !== '건별등록' && inputMode !== '상세등록' && (
+          {!book && inputMode !== '건별등록' && inputMode !== '상세등록'
+            && !filtered.some(r => r.srcNo && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon') && (
             <button
               data-tip="선택된 전표 또는 화면의 전체 전표를 인천시 시스템(전표관리 - 수기입력)에 반영"
               onClick={async () => {
