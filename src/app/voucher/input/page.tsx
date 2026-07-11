@@ -1479,7 +1479,7 @@ export default function VoucherInputPage() {
                     <option value="계좌이체">계좌이체</option>
                     <option value="자동이체">자동이체</option>
                     <option value="카드결제">카드결제</option>
-                    <option value="아이행복카드">아이행복카드</option>
+                    <option value="국민행복카드">국민행복카드</option>
                     <option value="현금결제">현금결제</option>
                     <option value="지로">지로</option>
                   </select>
@@ -1597,7 +1597,7 @@ export default function VoucherInputPage() {
                       </React.Fragment>
                       case 'fee': return null
                       case 'counterpart': return <td key={key} className="px-1 py-1"><input type="text" value={dr.counterpart} onChange={e => updateDraft('counterpart',e.target.value)} className={inputCls}/></td>
-                      case 'payment': return <td key={key} className="px-1 py-1"><select value={dr.note} onChange={e => updateDraft('note',e.target.value)} className={inputCls}><option value="">::선택::</option><option value="카드결제">카드결제</option><option value="아이행복카드">아이행복카드</option><option value="계좌이체">계좌이체</option><option value="자동이체">자동이체</option><option value="지로">지로</option><option value="현금결제">현금결제</option><option value="기타">기타</option></select></td>
+                      case 'payment': return <td key={key} className="px-1 py-1"><select value={dr.note} onChange={e => updateDraft('note',e.target.value)} className={inputCls}><option value="">::선택::</option><option value="카드결제">카드결제</option><option value="국민행복카드">국민행복카드</option><option value="계좌이체">계좌이체</option><option value="자동이체">자동이체</option><option value="지로">지로</option><option value="현금결제">현금결제</option><option value="기타">기타</option></select></td>
                       case 'child': return <React.Fragment key={key}>
                         <td className="px-1 py-1 text-center text-xs text-slate-400">-</td>
                         <td className="px-1 py-1 text-center">
@@ -2228,7 +2228,7 @@ export default function VoucherInputPage() {
                                 <option value="">::선택::</option>
                                 {row.type === '수입' ? <>
                                   <option value="카드결제">카드결제</option>
-                                  <option value="아이행복카드">아이행복카드</option>
+                                  <option value="국민행복카드">국민행복카드</option>
                                   <option value="계좌이체">계좌이체</option>
                                   <option value="자동이체">자동이체</option>
                                   <option value="지로">지로</option>
@@ -2240,7 +2240,7 @@ export default function VoucherInputPage() {
                                   <option value="비지정후원금">비지정후원금</option>
                                 </> : <>
                                   <option value="카드결제">카드결제</option>
-                                  <option value="아이행복카드">아이행복카드</option>
+                                  <option value="국민행복카드">국민행복카드</option>
                                   <option value="계좌이체">계좌이체</option>
                                   <option value="자동이체">자동이체</option>
                                   <option value="지로">지로</option>
@@ -2734,7 +2734,7 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
                       <option value="">::선택::</option>
                       {amountType === '수입' ? <>
                         <option value="카드결제">카드결제</option>
-                        <option value="아이행복카드">아이행복카드</option>
+                        <option value="국민행복카드">국민행복카드</option>
                         <option value="계좌이체">계좌이체</option>
                         <option value="자동이체">자동이체</option>
                         <option value="지로">지로</option>
@@ -2746,7 +2746,7 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
                         <option value="비지정후원금">비지정후원금</option>
                       </> : <>
                         <option value="카드결제">카드결제</option>
-                        <option value="아이행복카드">아이행복카드</option>
+                        <option value="국민행복카드">국민행복카드</option>
                         <option value="계좌이체">계좌이체</option>
                         <option value="자동이체">자동이체</option>
                         <option value="지로">지로</option>

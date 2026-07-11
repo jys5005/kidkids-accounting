@@ -127,7 +127,7 @@ export default function DeletedVoucherPage() {
             <select value={filterEvidence} onChange={e => setFilterEvidence(e.target.value)} className={`${inputCls} w-28`}>
               <option value="전체">::전체::</option>
               <option value="카드결제">카드결제</option>
-              <option value="아이행복카드">아이행복카드</option>
+              <option value="국민행복카드">국민행복카드</option>
               <option value="계좌이체">계좌이체</option>
               <option value="자동이체">자동이체</option>
               <option value="지로">지로</option>
