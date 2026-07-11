@@ -2574,11 +2574,19 @@ export default function DataMigrationPage() {
             {source in MAPPING_TABLE && source !== 'gyeonggi' && (
               <button
                 onClick={async () => {
-                  const storedUserId = currentSource.authType === 'cert' ? (programAuth?.certName || '') : sourceId
+                  // gbccm(authType:'session')은 출발지 자체 로그인 아이디가 없음 —
+                  // 서버가 auth_session 쿠키(통합e 로그인 계정)로 자동 판별하므로 userId 불필요
+                  const storedUserId = currentSource.authType === 'cert'
+                    ? (programAuth?.certName || '')
+                    : currentSource.authType === 'session'
+                      ? '__session__'
+                      : sourceId
                   if (!storedUserId) { setError(currentSource.authType === 'cert' ? '등록된 인증서가 없습니다.' : '아이디를 입력하세요.'); return }
                   setLoading(true); setError('')
                   try {
-                    let storedUrl = `/api/${source}/stored?userId=${encodeURIComponent(storedUserId)}&latest=1`
+                    let storedUrl = currentSource.authType === 'session'
+                      ? `/api/${source}/stored?latest=1`
+                      : `/api/${source}/stored?userId=${encodeURIComponent(storedUserId)}&latest=1`
                     if (mode === 'single' && yearMonth) {
                       storedUrl += `&startYm=${yearMonth}&endYm=${yearMonth}`
                     } else if (mode === 'range' && startYm && endYm) {
