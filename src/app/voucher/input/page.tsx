@@ -1236,9 +1236,12 @@ export default function VoucherInputPage() {
                 if (targets.length === 0) { alert('처리할 전표가 없습니다.'); return }
                 // ⚠ 데이터이관으로 들어온 전표는 출발지 시스템이 다를 수 있음 — 인천시가 아닌 출처(예: 경상북도 gbccm)를
                 // 인천시로 잘못 전송하지 않게 차단. _srcSystem 없는 행(수기입력 등)은 기존처럼 허용.
-                const wrongSource = targets.find(r => r._srcSystem && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon')
+                // ⚠ _srcSystem 이 명시적으로 'incheon'/'aincheon' 이 아니면 전부 차단.
+                // srcNo(원본번호)만 있고 _srcSystem 이 비어있는 옛 저장분(이 가드 추가 전 이관된 데이터)도
+                // "출처 불명 = 인천시 아님"으로 간주해 안전하게 막음 — 진짜 수기입력(srcNo 자체가 없음)만 통과.
+                const wrongSource = targets.find(r => r.srcNo && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon')
                 if (wrongSource) {
-                  alert(`선택한 전표 중 인천시 출처가 아닌 전표가 있습니다(원본번호 ${wrongSource.srcNo || '-'}, 출처: ${wrongSource._srcSystem}).\n인천시 전표수정은 인천시 시스템에서 이관된 전표만 가능합니다.`)
+                  alert(`선택한 전표 중 인천시 출처가 아닌 전표가 있습니다(원본번호 ${wrongSource.srcNo || '-'}${wrongSource._srcSystem ? `, 출처: ${wrongSource._srcSystem}` : ''}).\n인천시 전표수정은 인천시 시스템에서 이관된 전표만 가능합니다.`)
                   return
                 }
                 if (!confirm(`인천시 시스템에 ${targets.length}건 반영(전표수정)?\n본인 PC 에이전트가 Puppeteer 로 자동 진행합니다.`)) return
