@@ -1284,6 +1284,23 @@ export default function VoucherInputPage() {
               인천시 전표수정
             </button>
           )}
+          {/* 경상북도(gbccm) 이관 전표만 화면에 있으면 그쪽 전용 버튼 노출 — 인천시 버튼과 자리 교체 */}
+          {!book && inputMode !== '건별등록' && inputMode !== '상세등록' && filtered.length > 0
+            && filtered.some(r => r.srcNo && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon') && (
+            <button
+              data-tip="체크한 전표 1건의 결제방식을 경상북도 어린이집관리시스템 실제 전표에 반영(원본번호 기준)"
+              onClick={() => {
+                const gbccmTargets = filtered.filter(r => r.srcNo && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon')
+                const checkedTargets = checked.size > 0 ? gbccmTargets.filter(r => checked.has(r.id)) : gbccmTargets
+                if (checkedTargets.length === 0) { alert('경상북도 출처 전표가 없습니다.'); return }
+                if (checkedTargets.length > 1) { alert('한 번에 한 건만 수정할 수 있습니다. 전표 1건만 체크해주세요.'); return }
+                setGbccmEditRow(checkedTargets[0]); setGbccmMethod('300'); setGbccmMsg('')
+              }}
+              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-amber-400 rounded bg-amber-500 hover:bg-amber-600 text-white sub-tab-hover"
+            >
+              경상북도 전표수정
+            </button>
+          )}
         </div>
         )}
         </div>
