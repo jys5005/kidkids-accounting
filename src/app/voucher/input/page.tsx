@@ -554,19 +554,45 @@ export default function VoucherInputPage() {
     { code: '100', label: '카드결제' }, { code: '200', label: '국민행복카드' }, { code: '300', label: '계좌이체' },
     { code: '400', label: '자동이체' }, { code: '500', label: '지로' }, { code: '600', label: '현금결제' }, { code: '700', label: '기타' },
   ]
+  // 경상북도(gbccm) "계정코드검색" 팝업 실측(2026-07-11) — 세목이 있는 계정은 부모 목("퇴직금 및 퇴직적립금"
+  // [142]) 과 세목 leaf("퇴직금"[142-111]/"퇴직적립금"[142-121])가 팝업에 별도 행으로 함께 존재하고,
+  // 부모명으로 검색하면 세목이 아닌 부모(142) 행이 먼저 매칭돼버림(일부 leaf 는 이름이 부모와 동일해 더 위험 —
+  // 예: "자산취득비" 가 부모[721] 이름과 세목[721-002] 이름이 같음). 통합e accountCode(5자리) 로 어느
+  // leaf 인지 확정한 뒤, gbccm 의 "[코드-세목코드]" 대괄호 표기를 그대로 검색어로 써서 정확히 그 행만 선택.
+  const GBCCM_LEAF_CODE_MAP: Record<string, { search: string; label: string }> = {
+    '21423': { search: '[ 142-111 ]', label: '퇴직금' },
+    '21424': { search: '[ 142-121 ]', label: '퇴직적립금' },
+    '22171': { search: '[ 217-111 ]', label: '임대료' },
+    '22172': { search: '[ 217-121 ]', label: '건물융자금의이자' },
+    '24211': { search: '[ 421-111 ]', label: '입학준비금' },
+    '24212': { search: '[ 421-121 ]', label: '현장학습비' },
+    '24213': { search: '[ 421-131 ]', label: '차량운행비' },
+    '24214': { search: '[ 421-141 ]', label: '부모부담행사비' },
+    '24215': { search: '[ 421-151 ]', label: '아침.저녁급식비' },
+    '24216': { search: '[ 421-161 ]', label: '기타시도특성화비' },
+    '27211': { search: '[ 721-001 ]', label: '차량할부금' },
+    '27212': { search: '[ 721-002 ]', label: '자산취득비' },
+  }
   const openGbccmEdit = (row: VoucherRow) => { setGbccmEditRow(row); setGbccmMsg('') }
   // 공백 차이(예: "정부지원 보육료" vs "정부지원보육료")로 인한 오탐 매칭 실패 방지 — 공백 제거 후 비교
   const gbccmNorm = (s: string) => (s || '').replace(/\s+/g, '').trim()
+  // 계정과목 전송값 결정 — 세목 있는 계정(accountCode 로 판별)은 leaf 대괄호코드, 없으면 부모명 그대로 비교
+  const resolveGbccmAccount = (row: VoucherRow): { search: string; display: string } | null => {
+    const leaf = GBCCM_LEAF_CODE_MAP[row.accountCode || '']
+    if (leaf) return { search: leaf.search, display: `${row.account} · ${leaf.label}` }
+    const found = GBCCM_ACCOUNTS_ALL.find(a => gbccmNorm(a) === gbccmNorm(row.account))
+    return found ? { search: found, display: found } : null
+  }
   const submitGbccmEdit = async () => {
     if (!gbccmEditRow?.srcNo) return
     const methodMatch = GBCCM_METHODS.find(m => gbccmNorm(m.label) === gbccmNorm(gbccmEditRow.note))
-    const accountMatch = GBCCM_ACCOUNTS_ALL.find(a => gbccmNorm(a) === gbccmNorm(gbccmEditRow.account)) || null
+    const accountMatch = resolveGbccmAccount(gbccmEditRow)
     if (!methodMatch && !accountMatch) { setGbccmMsg('❌ 결제방식/계정과목 둘 다 경상북도 목록과 일치하지 않아 적요만으로는 보낼 항목이 없습니다.'); return }
     setGbccmSaving(true); setGbccmMsg('')
     try {
       const body: Record<string, string> = { prfNo: gbccmEditRow.srcNo, memo: gbccmEditRow.summary || '' }
       if (methodMatch) body.sttlMethod = methodMatch.code
-      if (accountMatch) body.accountName = accountMatch
+      if (accountMatch) body.accountName = accountMatch.search
       const res = await fetch('/api/gbccm/vouchers/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -670,7 +696,8 @@ export default function VoucherInputPage() {
             </p>
             {(() => {
               const methodMatch = GBCCM_METHODS.find(m => gbccmNorm(m.label) === gbccmNorm(gbccmEditRow.note))
-              const accountOk = GBCCM_ACCOUNTS_ALL.some(a => gbccmNorm(a) === gbccmNorm(gbccmEditRow.account))
+              const accountMatch = resolveGbccmAccount(gbccmEditRow)
+              const leaf = GBCCM_LEAF_CODE_MAP[gbccmEditRow.accountCode || '']
               const Row = ({ label, value, ok }: { label: string; value: string; ok: boolean }) => (
                 <div className="flex items-start justify-between gap-3 py-1.5 border-b border-slate-100">
                   <span className="text-xs text-slate-400 shrink-0">{label}</span>
@@ -683,7 +710,10 @@ export default function VoucherInputPage() {
                 <div className="mb-4">
                   <Row label="결제방식" value={gbccmEditRow.note} ok={!!methodMatch} />
                   <Row label="적요" value={gbccmEditRow.summary} ok={true} />
-                  <Row label="계정과목" value={gbccmEditRow.account} ok={accountOk} />
+                  <Row label="계정과목" value={gbccmEditRow.account} ok={!!accountMatch} />
+                  {gbccmEditRow.subAccount && (
+                    <Row label="세목" value={gbccmEditRow.subAccount} ok={!!leaf} />
+                  )}
                 </div>
               )
             })()}
