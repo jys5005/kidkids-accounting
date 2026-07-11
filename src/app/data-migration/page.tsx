@@ -58,6 +58,9 @@ interface CashLedgerRow {
   _note?: string                // 비고 (gbccm)
   _paymentMethod?: string       // 결제방식 명칭 (gbccm — accgg 의 _payMethod 코드값과 별개)
   _subsidyType?: string         // 보조금 유형 (gbccm)
+  // 실제 이미지/상세는 못 가져오지만 있다/없다 여부만 아는 경우(gbccm) — 존재 배지 표시용
+  _receiptExists?: boolean
+  _cardMappingExists?: boolean
 }
 
 interface CashLedgerSummary {
@@ -3014,6 +3017,7 @@ export default function DataMigrationPage() {
                       <th className="px-3 py-2 text-left whitespace-nowrap">결제방식</th>
                       <th className="px-3 py-2 text-left whitespace-nowrap">보조금유형</th>
                       <th className="px-3 py-2 text-center w-20 whitespace-nowrap">카드매핑</th>
+                      <th className="px-3 py-2 text-center w-16 whitespace-nowrap">영수증</th>
                       <th className="px-3 py-2 text-right w-28">수입금액</th>
                       <th className="px-3 py-2 text-right w-28">지출금액</th>
                       <th className="px-3 py-2 text-right w-28">잔액</th>
@@ -3067,7 +3071,8 @@ export default function DataMigrationPage() {
                         <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row.demandCoName || ''}</td>
                         <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row._paymentMethod || ''}</td>
                         <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row._subsidyType || ''}</td>
-                        {/* 카드매핑 컬럼 — 매핑된 전표만 빨간 C (지역형 시스템과 동일) */}
+                        {/* 카드매핑 컬럼 — 매핑된 전표만 빨간 C (지역형 시스템과 동일). 상세(_cardInfo)
+                            없어도 있다/없다만 아는 출발지(gbccm 등)는 _cardMappingExists 로 배지만 표시 */}
                         <td className="px-3 py-2 text-center">
                           {row._cardInfo?.length ? (
                             <span
@@ -3075,6 +3080,19 @@ export default function DataMigrationPage() {
                               className="inline-flex items-center justify-center w-4 h-4 rounded-sm bg-white border border-red-600 text-red-600 text-[9px] font-bold leading-none cursor-default">
                               C
                             </span>
+                          ) : row._cardMappingExists ? (
+                            <span
+                              title="카드매핑 있음 (상세는 조회 불가)"
+                              className="inline-flex items-center justify-center w-4 h-4 rounded-sm bg-white border border-amber-500 text-amber-600 text-[9px] font-bold leading-none cursor-default">
+                              C
+                            </span>
+                          ) : ''}
+                        </td>
+                        {/* 영수증 존재여부만 표시 — 실제 이미지(_receiptImages)는 적요 셀의 GgRowExtra 가 따로
+                            처리(썸네일+갤러리). 이미지 못 가져오는 출발지(gbccm)는 있다/없다만 아이콘으로 */}
+                        <td className="px-3 py-2 text-center">
+                          {!row._receiptImages?.length && row._receiptExists ? (
+                            <span title="영수증 있음 (이미지는 조회 불가)" className="text-emerald-600 text-[13px]">📎</span>
                           ) : ''}
                         </td>
                         <td className="px-3 py-2 text-right text-blue-600 font-medium">
