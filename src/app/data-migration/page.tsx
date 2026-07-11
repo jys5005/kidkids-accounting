@@ -2851,12 +2851,12 @@ export default function DataMigrationPage() {
         )}
       </div>
 
-      {/* 이관 버튼 (2열 그리드 바로 아래) */}
-      {displayData.length > 0 && currentSource.authType === 'session' && (
+      {/* 이관 버튼 (2열 그리드 바로 아래) — 통합e 전표관리 직접 저장은 모든 출발지 공통 */}
+      {displayData.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-2">
-          <h3 className="font-semibold text-slate-800 mb-1">전표 저장</h3>
+          <h3 className="font-semibold text-slate-800 mb-1">통합e 전표관리로 저장</h3>
           <p className="text-[11px] text-slate-400 mb-3">
-            이 출발지는 sunote(수전자장부)를 거치지 않고 <b>통합e 전표관리</b>에 바로 저장합니다.
+            sunote(수전자장부)를 거치지 않고 <b>통합e 전표관리(전표입력)</b>에 바로 저장합니다.
           </p>
           <button
             onClick={handleGbccmSaveToVoucherInput}
