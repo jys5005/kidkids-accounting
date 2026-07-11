@@ -53,7 +53,11 @@ interface CashLedgerRow {
   agreeDate: string
   _receiptImages?: string[]     // accgg 영수증 이미지 URL
   _cardInfo?: GgCardInfo[]       // accgg 카드매핑 정보
-  _payMethod?: string           // 결제방식 코드(stlmMtcd)
+  _payMethod?: string           // 결제방식 코드(stlmMtcd, accgg)
+  demandCoName?: string         // 거래처 (gbccm 등)
+  _note?: string                // 비고 (gbccm)
+  _paymentMethod?: string       // 결제방식 명칭 (gbccm — accgg 의 _payMethod 코드값과 별개)
+  _subsidyType?: string         // 보조금 유형 (gbccm)
 }
 
 interface CashLedgerSummary {
@@ -2997,6 +3001,10 @@ export default function DataMigrationPage() {
                       <th className="px-3 py-2 text-left whitespace-nowrap">계정과목</th>
                       <th className="px-3 py-2 text-left whitespace-nowrap">세목</th>
                       <th className="px-3 py-2 text-left">적요</th>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">비고</th>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">거래처</th>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">결제방식</th>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">보조금유형</th>
                       <th className="px-3 py-2 text-center w-20 whitespace-nowrap">카드매핑</th>
                       <th className="px-3 py-2 text-right w-28">수입금액</th>
                       <th className="px-3 py-2 text-right w-28">지출금액</th>
@@ -3047,6 +3055,10 @@ export default function DataMigrationPage() {
                         {/* 세목이 계정과목(목)과 동일 명칭이면 숨김 */}
                         <td className="px-3 py-2 text-slate-500 text-[11px] whitespace-nowrap">{row.subAccountName && row.subAccountName !== row.accountName ? row.subAccountName : ''}</td>
                         <td className="px-3 py-2 text-slate-600">{row.summary}<GgRowExtra row={row} onOpen={(urls, i) => setGallery({ urls, idx: i })} /></td>
+                        <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row._note || ''}</td>
+                        <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row.demandCoName || ''}</td>
+                        <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row._paymentMethod || ''}</td>
+                        <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row._subsidyType || ''}</td>
                         {/* 카드매핑 컬럼 — 매핑된 전표만 빨간 C (지역형 시스템과 동일) */}
                         <td className="px-3 py-2 text-center">
                           {row._cardInfo?.length ? (
