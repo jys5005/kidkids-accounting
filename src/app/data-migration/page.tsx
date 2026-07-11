@@ -977,6 +977,8 @@ export default function DataMigrationPage() {
   const [transferring, setTransferring] = useState(false)
   const [transferringYm, setTransferringYm] = useState<string | null>(null) // 현재 이관 중인 월
   const [transferredYms, setTransferredYms] = useState<Record<string, string>>({}) // 월별 이관 결과
+  const [gbccmSaving, setGbccmSaving] = useState(false)
+  const [gbccmSaveMsg, setGbccmSaveMsg] = useState('')
   const [data, setData] = useState<CashLedgerResult | null>(null)
   const [multiData, setMultiData] = useState<CashLedgerResult[]>([])
   const [error, setError] = useState('')
@@ -1815,6 +1817,31 @@ export default function DataMigrationPage() {
     } finally {
       setTransferring(false)
       setTransferringYm(null)
+    }
+  }
+
+  // 경상북도(gbccm, authType:'session') → 통합e 전표관리(voucher-input) 직접 저장.
+  // sunote 를 안 거치는 소스라 sunoteId/Pw 불필요 — displayData 의 모든 행을 그대로 전송.
+  const handleGbccmSaveToVoucherInput = async () => {
+    const allRows = displayData.flatMap((d) => d.rows)
+    if (allRows.length === 0) { setGbccmSaveMsg('❌ 저장할 전표가 없습니다.'); return }
+    setGbccmSaving(true); setGbccmSaveMsg('')
+    try {
+      const res = await fetch('/api/gbccm/vouchers/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows: allRows }),
+      })
+      const j = await res.json()
+      if (j.success) {
+        setGbccmSaveMsg(`✅ 전표관리에 ${j.saved}건 저장 완료`)
+      } else {
+        setGbccmSaveMsg(`❌ ${j.error || '저장 실패'}`)
+      }
+    } catch (e) {
+      setGbccmSaveMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
+    } finally {
+      setGbccmSaving(false)
     }
   }
 
@@ -2825,7 +2852,33 @@ export default function DataMigrationPage() {
       </div>
 
       {/* 이관 버튼 (2열 그리드 바로 아래) */}
-      {displayData.length > 0 && (
+      {displayData.length > 0 && currentSource.authType === 'session' && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-2">
+          <h3 className="font-semibold text-slate-800 mb-1">전표 저장</h3>
+          <p className="text-[11px] text-slate-400 mb-3">
+            이 출발지는 sunote(수전자장부)를 거치지 않고 <b>통합e 전표관리</b>에 바로 저장합니다.
+          </p>
+          <button
+            onClick={handleGbccmSaveToVoucherInput}
+            disabled={gbccmSaving}
+            className="w-full py-2.5 bg-emerald-600 text-white rounded-lg text-[11px] font-medium hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {gbccmSaving && (
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            )}
+            통합e 전표관리로 저장 ({displayData.length}개월, {totalRows}건)
+          </button>
+          {gbccmSaveMsg && <p className="text-[11px] text-slate-600 pt-1">{gbccmSaveMsg}</p>}
+          <p className="text-[11px] text-amber-600 pt-1">
+            ⚠ 추가(append) 방식 저장입니다 — 같은 달을 여러 번 저장하면 전표가 중복될 수 있으니, 한 번만 저장해주세요.
+          </p>
+        </div>
+      )}
+
+      {displayData.length > 0 && currentSource.authType !== 'session' && (
         <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-2">
           <h3 className="font-semibold text-slate-800 mb-3">이관 실행</h3>
           {/* 전체 일괄 이관 */}
