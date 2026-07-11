@@ -1830,7 +1830,7 @@ export default function DataMigrationPage() {
       const res = await fetch('/api/gbccm/vouchers/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rows: allRows }),
+        body: JSON.stringify({ rows: allRows, source }),
       })
       const j = await res.json()
       if (j.success) {

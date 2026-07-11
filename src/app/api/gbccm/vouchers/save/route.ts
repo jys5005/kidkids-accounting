@@ -36,7 +36,7 @@ function toIsoDate(d: string): string {
   return digits.length === 8 ? `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}` : ''
 }
 
-function mapRow(r: IncomingRow, i: number) {
+function mapRow(r: IncomingRow, i: number, srcSystem: string) {
   const isIncome = r.income > 0
   return {
     id: i + 1,
@@ -46,6 +46,7 @@ function mapRow(r: IncomingRow, i: number) {
     subAccount: r.subAccountName || '',
     summary: r.summary || '',
     srcNo: r.docNo || '',   // ⚠ 출처 추적용 — 전표관리(voucher-input)의 "원본번호" 전용 컬럼에 담음(적요엔 안 섞음)
+    _srcSystem: srcSystem,  // 어느 지역형 시스템에서 왔는지 — "인천시 전송" 같은 지역형 전용 버튼이 오작동하지 않게 구분
     amount: isIncome ? r.income : r.expense,
     counterpart: r.demandCoName || '',
     note: r._paymentMethod || '',   // 결제방식 — voucher/input 의 "결제방식" 드롭다운이 note 필드를 읽음
@@ -60,12 +61,15 @@ function mapRow(r: IncomingRow, i: number) {
 export async function POST(req: NextRequest) {
   try {
     const cookie = req.headers.get('cookie') || ''
-    const { rows } = await req.json() as { rows?: IncomingRow[] }
+    const { rows, source } = await req.json() as { rows?: IncomingRow[]; source?: string }
     if (!Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json({ success: false, error: '저장할 전표가 없습니다.' }, { status: 400 })
     }
 
-    const list = rows.map((r, i) => mapRow(r, i))
+    // ⚠ 이 엔드포인트는 모든 데이터이관 출발지가 공통으로 씀(경로명은 gbccm 이지만 by24/incheon 등도 호출) —
+    // source 를 안 넘기면 과거 호출부와의 호환을 위해 'gbccm' 으로 폴백.
+    const srcSystem = source || 'gbccm'
+    const list = rows.map((r, i) => mapRow(r, i, srcSystem))
     const field = 'voucher-input'
 
     // 추가(append) — 기존 저장분 보존, 완전 동일한 행만 중복 제거됨

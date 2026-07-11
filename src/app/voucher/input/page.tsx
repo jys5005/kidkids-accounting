@@ -32,6 +32,7 @@ interface VoucherRow {
   receiptImages?: string[] // 여러 장(각 1장씩 배열) — 걸음마 이관 시 한 전표에 3~4장
   _bankKey?: string        // 은행거래 자동전표 출처키(계좌|날짜|시간|금액) — 중복 등록 방지
   srcNo?: string           // 데이터이관 출처 시스템의 원본 전표번호(예: 인천/경상북도 증빙번호) — 추적용
+  _srcSystem?: string      // 데이터이관 출발지 코드(예: 'gbccm'/'incheon') — 지역형 전용 버튼 오작동 방지용
 }
 
 const sampleData: VoucherRow[] = []
@@ -1233,6 +1234,13 @@ export default function VoucherInputPage() {
               onClick={async () => {
                 const targets = checked.size > 0 ? rows.filter(r => checked.has(r.id)) : filtered
                 if (targets.length === 0) { alert('전송할 전표가 없습니다.'); return }
+                // ⚠ 데이터이관으로 들어온 전표는 출발지 시스템이 다를 수 있음 — 인천시가 아닌 출처(예: 경상북도 gbccm)를
+                // 인천시로 잘못 전송하지 않게 차단. _srcSystem 없는 행(수기입력 등)은 기존처럼 허용.
+                const wrongSource = targets.find(r => r._srcSystem && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon')
+                if (wrongSource) {
+                  alert(`선택한 전표 중 인천시 출처가 아닌 전표가 있습니다(원본번호 ${wrongSource.srcNo || '-'}, 출처: ${wrongSource._srcSystem}).\n인천시 전송은 인천시 시스템에서 이관된 전표만 가능합니다.`)
+                  return
+                }
                 if (!confirm(`인천시 시스템에 ${targets.length}건 전송 (수기입력 + 저장)?\n본인 PC 에이전트가 Puppeteer 로 자동 진행합니다.`)) return
                 const vouchers = targets.map(r => ({
                   date:        r.date.replace(/[^0-9]/g, ''),
