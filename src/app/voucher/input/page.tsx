@@ -1231,8 +1231,10 @@ export default function VoucherInputPage() {
             </button>
           )}
           {inputMode !== '건별등록' && inputMode !== '상세등록' && <button onClick={deleteRows} className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-slate-300 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 sub-tab-hover">삭제</button>}
+          {/* 경상북도 전용 버튼이 뜨는 화면(_srcSystem==='gbccm' 명시)에서는 인천시 버튼을 숨겨 자리 교체.
+              그 외(태그 없는 옛 데이터·다른 출발지 등)는 기존처럼 노출 — 실제 클릭 시 가드가 최종 차단. */}
           {!book && inputMode !== '건별등록' && inputMode !== '상세등록' && filtered.length > 0
-            && !filtered.some(r => r.srcNo && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon') && (
+            && !filtered.some(r => r._srcSystem === 'gbccm') && (
             <button
               data-tip="선택된 전표 또는 화면의 전체 전표를 인천시 시스템(전표관리 - 수기입력)에 반영"
               onClick={async () => {
@@ -1284,13 +1286,15 @@ export default function VoucherInputPage() {
               인천시 전표수정
             </button>
           )}
-          {/* 경상북도(gbccm) 이관 전표만 화면에 있으면 그쪽 전용 버튼 노출 — 인천시 버튼과 자리 교체 */}
+          {/* 경상북도(gbccm) 이관 전표만 화면에 있으면 그쪽 전용 버튼 노출 — 인천시 버튼과 자리 교체.
+              ⚠ 데이터이관 저장 시 실제 기록된 _srcSystem==='gbccm' 명시값만 기준 — "인천시가 아니면 경상북도"식
+              배제 추론 금지(장부나라 등 다른 출발지·태그 없는 옛 데이터를 경상북도로 오판하던 버그). */}
           {!book && inputMode !== '건별등록' && inputMode !== '상세등록' && filtered.length > 0
-            && filtered.some(r => r.srcNo && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon') && (
+            && filtered.some(r => r._srcSystem === 'gbccm') && (
             <button
               data-tip="체크한 전표 1건의 결제방식을 경상북도 어린이집관리시스템 실제 전표에 반영(원본번호 기준)"
               onClick={() => {
-                const gbccmTargets = filtered.filter(r => r.srcNo && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon')
+                const gbccmTargets = filtered.filter(r => r._srcSystem === 'gbccm')
                 const checkedTargets = checked.size > 0 ? gbccmTargets.filter(r => checked.has(r.id)) : gbccmTargets
                 if (checkedTargets.length === 0) { alert('경상북도 출처 전표가 없습니다.'); return }
                 if (checkedTargets.length > 1) { alert('한 번에 한 건만 수정할 수 있습니다. 전표 1건만 체크해주세요.'); return }
