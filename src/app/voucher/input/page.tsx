@@ -555,10 +555,12 @@ export default function VoucherInputPage() {
     { code: '400', label: '자동이체' }, { code: '500', label: '지로' }, { code: '600', label: '현금결제' }, { code: '700', label: '기타' },
   ]
   const openGbccmEdit = (row: VoucherRow) => { setGbccmEditRow(row); setGbccmMsg('') }
+  // 공백 차이(예: "정부지원 보육료" vs "정부지원보육료")로 인한 오탐 매칭 실패 방지 — 공백 제거 후 비교
+  const gbccmNorm = (s: string) => (s || '').replace(/\s+/g, '').trim()
   const submitGbccmEdit = async () => {
     if (!gbccmEditRow?.srcNo) return
-    const methodMatch = GBCCM_METHODS.find(m => m.label === gbccmEditRow.note)
-    const accountMatch = GBCCM_ACCOUNTS_ALL.includes(gbccmEditRow.account) ? gbccmEditRow.account : null
+    const methodMatch = GBCCM_METHODS.find(m => gbccmNorm(m.label) === gbccmNorm(gbccmEditRow.note))
+    const accountMatch = GBCCM_ACCOUNTS_ALL.find(a => gbccmNorm(a) === gbccmNorm(gbccmEditRow.account)) || null
     if (!methodMatch && !accountMatch) { setGbccmMsg('❌ 결제방식/계정과목 둘 다 경상북도 목록과 일치하지 않아 적요만으로는 보낼 항목이 없습니다.'); return }
     setGbccmSaving(true); setGbccmMsg('')
     try {
@@ -575,7 +577,7 @@ export default function VoucherInputPage() {
       if (j.success) {
         setGbccmMsg('✅ 전표수정 완료')
       } else {
-        setGbccmMsg(`❌ ${j.error || '전표수정 실패'}`)
+        setGbccmMsg(`❌ ${j.error || j.message || '전표수정 실패'}`)
       }
     } catch (e) {
       setGbccmMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
@@ -667,8 +669,8 @@ export default function VoucherInputPage() {
               (값을 바꾸시려면 이 창을 닫고 표에서 직접 수정 후 다시 눌러주세요)
             </p>
             {(() => {
-              const methodMatch = GBCCM_METHODS.find(m => m.label === gbccmEditRow.note)
-              const accountOk = GBCCM_ACCOUNTS_ALL.includes(gbccmEditRow.account)
+              const methodMatch = GBCCM_METHODS.find(m => gbccmNorm(m.label) === gbccmNorm(gbccmEditRow.note))
+              const accountOk = GBCCM_ACCOUNTS_ALL.some(a => gbccmNorm(a) === gbccmNorm(gbccmEditRow.account))
               const Row = ({ label, value, ok }: { label: string; value: string; ok: boolean }) => (
                 <div className="flex items-start justify-between gap-3 py-1.5 border-b border-slate-100">
                   <span className="text-xs text-slate-400 shrink-0">{label}</span>
