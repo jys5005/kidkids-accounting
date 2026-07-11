@@ -2018,11 +2018,8 @@ export default function DataMigrationPage() {
 
   return (
     <div className="space-y-6">
-      {/* 언더바 탭 */}
-      <div className="flex items-center gap-0 border-b border-slate-200">
-        <a href="/data-migration" className="px-4 py-2 text-[11px] font-bold whitespace-nowrap border-b-2 text-teal-700 border-teal-500">데이터이관</a>
-        <a href="/data-migration/auto-login" className="px-4 py-2 text-[11px] font-bold whitespace-nowrap border-b-2 text-slate-400 border-transparent hover:text-slate-600 hover:border-slate-300">자동로그인</a>
-      </div>
+      {/* ⚠ 언더바 탭(데이터이관/자동로그인)은 전역 메뉴(Sidebar.tsx)가 이미 서브탭으로 제공 —
+          여기서 또 렌더하면 화면에 같은 탭이 두 줄로 중복 표시되어 제거함(2026-07-11). */}
       {/* 제목 + 로컬 에이전트 상태(항상 노출) */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
