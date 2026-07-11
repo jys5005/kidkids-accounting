@@ -38,13 +38,16 @@ function toIsoDate(d: string): string {
 
 function mapRow(r: IncomingRow, i: number) {
   const isIncome = r.income > 0
+  // ⚠ 출처 추적용 — 전표관리(voucher-input)엔 원본 증빙번호를 담을 전용 칸이 없어서,
+  // 적요 앞에 "[gbccm#402]" 형태로 붙여 나중에 어느 gbccm 전표에서 왔는지 역추적 가능하게 함.
+  const summary = r.docNo ? `[gbccm#${r.docNo}] ${r.summary || ''}` : (r.summary || '')
   return {
     id: i + 1,
     date: toIsoDate(r.date),
     type: (isIncome ? '수입' : '지출') as '수입' | '지출',
     account: r.accountName || '',
     subAccount: r.subAccountName || '',
-    summary: r.summary || '',
+    summary,
     amount: isIncome ? r.income : r.expense,
     counterpart: r.demandCoName || '',
     note: r._paymentMethod || '',   // 결제방식 — voucher/input 의 "결제방식" 드롭다운이 note 필드를 읽음
