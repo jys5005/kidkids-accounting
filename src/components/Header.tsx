@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { visibleCategories, isCisEnabled } from './Sidebar'
 import BookDropdown from './BookDropdown'
+import { REGION_SYSTEMS } from '@/lib/region-systems'
 
 const TIMEOUT_SEC = 30 * 60
 
@@ -86,7 +87,7 @@ export default function Header() {
   const [editData, setEditData] = useState({ phone: '', email: '' })
   const profileRef = useRef<HTMLDivElement>(null)
   // 기본정보 모달 편집 폼
-  const [basicForm, setBasicForm] = useState({ name: '', bizNo: '', ownerName: '', zipCode: '', address: '', email: '', phone: '', pw: '', pw2: '' })
+  const [basicForm, setBasicForm] = useState({ name: '', bizNo: '', ownerName: '', zipCode: '', address: '', email: '', phone: '', pw: '', pw2: '', regionSystem: '' })
   const [basicMsg, setBasicMsg] = useState('')
   const [basicSaving, setBasicSaving] = useState(false)
 
@@ -119,6 +120,7 @@ export default function Header() {
             zipCode: p.zipCode || p.zip || p.postCode || '',
             address: p.address || (data.address as string) || '',
             email, phone, pw: '', pw2: '',
+            regionSystem: (p.regionSystem as string) || '',
           })
         }
       })
@@ -153,7 +155,7 @@ export default function Header() {
       const res = await fetch('/api/auth/me', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({
-          profile: { centerName: basicForm.name, bizNo: basicForm.bizNo, ownerName: basicForm.ownerName, zipCode: basicForm.zipCode, address: basicForm.address, email: basicForm.email, phone: basicForm.phone },
+          profile: { centerName: basicForm.name, bizNo: basicForm.bizNo, ownerName: basicForm.ownerName, zipCode: basicForm.zipCode, address: basicForm.address, email: basicForm.email, phone: basicForm.phone, regionSystem: basicForm.regionSystem },
           newPassword: basicForm.pw || undefined,
         }),
       })
@@ -457,6 +459,22 @@ export default function Header() {
                         <td className="px-3 py-2.5">{label === '새 비밀번호' ? <input type="password" value={basicForm.pw} onChange={e => setBasicForm(f => ({ ...f, pw: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" placeholder="공백문자를 제외한 6 ~ 12 자, 비밀번호를 변경하고 싶으면 입력하세요" /> : label === '새 비밀번호 확인' ? <input type="password" value={basicForm.pw2} onChange={e => setBasicForm(f => ({ ...f, pw2: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" placeholder="비밀번호를 다시 한번 확인합니다." /> : label === '이름(상호)' ? <input type="text" value={basicForm.name} onChange={e => setBasicForm(f => ({ ...f, name: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" /> : label === '사업자등록번호' ? <input type="text" value={basicForm.bizNo} onChange={e => setBasicForm(f => ({ ...f, bizNo: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" /> : label === '대표자명' ? <input type="text" value={basicForm.ownerName} onChange={e => setBasicForm(f => ({ ...f, ownerName: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" /> : label === '아이디' ? <span className="text-slate-700">{val}</span> : <input type="text" className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64" />}</td>
                       </tr>
                     ))}
+                    <tr className="border-b border-slate-100">
+                      <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">지역시스템</td>
+                      <td className="px-3 py-2.5">
+                        <select
+                          value={basicForm.regionSystem}
+                          onChange={e => setBasicForm(f => ({ ...f, regionSystem: e.target.value }))}
+                          className="border border-teal-300 rounded px-2 py-1 text-[12px] w-64"
+                        >
+                          <option value="">해당없음(일반 어린이집)</option>
+                          {REGION_SYSTEMS.map(r => (
+                            <option key={r.value} value={r.value}>{r.label}</option>
+                          ))}
+                        </select>
+                        <p className="text-[10px] text-slate-400 mt-1">지역형 어린이집관리시스템(인천시/경상북도 등)을 쓰는 시설만 지정 — 전표수정 등 지역형 전용 기능이 더 정확하게 동작합니다.</p>
+                      </td>
+                    </tr>
                     <tr className="border-b border-slate-100">
                       <td className="text-[12px] font-medium text-slate-700 bg-slate-50 px-3 py-2.5 border-r border-slate-200">주소</td>
                       <td className="px-3 py-2.5"><div className="flex gap-1 mb-1"><input type="text" value={basicForm.zipCode} onChange={e => setBasicForm(f => ({ ...f, zipCode: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-20" /><button type="button" onClick={openPostcode} className="px-2 py-1 text-[10px] bg-slate-100 border border-slate-300 rounded hover:bg-slate-200">우편번호</button></div><input type="text" value={basicForm.address} onChange={e => setBasicForm(f => ({ ...f, address: e.target.value }))} className="border border-teal-300 rounded px-2 py-1 text-[12px] w-full" placeholder="우편번호 검색 후 상세주소 입력" /></td>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { REGION_SYSTEMS } from '@/lib/region-systems'
 
 interface CisStatus {
   hasUserId: boolean
@@ -26,22 +27,6 @@ const PROGRAM_LABELS: Record<string, string> = {
   mores: '더편한시스템',
   seoul: '서울시어린이집관리시스템',
 }
-
-// 지역형(정부/지자체 운영) 회계시스템 목록 — data-migration 의 SOURCE_OPTIONS 값과 동일 코드 사용
-// (incheon/gbccm/gyeonggi 는 실제 구현됨, 나머지는 아직 미구현 — 설정만 먼저 열어둠).
-// ⚠ voucher/input/page.tsx 의 REGION_SYSTEMS 와 반드시 동일하게 유지할 것(값 하드코딩 중복).
-const REGION_SYSTEMS: { value: string; label: string }[] = [
-  { value: 'seoul', label: '서울시' },
-  { value: 'gyeonggi', label: '경기도' },
-  { value: 'incheon', label: '인천시' },
-  { value: 'wonju', label: '원주시' },
-  { value: 'daejeon', label: '대전시' },
-  { value: 'daegu', label: '대구시' },
-  { value: 'gbccm', label: '경상북도' },
-  { value: 'jeonbuk', label: '전라북도' },
-  { value: 'chungnam_nh', label: '충남형(농협)' },
-  { value: 'chungnam_hana', label: '충남형(하나은행)' },
-]
 
 export default function SettingsPage() {
   const [cisStatus, setCisStatus] = useState<CisStatus | null>(null)
