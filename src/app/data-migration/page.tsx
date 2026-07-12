@@ -1156,7 +1156,11 @@ export default function DataMigrationPage() {
       })
       const j = await res.json().catch(() => ({}))
       if (j.ok) {
-        setGbccmOpenMsg(`✅ ${label} 로그인된 화면을 열었습니다. (원장님 PC 브라우저 확인)`)
+        // 탭 자동클릭 진단: 각 단계 라벨을 몇 개 찾고 클릭했는지 (안 가면 원인 파악용)
+        const navMsg = Array.isArray(j.nav) && j.nav.length
+          ? ' · 탭: ' + j.nav.map((n: { step: string; found: number; clicked: boolean }) => `${n.step}(${n.clicked ? '클릭' : n.found === 0 ? '못찾음' : '찾음'})`).join(' → ')
+          : ''
+        setGbccmOpenMsg(`✅ ${label} 로그인된 화면을 열었습니다. (원장님 PC 브라우저 확인)${navMsg}`)
       } else {
         setGbccmOpenMsg(`❌ ${j.error || '자동로그인 실패'}`)
       }
@@ -2330,7 +2334,10 @@ export default function DataMigrationPage() {
                       → 원장 PC 자동화 에이전트가 켜져 있어야 동작. 꺼져있으면 안내 메시지 표시.
                       ⚠ 메뉴코드(?m=U02M0XT01D000)는 전표관리(M03)만 HAR 확정 — 예산 M02/월회계 M04/결산 M05 는
                         상단탭 순서 추정. gbccm 은 SPA(하부 탭이 URL 을 하나만 씀)라 진입 후 상단 탭 이동 필요할 수 있음. */}
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  {/* 자동로그인 버튼은 PC 전용 (hidden sm:flex): 자동로그인은 '원장 PC 에이전트'가 브라우저를 여는
+                      방식이라 폰에서 눌러도 화면은 PC 에 뜬다. 또 폰 브라우저로 gbccm 직접 열면 보안프로그램
+                      (AhnLab Safe Transaction) 설치 벽에 막혀 모바일은 원천적으로 불가. → 모바일엔 안내만 표시. */}
+                  <div className="mt-2 hidden sm:flex flex-wrap gap-1.5">
                     <button type="button" disabled={!!gbccmOpening}
                       onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M02T01D000', '예산관리', '예산관리>보육통합 예산보고')}
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 disabled:opacity-50 text-emerald-700">
@@ -2347,6 +2354,10 @@ export default function DataMigrationPage() {
                       📑 결산관리 자동로그인
                     </button>
                   </div>
+                  <p className="mt-2 sm:hidden text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+                    🖥 예산/월회계/결산 <b>자동로그인은 PC 에서만</b> 됩니다. (모바일은 gbccm 보안프로그램 제약)<br />
+                    · 데이터 <b>가져오기·저장</b>은 모바일에서도 정상 동작합니다.
+                  </p>
                   {gbccmOpenMsg && <p className="text-[11px] mt-1.5 text-slate-600">{gbccmOpenMsg}</p>}
                   <p className="text-[10px] text-slate-400 mt-1">· 원장님 PC 에이전트가 저장된 세션으로 로그인된 화면을 새 창으로 엽니다. 혹시 다른 탭이 뜨면 상단 탭에서 이동해주세요(메뉴코드 추정치).</p>
                 </div>

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       if (job.status === 'running') claimed = true
       if (job.status === 'completed') {
         const res = job.result || {}
-        return NextResponse.json({ ok: res.ok !== false, openedUrl: res.openedUrl, error: res.errMsg })
+        return NextResponse.json({ ok: res.ok !== false, openedUrl: res.openedUrl, error: res.errMsg, nav: res.nav })
       }
       if (job.status === 'failed' || job.status === 'cancelled') {
         return NextResponse.json({ ok: false, error: job.error || '브라우저 열기 실패' })
