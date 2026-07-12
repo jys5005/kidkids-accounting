@@ -2299,6 +2299,25 @@ export default function DataMigrationPage() {
                     </button>
                   </div>
                   {gbccmRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{gbccmRegisterMsg}</p>}
+                  {/* 등록된 세션(=원장이 이미 로그인한 그 브라우저)으로 실제 사이트를 새 탭으로 열면
+                      만료 전까지는 로그인 상태 그대로 확인 가능 — 서버가 쿠키를 주입하는 게 아니라
+                      "원장 본인 브라우저에 이미 있는 gbccm.co.kr 쿠키"를 그대로 재사용하는 것뿐이라
+                      경기도(accgg) WebSquare 세션 주입과 달리 안전하게 동작(단순 새 탭 열기). */}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M01T01D000" target="_blank" rel="noopener noreferrer"
+                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
+                      📊 예산관리 바로가기
+                    </a>
+                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M01T01D000" target="_blank" rel="noopener noreferrer"
+                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
+                      📅 월회계보고 바로가기
+                    </a>
+                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M01T01D000" target="_blank" rel="noopener noreferrer"
+                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
+                      📑 결산관리 바로가기
+                    </a>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">· 진입 후 상단 탭에서 원하는 화면(예산관리/월회계보고/결산관리)을 눌러 이동해주세요.</p>
                 </div>
               ) : (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
