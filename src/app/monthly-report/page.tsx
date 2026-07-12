@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import DraggableModal from '@/components/DraggableModal'
 import { incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap } from '@/lib/accounts'
 
@@ -16,24 +16,18 @@ function getYmOptions() {
   return opts
 }
 
-type LedgerRow = {
+// 전표관리(voucher/input)와 동일한 필드만 사용 — 실제 저장된 전표 데이터 조회용
+interface VoucherRow {
+  id: number
   date: string
+  type: '수입' | '지출' | '반납'
+  amount: number
   summary: string
-  receipt: boolean
-  transfer: boolean
-  bank: boolean
-  tax: boolean
-  cash: boolean
-  attach: boolean
-  docNo: string
-  budget: number
-  income: number
-  expense: number
-  balance: number
-  linked: number
+  accountCode?: string
+  srcNo?: string
 }
 
-const mockData: LedgerRow[] = []
+interface BasisItem { total: number }
 
 type AccountRow = {
   code: string; name: string; budget: number; income: number; accumIncome: number
@@ -41,18 +35,18 @@ type AccountRow = {
   gwanCode?: string; gwanName?: string; hangCode?: string; hangName?: string
 }
 
-// 수입 관-항 매핑
+// 수입 관-항 매핑 (accounts.ts 의 accountCodeMap/subAccountCodeMap 이 실제로 만드는 코드 그대로 — 목 4자리 / 세목 5자리)
 const incomeGwanHang: Record<string, { gwanCode: string; gwanName: string; hangCode: string; hangName: string }> = {
   '1111': { gwanCode: '01', gwanName: '보육료', hangCode: '11', hangName: '보육료' },
   '1112': { gwanCode: '01', gwanName: '보육료', hangCode: '11', hangName: '보육료' },
   '1211': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '21', hangName: '선택적 보육활동비' },
   '1221': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '1221111': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '1221112': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '1221113': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '1221121': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '1221131': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
-  '1221141': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
+  '12211': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
+  '12212': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
+  '12213': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
+  '12214': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
+  '12215': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
+  '12216': { gwanCode: '02', gwanName: '수익자부담 수입', hangCode: '22', hangName: '기타 필요경비' },
   '1311': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '31', hangName: '인건비 보조금' },
   '1312': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '32', hangName: '운영보조금' },
   '1321': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '32', hangName: '운영보조금' },
@@ -60,16 +54,16 @@ const incomeGwanHang: Record<string, { gwanCode: string; gwanName: string; hangC
   '1324': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '32', hangName: '운영보조금' },
   '1331': { gwanCode: '03', gwanName: '보조금 및 지원금', hangCode: '33', hangName: '자본 보조금' },
   '1411': { gwanCode: '04', gwanName: '전입금', hangCode: '41', hangName: '전입금' },
-  '1511': { gwanCode: '04', gwanName: '전입금', hangCode: '42', hangName: '차입금' },
-  '1521': { gwanCode: '04', gwanName: '전입금', hangCode: '42', hangName: '차입금' },
-  '1611': { gwanCode: '05', gwanName: '기부금', hangCode: '51', hangName: '기부금' },
-  '1612': { gwanCode: '05', gwanName: '기부금', hangCode: '51', hangName: '기부금' },
-  '1711': { gwanCode: '06', gwanName: '적립금', hangCode: '61', hangName: '적립금' },
-  '1811': { gwanCode: '07', gwanName: '과년도 수입', hangCode: '71', hangName: '과년도 수입' },
-  '1911': { gwanCode: '08', gwanName: '잡수입', hangCode: '81', hangName: '잡수입' },
-  '1921': { gwanCode: '08', gwanName: '잡수입', hangCode: '81', hangName: '잡수입' },
-  '1991': { gwanCode: '09', gwanName: '전년도 이월액', hangCode: '91', hangName: '전년도 이월액' },
-  '1992': { gwanCode: '09', gwanName: '전년도 이월액', hangCode: '91', hangName: '전년도 이월액' },
+  '1421': { gwanCode: '04', gwanName: '전입금', hangCode: '42', hangName: '차입금' },
+  '1422': { gwanCode: '04', gwanName: '전입금', hangCode: '42', hangName: '차입금' },
+  '1511': { gwanCode: '05', gwanName: '기부금', hangCode: '51', hangName: '기부금' },
+  '1512': { gwanCode: '05', gwanName: '기부금', hangCode: '51', hangName: '기부금' },
+  '1611': { gwanCode: '06', gwanName: '적립금', hangCode: '61', hangName: '적립금' },
+  '1711': { gwanCode: '07', gwanName: '과년도 수입', hangCode: '71', hangName: '과년도 수입' },
+  '1811': { gwanCode: '08', gwanName: '잡수입', hangCode: '81', hangName: '잡수입' },
+  '1812': { gwanCode: '08', gwanName: '잡수입', hangCode: '81', hangName: '잡수입' },
+  '1911': { gwanCode: '09', gwanName: '전년도 이월액', hangCode: '91', hangName: '전년도 이월액' },
+  '1912': { gwanCode: '09', gwanName: '전년도 이월액', hangCode: '91', hangName: '전년도 이월액' },
 }
 
 // 지출 관-항 매핑
@@ -81,8 +75,8 @@ const expenseGwanHang: Record<string, { gwanCode: string; gwanName: string; hang
   '2131': { gwanCode: '01', gwanName: '인건비', hangCode: '13', hangName: '기타인건비' },
   '2141': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
   '2142': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
-  '2142311': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
-  '2142411': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
+  '21423': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
+  '21424': { gwanCode: '01', gwanName: '인건비', hangCode: '14', hangName: '법정부담금·퇴직금' },
   '2211': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
   '2212': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
   '2213': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
@@ -90,11 +84,11 @@ const expenseGwanHang: Record<string, { gwanCode: string; gwanName: string; hang
   '2215': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
   '2216': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
   '2217': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2217111': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2217211': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
-  '2218': { gwanCode: '02', gwanName: '관리운영비', hangCode: '22', hangName: '업무추진비' },
-  '2219': { gwanCode: '02', gwanName: '관리운영비', hangCode: '22', hangName: '업무추진비' },
-  '2220': { gwanCode: '02', gwanName: '관리운영비', hangCode: '22', hangName: '업무추진비' },
+  '22171': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
+  '22172': { gwanCode: '02', gwanName: '관리운영비', hangCode: '21', hangName: '기관운영비' },
+  '2221': { gwanCode: '02', gwanName: '관리운영비', hangCode: '22', hangName: '업무추진비' },
+  '2222': { gwanCode: '02', gwanName: '관리운영비', hangCode: '22', hangName: '업무추진비' },
+  '2223': { gwanCode: '02', gwanName: '관리운영비', hangCode: '22', hangName: '업무추진비' },
   '2311': { gwanCode: '03', gwanName: '보육활동비', hangCode: '31', hangName: '보육활동운영비' },
   '2312': { gwanCode: '03', gwanName: '보육활동비', hangCode: '31', hangName: '보육활동운영비' },
   '2313': { gwanCode: '03', gwanName: '보육활동비', hangCode: '31', hangName: '보육활동운영비' },
@@ -102,102 +96,68 @@ const expenseGwanHang: Record<string, { gwanCode: string; gwanName: string; hang
   '2315': { gwanCode: '03', gwanName: '보육활동비', hangCode: '31', hangName: '보육활동운영비' },
   '2411': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '41', hangName: '특별활동비' },
   '2421': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '2421111': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '2421112': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '2421113': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '2421121': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
-  '2421131': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
+  '24211': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
+  '24212': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
+  '24213': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
+  '24214': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
+  '24215': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
+  '24216': { gwanCode: '04', gwanName: '수익자부담 지출', hangCode: '42', hangName: '기타필요경비지출' },
   '2511': { gwanCode: '05', gwanName: '적립금', hangCode: '51', hangName: '적립금' },
   '2611': { gwanCode: '06', gwanName: '상환금', hangCode: '61', hangName: '차입금상환' },
-  '2621': { gwanCode: '06', gwanName: '상환금', hangCode: '61', hangName: '차입금상환' },
-  '2631': { gwanCode: '06', gwanName: '상환금', hangCode: '62', hangName: '반환금' },
-  '2632': { gwanCode: '06', gwanName: '상환금', hangCode: '62', hangName: '반환금' },
-  '2641': { gwanCode: '06', gwanName: '상환금', hangCode: '63', hangName: '전출금' },
+  '2612': { gwanCode: '06', gwanName: '상환금', hangCode: '61', hangName: '차입금상환' },
+  '2621': { gwanCode: '06', gwanName: '상환금', hangCode: '62', hangName: '반환금' },
+  '2622': { gwanCode: '06', gwanName: '상환금', hangCode: '62', hangName: '반환금' },
+  '2623': { gwanCode: '06', gwanName: '상환금', hangCode: '63', hangName: '전출금' },
   '2711': { gwanCode: '07', gwanName: '시설비', hangCode: '71', hangName: '시설비' },
   '2712': { gwanCode: '07', gwanName: '시설비', hangCode: '71', hangName: '시설비' },
   '2721': { gwanCode: '07', gwanName: '시설비', hangCode: '72', hangName: '자산취득비' },
-  '2721111': { gwanCode: '07', gwanName: '시설비', hangCode: '72', hangName: '자산취득비' },
-  '2721211': { gwanCode: '07', gwanName: '시설비', hangCode: '72', hangName: '자산취득비' },
+  '27211': { gwanCode: '07', gwanName: '시설비', hangCode: '72', hangName: '자산취득비' },
+  '27212': { gwanCode: '07', gwanName: '시설비', hangCode: '72', hangName: '자산취득비' },
   '2811': { gwanCode: '08', gwanName: '과년도 지출', hangCode: '81', hangName: '과년도 지출' },
   '2911': { gwanCode: '09', gwanName: '잡지출·예비비', hangCode: '91', hangName: '잡지출·예비비' },
   '2991': { gwanCode: '09', gwanName: '잡지출·예비비', hangCode: '91', hangName: '잡지출·예비비' },
 }
 
-// accountCodeMap(목) + subAccountCodeMap(세목) 기반 계정과목 목록 생성
-// 거래내역 페이지와 동일한 구조: account(목) → code 4자리, subAccount(세목) → code 5자리
-const accountSummary: AccountRow[] = (() => {
-  const rows: AccountRow[] = []
+// accountCodeMap(목) + subAccountCodeMap(세목) 기반 계정과목 뼈대(코드/이름/관/항) — 금액과 무관, 데이터 로드 전에도 고정
+const skeletonRows: Omit<AccountRow, 'budget' | 'income' | 'accumIncome' | 'expense' | 'accumExpense' | 'balance' | 'rate'>[] = (() => {
+  const rows: Omit<AccountRow, 'budget' | 'income' | 'accumIncome' | 'expense' | 'accumExpense' | 'balance' | 'rate'>[] = []
   const allItems = [...incomeAccounts, ...expenseAccounts]
   const seen = new Set<string>()
 
   for (const item of allItems) {
     if (item.isSub) {
-      // 세목: subAccountCodeMap에서 코드 조회 (value 기반 → label 기반 → (지출) 포함 기반)
       const label = item.label
       const valueKey = item.value.replace('세목:', '').replace('필:', '')
       const code = subAccountCodeMap[valueKey] || subAccountCodeMap[label] || subAccountCodeMap[label.replace('(지출)', '')]
       if (!code || seen.has(code)) continue
       seen.add(code)
-      rows.push({ code, name: label, isSub: true, budget: 0, income: 0, accumIncome: 0, expense: 0, accumExpense: 0, balance: 0, rate: 0 })
+      rows.push({ code, name: label, isSub: true })
     } else {
-      // 목: accountCodeMap에서 코드 조회
       const code = accountCodeMap[item.value] || accountCodeMap[item.label]
       if (!code || seen.has(code)) continue
       seen.add(code)
-      rows.push({ code, name: item.label, isSub: false, budget: 0, income: 0, accumIncome: 0, expense: 0, accumExpense: 0, balance: 0, rate: 0 })
+      rows.push({ code, name: item.label, isSub: false })
     }
   }
 
-  // 코드순 정렬 (목 아래에 세목이 오도록)
   rows.sort((a, b) => a.code.localeCompare(b.code))
-
-  // mock 금액 적용
-  const amounts: Record<string, Partial<AccountRow>> = {
-    '1111': { budget:422168000, income:26720862, accumIncome:290187128, balance:131980872, rate:68 },
-    '1112': { budget:27600000, income:2509952, accumIncome:27501918, balance:98082, rate:99 },
-    '1211': { budget:64190800, income:2660000, accumIncome:30611019, balance:33579781, rate:47 },
-    '1221': { budget:123940318, income:4034896, accumIncome:49461527, balance:74478791, rate:39 },
-    '1221111': { budget:5000000, income:0, accumIncome:2500000, balance:2500000, rate:50 },
-    '1221112': { budget:8000000, income:800000, accumIncome:4800000, balance:3200000, rate:60 },
-    '1221113': { budget:36000000, income:1234896, accumIncome:14161527, balance:21838473, rate:39 },
-    '1221121': { budget:12000000, income:500000, accumIncome:6000000, balance:6000000, rate:50 },
-    '1221131': { budget:3000000, income:300000, accumIncome:2400000, balance:600000, rate:80 },
-    '1221141': { budget:5940318, income:200000, accumIncome:1600000, balance:4340318, rate:26 },
-    '1311': { budget:140941350, income:12960310, accumIncome:140941350, balance:0, rate:100 },
-    '1312': { budget:149048000, income:11646000, accumIncome:114751150, balance:34296850, rate:76 },
-    '1321': { budget:22320000, income:1679500, accumIncome:19327500, balance:2992500, rate:86 },
-    '1323': { budget:86280000, income:7340000, accumIncome:85335000, balance:945000, rate:98 },
-    '1324': { budget:150054970, income:12484960, accumIncome:150054970, balance:0, rate:100 },
-    '1411': { budget:2364000, income:140000, accumIncome:1680000, balance:684000, rate:71 },
-    '1511': { budget:10000000 },
-    '2111': { budget:48000000, expense:4000000, accumExpense:44000000, balance:4000000, rate:91 },
-    '2112': { budget:6000000, expense:500000, accumExpense:5500000, balance:500000, rate:91 },
-    '2121': { budget:180000000, expense:15000000, accumExpense:165000000, balance:15000000, rate:91 },
-    '2122': { budget:24000000, expense:2000000, accumExpense:22000000, balance:2000000, rate:91 },
-    '2131': { budget:12000000, expense:1000000, accumExpense:11000000, balance:1000000, rate:91 },
-    '2141': { budget:36000000, expense:3000000, accumExpense:33000000, balance:3000000, rate:91 },
-    '2142': { budget:18000000, expense:1500000, accumExpense:16500000, balance:1500000, rate:91 },
-    '2142311': { budget:9000000, expense:750000, accumExpense:8250000, balance:750000, rate:91 },
-    '2142411': { budget:9000000, expense:750000, accumExpense:8250000, balance:750000, rate:91 },
-    '2211': { budget:24000000, expense:2100000, accumExpense:21500000, balance:2500000, rate:89 },
-    '2212': { budget:18000000, expense:1500000, accumExpense:16800000, balance:1200000, rate:93 },
-    '2213': { budget:6000000, expense:500000, accumExpense:5500000, balance:500000, rate:91 },
-    '2215': { budget:8400000, expense:700000, accumExpense:7700000, balance:700000, rate:91 },
-    '2216': { budget:3600000, expense:300000, accumExpense:3300000, balance:300000, rate:91 },
-    '2217': { budget:6000000, expense:500000, accumExpense:5200000, balance:800000, rate:86 },
-    '2217111': { budget:3000000, expense:250000, accumExpense:2600000, balance:400000, rate:86 },
-    '2217211': { budget:3000000, expense:250000, accumExpense:2600000, balance:400000, rate:86 },
-    '2311': { budget:2400000, expense:200000, accumExpense:1800000, balance:600000, rate:75 },
-    '2312': { budget:4800000, expense:400000, accumExpense:4400000, balance:400000, rate:91 },
-    '2315': { budget:48000000, expense:4000000, accumExpense:44000000, balance:4000000, rate:91 },
-    '2411': { budget:64190800, expense:2660000, accumExpense:30611019, balance:33579781, rate:47 },
-    '2421': { budget:123940318, expense:4034896, accumExpense:49461527, balance:74478791, rate:39 },
-  }
-
   return rows.map(r => {
     const gh = incomeGwanHang[r.code] || expenseGwanHang[r.code]
-    return { ...r, ...(amounts[r.code] || {}), gwanCode: gh?.gwanCode, gwanName: gh?.gwanName, hangCode: gh?.hangCode, hangName: gh?.hangName }
+    return { ...r, gwanCode: gh?.gwanCode, gwanName: gh?.gwanName, hangCode: gh?.hangCode, hangName: gh?.hangName }
   })
+})()
+
+// 목(4자리) → 그 아래 세목(5자리) 코드 목록 — 세목이 있는 목은 자기 코드 + 세목들 합산해서 보여줌
+const childCodesByParent: Record<string, string[]> = (() => {
+  const map: Record<string, string[]> = {}
+  for (const r of skeletonRows) {
+    if (r.isSub && r.code.length >= 5) {
+      const parent = r.code.substring(0, 4)
+      if (!map[parent]) map[parent] = []
+      map[parent].push(r.code)
+    }
+  }
+  return map
 })()
 
 const TH = 'px-2 py-2.5 text-center font-bold text-slate-600 whitespace-nowrap border-b border-r border-slate-200 text-[11px]'
@@ -206,18 +166,116 @@ const TD = 'px-2 py-2 text-center border-b border-r border-slate-100 text-xs'
 export default function MonthlyReportPage() {
   const ymOpts = useMemo(() => getYmOptions(), [])
   const [selectedYm, setSelectedYm] = useState(ymOpts[1])
+  const [vouchers, setVouchers] = useState<VoucherRow[]>([])
+  const [basisByMok, setBasisByMok] = useState<Record<string, BasisItem[]>>({})
+  const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState('')
 
-  const baseAmount = 119329633
-  const incomeTotal = 82205830
-  const expenseTotal = 84395552
-  const balanceTotal = 117139911
+  const fiscalYear = useMemo(() => {
+    const [y, m] = selectedYm.split('-').map(Number)
+    return m >= 3 ? y : y - 1
+  }, [selectedYm])
+
+  const loadData = useCallback(async () => {
+    setLoading(true); setLoadError('')
+    try {
+      const [voucherRes, budgetRes] = await Promise.all([
+        fetch('/api/voucher/list?book=').then(r => r.json()),
+        fetch(`/api/budget?book=&year=${fiscalYear}`).then(r => r.json()),
+      ])
+      setVouchers(Array.isArray(voucherRes?.list) ? voucherRes.list : [])
+      const savedBasis = (Array.isArray(budgetRes?.list) && budgetRes.list[0] && budgetRes.list[0].basisByMok) || {}
+      setBasisByMok(savedBasis)
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : '데이터 조회 실패')
+    } finally {
+      setLoading(false)
+    }
+  }, [fiscalYear])
+
+  useEffect(() => { loadData() }, [loadData])
+
+  // 회계연도 3월 시작 — 기초액(전월까지 누적)/당월/누적(연초~당월) 계산 기준일
+  const fyStart = `${fiscalYear}-03-01`
+  const monthStart = `${selectedYm}-01`
+  const monthEnd = `${selectedYm}-32` // 문자열 비교용 상한(실제 존재하지 않는 날짜, 31일 이하는 전부 이보다 작음)
+
+  const budgetSum = useCallback((code: string) => (basisByMok[code] || []).reduce((s, it) => s + (Number(it?.total) || 0), 0), [basisByMok])
+
+  const accountSummary: AccountRow[] = useMemo(() => {
+    const incomeByCode = new Map<string, VoucherRow[]>()
+    const expenseByCode = new Map<string, VoucherRow[]>()
+    for (const v of vouchers) {
+      if (!v.accountCode) continue
+      const map = v.type === '수입' ? incomeByCode : v.type === '지출' ? expenseByCode : null
+      if (!map) continue
+      if (!map.has(v.accountCode)) map.set(v.accountCode, [])
+      map.get(v.accountCode)!.push(v)
+    }
+
+    return skeletonRows.map(r => {
+      const isIncome = r.code.startsWith('1')
+      const byCode = isIncome ? incomeByCode : expenseByCode
+      const relatedCodes = r.isSub ? [r.code] : [r.code, ...(childCodesByParent[r.code] || [])]
+
+      let curAmt = 0, accumAmt = 0
+      for (const code of relatedCodes) {
+        for (const v of byCode.get(code) || []) {
+          if (v.date >= fyStart && v.date <= monthEnd) accumAmt += v.amount
+          if (v.date >= monthStart && v.date <= monthEnd) curAmt += v.amount
+        }
+      }
+      let budget = budgetSum(r.code)
+      if (!r.isSub) for (const c of (childCodesByParent[r.code] || [])) budget += budgetSum(c)
+
+      const balance = budget - accumAmt
+      const rate = budget > 0 ? Math.round((accumAmt / budget) * 100) : 0
+
+      return {
+        ...r,
+        budget,
+        income: isIncome ? curAmt : 0,
+        accumIncome: isIncome ? accumAmt : 0,
+        expense: !isIncome ? curAmt : 0,
+        accumExpense: !isIncome ? accumAmt : 0,
+        balance,
+        rate,
+      }
+    })
+  }, [vouchers, fyStart, monthStart, monthEnd, budgetSum])
+
+  // 기초액(전월까지 누적 수입-지출) / 당월 수입·지출 합계 / 회계잔액
+  const baseAmount = useMemo(() => {
+    let s = 0
+    for (const v of vouchers) {
+      if (v.date >= fyStart && v.date < monthStart) {
+        if (v.type === '수입') s += v.amount
+        else if (v.type === '지출') s -= v.amount
+      }
+    }
+    return s
+  }, [vouchers, fyStart, monthStart])
+  const incomeTotal = useMemo(() => vouchers.filter(v => v.type === '수입' && v.date >= monthStart && v.date <= monthEnd).reduce((s, v) => s + v.amount, 0), [vouchers, monthStart, monthEnd])
+  const expenseTotal = useMemo(() => vouchers.filter(v => v.type === '지출' && v.date >= monthStart && v.date <= monthEnd).reduce((s, v) => s + v.amount, 0), [vouchers, monthStart, monthEnd])
+  const balanceTotal = baseAmount + incomeTotal - expenseTotal
+
   const [acctSort, setAcctSort] = useState<'asc' | 'desc'>('asc')
-  const sortedAccounts = useMemo(() => [...accountSummary].sort((a, b) => acctSort === 'asc' ? a.code.localeCompare(b.code) : b.code.localeCompare(a.code)), [acctSort])
+  const sortedAccounts = useMemo(() => [...accountSummary].sort((a, b) => acctSort === 'asc' ? a.code.localeCompare(b.code) : b.code.localeCompare(a.code)), [accountSummary, acctSort])
   const [detailAccount, setDetailAccount] = useState<AccountRow | null>(null)
   const [showSupplementary, setShowSupplementary] = useState(false)
   const [receiptSetting, setReceiptSetting] = useState('신청완료')
   const [showReceiptConfirm, setShowReceiptConfirm] = useState(false)
   const [showReceiptApply, setShowReceiptApply] = useState(false)
+
+  // 세부내역 팝업용 — 선택한 계정(목/세목)의 당월 실제 전표만 날짜순으로
+  const detailRows = useMemo(() => {
+    if (!detailAccount) return []
+    const codes = detailAccount.isSub ? [detailAccount.code] : [detailAccount.code, ...(childCodesByParent[detailAccount.code] || [])]
+    const wantType = detailAccount.code.startsWith('1') ? '수입' : '지출'
+    return vouchers
+      .filter(v => v.accountCode && codes.includes(v.accountCode) && v.type === wantType && v.date >= monthStart && v.date <= monthEnd)
+      .sort((a, b) => a.date.localeCompare(b.date))
+  }, [detailAccount, vouchers, monthStart, monthEnd])
 
   return (
     <div className="p-6 space-y-4">
@@ -241,8 +299,6 @@ export default function MonthlyReportPage() {
             {receiptSetting === '신청완료' && <button className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded transition-colors">step1. 영수증 이미지생성</button>}
             <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">{receiptSetting === '신청완료' ? 'step2. 회계전표 전송' : 'step1. 회계전표 전송'}</button>
             <div className="w-px h-5 bg-slate-200 mx-1" />
-            <span className="text-[11px] text-slate-500">전표 전송 : 2026-03-13 17:42:11</span>
-            <div className="w-px h-5 bg-slate-200 mx-1" />
             <select className="border border-slate-300 rounded px-2 py-1.5 text-xs font-bold text-slate-600">
               <option>마감전</option>
               <option>조정완료</option>
@@ -263,8 +319,6 @@ export default function MonthlyReportPage() {
             </div>
           </div>
         </div>
-
-
       </div>
 
       {/* 출납연월 요약 */}
@@ -275,11 +329,14 @@ export default function MonthlyReportPage() {
             <select value={selectedYm} onChange={e => setSelectedYm(e.target.value)} className="border border-slate-300 rounded px-2 py-1.5 text-xs">
               {ymOpts.map(ym => <option key={ym} value={ym}>{ym}</option>)}
             </select>
-            <button className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
+            <button onClick={loadData} disabled={loading} className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 disabled:opacity-50 rounded transition-colors">
+              {loading ? '조회 중…' : '조회'}
+            </button>
             <label className="flex items-center gap-1 text-xs text-slate-600 cursor-pointer">
               <input type="checkbox" checked={showSupplementary} onChange={e => setShowSupplementary(e.target.checked)} className="rounded border-slate-300" />
               <span className="font-bold">추경필요경비선택</span>
             </label>
+            {loadError && <span className="text-xs text-rose-600 font-medium">⚠ {loadError}</span>}
           </div>
           <div className="flex items-center gap-6 flex-wrap flex-1 justify-end">
             <div className="flex items-center gap-1.5">
@@ -442,7 +499,7 @@ export default function MonthlyReportPage() {
         </DraggableModal>
       )}
 
-      {/* 세부내역 팝업 */}
+      {/* 세부내역 팝업 — 선택 계정의 당월 실제 전표 */}
       {detailAccount && (
         <DraggableModal onClose={() => setDetailAccount(null)} title={`${detailAccount.code} ${detailAccount.name} 현금출납부`} className="w-[800px] max-h-[80vh] overflow-hidden">
             <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-4 text-xs">
@@ -474,19 +531,25 @@ export default function MonthlyReportPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {detailAccount.code.startsWith('1') ? (
-                    <>
-                      <tr className="bg-slate-50"><td className={TD}></td><td className={`${TD} text-left px-3 font-medium text-slate-600`}>전월이월</td><td className={TD}></td><td className={`${TD} text-right font-medium text-blue-700`}>{fmt(detailAccount.accumIncome - detailAccount.income)}</td><td className={`${TD} text-right font-medium text-green-700 border-r-0`}>{fmt(detailAccount.accumIncome - detailAccount.income)}</td></tr>
-                      {mockData.filter(d => d.docNo).slice(0, 6).map((d, i) => (
-                        <tr key={i} className="hover:bg-slate-50"><td className={`${TD} text-slate-600`}>{d.date.replace('20260', '0')}</td><td className={`${TD} text-left px-3 text-slate-700`}>{d.summary}</td><td className={`${TD} text-slate-500`}>{d.docNo}</td><td className={`${TD} text-right text-blue-700 font-medium`}>{fmt(d.income || Math.floor(Math.random() * 500000) + 100000)}</td><td className={`${TD} text-right text-green-700 border-r-0`}>{fmt(detailAccount.accumIncome - detailAccount.income + (i + 1) * 280000)}</td></tr>
-                      ))}
-                    </>
+                  {detailRows.length === 0 ? (
+                    <tr><td colSpan={5} className="px-3 py-6 text-center text-slate-400">해당 월 전표가 없습니다.</td></tr>
                   ) : (
-                    <>
-                      {mockData.filter(d => d.expense > 0).slice(0, 8).map((d, i) => (
-                        <tr key={i} className="hover:bg-slate-50"><td className={`${TD} text-slate-600`}>{d.date.replace('2026-', '')}</td><td className={`${TD} text-left px-3 text-slate-700`}>{d.summary}</td><td className={`${TD} text-slate-500`}>{d.docNo}</td><td className={`${TD} text-right text-red-600 font-medium`}>{fmt(d.expense)}</td><td className={`${TD} text-right text-green-700 border-r-0`}>{fmt(detailAccount.balance + (8 - i) * d.expense)}</td></tr>
-                      ))}
-                    </>
+                    (() => {
+                      let running = detailAccount.code.startsWith('1') ? (detailAccount.accumIncome - detailAccount.income) : detailAccount.balance
+                      return detailRows.map((d, i) => {
+                        if (detailAccount.code.startsWith('1')) running += d.amount
+                        else running -= d.amount
+                        return (
+                          <tr key={d.id ?? i} className="hover:bg-slate-50">
+                            <td className={`${TD} text-slate-600`}>{d.date.slice(5).replace('-', '/')}</td>
+                            <td className={`${TD} text-left px-3 text-slate-700`}>{d.summary}</td>
+                            <td className={`${TD} text-slate-500`}>{d.srcNo || d.id}</td>
+                            <td className={`${TD} text-right font-medium ${detailAccount.code.startsWith('1') ? 'text-blue-700' : 'text-red-600'}`}>{fmt(d.amount)}</td>
+                            <td className={`${TD} text-right text-green-700 border-r-0`}>{fmt(running)}</td>
+                          </tr>
+                        )
+                      })
+                    })()
                   )}
                 </tbody>
               </table>
