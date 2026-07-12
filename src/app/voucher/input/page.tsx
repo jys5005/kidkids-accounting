@@ -536,14 +536,16 @@ export default function VoucherInputPage() {
   // 전표수정(인천시 aincheon) — gbccm 과 동일 패턴: 팝업에서 값을 다시 입력받지 않고, 통합e
   // 전표관리 표에서 "이미 수정해둔" 결제방식(row.note)/적요(row.summary)/계정과목(row.account)
   // 현재 값을 그대로 원본번호(BILL_NUMDETAIL) 기준으로 실제 인천시 전표에 반영한다.
-  // ⚠ 2026-07-13: gbccm 과 확연히 다른 점 — 인천시는 결제방식 코드표를 아직 다 못 구했음(820=전입금만
-  // 실측 확인). AINCHEON_METHODS 에 없는 결제방식명은 조용히 건너뛰고(적요/계정과목만 반영) ⚠ 표시.
+  // ⚠ 2026-07-13: 결제방식 코드(SETLE_MTHD)는 하드코딩하지 않음 — 원장님이 실제 인천시 화면에서
+  // 캡처해준 결제방식 드롭다운 라벨 11개만 사용하고, 코드는 서버가 그 달의 기존 전표에서 같은
+  // 라벨(SETLE_MTHD_NAME)을 쓰는 행을 찾아 코드를 그대로 복사(계정과목 매칭과 동일 방식) —
+  // 코드를 잘못 추측해서 엉뚱한 결제방식으로 저장되는 사고를 방지하기 위함.
   const [incheonEditRows, setIncheonEditRows] = useState<VoucherRow[]>([])
   const [incheonSaving, setIncheonSaving] = useState(false)
   const [incheonProgressIdx, setIncheonProgressIdx] = useState(-1)
   const [incheonResults, setIncheonResults] = useState<Record<number, string>>({})
-  const AINCHEON_METHODS: { code: string; label: string }[] = [
-    { code: '820', label: '전입금' },
+  const AINCHEON_METHOD_LABELS = [
+    '국민행복카드', '계좌이체', '보조금', '전입금', '지정후원금', '비지정후원금', '카드결제', '자동이체', '지로', '현금결제', '기타',
   ]
   const openIncheonEdit = (rows: VoucherRow[]) => { setIncheonEditRows(rows); setIncheonResults({}); setIncheonProgressIdx(-1) }
   const closeIncheonEdit = () => { setIncheonEditRows([]); setIncheonResults({}); setIncheonProgressIdx(-1) }
@@ -553,9 +555,10 @@ export default function VoucherInputPage() {
     const digits = row.date.replace(/\D/g, '')
     const yearMonth = digits.length >= 6 ? digits.slice(0, 6) : ''
     if (!yearMonth) return '❌ 날짜에서 조회월을 알 수 없음'
-    const methodMatch = AINCHEON_METHODS.find(m => incheonNorm(m.label) === incheonNorm(row.note))
+    const methodMatch = AINCHEON_METHOD_LABELS.find(m => incheonNorm(m) === incheonNorm(row.note))
     const body: Record<string, string> = { billNumDetail: row.srcNo, yearMonth, memo: row.summary || '' }
-    if (methodMatch) { body.sttlMethodCode = methodMatch.code; body.sttlMethodName = methodMatch.label }
+    // ⚠ sttlMethodCode 는 일부러 안 보냄 — 서버가 같은 달 기존 전표에서 코드를 찾아 채움
+    if (methodMatch) body.sttlMethodName = methodMatch
     if (row.account) body.accountName = row.account
     if (row.subAccount) body.subAccountName = row.subAccount
     try {
@@ -766,7 +769,7 @@ export default function VoucherInputPage() {
             </p>
             <div className="mb-4 divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
               {incheonEditRows.map((row, i) => {
-                const methodMatch = AINCHEON_METHODS.find(m => incheonNorm(m.label) === incheonNorm(row.note))
+                const methodMatch = AINCHEON_METHOD_LABELS.find(m => incheonNorm(m) === incheonNorm(row.note))
                 const result = incheonResults[row.id]
                 const isCurrent = incheonSaving && incheonProgressIdx === i
                 return (
@@ -778,7 +781,7 @@ export default function VoucherInputPage() {
                     </div>
                     <div className="text-[11px] text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
                       <span className={row.note && !methodMatch ? 'text-rose-400' : ''}>
-                        결제방식: {row.note || '(빈 값)'}{row.note && !methodMatch && ' ⚠(코드 미확인 — 건너뜀)'}
+                        결제방식: {row.note || '(빈 값)'}{row.note && !methodMatch && ' ⚠(인천시 결제방식 목록에 없는 값 — 건너뜀)'}
                       </span>
                       <span>적요: {row.summary}</span>
                       <span>계정과목: {row.account}{row.subAccount ? ` · 세목: ${row.subAccount}` : ''}</span>
