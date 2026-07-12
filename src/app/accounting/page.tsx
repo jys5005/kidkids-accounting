@@ -1,16 +1,102 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+
+interface VoucherRow {
+  id: number
+  date: string
+  type: '수입' | '지출' | '반납'
+  account: string
+  subAccount: string
+  summary: string
+  amount: number
+}
+
+function fmt(n: number) { return n.toLocaleString('ko-KR') }
+
+// 매달 15일까지는 전월을 기본값으로, 16일부터는 당월을 기본값으로 (다른 화면들과 동일한 16일 규칙)
+function defaultYearMonth() {
+  const now = new Date()
+  const base = now.getDate() <= 15 ? new Date(now.getFullYear(), now.getMonth() - 1, 1) : now
+  return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}`
+}
+
+function getYmOptions() {
+  const now = new Date()
+  const opts: string[] = []
+  for (let i = -2; i < 24; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    opts.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+  return opts
+}
+
+function norm(s?: string) { return (s || '').replace(/\s+/g, '') }
+function rowText(v: VoucherRow) { return norm(v.account) + norm(v.subAccount) + norm(v.summary) }
+function sumByKeyword(rows: VoucherRow[], type: '수입' | '지출', keywords: string[]) {
+  return rows
+    .filter(v => v.type === type && keywords.some(k => rowText(v).includes(k)))
+    .reduce((s, v) => s + v.amount, 0)
+}
 
 export default function AccountingPage() {
-  const [yearmon] = useState('2026-02')
+  const ymOpts = useMemo(() => getYmOptions(), [])
+  const [yearmon, setYearmon] = useState(() => defaultYearMonth())
+  const [vouchers, setVouchers] = useState<VoucherRow[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const fiscalYear = useMemo(() => {
+    const [y, m] = yearmon.split('-').map(Number)
+    return m >= 3 ? y : y - 1
+  }, [yearmon])
+
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/voucher/list?book=').then(r => r.json())
+      setVouchers(Array.isArray(res?.list) ? res.list : [])
+    } catch {
+      setVouchers([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { loadData() }, [loadData])
+
+  // 당월(선택한 출납년월)만 필터
+  const monthRows = useMemo(() => vouchers.filter(v => v.date?.startsWith(yearmon)), [vouchers, yearmon])
+
+  // 회계연도(3월 시작) 시작 ~ 선택월까지 누적 — 회계마감잔고 계산용
+  const cumRows = useMemo(() => {
+    const fyStart = `${fiscalYear}-03-01`
+    const monthEnd = `${yearmon}-31`
+    return vouchers.filter(v => v.date && v.date >= fyStart && v.date <= monthEnd)
+  }, [vouchers, fiscalYear, yearmon])
+
+  const closingBalance = useMemo(() => {
+    const inc = cumRows.filter(v => v.type === '수입').reduce((s, v) => s + v.amount, 0)
+    const exp = cumRows.filter(v => v.type === '지출').reduce((s, v) => s + v.amount, 0)
+    return inc - exp
+  }, [cumRows])
+
+  // 이달의 장부진행 — 계정과목명(account/subAccount/summary) 키워드로 실제 전표 집계
+  const 보육료수입 = sumByKeyword(monthRows, '수입', ['보육료'])
+  const 급간식비 = sumByKeyword(monthRows, '수입', ['급식', '간식'])
+  const 기타필요경비수입 = sumByKeyword(monthRows, '수입', ['기타필요경비'])
+  const 기본급 = sumByKeyword(monthRows, '지출', ['기본급'])
+  const 퇴직적립금 = sumByKeyword(monthRows, '지출', ['퇴직적립금'])
+  const 사대보험 = sumByKeyword(monthRows, '지출', ['4대보험', '법정부담금', '국민연금', '건강보험', '고용보험', '산재보험'])
+  const 공공요금 = sumByKeyword(monthRows, '지출', ['공공요금', '제세공과금'])
+
+  const fmtOrDash = (n: number) => (n === 0 ? '-' : fmt(n))
 
   return (
     <div className="space-y-5 max-w-6xl mx-auto">
       {/* 이달의 장부진행 */}
       <div className="bg-white rounded-xl border border-slate-200 p-5 hover:bg-slate-50/50 transition-colors">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-slate-800">이달({yearmon})의 장부진행</h2>
+          <h2 className="text-sm font-bold text-slate-800">이달({yearmon})의 장부진행{loading && <span className="ml-2 text-[11px] font-normal text-slate-400">불러오는 중…</span>}</h2>
         </div>
 
         {/* 마감 상태 */}
@@ -29,22 +115,22 @@ export default function AccountingPage() {
           </div>
         </div>
 
-        {/* 주요 항목 요약 */}
+        {/* 주요 항목 요약 — 실제 전표(voucher/input) 데이터 집계 */}
         <div className="grid grid-cols-3 gap-3">
           <div className="border border-blue-100 bg-blue-50/50 rounded-lg p-3 hover:bg-blue-100/70 transition-colors cursor-pointer">
             <p className="text-[11px] text-blue-500 mb-2">수입</p>
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-600">보육료수입</span>
-                <span className="font-semibold text-slate-800">74,785,335</span>
+                <span className="font-semibold text-slate-800">{fmtOrDash(보육료수입)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-slate-600">급간식비</span>
-                <span className="font-semibold text-slate-800">2,251,050</span>
+                <span className="font-semibold text-slate-800">{fmtOrDash(급간식비)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-slate-600">기타필요경비</span>
-                <span className="font-semibold text-slate-800">-</span>
+                <span className="font-semibold text-slate-800">{fmtOrDash(기타필요경비수입)}</span>
               </div>
             </div>
           </div>
@@ -53,11 +139,11 @@ export default function AccountingPage() {
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-600">기본급</span>
-                <span className="font-semibold text-slate-800">52,855,120</span>
+                <span className="font-semibold text-slate-800">{fmtOrDash(기본급)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-slate-600">퇴직적립금</span>
-                <span className="font-semibold text-slate-800">0</span>
+                <span className="font-semibold text-slate-800">{fmtOrDash(퇴직적립금)}</span>
               </div>
             </div>
           </div>
@@ -66,11 +152,11 @@ export default function AccountingPage() {
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-600">4대보험</span>
-                <span className="font-semibold text-slate-800">9,220,470</span>
+                <span className="font-semibold text-slate-800">{fmtOrDash(사대보험)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-slate-600">공공요금/제세공과금</span>
-                <span className="font-semibold text-slate-800">1,312,070</span>
+                <span className="font-semibold text-slate-800">{fmtOrDash(공공요금)}</span>
               </div>
             </div>
           </div>
@@ -83,12 +169,12 @@ export default function AccountingPage() {
         </div>
       </div>
 
-      {/* 회계마감잔고 */}
+      {/* 회계마감잔고 — 회계연도(3월) 시작~선택월 누적 수입-지출 */}
       <div className="bg-white rounded-xl border border-slate-200 p-5 hover:bg-slate-50/50 transition-colors">
         <h3 className="text-sm font-bold text-slate-800 mb-3">회계마감잔고</h3>
-        <div className="bg-gradient-to-r from-red-50 to-red-100/50 border border-red-200 rounded-lg p-4 flex items-center justify-between hover:from-red-100 hover:to-red-150/50 transition-colors cursor-pointer">
+        <div className={`bg-gradient-to-r rounded-lg p-4 flex items-center justify-between transition-colors cursor-pointer ${closingBalance < 0 ? 'from-red-50 to-red-100/50 border border-red-200 hover:from-red-100 hover:to-red-150/50' : 'from-blue-50 to-blue-100/50 border border-blue-200 hover:from-blue-100 hover:to-blue-150/50'}`}>
           <span className="text-sm text-slate-700 font-medium">{yearmon}월 회계마감잔고</span>
-          <span className="text-lg font-bold text-red-600">-38,248,018 원</span>
+          <span className={`text-lg font-bold ${closingBalance < 0 ? 'text-red-600' : 'text-blue-600'}`}>{fmt(closingBalance)} 원</span>
         </div>
       </div>
 
@@ -97,7 +183,13 @@ export default function AccountingPage() {
         <div className="grid grid-cols-5 gap-3">
           <div>
             <label className="text-[11px] text-slate-500 mb-1 block font-medium">출납년월</label>
-            <input type="month" defaultValue={yearmon} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+            <select
+              value={yearmon}
+              onChange={e => setYearmon(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+            >
+              {ymOpts.map(ym => <option key={ym} value={ym}>{ym}</option>)}
+            </select>
           </div>
           <div>
             <label className="text-[11px] text-slate-500 mb-1 block font-medium">아동인원</label>
