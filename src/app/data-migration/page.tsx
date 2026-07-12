@@ -1143,6 +1143,35 @@ export default function DataMigrationPage() {
     }
   }, [gbccmCookieInput, reloadGbccmSession])
 
+  // [로그인 화면 열기] — DCPU_SSID 쿠키를 크롬에 주입해 로그인된 gbccm 화면을 띄운다.
+  // ⚠ 로컬 실행(localhost)에서만 화면이 사용자 PC에 보임 (VPS=headless).
+  const [gbccmOpening, setGbccmOpening] = useState(false)
+  const handleGbccmOpenBrowser = useCallback(async (menu?: string) => {
+    const ck = gbccmCookieInput.trim()
+    if (!ck) { setGbccmRegisterMsg('❌ 먼저 DCPU_SSID 쿠키값을 붙여넣으세요'); return }
+    setGbccmOpening(true); setGbccmRegisterMsg('')
+    try {
+      const res = await fetch('/api/gbccm/open-browser', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionCookie: ck, menu }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (j.success) {
+        setGbccmRegisterMsg(j.headless
+          ? '⚠️ 서버(headless)라 화면이 안 보입니다. 회계앱을 PC 로컬(localhost:4000)에서 실행하세요.'
+          : j.bouncedToLogin
+            ? '⚠️ 세션 만료. gbccm.co.kr 재로그인 후 새 DCPU_SSID 값으로 다시 시도하세요.'
+            : '✅ 로그인된 gbccm 화면을 열었습니다.')
+      } else {
+        setGbccmRegisterMsg(`❌ ${j.error || '실행 실패'}`)
+      }
+    } catch (e) {
+      setGbccmRegisterMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
+    } finally {
+      setGbccmOpening(false)
+    }
+  }, [gbccmCookieInput])
+
   // [통합e 인증서 가져오기] — 통합e 등록 인증서를 이 출발지 인증으로 복사 (비번은 서버에서만)
   const [certImporting, setCertImporting] = useState(false)
   const [certImportMsg, setCertImportMsg] = useState('')
@@ -2346,6 +2375,15 @@ export default function DataMigrationPage() {
                       className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white"
                     >
                       {gbccmRegistering ? '등록 중…' : '등록'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleGbccmOpenBrowser()}
+                      disabled={gbccmOpening}
+                      className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white whitespace-nowrap"
+                      title="DCPU_SSID 쿠키로 로그인된 gbccm 화면을 엽니다 (PC 로컬 실행 시)"
+                    >
+                      {gbccmOpening ? '여는 중…' : '🖥️ 로그인 화면 열기'}
                     </button>
                   </div>
                   {gbccmRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{gbccmRegisterMsg}</p>}
