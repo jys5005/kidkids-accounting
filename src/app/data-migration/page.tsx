@@ -1876,8 +1876,19 @@ export default function DataMigrationPage() {
 
   // 경상북도(gbccm, authType:'session') → 통합e 전표관리(voucher-input) 직접 저장.
   // sunote 를 안 거치는 소스라 sunoteId/Pw 불필요 — displayData 의 모든 행을 그대로 전송.
+  //
+  // ⚠ 2026-07-13 fix: 인천시(aincheon) 등 일부 출발지는 row.date 에 "일(day)"만 담김(예: "01") —
+  // 월 정보는 부모 CashLedgerResult.yearMonth 에 따로 있음(handleExcelDownload 가 이미 이 패턴을
+  // 씀). flatMap 으로 그냥 펼치면 이 yearMonth 컨텍스트가 사라지고, 저장 API(/api/gbccm/vouchers/save)
+  // 의 toIsoDate() 는 8자리 YYYYMMDD 만 인식해 2자리 day 는 빈 날짜('')로 저장 — voucher/input 화면의
+  // 월 필터에 절대 걸리지 않아 "조회는 되는데 저장하면 안 보인다"는 버그가 있었음. 저장 전에
+  // yearMonth+day 로 8자리 날짜를 미리 조립해서 보낸다.
   const handleGbccmSaveToVoucherInput = async () => {
-    const allRows = displayData.flatMap((d) => d.rows)
+    const allRows = displayData.flatMap((d) => d.rows.map((row) => {
+      const digits = String(row.date || '').replace(/\D/g, '')
+      const fullDate = digits.length >= 8 ? digits : `${d.yearMonth}${digits.padStart(2, '0')}`
+      return { ...row, date: fullDate }
+    }))
     if (allRows.length === 0) { setGbccmSaveMsg('❌ 저장할 전표가 없습니다.'); return }
     setGbccmSaving(true); setGbccmSaveMsg('')
     try {
