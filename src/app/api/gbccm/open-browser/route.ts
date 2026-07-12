@@ -14,7 +14,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
  */
 export async function POST(req: NextRequest) {
   const cookie = req.headers.get('cookie') || ''
-  let body: { targetUrl?: string } = {}
+  let body: { targetUrl?: string; tabLabel?: string } = {}
   try { body = await req.json() } catch {}
 
   try {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const r1 = await fetch(`${PLATFORM_URL}/api/gbccm/open-browser`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', cookie },
-      body: JSON.stringify({ targetUrl: body.targetUrl }),
+      body: JSON.stringify({ targetUrl: body.targetUrl, tabLabel: body.tabLabel }),
     })
     const j1 = await r1.json().catch(() => ({}))
     if (!r1.ok || !j1?.success || !j1?.jobId) {

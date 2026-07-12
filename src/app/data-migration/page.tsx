@@ -1147,12 +1147,12 @@ export default function DataMigrationPage() {
   // (서버는 원장 브라우저 탭에 gbccm 쿠키를 못 심음 → 원장 PC 에이전트가 헤드풀 브라우저에 주입)
   const [gbccmOpening, setGbccmOpening] = useState('')
   const [gbccmOpenMsg, setGbccmOpenMsg] = useState('')
-  const handleGbccmOpenBrowser = useCallback(async (targetUrl: string, label: string) => {
+  const handleGbccmOpenBrowser = useCallback(async (targetUrl: string, label: string, tabLabel: string) => {
     setGbccmOpening(targetUrl); setGbccmOpenMsg(`⏳ ${label} 자동로그인 중… (에이전트가 브라우저를 엽니다)`)
     try {
       const res = await fetch('/api/gbccm/open-browser', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUrl }),
+        body: JSON.stringify({ targetUrl, tabLabel }),
       })
       const j = await res.json().catch(() => ({}))
       if (j.ok) {
@@ -2332,17 +2332,17 @@ export default function DataMigrationPage() {
                         상단탭 순서 추정. gbccm 은 SPA(하부 탭이 URL 을 하나만 씀)라 진입 후 상단 탭 이동 필요할 수 있음. */}
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <button type="button" disabled={!!gbccmOpening}
-                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M02T01D000', '예산관리')}
+                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M02T01D000', '예산관리', '예산관리>보육통합 예산보고')}
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 disabled:opacity-50 text-emerald-700">
                       📊 예산관리 자동로그인
                     </button>
                     <button type="button" disabled={!!gbccmOpening}
-                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M04T01D000', '월회계보고')}
+                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M04T01D000', '월회계보고', '월회계보고>보육통합 월 회계보고')}
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 disabled:opacity-50 text-emerald-700">
                       📅 월회계보고 자동로그인
                     </button>
                     <button type="button" disabled={!!gbccmOpening}
-                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M05T01D000', '결산관리')}
+                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M05T01D000', '결산관리', '정산/결산>보육통합 결산보고')}
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 disabled:opacity-50 text-emerald-700">
                       📑 결산관리 자동로그인
                     </button>

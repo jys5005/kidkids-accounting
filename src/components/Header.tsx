@@ -314,7 +314,7 @@ export default function Header() {
               )}
             </div>
 
-            <span className="text-[12px] text-slate-600 font-medium">{profileData.displayName || user?.displayName || '...'}님</span>
+            <span className="text-[12px] text-slate-600 font-medium">{profileData.centerName || profileData.displayName || user?.displayName || '...'}님</span>
 
             <span className={`text-[11px] font-mono px-2 py-0.5 border rounded-md ${secondsLeft <= 300 ? 'text-red-500 border-red-300 animate-pulse' : secondsLeft <= 600 ? 'text-teal-500 border-teal-300' : 'text-slate-400 border-slate-200'}`} title="자동 로그아웃까지 남은 시간">
               {timerDisplay}
