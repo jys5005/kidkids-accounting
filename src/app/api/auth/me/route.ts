@@ -3,6 +3,13 @@ import type { NextRequest } from 'next/server'
 
 const PLATFORM_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'
 
+// ⚠ 이 라우트는 항상 최신 프로필을 반환해야 함 — Next.js는 서버측 fetch()를 기본적으로 캐싱하므로
+// (Data Cache), no-store 를 빼먹으면 "가입 직후(정보 비어있던 시점)"의 응답이 영구히 캐시되어
+// 이후 DB에 어린이집명/원장명이 채워져도 화면엔 계속 옛 빈 값이 나가는 버그가 생김
+// (2026-07 실사례: DB엔 centerName/principalName 다 있는데 헤더 팝업엔 빈칸+휴대폰번호만 표시).
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(request: NextRequest) {
   const session = request.cookies.get('auth_session')?.value
   if (!session) {
@@ -16,6 +23,7 @@ export async function GET(request: NextRequest) {
     try {
       const res = await fetch(`${PLATFORM_URL}/api/auth/me`, {
         headers: { Cookie: `auth_session=${session}` },
+        cache: 'no-store',
       })
       if (res.ok) {
         const me = await res.json()
@@ -51,6 +59,7 @@ export async function PUT(request: NextRequest) {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Cookie: `auth_session=${session}` },
       body,
+      cache: 'no-store',
     })
     const j = await res.json().catch(() => ({}))
     return NextResponse.json(j, { status: res.status })
