@@ -328,7 +328,9 @@ export default function Header() {
               </button>
             )}
 
-            <span className="text-[12px] text-slate-600 font-medium">{profileData.centerName || profileData.displayName || user?.displayName || '...'}님</span>
+            {/* 어린이집명은 좌측 상단 GNB(에인어린이집 ⌄)에 이미 나오므로, 여기 "...님" 뱃지는
+                사람 이름(대표자/원장명) 우선 표시 — centerName 은 최후 폴백만 */}
+            <span className="text-[12px] text-slate-600 font-medium">{profileData.displayName || user?.displayName || profileData.centerName || '...'}님</span>
 
             <span className={`text-[11px] font-mono px-2 py-0.5 border rounded-md ${secondsLeft <= 300 ? 'text-red-500 border-red-300 animate-pulse' : secondsLeft <= 600 ? 'text-teal-500 border-teal-300' : 'text-slate-400 border-slate-200'}`} title="자동 로그아웃까지 남은 시간">
               {timerDisplay}
