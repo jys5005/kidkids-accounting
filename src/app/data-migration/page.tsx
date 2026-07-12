@@ -2353,39 +2353,27 @@ export default function DataMigrationPage() {
                     </button>
                   </div>
                   {gbccmRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{gbccmRegisterMsg}</p>}
-                  {/* 자동로그인 — 저장된 세션(DCPU_SSID)으로 로그인된 화면을 "새 브라우저창"으로 띄움.
-                      ⚠ 서버(accounting.cert24.kr)가 원장 브라우저 탭에 gbccm 쿠키를 직접 심는 건 불가능
-                        (cross-domain 쿠키 정책). 그래서 원장 PC 로컬 에이전트가 헤드풀 브라우저를 열어
-                        DCPU_SSID 를 주입 → 이미 로그인된 화면으로 진입한다(전표수정과 동일 원리, npPfs 무관).
-                      → 원장 PC 자동화 에이전트가 켜져 있어야 동작. 꺼져있으면 안내 메시지 표시.
-                      ⚠ 메뉴코드(?m=U02M0XT01D000)는 전표관리(M03)만 HAR 확정 — 예산 M02/월회계 M04/결산 M05 는
-                        상단탭 순서 추정. gbccm 은 SPA(하부 탭이 URL 을 하나만 씀)라 진입 후 상단 탭 이동 필요할 수 있음. */}
-                  {/* 자동로그인 버튼은 PC 전용 (hidden sm:flex): 자동로그인은 '원장 PC 에이전트'가 브라우저를 여는
-                      방식이라 폰에서 눌러도 화면은 PC 에 뜬다. 또 폰 브라우저로 gbccm 직접 열면 보안프로그램
-                      (AhnLab Safe Transaction) 설치 벽에 막혀 모바일은 원천적으로 불가. → 모바일엔 안내만 표시. */}
-                  <div className="mt-2 hidden sm:flex flex-wrap gap-1.5">
-                    <button type="button" disabled={!!gbccmOpening}
-                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M02T01D000', '예산관리', '예산관리>보육통합 예산보고')}
-                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 disabled:opacity-50 text-emerald-700">
-                      📊 예산관리 자동로그인
-                    </button>
-                    <button type="button" disabled={!!gbccmOpening}
-                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M04T01D000', '월회계보고', '월회계보고>전표검증')}
-                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 disabled:opacity-50 text-emerald-700">
-                      📅 월회계보고 자동로그인
-                    </button>
-                    <button type="button" disabled={!!gbccmOpening}
-                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M05T01D000', '결산관리', '정산/결산>보육통합 결산보고')}
-                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 disabled:opacity-50 text-emerald-700">
-                      📑 결산관리 자동로그인
-                    </button>
+                  {/* 등록된 세션(=원장이 이미 로그인한 그 브라우저)으로 실제 사이트를 새 탭으로 열면
+                      만료 전까지는 로그인 상태 그대로 확인 가능 — 서버가 쿠키를 주입하는 게 아니라
+                      "원장 본인 브라우저에 이미 있는 gbccm.co.kr 쿠키"를 그대로 재사용하는 것뿐이라
+                      경기도(accgg) WebSquare 세션 주입과 달리 안전하게 동작(단순 새 탭 열기).
+                      ⚠ gbccm 은 SPA(하부 탭이 URL 하나만 씀) + cross-origin 이라 서브탭 자동이동 불가 —
+                      진입 후 상단 탭에서 직접 이동. 에이전트 방식(자동로그인)은 별도창이라 미채택(2026-07-12 결정). */}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M02T01D000" target="_blank" rel="noopener noreferrer"
+                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
+                      📊 예산관리 바로가기
+                    </a>
+                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M04T01D000" target="_blank" rel="noopener noreferrer"
+                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
+                      📅 월회계보고 바로가기
+                    </a>
+                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M05T01D000" target="_blank" rel="noopener noreferrer"
+                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
+                      📑 결산관리 바로가기
+                    </a>
                   </div>
-                  <p className="mt-2 sm:hidden text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
-                    🖥 예산/월회계/결산 <b>자동로그인은 PC 에서만</b> 됩니다. (모바일은 gbccm 보안프로그램 제약)<br />
-                    · 데이터 <b>가져오기·저장</b>은 모바일에서도 정상 동작합니다.
-                  </p>
-                  {gbccmOpenMsg && <p className="text-[11px] mt-1.5 text-slate-600">{gbccmOpenMsg}</p>}
-                  <p className="text-[10px] text-slate-400 mt-1">· 원장님 PC 에이전트가 저장된 세션으로 로그인된 화면을 새 창으로 엽니다. 혹시 다른 탭이 뜨면 상단 탭에서 이동해주세요(메뉴코드 추정치).</p>
+                  <p className="text-[10px] text-slate-400 mt-1">· 로그인 상태로 해당 화면이 바로 열립니다. 혹시 다른 화면이 뜨면 상단 탭에서 직접 이동해주세요(코드 추정치라 보정이 필요할 수 있습니다).</p>
                 </div>
               ) : (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
