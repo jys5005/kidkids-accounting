@@ -2594,26 +2594,31 @@ export default function DataMigrationPage() {
                 </button>
                 {incheonRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{incheonRegisterMsg}</p>}
 
-                {/* 바로가기 — 에이전트가 인천시에 로그인된 상태로 해당 상단 탭까지 이동(공동인증서라 window.open 불가) */}
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <button type="button" disabled={!!incheonNavigating}
-                    onClick={() => handleIncheonNavigate('예산관리')}
-                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 disabled:opacity-50 text-indigo-700">
-                    📊 예산관리 바로가기
-                  </button>
-                  <button type="button" disabled={!!incheonNavigating}
-                    onClick={() => handleIncheonNavigate('월회계보고')}
-                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 disabled:opacity-50 text-indigo-700">
-                    📅 월회계보고 바로가기
-                  </button>
-                  <button type="button" disabled={!!incheonNavigating}
-                    onClick={() => handleIncheonNavigate('결산관리')}
-                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 disabled:opacity-50 text-indigo-700">
-                    📑 결산관리 바로가기
-                  </button>
-                </div>
-                {incheonNavMsg && <p className="text-[11px] mt-1.5 text-slate-600">{incheonNavMsg}</p>}
-                <p className="text-[10px] text-slate-400 mt-1">· 에이전트가 인천시에 로그인된 상태로 해당 화면을 엽니다. (세션등록 + PC 에이전트 켜짐 필요)</p>
+                {/* 세션이 등록(세션완료)됐을 때만 바로가기 노출 — 에이전트가 인천시에 로그인된 상태로 해당
+                    상단 탭까지 이동(공동인증서라 window.open 불가). 세션 없으면 이동 자체가 안 되므로 숨김. */}
+                {incheonSession?.exists && (
+                  <div className="mt-3 pt-2 border-t border-indigo-200">
+                    <div className="flex flex-wrap gap-1.5">
+                      <button type="button" disabled={!!incheonNavigating}
+                        onClick={() => handleIncheonNavigate('예산관리')}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 disabled:opacity-50 text-indigo-700">
+                        📊 예산관리 바로가기
+                      </button>
+                      <button type="button" disabled={!!incheonNavigating}
+                        onClick={() => handleIncheonNavigate('월회계보고')}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 disabled:opacity-50 text-indigo-700">
+                        📅 월회계보고 바로가기
+                      </button>
+                      <button type="button" disabled={!!incheonNavigating}
+                        onClick={() => handleIncheonNavigate('결산관리')}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 disabled:opacity-50 text-indigo-700">
+                        📑 결산관리 바로가기
+                      </button>
+                    </div>
+                    {incheonNavMsg && <p className="text-[11px] mt-1.5 text-slate-600">{incheonNavMsg}</p>}
+                    <p className="text-[10px] text-slate-400 mt-1">· 에이전트가 인천시에 로그인된 상태로 해당 화면을 엽니다. (PC 에이전트 켜짐 필요)</p>
+                  </div>
+                )}
               </div>
             )}
             <div className="flex gap-2">
