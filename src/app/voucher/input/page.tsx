@@ -13,6 +13,23 @@ import {
 import ReceiptOcrModal, { type ReceiptOcrResult } from '@/components/ReceiptOcrModal'
 import { getActiveBook, bookLabel, BOOK_CHANGE_EVENT } from '@/lib/ilovechild-books'
 
+// 출납년월 기본값 — 매달 15일까지는 전월, 16일부터는 당월 (다른 화면과 동일한 16일 규칙)
+const VOUCHER_YM_SESSION_KEY = 'voucher-input-last-ym'
+function defaultVoucherYearMonth() {
+  const now = new Date()
+  const base = now.getDate() <= 15 ? new Date(now.getFullYear(), now.getMonth() - 1, 1) : now
+  return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}`
+}
+// 접속 이후(같은 브라우저 세션 동안) 마지막으로 조회했던 월을 유지 — 없으면 15일 규칙 기본값
+function initialVoucherYearMonth() {
+  if (typeof window === 'undefined') return defaultVoucherYearMonth()
+  try {
+    const saved = window.sessionStorage.getItem(VOUCHER_YM_SESSION_KEY)
+    if (saved && /^\d{4}-\d{2}$/.test(saved)) return saved
+  } catch { /* sessionStorage 접근 불가(프라이빗 모드 등) — 기본값 폴백 */ }
+  return defaultVoucherYearMonth()
+}
+
 interface VoucherRow {
   id: number
   date: string
@@ -221,12 +238,16 @@ export default function VoucherInputPage() {
   const [filterAmountTo, setFilterAmountTo] = useState('')
   const [searchKey, setSearchKey] = useState<'적요' | '계정' | '결제방식' | '전표번호'>('적요')
   const [searchText, setSearchText] = useState('')
-  const [filterYearMonth, setFilterYearMonth] = useState('2026-03')
+  const [filterYearMonth, setFilterYearMonth] = useState(initialVoucherYearMonth)
   // 데이터이관 [→ 전표관리로 이동]에서 ?ym=YYYY-MM 로 진입 시 그 달로 열기(저장 데이터가 안 보이던 문제 해결)
   useEffect(() => {
     const ym = new URLSearchParams(window.location.search).get('ym')
     if (ym && /^\d{4}-\d{2}$/.test(ym)) setFilterYearMonth(ym)
   }, [])
+  // 조회 월이 바뀔 때마다 세션에 기억 — 같은 접속(탭) 안에서는 마지막 검색했던 월을 계속 유지
+  useEffect(() => {
+    try { window.sessionStorage.setItem(VOUCHER_YM_SESSION_KEY, filterYearMonth) } catch { /* 무시 */ }
+  }, [filterYearMonth])
 
   // 아이사랑꿈터: 활성 장부의 coa 계정과목 로드 → 전표 계정 드롭다운/코드에 사용 (어린이집은 기본 accounts.ts)
   const [coaTree, setCoaTree] = useState<CoaGwan[] | null>(null)
