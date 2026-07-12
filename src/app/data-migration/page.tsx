@@ -2344,7 +2344,7 @@ export default function DataMigrationPage() {
                       📊 예산관리 자동로그인
                     </button>
                     <button type="button" disabled={!!gbccmOpening}
-                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M04T01D000', '월회계보고', '월회계보고>보육통합 월 회계보고')}
+                      onClick={() => handleGbccmOpenBrowser('https://www.gbccm.co.kr/ccmc_2040.act?m=U02M04T01D000', '월회계보고', '월회계보고>전표검증')}
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 disabled:opacity-50 text-emerald-700">
                       📅 월회계보고 자동로그인
                     </button>
