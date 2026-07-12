@@ -1426,7 +1426,13 @@ export default function VoucherInputPage() {
                 if (targets.length === 0) { alert('전표수정 대상으로 체크된 전표가 없습니다. 표에서 전표를 먼저 체크해주세요.'); return }
                 // ⚠ 데이터이관으로 들어온 전표는 출발지 시스템이 다를 수 있음 — 인천시가 아닌 출처(예: 경상북도 gbccm)를
                 // 인천시로 잘못 전송하지 않게 차단. _srcSystem 없는 행(수기입력 등, srcNo 자체가 없는 행)만 통과.
-                const wrongSource = targets.find(r => r.srcNo && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon')
+                // ⚠ 2026-07-13: 구분값은 'incheon' 하나뿐 — data-migration 의 SOURCE_OPTIONS(value:'incheon')
+                // 에서 그대로 내려와 /api/gbccm/vouchers/save 가 _srcSystem 에 그대로 기록함(gbccm.ts/aincheon.ts
+                // 등 "라이브러리 파일명"과 이 값은 무관, 절대 혼동 금지). 예전엔 'aincheon' 도 같이 허용하는
+                // 방어 코드가 있었는데, 실제로 그 값이 기록되는 코드 경로가 존재한 적이 없어(git log 로 확인)
+                // 오히려 "혹시 다른 값도 있나?"하는 혼동만 유발해 제거함.
+                const INCHEON_SRC = 'incheon'
+                const wrongSource = targets.find(r => r.srcNo && r._srcSystem !== INCHEON_SRC)
                 if (wrongSource) {
                   alert(`선택한 전표 중 인천시 출처가 아닌 전표가 있습니다(원본번호 ${wrongSource.srcNo || '-'}${wrongSource._srcSystem ? `, 출처: ${wrongSource._srcSystem}` : ''}).\n인천시 전표수정은 인천시 시스템에서 이관된 전표만 가능합니다.`)
                   return
