@@ -2350,6 +2350,34 @@ export default function DataMigrationPage() {
                     </a>
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">· 로그인 상태로 해당 화면이 바로 열립니다. 혹시 다른 화면이 뜨면 상단 탭에서 직접 이동해주세요(코드 추정치라 보정이 필요할 수 있습니다).</p>
+
+                  {/* 세션쿠키 주입 방식 — 로컬 에이전트가 사용자 PC 에 로그인된 새 창을 띄움.
+                      브라우저 세션이 죽었어도 등록된 DCPU_SSID 로 로그인된 화면이 뜬다.
+                      쿠키값은 위 입력칸(gbccmCookieInput)에 붙여넣은 값을 사용. */}
+                  <div className="mt-2 pt-2 border-t border-emerald-100">
+                    <p className="text-[10px] text-indigo-600 font-medium mb-1">
+                      🖥️ 세션값으로 로그인 화면 열기 (로컬 에이전트 · PC 에 새 창)
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button type="button" onClick={() => handleGbccmOpenBrowser('U02M02T01D000')} disabled={gbccmOpening}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white">
+                        {gbccmOpening ? '여는 중…' : '📊 예산관리'}
+                      </button>
+                      <button type="button" onClick={() => handleGbccmOpenBrowser('U02M04T01D000')} disabled={gbccmOpening}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white">
+                        {gbccmOpening ? '여는 중…' : '📅 월회계보고'}
+                      </button>
+                      <button type="button" onClick={() => handleGbccmOpenBrowser('U02M05T01D000')} disabled={gbccmOpening}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white">
+                        {gbccmOpening ? '여는 중…' : '📑 결산관리'}
+                      </button>
+                      <button type="button" onClick={() => handleGbccmOpenBrowser()} disabled={gbccmOpening}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-600 hover:bg-slate-700 disabled:opacity-50 text-white">
+                        🏠 메인
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1">· 위 입력칸에 현재 DCPU_SSID 값을 붙여넣고 눌러주세요. 로컬 에이전트가 실행 중이어야 PC 에 창이 뜹니다.</p>
+                  </div>
                 </div>
               ) : (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
