@@ -30,6 +30,13 @@ function initialVoucherYearMonth() {
   return defaultVoucherYearMonth()
 }
 
+// 인천시어린이집관리시스템(aincheon.co.kr) 실제 결제방식 드롭다운 11종(2026-07-14 실측 스크린샷) —
+// 지역시스템이 인천형(regionSystem==='incheon')인 시설은 결제방식 선택지를 이 목록과 정확히 맞춰야
+// 전표수정(submitOneIncheonEdit)이 이름 매칭에 실패하지 않고 실제 시스템에 반영된다.
+const AINCHEON_METHOD_LABELS = [
+  '국민행복카드', '계좌이체', '보조금', '전입금', '지정후원금', '비지정후원금', '카드결제', '자동이체', '지로', '현금결제', '기타',
+]
+
 interface VoucherRow {
   id: number
   date: string
@@ -569,9 +576,6 @@ export default function VoucherInputPage() {
   const [incheonSaving, setIncheonSaving] = useState(false)
   const [incheonProgressIdx, setIncheonProgressIdx] = useState(-1)
   const [incheonResults, setIncheonResults] = useState<Record<number, string>>({})
-  const AINCHEON_METHOD_LABELS = [
-    '국민행복카드', '계좌이체', '보조금', '전입금', '지정후원금', '비지정후원금', '카드결제', '자동이체', '지로', '현금결제', '기타',
-  ]
   const openIncheonEdit = (rows: VoucherRow[]) => { setIncheonEditRows(rows); setIncheonResults({}); setIncheonProgressIdx(-1) }
   const closeIncheonEdit = () => { setIncheonEditRows([]); setIncheonResults({}); setIncheonProgressIdx(-1) }
   const incheonNorm = (s: string) => (s || '').replace(/\s+/g, '').trim()
@@ -1575,7 +1579,7 @@ export default function VoucherInputPage() {
               className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-white border border-slate-300 shadow-md flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-            <SimpleInputPanel rows={rows} setRows={setRows} filterYearMonth={filterYearMonth} incomeAccounts={incomeAccounts} expenseAccounts={expenseAccounts} accountCodeMap={accountCodeMap} subAccountCodeMap={subAccountCodeMap} codeToAccount={codeToAccount} inputMethod={filterInputMethod} excelParsed={excelParsed} setExcelParsed={setExcelParsed} excelFileName={excelFileName} setExcelFileName={setExcelFileName} />
+            <SimpleInputPanel rows={rows} setRows={setRows} filterYearMonth={filterYearMonth} regionSystem={regionSystem} incomeAccounts={incomeAccounts} expenseAccounts={expenseAccounts} accountCodeMap={accountCodeMap} subAccountCodeMap={subAccountCodeMap} codeToAccount={codeToAccount} inputMethod={filterInputMethod} excelParsed={excelParsed} setExcelParsed={setExcelParsed} excelFileName={excelFileName} setExcelFileName={setExcelFileName} />
           </div>
         </div>
       )}
@@ -1821,12 +1825,10 @@ export default function VoucherInputPage() {
                   <label className={labelCls}>결제방식</label>
                   <select value={dr.note} onChange={e => updateDraft('note', e.target.value)} className={inputCls}>
                     <option value="">선택</option>
-                    <option value="계좌이체">계좌이체</option>
-                    <option value="자동이체">자동이체</option>
-                    <option value="카드결제">카드결제</option>
-                    <option value="국민행복카드">국민행복카드</option>
-                    <option value="현금결제">현금결제</option>
-                    <option value="지로">지로</option>
+                    {(regionSystem === 'incheon'
+                      ? AINCHEON_METHOD_LABELS
+                      : ['계좌이체', '자동이체', '카드결제', '국민행복카드', '현금결제', '지로']
+                    ).map(v => <option key={v} value={v}>{v}</option>)}
                   </select>
                 </div>
               </div>
@@ -2587,7 +2589,9 @@ export default function VoucherInputPage() {
                                 onClick={e => e.stopPropagation()}
                                 className="w-full px-1 py-0.5 border border-teal-300 rounded text-xs text-center focus:ring-1 focus:ring-teal-300 outline-none">
                                 <option value="">::선택::</option>
-                                {row.type === '수입' ? <>
+                                {regionSystem === 'incheon' ? (
+                                  AINCHEON_METHOD_LABELS.map(v => <option key={v} value={v}>{v}</option>)
+                                ) : row.type === '수입' ? <>
                                   <option value="카드결제">카드결제</option>
                                   <option value="국민행복카드">국민행복카드</option>
                                   <option value="계좌이체">계좌이체</option>
@@ -2725,6 +2729,7 @@ interface InputPanelProps {
   rows: VoucherRow[]
   setRows: React.Dispatch<React.SetStateAction<VoucherRow[]>>
   filterYearMonth: string
+  regionSystem?: string
   incomeAccounts: AccItem[]
   expenseAccounts: AccItem[]
   accountCodeMap: Record<string, string>
@@ -2753,7 +2758,7 @@ interface SimpleRow {
   saved: boolean
 }
 
-function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, codeToAccount = {}, inputMethod, excelParsed = [], setExcelParsed, excelFileName = '', setExcelFileName }: InputPanelProps) {
+function SimpleInputPanel({ rows, setRows, filterYearMonth, regionSystem = '', incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap, codeToAccount = {}, inputMethod, excelParsed = [], setExcelParsed, excelFileName = '', setExcelFileName }: InputPanelProps) {
   const [simpleRows, setSimpleRows] = useState<SimpleRow[]>([
     { id: 1, day: '', type: '지출', summary: '', incomeAmount: '', expenseAmount: '', account: '', subAccount: '', accountCode: '', payment: '', rowInputMethod: '수기', saved: false },
     { id: 2, day: '', type: '지출', summary: '', incomeAmount: '', expenseAmount: '', account: '', subAccount: '', accountCode: '', payment: '', rowInputMethod: '수기', saved: false },
@@ -3093,7 +3098,9 @@ function SimpleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
                       onChange={e => updateRow(idx, 'payment', e.target.value)}
                       className="w-full px-1 py-1.5 border border-teal-400/30 rounded text-xs focus:outline-none focus:ring-1 focus:ring-teal-300 focus:border-teal-400 disabled:bg-slate-50 disabled:text-slate-400">
                       <option value="">::선택::</option>
-                      {amountType === '수입' ? <>
+                      {regionSystem === 'incheon' ? (
+                        AINCHEON_METHOD_LABELS.map(v => <option key={v} value={v}>{v}</option>)
+                      ) : amountType === '수입' ? <>
                         <option value="카드결제">카드결제</option>
                         <option value="국민행복카드">국민행복카드</option>
                         <option value="계좌이체">계좌이체</option>
@@ -3304,7 +3311,7 @@ function SingleInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
 }
 
 /* ── 상세등록 패널 ── */
-function DetailInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap }: InputPanelProps) {
+function DetailInputPanel({ rows, setRows, filterYearMonth, regionSystem = '', incomeAccounts, expenseAccounts, accountCodeMap, subAccountCodeMap }: InputPanelProps) {
   const [form, setForm] = useState({
     day: '', type: '지출' as '수입' | '지출', summary: '', amount: '',
     account: '', subAccount: '', counterpart: '', note: '',
@@ -3437,11 +3444,10 @@ function DetailInputPanel({ rows, setRows, filterYearMonth, incomeAccounts, expe
             <label className={labelCls}>결제방식</label>
             <select value={form.payment} onChange={e => setForm(f => ({ ...f, payment: e.target.value }))} className={inputCls}>
               <option value="">선택</option>
-              <option value="계좌이체">계좌이체</option>
-              <option value="자동이체">자동이체</option>
-              <option value="카드결제">카드결제</option>
-              <option value="현금결제">현금결제</option>
-              <option value="지로">지로</option>
+              {(regionSystem === 'incheon'
+                ? AINCHEON_METHOD_LABELS
+                : ['계좌이체', '자동이체', '카드결제', '현금결제', '지로']
+              ).map(v => <option key={v} value={v}>{v}</option>)}
             </select>
           </div>
           <div>
