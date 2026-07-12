@@ -533,6 +533,10 @@ export default function VoucherInputPage() {
   const [receiptRowId, setReceiptRowId] = useState<number | null>(null)
   const [galleryImages, setGalleryImages] = useState<string[] | null>(null)  // 영수증 여러 장 갤러리
 
+  // "인천시 전표수정" 버튼 처리 중 상태 — 예전엔 로딩 표시가 전혀 없어서 confirm 팝업 확인 후
+  // Puppeteer 자동화(수십 초)가 진행되는 동안 아무 표시 없이 멈춘 것처럼 보이던 문제(2026-07-13).
+  const [incheonEditBusy, setIncheonEditBusy] = useState(false)
+
   // 전표수정(경상북도 gbccm) — 팝업에서 값을 다시 입력받지 않고, 통합e 전표관리 표에서 "이미 수정해둔"
   // 결제방식(row.note)/적요(row.summary)/계정과목(row.account) 현재 값을 그대로 실제 시스템에 반영한다.
   // 체크한 전표 여러 건을 한 번에 담아 순차 처리(한 건씩 gbccm 화면을 조작해야 해서 동시 처리는 불가).
@@ -1313,6 +1317,7 @@ export default function VoucherInputPage() {
             && !filtered.some(r => r._srcSystem === 'gbccm') && (
             <button
               data-tip="선택된 전표 또는 화면의 전체 전표를 인천시 시스템(전표관리 - 수기입력)에 반영"
+              disabled={incheonEditBusy}
               onClick={async () => {
                 // ⚠ rows(전체, 월 무관) 가 아니라 filtered(현재 조회월에 보이는 행)에서만 매칭해야 함 —
                 // id 는 이관 배치마다 1번부터 다시 매겨지므로(mapRow), 다른 달의 행과 우연히 같은 id 를
@@ -1329,7 +1334,7 @@ export default function VoucherInputPage() {
                   alert(`선택한 전표 중 인천시 출처가 아닌 전표가 있습니다(원본번호 ${wrongSource.srcNo || '-'}${wrongSource._srcSystem ? `, 출처: ${wrongSource._srcSystem}` : ''}).\n인천시 전표수정은 인천시 시스템에서 이관된 전표만 가능합니다.`)
                   return
                 }
-                if (!confirm(`인천시 시스템에 ${targets.length}건 반영(전표수정)?\n본인 PC 에이전트가 Puppeteer 로 자동 진행합니다.`)) return
+                if (!confirm(`인천시 시스템에 ${targets.length}건 반영(전표수정)?\n본인 PC 에이전트가 Puppeteer 로 자동 진행합니다(전표당 수십 초 소요될 수 있습니다).`)) return
                 const vouchers = targets.map(r => ({
                   date:        r.date.replace(/[^0-9]/g, ''),
                   summary:     r.summary || '',
@@ -1339,12 +1344,17 @@ export default function VoucherInputPage() {
                   accountName: r.subAccount || r.account,
                   memo:        r.note,
                 }))
+                // ⚠ 2026-07-13 fix: 예전엔 여기서 로딩 표시가 전혀 없어서 confirm 이후 Puppeteer
+                // 자동화가 진행되는 수십 초~수 분 동안 화면이 그대로 멈춘 것처럼 보였음(사용자 보고).
+                // incheonEditBusy 로 버튼에 "처리 중…" 표시 + 8분 타임아웃(정말 멈춘 경우 무한 대기 방지).
+                setIncheonEditBusy(true)
                 try {
                   const res = await fetch('/api/incheon/add-voucher', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({ vouchers }),
+                    signal: AbortSignal.timeout(480_000),
                   })
                   const j = await res.json()
                   if (j.success) {
@@ -1354,12 +1364,17 @@ export default function VoucherInputPage() {
                     alert(`처리 실패: ${j.error || j.errMsg || '알 수 없음'}`)
                   }
                 } catch (e) {
-                  alert('처리 오류: ' + (e instanceof Error ? e.message : String(e)))
+                  const timedOut = e instanceof Error && e.name === 'TimeoutError'
+                  alert(timedOut
+                    ? '처리 시간 초과(8분) — 에이전트가 응답하지 않습니다. PC 에이전트 상태를 확인해주세요.'
+                    : '처리 오류: ' + (e instanceof Error ? e.message : String(e)))
+                } finally {
+                  setIncheonEditBusy(false)
                 }
               }}
-              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-blue-400 rounded bg-teal-500 hover:bg-teal-500 text-white sub-tab-hover"
+              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-blue-400 rounded bg-teal-500 hover:bg-teal-500 text-white sub-tab-hover disabled:opacity-50"
             >
-              인천시 전표수정
+              {incheonEditBusy ? '⏳ 처리 중… (수십 초 소요)' : '인천시 전표수정'}
             </button>
           )}
           {/* 경상북도(gbccm) 이관 전표만 화면에 있으면 그쪽 전용 버튼 노출 — 인천시 버튼과 자리 교체.
