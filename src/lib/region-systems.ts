@@ -6,15 +6,16 @@ export interface RegionSystemOption {
   label: string
 }
 
+// ⚠ 2026-07-13: 라벨을 "-형" 표기로 통일(사용자 지정, 헤더 알약배지에 "서울형"/"경기형" 식으로 노출).
 export const REGION_SYSTEMS: RegionSystemOption[] = [
-  { value: 'seoul', label: '서울시' },
-  { value: 'gyeonggi', label: '경기도' },
-  { value: 'incheon', label: '인천시' },
-  { value: 'wonju', label: '원주시' },
-  { value: 'daejeon', label: '대전시' },
-  { value: 'daegu', label: '대구시' },
-  { value: 'gbccm', label: '경상북도' },
-  { value: 'jeonbuk', label: '전라북도' },
+  { value: 'seoul', label: '서울형' },
+  { value: 'gyeonggi', label: '경기형' },
+  { value: 'incheon', label: '인천형' },
+  { value: 'wonju', label: '원주형' },
+  { value: 'daejeon', label: '대전형' },
+  { value: 'daegu', label: '대구형' },
+  { value: 'gbccm', label: '경북형' },
+  { value: 'jeonbuk', label: '전북형' },
   { value: 'chungnam_nh', label: '충남형(농협)' },
   { value: 'chungnam_hana', label: '충남형(하나은행)' },
 ]

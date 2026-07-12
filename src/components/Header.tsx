@@ -316,6 +316,18 @@ export default function Header() {
               )}
             </div>
 
+            {/* 지역시스템 알약 배지 — 기본정보 모달에서 설정한 값을 한눈에 보여줌. 클릭 시 그 모달로 이동.
+                미설정(일반 어린이집)이면 표시 안 함 — 대부분 시설엔 해당 없어 배지가 안 뜨는 게 정상. */}
+            {basicForm.regionSystem && (
+              <button
+                onClick={() => setCenterInfoOpen(true)}
+                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-indigo-400 to-violet-500 rounded-full hover:from-indigo-500 hover:to-violet-600 transition-all shadow-sm whitespace-nowrap shrink-0"
+                title="지역시스템 설정 (클릭하여 변경)"
+              >
+                {REGION_SYSTEMS.find(r => r.value === basicForm.regionSystem)?.label || basicForm.regionSystem}
+              </button>
+            )}
+
             <span className="text-[12px] text-slate-600 font-medium">{profileData.centerName || profileData.displayName || user?.displayName || '...'}님</span>
 
             <span className={`text-[11px] font-mono px-2 py-0.5 border rounded-md ${secondsLeft <= 300 ? 'text-red-500 border-red-300 animate-pulse' : secondsLeft <= 600 ? 'text-teal-500 border-teal-300' : 'text-slate-400 border-slate-200'}`} title="자동 로그아웃까지 남은 시간">
