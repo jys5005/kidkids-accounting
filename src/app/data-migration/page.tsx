@@ -2358,22 +2358,26 @@ export default function DataMigrationPage() {
                       "원장 본인 브라우저에 이미 있는 gbccm.co.kr 쿠키"를 그대로 재사용하는 것뿐이라
                       경기도(accgg) WebSquare 세션 주입과 달리 안전하게 동작(단순 새 탭 열기).
                       ⚠ gbccm 은 SPA(하부 탭이 URL 하나만 씀) + cross-origin 이라 서브탭 자동이동 불가 —
-                      진입 후 상단 탭에서 직접 이동. 에이전트 방식(자동로그인)은 별도창이라 미채택(2026-07-12 결정). */}
+                      진입 후 상단 탭에서 직접 이동. 에이전트 방식(자동로그인)은 별도창이라 미채택(2026-07-12 결정).
+                      2026-07-12 실사용자 스크린샷으로 확인: U02M02T01D000 은 "예산관리"가 아니라
+                      "정산/결산 > 보육통합 결산보고"(결산관리)로 열림 — 결산관리로 재배정.
+                      예산관리/월회계보고는 정확한 코드가 미확인이라 안전한 기본 진입점(M01T01=회계현황,
+                      docs 상 확정값)으로 열고 상단 탭에서 직접 클릭하도록 안내. */}
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M02T01D000" target="_blank" rel="noopener noreferrer"
+                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M01T01D000" target="_blank" rel="noopener noreferrer"
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
                       📊 예산관리 바로가기
                     </a>
-                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M04T01D000" target="_blank" rel="noopener noreferrer"
+                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M01T01D000" target="_blank" rel="noopener noreferrer"
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
                       📅 월회계보고 바로가기
                     </a>
-                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M05T01D000" target="_blank" rel="noopener noreferrer"
+                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M02T01D000" target="_blank" rel="noopener noreferrer"
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
                       📑 결산관리 바로가기
                     </a>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">· 로그인 상태로 해당 화면이 바로 열립니다. 혹시 다른 화면이 뜨면 상단 탭에서 직접 이동해주세요(코드 추정치라 보정이 필요할 수 있습니다).</p>
+                  <p className="text-[10px] text-slate-400 mt-1">· 결산관리는 확인된 화면으로 바로 열립니다. 예산관리·월회계보고는 아직 정확한 화면 코드가 확인되지 않아 회계현황 화면이 열리니, 상단 탭에서 직접 클릭해주세요.</p>
                 </div>
               ) : (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
