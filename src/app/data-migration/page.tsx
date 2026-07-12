@@ -1101,6 +1101,32 @@ export default function DataMigrationPage() {
     }
   }, [reloadIncheonSession])
 
+  // 인천시 바로가기 — 에이전트가 인천시에 로그인된 상태로 상단 탭(예산관리/월회계보고/결산관리)까지 이동
+  // (gbccm 과 달리 window.open 불가 — 공동인증서(UniSign)라 반드시 에이전트 경유)
+  const [incheonNavigating, setIncheonNavigating] = useState('')
+  const [incheonNavMsg, setIncheonNavMsg] = useState('')
+  const handleIncheonNavigate = useCallback(async (menuName: string) => {
+    setIncheonNavigating(menuName); setIncheonNavMsg(`⏳ ${menuName} 이동 중… (에이전트가 인천시 화면을 엽니다, 최대 5분)`)
+    try {
+      const res = await fetch('/api/incheon/navigate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ menuName }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (j.success) {
+        setIncheonNavMsg(`✅ ${menuName} 화면을 열었습니다. (원장님 PC 브라우저 확인)`)
+      } else if (j.agentOffline) {
+        setIncheonNavMsg('❌ 로컬 에이전트가 꺼져 있습니다. 우상단 [에이전트 실행]으로 켠 뒤 다시 시도하세요.')
+      } else {
+        setIncheonNavMsg(`❌ ${j.error || '이동 실패'}`)
+      }
+    } catch (e) {
+      setIncheonNavMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
+    } finally {
+      setIncheonNavigating('')
+    }
+  }, [])
+
   // 경상북도(gbccm) 세션쿠키 등록 여부 — 이 시스템은 로컬 보안프로그램(npPfs) 의존성 때문에
   // 자동 로그인이 안 됨(2026-07-10 확인) → 원장이 실제 브라우저로 로그인 후 DCPU_SSID 쿠키값을 1회 붙여넣기.
   const [gbccmSession, setGbccmSession] = useState<{ exists: boolean; savedAt?: string } | null>(null)
@@ -2567,6 +2593,27 @@ export default function DataMigrationPage() {
                   {incheonRegistering ? '로그인 세션 등록 중… (인증서 목록 확인, 최대 5분)' : (incheonSession?.exists ? '🔄 세션 다시 등록' : '🔐 로그인세션등록')}
                 </button>
                 {incheonRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{incheonRegisterMsg}</p>}
+
+                {/* 바로가기 — 에이전트가 인천시에 로그인된 상태로 해당 상단 탭까지 이동(공동인증서라 window.open 불가) */}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <button type="button" disabled={!!incheonNavigating}
+                    onClick={() => handleIncheonNavigate('예산관리')}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 disabled:opacity-50 text-indigo-700">
+                    📊 예산관리 바로가기
+                  </button>
+                  <button type="button" disabled={!!incheonNavigating}
+                    onClick={() => handleIncheonNavigate('월회계보고')}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 disabled:opacity-50 text-indigo-700">
+                    📅 월회계보고 바로가기
+                  </button>
+                  <button type="button" disabled={!!incheonNavigating}
+                    onClick={() => handleIncheonNavigate('결산관리')}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-indigo-300 bg-white hover:bg-indigo-50 disabled:opacity-50 text-indigo-700">
+                    📑 결산관리 바로가기
+                  </button>
+                </div>
+                {incheonNavMsg && <p className="text-[11px] mt-1.5 text-slate-600">{incheonNavMsg}</p>}
+                <p className="text-[10px] text-slate-400 mt-1">· 에이전트가 인천시에 로그인된 상태로 해당 화면을 엽니다. (세션등록 + PC 에이전트 켜짐 필요)</p>
               </div>
             )}
             <div className="flex gap-2">
