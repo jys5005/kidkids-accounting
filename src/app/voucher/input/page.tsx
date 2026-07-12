@@ -112,6 +112,9 @@ export default function VoucherInputPage() {
   const [loaded, setLoaded] = useState(false)  // ← mount 로드 완료 전엔 자동저장 금지
   // 아이사랑꿈터 장부(계정) — 3개 장부별로 전표가 분리 저장됨. 어린이집은 '' (분리 안 함)
   const [book, setBook] = useState<string | null>(null)  // null = 아직 결정 전
+  // 지역시스템 설정(profile.regionSystem, /settings 에서 지정) — 수기입력한 전표(_srcSystem 없음)도
+  // 이 시설이 인천시 시스템 쓰는 걸로 지정돼 있으면 인천시 전표수정 대상에 포함시키기 위함.
+  const [regionSystem, setRegionSystem] = useState('')
   const [bankBusy, setBankBusy] = useState(false)        // 은행미등록(은행거래→전표) 처리 중
   const [showManualEntry, setShowManualEntry] = useState(false)  // 수기등록 팝업
   const [acctPopPos, setAcctPopPos] = useState<{ x: number; y: number } | null>(null)  // 계정과목 팝업 위치(드래그 이동)
@@ -140,6 +143,7 @@ export default function VoucherInputPage() {
       try {
         const me = await fetch('/api/auth/me').then(r => r.json())
         itype = (me?.institutionType || me?.profile?.institutionType || 'childcare') as string
+        if (!cancelled) setRegionSystem((me?.profile?.regionSystem as string) || '')
       } catch { /* ignore */ }
       if (!cancelled) setBook(itype === 'ilovechild' ? getActiveBook() : '')
     })()
@@ -1425,14 +1429,21 @@ export default function VoucherInputPage() {
                 const targets = filtered.filter(r => checked.has(r.id))
                 if (targets.length === 0) { alert('전표수정 대상으로 체크된 전표가 없습니다. 표에서 전표를 먼저 체크해주세요.'); return }
                 // ⚠ 데이터이관으로 들어온 전표는 출발지 시스템이 다를 수 있음 — 인천시가 아닌 출처(예: 경상북도 gbccm)를
-                // 인천시로 잘못 전송하지 않게 차단. _srcSystem 없는 행(수기입력 등, srcNo 자체가 없는 행)만 통과.
+                // 인천시로 잘못 전송하지 않게 차단.
                 // ⚠ 2026-07-13: 구분값은 'incheon' 하나뿐 — data-migration 의 SOURCE_OPTIONS(value:'incheon')
                 // 에서 그대로 내려와 /api/gbccm/vouchers/save 가 _srcSystem 에 그대로 기록함(gbccm.ts/aincheon.ts
                 // 등 "라이브러리 파일명"과 이 값은 무관, 절대 혼동 금지). 예전엔 'aincheon' 도 같이 허용하는
                 // 방어 코드가 있었는데, 실제로 그 값이 기록되는 코드 경로가 존재한 적이 없어(git log 로 확인)
                 // 오히려 "혹시 다른 값도 있나?"하는 혼동만 유발해 제거함.
+                // ⚠ _srcSystem 없는 행(수기입력 등)은 데이터이관을 안 거쳤을 뿐 실제로는 인천시 전표일 수 있음
+                // (원장이 [설정 > 지역시스템]에서 이 시설=인천시로 지정해뒀으면 통과시킴) — 그 설정이 없으면
+                // "출처 불명"으로 안전하게 차단(기존 동작 유지).
                 const INCHEON_SRC = 'incheon'
-                const wrongSource = targets.find(r => r.srcNo && r._srcSystem !== INCHEON_SRC)
+                const wrongSource = targets.find(r => {
+                  if (r._srcSystem === INCHEON_SRC) return false
+                  if (!r._srcSystem && regionSystem === INCHEON_SRC) return false
+                  return !!r.srcNo
+                })
                 if (wrongSource) {
                   alert(`선택한 전표 중 인천시 출처가 아닌 전표가 있습니다(원본번호 ${wrongSource.srcNo || '-'}${wrongSource._srcSystem ? `, 출처: ${wrongSource._srcSystem}` : ''}).\n인천시 전표수정은 인천시 시스템에서 이관된 전표만 가능합니다.`)
                   return

@@ -27,11 +27,33 @@ const PROGRAM_LABELS: Record<string, string> = {
   seoul: '서울시어린이집관리시스템',
 }
 
+// 지역형(정부/지자체 운영) 회계시스템 목록 — data-migration 의 SOURCE_OPTIONS 값과 동일 코드 사용
+// (incheon/gbccm/gyeonggi 는 실제 구현됨, 나머지는 아직 미구현 — 설정만 먼저 열어둠).
+// ⚠ voucher/input/page.tsx 의 REGION_SYSTEMS 와 반드시 동일하게 유지할 것(값 하드코딩 중복).
+const REGION_SYSTEMS: { value: string; label: string }[] = [
+  { value: 'seoul', label: '서울시' },
+  { value: 'gyeonggi', label: '경기도' },
+  { value: 'incheon', label: '인천시' },
+  { value: 'wonju', label: '원주시' },
+  { value: 'daejeon', label: '대전시' },
+  { value: 'daegu', label: '대구시' },
+  { value: 'gbccm', label: '경상북도' },
+  { value: 'jeonbuk', label: '전라북도' },
+  { value: 'chungnam_nh', label: '충남형(농협)' },
+  { value: 'chungnam_hana', label: '충남형(하나은행)' },
+]
+
 export default function SettingsPage() {
   const [cisStatus, setCisStatus] = useState<CisStatus | null>(null)
   const [cisLoading, setCisLoading] = useState(true)
   const [programs, setPrograms] = useState<Record<string, ProgramEntry>>({})
   const [programLoading, setProgramLoading] = useState(true)
+  // 지역시스템 설정 — 이 시설이 어느 지역형 회계시스템을 쓰는지. profile.regionSystem 에 저장(PUT /api/auth/me
+  // 가 그대로 프록시 → 통합e updateUser 가 profile 필드만 머지, 다른 정보 안 건드림).
+  const [regionSystem, setRegionSystem] = useState<string>('')
+  const [regionLoading, setRegionLoading] = useState(true)
+  const [regionSaving, setRegionSaving] = useState(false)
+  const [regionMsg, setRegionMsg] = useState('')
 
   useEffect(() => {
     // CIS 상태
@@ -47,7 +69,33 @@ export default function SettingsPage() {
       .then(json => { if (json.success) setPrograms(json.data ?? {}) })
       .catch(() => {})
       .finally(() => setProgramLoading(false))
+
+    // 지역시스템 설정
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(json => setRegionSystem((json?.profile?.regionSystem as string) || ''))
+      .catch(() => {})
+      .finally(() => setRegionLoading(false))
   }, [])
+
+  const saveRegionSystem = async (value: string) => {
+    setRegionSaving(true); setRegionMsg('')
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile: { regionSystem: value } }),
+      })
+      const j = await res.json()
+      if (j.success) { setRegionSystem(value); setRegionMsg('✅ 저장됨') }
+      else setRegionMsg(`❌ ${j.error || '저장 실패'}`)
+    } catch (e) {
+      setRegionMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
+    } finally {
+      setRegionSaving(false)
+      setTimeout(() => setRegionMsg(''), 3000)
+    }
+  }
 
   const cisReady = cisStatus && cisStatus.hasUserId && cisStatus.hasUserPw
   const programCount = Object.keys(programs).length
@@ -132,6 +180,36 @@ export default function SettingsPage() {
           <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
             <p className="text-xs text-teal-700 font-medium">등록된 회계프로그램이 없습니다.</p>
             <p className="text-xs text-teal-600 mt-1">통합e 인증설정 &gt; 회계프로그램 관리에서 등록하세요.</p>
+          </div>
+        )}
+      </div>
+
+      {/* 지역시스템 설정 */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className={`w-2.5 h-2.5 rounded-full ${regionSystem ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+          <h2 className="font-semibold text-slate-800">지역시스템</h2>
+        </div>
+        <p className="text-xs text-slate-500 mb-3">
+          이 시설이 어느 지역 어린이집관리시스템을 쓰는지 지정합니다. 데이터이관으로 안 들어온 수기입력 전표도
+          이 설정으로 어느 지역인지 판단할 수 있어, "전표수정" 등 지역형 전용 기능이 더 안정적으로 동작합니다.
+        </p>
+        {regionLoading ? (
+          <p className="text-sm text-slate-400">확인 중...</p>
+        ) : (
+          <div className="flex items-center gap-2">
+            <select
+              value={regionSystem}
+              onChange={e => saveRegionSystem(e.target.value)}
+              disabled={regionSaving}
+              className="px-3 py-2 border border-slate-200 rounded-lg text-sm disabled:opacity-50"
+            >
+              <option value="">해당없음(일반 어린이집)</option>
+              {REGION_SYSTEMS.map(r => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+            {regionMsg && <span className="text-xs text-slate-500">{regionMsg}</span>}
           </div>
         )}
       </div>
