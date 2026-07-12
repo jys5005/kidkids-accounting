@@ -963,10 +963,20 @@ export default function DataMigrationPage() {
   }, [source])
   const [sourceId, setSourceId] = useState('')
   const [sourcePw, setSourcePw] = useState('')
+  // 조회월 — 마지막으로 조회했던 월을 기억해 다음에 열 때 기본값으로 복원 (출발지와 동일한 localStorage 패턴)
   const [yearMonth, setYearMonth] = useState(() => {
+    try {
+      const last = localStorage.getItem('data-migration:yearMonth')
+      if (last && /^\d{6}$/.test(last)) return last
+    } catch {}
     const d = new Date()
     return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`
   })
+  const ymPersistRef = useRef(false)
+  useEffect(() => {
+    if (!ymPersistRef.current) { ymPersistRef.current = true; return }
+    try { localStorage.setItem('data-migration:yearMonth', yearMonth) } catch {}
+  }, [yearMonth])
 
   // sunote (목적지)
   const [sunoteId, setSunoteId] = useState('')
