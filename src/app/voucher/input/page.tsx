@@ -533,9 +533,61 @@ export default function VoucherInputPage() {
   const [receiptRowId, setReceiptRowId] = useState<number | null>(null)
   const [galleryImages, setGalleryImages] = useState<string[] | null>(null)  // 영수증 여러 장 갤러리
 
-  // "인천시 전표수정" 버튼 처리 중 상태 — 예전엔 로딩 표시가 전혀 없어서 confirm 팝업 확인 후
-  // Puppeteer 자동화(수십 초)가 진행되는 동안 아무 표시 없이 멈춘 것처럼 보이던 문제(2026-07-13).
-  const [incheonEditBusy, setIncheonEditBusy] = useState(false)
+  // 전표수정(인천시 aincheon) — gbccm 과 동일 패턴: 팝업에서 값을 다시 입력받지 않고, 통합e
+  // 전표관리 표에서 "이미 수정해둔" 결제방식(row.note)/적요(row.summary)/계정과목(row.account)
+  // 현재 값을 그대로 원본번호(BILL_NUMDETAIL) 기준으로 실제 인천시 전표에 반영한다.
+  // ⚠ 2026-07-13: gbccm 과 확연히 다른 점 — 인천시는 결제방식 코드표를 아직 다 못 구했음(820=전입금만
+  // 실측 확인). AINCHEON_METHODS 에 없는 결제방식명은 조용히 건너뛰고(적요/계정과목만 반영) ⚠ 표시.
+  const [incheonEditRows, setIncheonEditRows] = useState<VoucherRow[]>([])
+  const [incheonSaving, setIncheonSaving] = useState(false)
+  const [incheonProgressIdx, setIncheonProgressIdx] = useState(-1)
+  const [incheonResults, setIncheonResults] = useState<Record<number, string>>({})
+  const AINCHEON_METHODS: { code: string; label: string }[] = [
+    { code: '820', label: '전입금' },
+  ]
+  const openIncheonEdit = (rows: VoucherRow[]) => { setIncheonEditRows(rows); setIncheonResults({}); setIncheonProgressIdx(-1) }
+  const closeIncheonEdit = () => { setIncheonEditRows([]); setIncheonResults({}); setIncheonProgressIdx(-1) }
+  const incheonNorm = (s: string) => (s || '').replace(/\s+/g, '').trim()
+  const submitOneIncheonEdit = async (row: VoucherRow): Promise<string> => {
+    if (!row.srcNo) return '❌ 원본번호(전표번호) 없음'
+    const digits = row.date.replace(/\D/g, '')
+    const yearMonth = digits.length >= 6 ? digits.slice(0, 6) : ''
+    if (!yearMonth) return '❌ 날짜에서 조회월을 알 수 없음'
+    const methodMatch = AINCHEON_METHODS.find(m => incheonNorm(m.label) === incheonNorm(row.note))
+    const body: Record<string, string> = { billNumDetail: row.srcNo, yearMonth, memo: row.summary || '' }
+    if (methodMatch) { body.sttlMethodCode = methodMatch.code; body.sttlMethodName = methodMatch.label }
+    if (row.account) body.accountName = row.account
+    if (row.subAccount) body.subAccountName = row.subAccount
+    try {
+      const res = await fetch('/api/incheon/update-voucher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ edits: [body] }),
+        signal: AbortSignal.timeout(120_000),
+      })
+      const j = await res.json()
+      const one = Array.isArray(j.results) ? j.results[0] : null
+      if (j.success && one?.ok) return '✅ 전표수정 완료'
+      return `❌ ${one?.message || j.error || '전표수정 실패'}`
+    } catch (e) {
+      const timedOut = e instanceof Error && e.name === 'TimeoutError'
+      return timedOut ? '❌ 처리 시간 초과(2분)' : `❌ ${e instanceof Error ? e.message : '연결 실패'}`
+    }
+  }
+  // 체크된 전표 여러 건을 순차 처리 — 진행중 인덱스/결과를 실시간으로 갱신해 모달에서 진행 상황을 볼 수 있게 함.
+  const submitIncheonEdit = async () => {
+    if (incheonEditRows.length === 0) return
+    setIncheonSaving(true)
+    for (let i = 0; i < incheonEditRows.length; i++) {
+      setIncheonProgressIdx(i)
+      const row = incheonEditRows[i]
+      const msg = await submitOneIncheonEdit(row)
+      setIncheonResults(prev => ({ ...prev, [row.id]: msg }))
+    }
+    setIncheonProgressIdx(-1)
+    setIncheonSaving(false)
+  }
 
   // 전표수정(경상북도 gbccm) — 팝업에서 값을 다시 입력받지 않고, 통합e 전표관리 표에서 "이미 수정해둔"
   // 결제방식(row.note)/적요(row.summary)/계정과목(row.account) 현재 값을 그대로 실제 시스템에 반영한다.
@@ -695,6 +747,52 @@ export default function VoucherInputPage() {
               ))}
             </div>
             <p className="text-[11px] text-slate-400 mt-3">· 사진을 클릭하면 원본이 새 창에 열립니다.</p>
+          </div>
+        </div>
+      )}
+
+      {/* 전표수정 — 원본번호(srcNo=BILL_NUMDETAIL) 기준으로 인천시(aincheon) 시스템에
+          결제방식/적요/계정과목 반영. 새 전표를 추가하는 게 아니라 기존 전표를 실제로 수정함. */}
+      {incheonEditRows.length > 0 && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4" onClick={() => !incheonSaving && closeIncheonEdit()}>
+          <div className="bg-white rounded-xl shadow-2xl w-[92vw] max-w-lg max-h-[85vh] overflow-y-auto p-5" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-800">전표수정(인천시) · {incheonEditRows.length}건</h3>
+              <button onClick={() => !incheonSaving && closeIncheonEdit()} className="text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
+            </div>
+            <p className="text-[11px] text-slate-400 mb-3">
+              통합e 전표관리 표에서 <b>이미 수정해두신 현재 값</b> 그대로 인천시어린이집관리시스템 실제 전표에 순서대로 반영합니다(원본번호 기준 — 새 전표 추가 아님).
+              (값을 바꾸시려면 이 창을 닫고 표에서 직접 수정 후 다시 눌러주세요)
+            </p>
+            <div className="mb-4 divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
+              {incheonEditRows.map((row, i) => {
+                const methodMatch = AINCHEON_METHODS.find(m => incheonNorm(m.label) === incheonNorm(row.note))
+                const result = incheonResults[row.id]
+                const isCurrent = incheonSaving && incheonProgressIdx === i
+                return (
+                  <div key={row.id} className={`p-2.5 ${isCurrent ? 'bg-teal-50' : ''}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-700">원본번호 {row.srcNo}</span>
+                      {isCurrent && <span className="text-[11px] font-bold text-teal-600">처리 중…</span>}
+                      {result && <span className={`text-[11px] font-bold ${result.startsWith('✅') ? 'text-emerald-600' : 'text-rose-500'}`}>{result}</span>}
+                    </div>
+                    <div className="text-[11px] text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
+                      <span className={row.note && !methodMatch ? 'text-rose-400' : ''}>
+                        결제방식: {row.note || '(빈 값)'}{row.note && !methodMatch && ' ⚠(코드 미확인 — 건너뜀)'}
+                      </span>
+                      <span>적요: {row.summary}</span>
+                      <span>계정과목: {row.account}{row.subAccount ? ` · 세목: ${row.subAccount}` : ''}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => !incheonSaving && closeIncheonEdit()} disabled={incheonSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-50">닫기</button>
+              <button onClick={submitIncheonEdit} disabled={incheonSaving} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-teal-500 hover:bg-teal-600 text-white disabled:opacity-50">
+                {incheonSaving ? `처리 중… (${incheonProgressIdx + 1}/${incheonEditRows.length})` : `전표수정 (${incheonEditRows.length}건)`}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1316,65 +1414,30 @@ export default function VoucherInputPage() {
           {!book && inputMode !== '건별등록' && inputMode !== '상세등록' && filtered.length > 0
             && !filtered.some(r => r._srcSystem === 'gbccm') && (
             <button
-              data-tip="선택된 전표 또는 화면의 전체 전표를 인천시 시스템(전표관리 - 수기입력)에 반영"
-              disabled={incheonEditBusy}
-              onClick={async () => {
+              data-tip="체크한 전표들의 결제방식/적요/계정과목을 인천시 시스템 실제 전표에 순서대로 반영(전표번호=원본번호 기준으로 기존 전표를 수정 — 새 전표를 추가하지 않음)"
+              onClick={() => {
                 // ⚠ rows(전체, 월 무관) 가 아니라 filtered(현재 조회월에 보이는 행)에서만 매칭해야 함 —
                 // id 는 이관 배치마다 1번부터 다시 매겨지므로(mapRow), 다른 달의 행과 우연히 같은 id 를
                 // 가질 수 있어 rows.filter 로 찾으면 화면에 안 보이는 엉뚱한 전표가 targets 에 섞여 들어옴.
-                const targets = checked.size > 0 ? filtered.filter(r => checked.has(r.id)) : filtered
-                if (targets.length === 0) { alert('처리할 전표가 없습니다.'); return }
+                const targets = filtered.filter(r => checked.has(r.id))
+                if (targets.length === 0) { alert('전표수정 대상으로 체크된 전표가 없습니다. 표에서 전표를 먼저 체크해주세요.'); return }
                 // ⚠ 데이터이관으로 들어온 전표는 출발지 시스템이 다를 수 있음 — 인천시가 아닌 출처(예: 경상북도 gbccm)를
-                // 인천시로 잘못 전송하지 않게 차단. _srcSystem 없는 행(수기입력 등)은 기존처럼 허용.
-                // ⚠ _srcSystem 이 명시적으로 'incheon'/'aincheon' 이 아니면 전부 차단.
-                // srcNo(원본번호)만 있고 _srcSystem 이 비어있는 옛 저장분(이 가드 추가 전 이관된 데이터)도
-                // "출처 불명 = 인천시 아님"으로 간주해 안전하게 막음 — 진짜 수기입력(srcNo 자체가 없음)만 통과.
+                // 인천시로 잘못 전송하지 않게 차단. _srcSystem 없는 행(수기입력 등, srcNo 자체가 없는 행)만 통과.
                 const wrongSource = targets.find(r => r.srcNo && r._srcSystem !== 'incheon' && r._srcSystem !== 'aincheon')
                 if (wrongSource) {
                   alert(`선택한 전표 중 인천시 출처가 아닌 전표가 있습니다(원본번호 ${wrongSource.srcNo || '-'}${wrongSource._srcSystem ? `, 출처: ${wrongSource._srcSystem}` : ''}).\n인천시 전표수정은 인천시 시스템에서 이관된 전표만 가능합니다.`)
                   return
                 }
-                if (!confirm(`인천시 시스템에 ${targets.length}건 반영(전표수정)?\n본인 PC 에이전트가 Puppeteer 로 자동 진행합니다(전표당 수십 초 소요될 수 있습니다).`)) return
-                const vouchers = targets.map(r => ({
-                  date:        r.date.replace(/[^0-9]/g, ''),
-                  summary:     r.summary || '',
-                  amount:      Number(r.amount) || 0,
-                  inOut:       (r.type === '지출' ? 'O' : 'I') as 'I' | 'O',
-                  accountCode: r.accountCode,
-                  accountName: r.subAccount || r.account,
-                  memo:        r.note,
-                }))
-                // ⚠ 2026-07-13 fix: 예전엔 여기서 로딩 표시가 전혀 없어서 confirm 이후 Puppeteer
-                // 자동화가 진행되는 수십 초~수 분 동안 화면이 그대로 멈춘 것처럼 보였음(사용자 보고).
-                // incheonEditBusy 로 버튼에 "처리 중…" 표시 + 8분 타임아웃(정말 멈춘 경우 무한 대기 방지).
-                setIncheonEditBusy(true)
-                try {
-                  const res = await fetch('/api/incheon/add-voucher', {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ vouchers }),
-                    signal: AbortSignal.timeout(480_000),
-                  })
-                  const j = await res.json()
-                  if (j.success) {
-                    alert(`인천시 전표수정 완료 — ${j.ok}/${j.total}건 성공\n실패 건은 콘솔(F12)에서 확인`)
-                    console.log('[인천시 전표수정 결과]', j.results)
-                  } else {
-                    alert(`처리 실패: ${j.error || j.errMsg || '알 수 없음'}`)
-                  }
-                } catch (e) {
-                  const timedOut = e instanceof Error && e.name === 'TimeoutError'
-                  alert(timedOut
-                    ? '처리 시간 초과(8분) — 에이전트가 응답하지 않습니다. PC 에이전트 상태를 확인해주세요.'
-                    : '처리 오류: ' + (e instanceof Error ? e.message : String(e)))
-                } finally {
-                  setIncheonEditBusy(false)
+                const noSrcNo = targets.find(r => !r.srcNo)
+                if (noSrcNo) {
+                  alert('선택한 전표 중 원본번호(전표번호)가 없는 전표가 있습니다.\n인천시 전표수정은 원본번호가 있는(데이터이관으로 들어온) 전표만 가능합니다.')
+                  return
                 }
+                openIncheonEdit(targets)
               }}
-              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-blue-400 rounded bg-teal-500 hover:bg-teal-500 text-white sub-tab-hover disabled:opacity-50"
+              className="px-3 py-1.5 text-[12px] font-bold whitespace-nowrap border border-blue-400 rounded bg-teal-500 hover:bg-teal-500 text-white sub-tab-hover"
             >
-              {incheonEditBusy ? '⏳ 처리 중… (수십 초 소요)' : '인천시 전표수정'}
+              인천시 전표수정
             </button>
           )}
           {/* 경상북도(gbccm) 이관 전표만 화면에 있으면 그쪽 전용 버튼 노출 — 인천시 버튼과 자리 교체.
