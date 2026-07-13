@@ -1561,6 +1561,33 @@ export default function DataMigrationPage() {
   const [ggMonthFrom, setGgMonthFrom] = useState('03')
   const [ggMonthTo, setGgMonthTo] = useState('02')
   const [ggCollecting, setGgCollecting] = useState(false)
+
+  // 경기도(accgg) 자동로그인 — 저장된 cert 자격으로 에이전트가 로그인된 accgg 새창을 띄움
+  // (gbccm 과 달리 공동인증서(CROSSCERT) + 안티봇이라 window.open 불가 → 에이전트 필수)
+  const [ggLoggingIn, setGgLoggingIn] = useState(false)
+  const [ggLoginMsg, setGgLoginMsg] = useState('')
+  const handleGyeonggiOpenBrowser = async () => {
+    setGgLoggingIn(true); setGgLoginMsg('⏳ 경기도 자동로그인 중… (에이전트가 로그인된 accgg 창을 엽니다, 최대 1~2분)')
+    try {
+      const res = await fetch('/api/gyeonggi/open-browser', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (j.ok) {
+        const m = j.member as { mberNm?: string; ccctNm?: string } | undefined
+        setGgLoginMsg(`✅ 로그인된 accgg 창을 열었습니다.${m?.ccctNm ? ` (${m.ccctNm})` : ''} 원장님 PC 브라우저를 확인하세요.`)
+      } else if (j.agentOffline) {
+        setGgLoginMsg('❌ 로컬 에이전트가 꺼져 있습니다. 우상단 [에이전트 실행]으로 켠 뒤 다시 시도하세요.')
+      } else {
+        setGgLoginMsg(`❌ ${j.error || '자동로그인 실패'}`)
+      }
+    } catch (e) {
+      setGgLoginMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
+    } finally {
+      setGgLoggingIn(false)
+    }
+  }
   // 기간(연도/월) 바꾸면 화면에 남은 옛 데이터 즉시 지움 — 선택연도와 표시연도 불일치 혼동 방지
   const clearGgShown = () => {
     setData(null); setMultiData([]); setTransferResult('')
@@ -2302,6 +2329,18 @@ export default function DataMigrationPage() {
                     수정
                   </a>
                 </div>
+                {/* 경기도 자동로그인 — cert 자격 캐시가 등록됐을 때만. 에이전트가 로그인된 accgg 새창을 엶 */}
+                {source === 'gyeonggi' && ggCache?.exists && (
+                  <div className="mt-2 pt-2 border-t border-emerald-200">
+                    <button type="button" disabled={ggLoggingIn}
+                      onClick={handleGyeonggiOpenBrowser}
+                      className="px-3 py-1.5 text-[11px] font-bold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50">
+                      {ggLoggingIn ? '자동로그인 중…' : '🔓 경기도 자동로그인 (accgg 창 열기)'}
+                    </button>
+                    {ggLoginMsg && <p className="text-[11px] mt-1.5 text-slate-600">{ggLoginMsg}</p>}
+                    <p className="text-[10px] text-slate-400 mt-1">· 에이전트가 저장된 인증서로 로그인된 accgg 화면을 새 창으로 엽니다. (PC 에이전트 켜짐 필요)</p>
+                  </div>
+                )}
               </div>
             ) : currentSource.authType === 'cert' ? (
               <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
