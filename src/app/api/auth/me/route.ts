@@ -41,7 +41,12 @@ export async function GET(request: NextRequest) {
           centerName: me.centerName || (profile.centerName as string) || data.centerName || '',
         })
       }
-    } catch {}
+      // ⚠ 진단용 — 통합e 응답이 !ok 이면 그냥 원시 세션(data, profile 없음)으로 조용히 떨어져
+      // 헤더 팝업이 전부 빈값으로 보이는 버그(2026-07-13 조사 중) — 실제 status/PLATFORM_URL 로그로 남김.
+      console.error('[api/auth/me] 통합e 응답 !ok — 원시 세션으로 폴백:', res.status, PLATFORM_URL)
+    } catch (e) {
+      console.error('[api/auth/me] 통합e fetch 예외 — 원시 세션으로 폴백:', e instanceof Error ? e.message : e, PLATFORM_URL)
+    }
 
     return NextResponse.json(data)
   } catch {
