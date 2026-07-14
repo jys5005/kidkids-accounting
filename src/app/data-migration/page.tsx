@@ -2362,6 +2362,32 @@ export default function DataMigrationPage() {
                     <p className="text-[10px] text-slate-400 mt-1">· 에이전트가 저장된 인증서로 로그인된 accgg 화면을 새 창으로 엽니다. (PC 에이전트 켜짐 필요)</p>
                   </div>
                 )}
+                {/* 경기도 화면 바로가기 — gbccm/인천시와 동일한 패턴으로 노출하되, accgg 는 아직
+                    "로그인된 화면"으로 자동 연결이 안 돼(실측 확인됨) 개발중 표시만 하고 로그인
+                    페이지로 보냄. 버튼 자체는 숨기지 않음(사용자 요청) — 완성되면 링크만 실제
+                    딥링크 URL로 교체하면 됨. */}
+                {source === 'gyeonggi' && (
+                  <div className="mt-2 pt-2 border-t border-emerald-200">
+                    <div className="flex flex-wrap gap-1.5">
+                      <a href="https://www.accgg.co.kr/websquare/user_index.html" target="_blank" rel="noopener noreferrer"
+                        title="개발중 — 아직 로그인된 화면으로 자동 연결되지 않습니다. 로그인 페이지가 열리면 직접 로그인해주세요."
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-700">
+                        📊 예산관리 바로가기 <span aria-hidden="true">❗</span>
+                      </a>
+                      <a href="https://www.accgg.co.kr/websquare/user_index.html" target="_blank" rel="noopener noreferrer"
+                        title="개발중 — 아직 로그인된 화면으로 자동 연결되지 않습니다. 로그인 페이지가 열리면 직접 로그인해주세요."
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-700">
+                        📅 월회계보고 바로가기 <span aria-hidden="true">❗</span>
+                      </a>
+                      <a href="https://www.accgg.co.kr/websquare/user_index.html" target="_blank" rel="noopener noreferrer"
+                        title="개발중 — 아직 로그인된 화면으로 자동 연결되지 않습니다. 로그인 페이지가 열리면 직접 로그인해주세요."
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-700">
+                        📑 결산관리 바로가기 <span aria-hidden="true">❗</span>
+                      </a>
+                    </div>
+                    <p className="text-[10px] text-amber-600 mt-1">· ❗ 개발중 — 클릭하면 accgg 로그인 화면이 열립니다. 로그인된 화면으로 바로 이동하는 기능은 아직 준비 중입니다.</p>
+                  </div>
+                )}
               </div>
             ) : currentSource.authType === 'cert' ? (
               <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
