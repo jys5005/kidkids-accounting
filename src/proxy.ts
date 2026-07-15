@@ -18,7 +18,14 @@ export function proxy(request: NextRequest) {
   const session = request.cookies.get('auth_session')?.value
   if (!session) {
     // 통합e 로그인 페이지로 리다이렉트 (returnTo 포함)
-    const returnTo = encodeURIComponent(request.url)
+    // nginx reverse proxy 뒤에서는 request.url 의 host 가 internal(localhost:4001)이라
+    // X-Forwarded-Host / Host 헤더로 외부 url 재구성 (sso/route.ts 와 동일 패턴)
+    const fwdHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+    const fwdProto = request.headers.get('x-forwarded-proto') || 'https'
+    const externalUrl = fwdHost
+      ? `${fwdProto}://${fwdHost}${request.nextUrl.pathname}${request.nextUrl.search}`
+      : request.url
+    const returnTo = encodeURIComponent(externalUrl)
     return NextResponse.redirect(`${TONGHAP_URL}/login?returnTo=${returnTo}`)
   }
 
