@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const url = `${PLATFORM_URL}/api/settings/page-data?field=${encodeURIComponent(field)}`
-    const r = await fetch(url, { headers: { Cookie: `auth_session=${session}` }, cache: 'no-store' })
+    const r = await fetch(url, { headers: { Cookie: `auth_session=${encodeURIComponent(session)}` }, cache: 'no-store' })
     const j = await r.json()
     return NextResponse.json(j)
   } catch (err: any) {

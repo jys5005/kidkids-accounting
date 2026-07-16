@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     const r = await fetch(`${PLATFORM_URL}/api/shop/oasis/login-check`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Cookie: `auth_session=${session}` },
+      headers: { 'Content-Type': 'application/json', Cookie: `auth_session=${encodeURIComponent(session)}` },
       body: JSON.stringify({ id: shopId, pw: shopPw }),
     })
     const j = await r.json()

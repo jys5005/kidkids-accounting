@@ -88,7 +88,7 @@ function mapChild(raw: RawChild, statFallback: '현원' | '퇴소', idx: number)
 async function fetchPageData(session: string, field: string): Promise<RawChild[]> {
   try {
     const res = await fetch(`${PLATFORM_URL}/api/settings/page-data?field=${encodeURIComponent(field)}`, {
-      headers: { Cookie: `auth_session=${session}` },
+      headers: { Cookie: `auth_session=${encodeURIComponent(session)}` },
       cache: 'no-store',
     })
     if (!res.ok) return []

@@ -20,9 +20,16 @@ export async function GET(request: NextRequest) {
 
     // 통합e me 호출 — displayName/centerName 외에 profile(phone/email/주소 등) 까지 모두 가져옴.
     // 통합e 응답이 우선 (centerName 은 facilities 테이블 기준이라 신뢰값).
+    // ⚠ session(auth_session 쿠키값) 을 encodeURIComponent 없이 그대로 Cookie 헤더에 넣으면,
+    // 관리자 대행 로그인(proxyCenterName 에 한글 어린이집명이 박힘) 세션에서
+    // "Cannot convert argument to a ByteString" 로 fetch 자체가 예외 던짐(HTTP 헤더는 Latin1만
+    // 허용, 한글 코드포인트는 255 넘음) — catch 로 조용히 삼켜져서 원시 세션(프로필 없음)으로
+    // 폴백되고, 그 결과 회계앱 화면에 어린이집명/사업자번호/대표자명이 전부 빈칸으로 뜸
+    // (2026-07-16 사용자 보고, PM2 로그로 확정). Next.js 쿠키 파서는 받는 쪽에서 자동으로
+    // percent-decode 하므로 인코딩해서 보내도 안전.
     try {
       const res = await fetch(`${PLATFORM_URL}/api/auth/me`, {
-        headers: { Cookie: `auth_session=${session}` },
+        headers: { Cookie: `auth_session=${encodeURIComponent(session)}` },
         cache: 'no-store',
       })
       if (res.ok) {
@@ -62,7 +69,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.text()
     const res = await fetch(`${PLATFORM_URL}/api/auth/me`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Cookie: `auth_session=${session}` },
+      headers: { 'Content-Type': 'application/json', Cookie: `auth_session=${encodeURIComponent(session)}` },
       body,
       cache: 'no-store',
     })

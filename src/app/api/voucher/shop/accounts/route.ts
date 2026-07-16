@@ -12,7 +12,7 @@ const PLATFORM_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3
 async function getBizNo(session: string): Promise<string | null> {
   try {
     const res = await fetch(`${PLATFORM_URL}/api/auth/me`, {
-      headers: { Cookie: `auth_session=${session}` },
+      headers: { Cookie: `auth_session=${encodeURIComponent(session)}` },
       cache: 'no-store',
     })
     if (!res.ok) return null
@@ -38,14 +38,14 @@ export async function GET(request: NextRequest) {
   try {
     if (wantCounts) {
       const url = `${PLATFORM_URL}/api/sunote/shop-accounts/save?counts=1&bizNo=${encodeURIComponent(bizNo)}`
-      const r = await fetch(url, { headers: { Cookie: `auth_session=${session}` }, cache: 'no-store' })
+      const r = await fetch(url, { headers: { Cookie: `auth_session=${encodeURIComponent(session)}` }, cache: 'no-store' })
       const j = await r.json()
       return NextResponse.json({ ...j, bizNo })
     }
     const u = new URL(`${PLATFORM_URL}/api/sunote/shop-accounts/save`)
     u.searchParams.set('bizNo', bizNo)
     if (shopType) u.searchParams.set('shopType', shopType)
-    const r = await fetch(u.toString(), { headers: { Cookie: `auth_session=${session}` }, cache: 'no-store' })
+    const r = await fetch(u.toString(), { headers: { Cookie: `auth_session=${encodeURIComponent(session)}` }, cache: 'no-store' })
     const j = await r.json()
     return NextResponse.json({ ...j, bizNo })
   } catch (err: any) {
