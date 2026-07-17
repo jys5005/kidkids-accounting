@@ -58,6 +58,10 @@ type IncheonChild = {
   PARNTS_CTTPC?: string      // 보호자 연락처
   PARNTS_MOBLPHON?: string   // 보호자 핸드폰
   PARNTS_RM?: string         // 기타사항
+  COM_CARE_NAME?: string     // 보육기준명
+  ZIP?: string               // 우편번호
+  SMS_SE?: string            // SMS 수신여부
+  RM?: string                // 비고
   _local?: boolean         // 통합e 에서 추가한 아동(인천시에 없음)
 }
 
@@ -134,6 +138,10 @@ function cisToIncheon(c: CisChild, idx: number): IncheonChild {
   }
 }
 
+/** 상세 팝업 탭 — 통합e 아동정보(dashboard/childcare/children)와 동일 구성 */
+type DetailTab = '기본정보' | '반·보육' | '주소' | '보호자' | '가정·기타'
+const DETAIL_TABS: DetailTab[] = ['기본정보', '반·보육', '주소', '보호자', '가정·기타']
+
 /** 성별 코드 — childRegUdt.xml 의 <xf:choices> 실측 (M=남 / F=여) */
 const SEX_OPTIONS: Array<{ cd: string; nm: string }> = [
   { cd: 'M', nm: '남' },
@@ -169,7 +177,7 @@ export default function ChildStatusPage() {
   const [savedAt, setSavedAt] = useState<string | null>(null)
 
   // 인천시 화면의 검색 조건 — 상태 / 반 / 성명
-  const [schSttus, setSchSttus] = useState('000')   // 기본 현원 (인천시 화면과 동일)
+  const [schSttus, setSchSttus] = useState('')   // 기본 전체 (통합e 아동정보와 동일)
   const [schClas, setSchClas] = useState('all')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
@@ -177,7 +185,8 @@ export default function ChildStatusPage() {
   const [codes, setCodes] = useState<IncheonCode[]>([])
   const [cisRaw, setCisRaw] = useState<CisChild[]>([])
   const [source, setSource] = useState<'incheon' | 'cis'>('incheon')
-  const [tab, setTab] = useState<'basic' | 'guardian' | 'class'>('basic')  // 상세 팝업 탭
+  const [tab, setTab] = useState<DetailTab>('기본정보')          // 상세 팝업 탭
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())  // 명단 체크박스
 
   // 편집 — CHIL_SN 별로 바뀐 필드만 모아둔다(저장 시 그 아동만 PUT)
   const [edits, setEdits] = useState<Record<number, Partial<IncheonChild>>>({})
@@ -288,7 +297,11 @@ export default function ChildStatusPage() {
   const filtered = useMemo(() => rows.filter(c => {
     if (schSttus && c.STTUS !== schSttus) return false
     if (schClas !== 'all' && String(c.CLAS_SN || c.CLAS_NM) !== schClas) return false
-    if (search && !(c.CHIL_NM || '').includes(search)) return false
+    // 검색 대상 — 통합e 아동정보와 동일하게 이름·반·보호자
+    if (search) {
+      const hay = `${c.CHIL_NM || ''} ${c.CHIL_REAL_NM || ''} ${c.CLAS_NM || ''} ${c.PARNTS_NM || ''}`
+      if (!hay.includes(search)) return false
+    }
     return true
   }), [rows, schSttus, schClas, search])
 
@@ -384,140 +397,238 @@ export default function ChildStatusPage() {
   const cur = rows.find(c => c.CHIL_SN === selected) || null
   const curKeywords = keywords.filter(k => Number(k.CHIL_SN) === selected).map(k => k.KEYWORD_NM)
 
+  /** 탭별 건수 — 통합e 아동정보와 동일하게 탭에 숫자를 붙인다 */
+  const tabCounts = {
+    '전체': rows.length,
+    '000': rows.filter(c => c.STTUS === '000').length,
+    '001': rows.filter(c => c.STTUS === '001').length,
+    '999': rows.filter(c => c.STTUS === '999').length,
+  } as Record<string, number>
+
+  const resetFilter = () => {
+    setSchSttus(''); setSchClas('all'); setSearch(''); setSearchInput('')
+  }
+
+  /** 엑셀 — 화면에 보이는 명단 그대로 CSV 로 (통합e 아동정보의 [엑셀]과 동일 역할) */
+  const handleExcel = () => {
+    const head = ['No', '이름', '성별', '보육나이', '생년월일', '반', '보육시간', '입소일', '퇴소일', '상태', '보호자(관계)', '연락처']
+    const body = filtered.map((c, i) => [
+      i + 1, c.CHIL_REAL_NM || c.CHIL_NM, c.CHIL_SEX_NM || '', c.CHILD_CARE_AGE,
+      fmtDate(c.BRTHDY), c.CLAS_NM || '', c.TIME_NAME || '',
+      fmtDate(c.ENTRNC_DE), fmtDate(c.RETIRE_DE), c.KID_STATE_NM || '',
+      `${c.PARNTS_NM || ''}${c.PARNTS_CHIL_RELATE ? `(${c.PARNTS_CHIL_RELATE})` : ''}`,
+      c.PARNTS_MOBLPHON || c.PARNTS_CTTPC || '',
+    ])
+    const csv = [head, ...body].map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n')
+    // BOM — 엑셀이 UTF-8 한글을 깨뜨리지 않게
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `아동정보_${source === 'cis' ? '보육통합' : '인천시'}_${year}.csv`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
 
   return (
-    <div className="p-3 space-y-3">
-      {/* 헤더 — 보육년도 + 소스 토글 + 조회조건 */}
-      <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
-        <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-bold text-slate-700">아동정보</span>
-          <span className="text-[11px] text-slate-500">보육년도 {year}년</span>
+    <div className="p-4 space-y-4">
+      {/* 제목 */}
+      <div className="flex items-start justify-between gap-2 flex-wrap">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">아동정보</h1>
+          <p className="text-sm text-slate-500 mt-0.5">어린이집 아동 현황을 조회합니다.</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {savedAt && <span className="text-xs text-slate-400 mr-1">최근조회일시: {new Date(savedAt).toLocaleString('ko-KR')}</span>}
+          <button onClick={handleExcel} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100">
+            📄 엑셀
+          </button>
+          <button onClick={() => window.print()} className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">
+            🖨 인쇄
+          </button>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded-lg whitespace-nowrap"
+          >
+            {syncing ? '가져오는 중…' : '📥 인천시에서 가져오기'}
+          </button>
+        </div>
+      </div>
 
-          {/* 소스 토글 — 보육통합(CIS)은 통합e 가 이미 수집해둔 원본, 인천시는 회계 시스템 */}
-          <div className="flex items-center rounded border border-slate-300 overflow-hidden ml-1">
-            {([['incheon', '인천시'], ['cis', '보육통합']] as const).map(([v, label]) => (
+      {msg && <div className="px-4 py-2 text-xs rounded-lg border border-slate-200 bg-slate-50 text-slate-600">{msg}</div>}
+
+      {/* 매칭 현황 — 정산 자동화는 인천시 CHIL_SN 으로 써야 하므로 CIS 아동이 인천시와
+          얼마나 연결되는지가 핵심 지표다. 매칭 키 = 주민번호 앞7자리. */}
+      {matchStats && (
+        <div className="px-4 py-2 text-xs rounded-lg border border-sky-200 bg-sky-50/60 text-slate-600 flex items-center gap-2 flex-wrap">
+          <span className="font-medium text-slate-700">🔗 소스 매칭</span>
+          <span>보육통합 {matchStats.cis}명 · 인천시 {matchStats.incheon}명</span>
+          <span className={matchStats.matched === matchStats.incheon ? 'text-emerald-600 font-medium' : 'text-amber-600 font-medium'}>
+            연결 {matchStats.matched}명
+          </span>
+          {matchStats.matched < matchStats.incheon && (
+            <span className="text-amber-600">— 인천시 {matchStats.incheon - matchStats.matched}명이 보육통합에서 안 찾아집니다</span>
+          )}
+          <span className="ml-auto text-slate-400">주민번호 앞7자리 기준 (인천시 아동고유번호 = 주민 앞7 + 내부번호)</span>
+        </div>
+      )}
+
+      {/* 탭 + 검색 */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="flex items-center justify-between px-5 pt-4 pb-0 border-b border-slate-200 gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            {/* 상태 탭 — 통합e 아동정보와 동일 (전체/현원/퇴소/졸업) */}
+            {([['', '전체'], ['000', '현원'], ['001', '퇴소'], ['999', '졸업']] as const).map(([v, label]) => (
               <button
-                key={v}
-                onClick={() => { setSource(v); setSelected(null) }}
-                className={`px-2.5 py-1 text-[11px] font-bold ${source === v ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                key={v || 'all'}
+                onClick={() => { setSchSttus(v); setSelectedRows(new Set()) }}
+                className="px-5 py-2.5 text-sm font-medium transition-colors"
+                style={
+                  schSttus === v
+                    ? { background: '#1a3a6b', color: '#fff', borderRadius: '7px' }
+                    : { background: '#fff', border: '1px solid #d1d5db', borderRadius: '7px', color: '#64748b' }
+                }
               >
-                {label} {v === 'cis' ? cisChildren.length : children.length}
+                {label}
+                {!loading && (
+                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${schSttus === v ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
+                    {tabCounts[v || '전체']}
+                  </span>
+                )}
               </button>
             ))}
+
+            {/* 소스 토글 — 보육통합(CIS)은 통합e 가 이미 수집해둔 원본, 인천시는 회계 시스템 */}
+            <div className="flex items-center rounded-[7px] border border-slate-300 overflow-hidden ml-2">
+              {([['incheon', '인천시'], ['cis', '보육통합']] as const).map(([v, label]) => (
+                <button
+                  key={v}
+                  onClick={() => { setSource(v); setSelected(null); setSelectedRows(new Set()) }}
+                  className={`px-3 py-2 text-xs font-bold ${source === v ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                >
+                  {label} {v === 'cis' ? cisChildren.length : children.length}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* 검색은 조회 버튼/엔터 방식 — 실시간 검색 금지(프로젝트 UX 규칙) */}
-          <form onSubmit={e => { e.preventDefault(); setSearch(searchInput) }} className="flex items-center gap-2 ml-2">
-            <select value={schSttus} onChange={e => setSchSttus(e.target.value)} className={`${inputCls} !w-24`}>
-              <option value="">전체</option>
-              {CHILD_STATUS.map(st => <option key={st.cd} value={st.cd}>{st.nm}</option>)}
-            </select>
-            <select value={schClas} onChange={e => setSchClas(e.target.value)} className={`${inputCls} !w-36`}>
+          {/* 초기화 + 검색 — 엔터/버튼 방식(실시간 검색 금지, 프로젝트 UX 규칙) */}
+          <div className="flex items-center gap-1.5 mb-2">
+            <button onClick={resetFilter} className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">
+              초기화
+            </button>
+            <select value={schClas} onChange={e => setSchClas(e.target.value)} className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-600">
               <option value="all">전체 반</option>
               {clasOptions.map(o => <option key={o.sn} value={o.sn}>{o.nm}</option>)}
             </select>
-            <input
-              type="text" placeholder="성명"
-              value={searchInput} onChange={e => setSearchInput(e.target.value)}
-              className={`${inputCls} !w-32`}
-            />
-            <button type="submit" className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded whitespace-nowrap">조회</button>
-          </form>
-
-          <div className="ml-auto flex items-center gap-2">
-            {savedAt && <span className="text-[11px] text-slate-400">최근 동기화 {new Date(savedAt).toLocaleString('ko-KR')}</span>}
-            <button
-              onClick={handleSync}
-              disabled={syncing}
-              className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded whitespace-nowrap"
-            >
-              {syncing ? '가져오는 중…' : '📥 인천시에서 가져오기'}
-            </button>
+            <form onSubmit={e => { e.preventDefault(); setSearch(searchInput) }} className="flex items-center gap-1.5">
+              <div className="relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                <input
+                  type="text" placeholder="이름, 반, 보호자 검색"
+                  value={searchInput} onChange={e => setSearchInput(e.target.value)}
+                  className="pl-7 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg w-52 focus:outline-none focus:border-blue-400"
+                />
+              </div>
+              <button type="submit" className="px-3 py-1.5 text-xs font-bold text-white rounded-lg" style={{ background: '#1A73E8' }}>조회</button>
+            </form>
           </div>
         </div>
-        {msg && <div className="px-4 py-2 text-[11px] border-t border-slate-100 text-slate-600 bg-slate-50">{msg}</div>}
 
-        {/* 매칭 현황 — 정산 자동화는 인천시 CHIL_SN 으로 써야 하므로 CIS 아동이 인천시와
-            얼마나 연결되는지가 핵심 지표다. 매칭 키 = 주민번호 앞7자리. */}
-        {matchStats && (
-          <div className="px-4 py-2 text-[11px] border-t border-slate-100 bg-sky-50/60 text-slate-600 flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-slate-700">🔗 소스 매칭</span>
-            <span>보육통합 {matchStats.cis}명 · 인천시 {matchStats.incheon}명</span>
-            <span className={matchStats.matched === matchStats.incheon ? 'text-emerald-600 font-medium' : 'text-amber-600 font-medium'}>
-              연결 {matchStats.matched}명
-            </span>
-            {matchStats.matched < matchStats.incheon && (
-              <span className="text-amber-600">— 인천시 {matchStats.incheon - matchStats.matched}명이 보육통합에서 안 찾아집니다</span>
-            )}
-            <span className="ml-auto text-slate-400">주민번호 앞7자리 기준 (인천시 아동고유번호 = 주민 앞7 + 내부번호)</span>
-          </div>
-        )}
-      </div>
-
-      {/* 명단 — 전체 폭. 성명 클릭 → 탭 팝업 */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        {/* 테이블 */}
         <div className="overflow-x-auto">
-          <table className="w-full text-[11px]">
-            <thead><tr className="bg-teal-50 border-b border-slate-300">
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[45px]">No</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[110px]">성명</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[50px]">성별</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[60px]">보육나이</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[95px]">생년월일</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[140px]">반명</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[95px]">입소일</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[95px]">퇴소일</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[60px]">상태</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[100px]">보호자</th>
-              <th className="px-2 py-2 text-center font-bold text-slate-600">연락처</th>
-            </tr></thead>
-            <tbody>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-200">
+                <th className="text-center px-3 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={filtered.length > 0 && filtered.every(c => selectedRows.has(c.CHIL_SN))}
+                    onChange={e => setSelectedRows(e.target.checked ? new Set(filtered.map(c => c.CHIL_SN)) : new Set())}
+                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                </th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 w-12">No</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">이름</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">성별</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">보육나이</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">생년월일</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">반</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">보육시간</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">입소일</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">퇴소일</th>
+                {schSttus === '' && <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500">상태</th>}
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">보호자(관계)</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">연락처</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr><td colSpan={11} className="px-2 py-10 text-center text-slate-400">불러오는 중…</td></tr>
+                <tr><td colSpan={schSttus === '' ? 13 : 12} className="py-12 text-center text-sm text-slate-400">데이터를 불러오는 중...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={11} className="px-2 py-10 text-center text-slate-400">
+                <tr><td colSpan={schSttus === '' ? 13 : 12} className="py-12 text-center text-sm text-slate-400">
                   {rows.length === 0
                     ? (isCis
                         ? '보육통합에서 수집된 아동이 없습니다. 통합e 아동정보에서 [CIS 갱신]을 먼저 실행해주세요.'
                         : '저장된 아동이 없습니다. [📥 인천시에서 가져오기]를 눌러주세요.')
-                    : '검색 결과가 없습니다.'}
+                    : '조회된 아동이 없습니다.'}
                 </td></tr>
-              ) : filtered.map((c, i) => {
+              ) : filtered.map((c, idx) => {
                 const dirty = !!edits[c.CHIL_SN]
                 return (
-                  <tr key={c.CHIL_SN} className={`border-b border-slate-100 ${dirty ? 'bg-amber-50' : 'hover:bg-blue-50/40'}`}>
-                    <td className="px-2 py-1.5 text-center text-slate-400 border-r border-slate-100">{i + 1}</td>
-                    {/* 성명 클릭 → 상세 팝업 */}
-                    <td className="px-2 py-1.5 text-center border-r border-slate-100">
+                  <tr key={c.CHIL_SN} className={dirty ? 'bg-amber-50' : 'hover:bg-slate-50/60'}>
+                    <td className="text-center px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedRows.has(c.CHIL_SN)}
+                        onChange={() => setSelectedRows(prev => {
+                          const n = new Set(prev)
+                          if (n.has(c.CHIL_SN)) n.delete(c.CHIL_SN); else n.add(c.CHIL_SN)
+                          return n
+                        })}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                    </td>
+                    <td className="px-5 py-3 text-slate-400 text-xs">{idx + 1}</td>
+                    {/* 이름 클릭 → 상세 팝업 */}
+                    <td className="px-4 py-3">
                       <button
-                        onClick={() => { setSelected(c.CHIL_SN); setTab('basic') }}
-                        className="font-medium text-slate-700 hover:text-teal-600 hover:underline"
+                        type="button"
+                        onClick={() => { setSelected(c.CHIL_SN); setTab('기본정보') }}
+                        className="font-semibold text-slate-800 hover:text-blue-600"
                       >
                         {c.CHIL_NM}
                       </button>
                       {dirty && <span className="ml-1 text-amber-600" title="저장 안 된 수정 있음">✏️</span>}
                       {c._local && <span className="ml-1 px-1 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 추가한 아동">e</span>}
                     </td>
-                    <td className="px-2 py-1.5 text-center border-r border-slate-100">
+                    <td className="px-4 py-3">
                       {c.CHIL_SEX_NM
-                        ? <span className={c.CHIL_SEXDSTN === 'F' ? 'text-pink-600' : 'text-sky-600'}>{c.CHIL_SEX_NM}</span>
-                        : <span className="text-slate-300">-</span>}
+                        ? <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${c.CHIL_SEXDSTN === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}`}>{c.CHIL_SEX_NM}</span>
+                        : <span className="text-slate-300 text-xs">-</span>}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.CHILD_CARE_AGE}</td>
-                    <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{fmtDate(c.BRTHDY)}</td>
-                    <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.CLAS_NM || '-'}</td>
-                    <td className="px-2 py-1.5 text-center text-sky-600 border-r border-slate-100">{fmtDate(c.ENTRNC_DE)}</td>
-                    <td className="px-2 py-1.5 text-center text-pink-600 border-r border-slate-100">{fmtDate(c.RETIRE_DE) || '-'}</td>
-                    <td className="px-2 py-1.5 text-center border-r border-slate-100">
-                      <span className={c.STTUS === '000' ? 'text-emerald-600' : 'text-slate-400'}>{c.KID_STATE_NM || '-'}</span>
+                    <td className="px-4 py-3 text-slate-600">{c.CHILD_CARE_AGE}</td>
+                    <td className="px-4 py-3 text-slate-600">{fmtDate(c.BRTHDY)}</td>
+                    <td className="px-4 py-3">
+                      {c.CLAS_NM
+                        ? <span className="bg-slate-100 px-1.5 py-0.5 rounded text-xs text-slate-600">{c.CLAS_NM}</span>
+                        : <span className="text-slate-300 text-xs">-</span>}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">
+                    <td className="px-4 py-3 text-slate-500 text-xs">{c.TIME_NAME || '-'}</td>
+                    <td className="px-4 py-3 text-sky-600">{fmtDate(c.ENTRNC_DE) || '-'}</td>
+                    <td className="px-4 py-3 text-pink-600">{fmtDate(c.RETIRE_DE) || '-'}</td>
+                    {schSttus === '' && (
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${c.STTUS === '000' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                          {c.KID_STATE_NM || '-'}
+                        </span>
+                      </td>
+                    )}
+                    <td className="px-4 py-3 text-slate-600 text-xs">
                       {c.PARNTS_NM || <span className="text-slate-300">-</span>}
-                      {c.PARNTS_CHIL_RELATE && <span className="ml-0.5 text-slate-400">({c.PARNTS_CHIL_RELATE})</span>}
+                      {c.PARNTS_CHIL_RELATE && <span className="text-slate-400"> ({c.PARNTS_CHIL_RELATE})</span>}
                     </td>
-                    <td className="px-2 py-1.5 text-center text-slate-600">
-                      {c.PARNTS_MOBLPHON || c.PARNTS_CTTPC || <span className="text-slate-300">-</span>}
-                    </td>
+                    <td className="px-4 py-3 text-slate-600 text-xs">{c.PARNTS_MOBLPHON || c.PARNTS_CTTPC || <span className="text-slate-300">-</span>}</td>
                   </tr>
                 )
               })}
@@ -526,42 +637,36 @@ export default function ChildStatusPage() {
         </div>
 
         {!loading && (
-          <div className="px-4 py-2 border-t border-slate-200 text-[11px] text-slate-500 flex items-center gap-3 flex-wrap">
+          <div className="px-5 py-3 border-t border-slate-200 text-xs text-slate-500 flex items-center gap-3 flex-wrap">
             <span>총 {filtered.length}명</span>
-            {rows.length > 0 && (
-              <span className="text-slate-400">
-                ({CHILD_STATUS.map(st => `${st.nm} ${rows.filter(c => c.STTUS === st.cd).length}`).join(' · ')})
-              </span>
-            )}
-            {dirtyCount > 0 && <span className="text-amber-600 font-medium">✏️ 미저장 {dirtyCount}명</span>}
+            {selectedRows.size > 0 && <span className="text-blue-600">선택 {selectedRows.size}명</span>}
             {dirtyCount > 0 && (
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-3 py-1 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded"
-              >
-                {saving ? '저장 중…' : `💾 수정 저장 (${dirtyCount})`}
-              </button>
+              <>
+                <span className="text-amber-600 font-medium">✏️ 미저장 {dirtyCount}명</span>
+                <button onClick={handleSave} disabled={saving} className="px-3 py-1 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded">
+                  {saving ? '저장 중…' : `💾 수정 저장 (${dirtyCount})`}
+                </button>
+              </>
             )}
-            <span className="ml-auto text-slate-400">성명을 클릭하면 상세 정보가 열립니다</span>
+            <span className="ml-auto text-slate-400">이름을 클릭하면 상세 정보가 열립니다</span>
           </div>
         )}
       </div>
 
-      {/* 상세 팝업 — 탭 구성 */}
+      {/* 상세 팝업 — 통합e 아동정보와 동일한 5탭 구성 */}
       {cur && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setSelected(null)}>
           <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-[880px] max-h-[90vh] overflow-hidden flex flex-col"
             onClick={e => e.stopPropagation()}
           >
-            {/* 팝업 헤더 */}
-            <div className="px-5 py-3 border-b border-slate-200 flex items-center gap-2">
+            {/* 헤더 */}
+            <div className="px-6 py-4 border-b border-slate-200 flex items-start gap-2">
               <div>
-                <div className="text-sm font-bold text-slate-800">
+                <div className="text-lg font-bold text-slate-800">
                   {cur.CHIL_REAL_NM || cur.CHIL_NM}
-                  <span className="ml-2 text-[11px] font-normal text-slate-500">
-                    {cur.KID_STATE_NM} · {cur.CHILD_CARE_AGE}세 · {cur.CLAS_NM}
+                  <span className="ml-2 text-xs font-normal text-slate-500">
+                    ({cur.KID_STATE_NM} · {cur.CHILD_CARE_AGE}세 · {cur.CLAS_NM})
                   </span>
                   {cur._local && <span className="ml-1.5 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 추가한 아동 — 인천시에는 없습니다">통합e</span>}
                   {/* 보육통합 아동이면 인천시 어느 아동과 연결되는지 표시 */}
@@ -573,8 +678,8 @@ export default function ChildStatusPage() {
                   })()}
                   {edits[cur.CHIL_SN] && <span className="ml-1.5 text-[10px] text-amber-600 font-medium">✏️ 수정됨 — 저장 안 됨</span>}
                 </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">
-                  {isCis ? '보육통합(CIS) 원본 — 읽기 전용' : `인천시 아동 · CHIL_SN ${cur.CHIL_SN} · CLAS_SN ${cur.CLAS_SN}`}
+                <div className="text-xs text-slate-400 mt-0.5">
+                  {isCis ? '아동 세부 정보 (CIS E0003 원본) — 읽기 전용' : `아동 세부 정보 (인천시 원본) · CHIL_SN ${cur.CHIL_SN}`}
                 </div>
               </div>
 
@@ -585,76 +690,65 @@ export default function ChildStatusPage() {
                     <button
                       onClick={handleSave}
                       disabled={saving || dirtyCount === 0}
-                      className="px-3 py-1 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded"
+                      className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded-lg"
                     >
                       {saving ? '저장 중…' : dirtyCount > 0 ? '수정 (' + dirtyCount + ')' : '수정'}
                     </button>
                     <button
                       onClick={handleDelete}
                       disabled={saving}
-                      className="px-3 py-1 text-[11px] font-bold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 rounded"
+                      className="px-3 py-1.5 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 rounded-lg"
                     >
                       삭제
                     </button>
                   </>
                 )}
-                <button onClick={() => setSelected(null)} className="ml-1 px-2 py-1 text-slate-400 hover:text-slate-700 text-lg leading-none">✕</button>
+                <button onClick={() => setSelected(null)} className="ml-1 px-2 text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
               </div>
             </div>
 
-            {/* 탭 */}
-            <div className="px-5 border-b border-slate-200 flex items-center gap-1">
-              {([['basic', '기본정보'], ['guardian', '보호자'], ['class', '반·보육']] as const).map(([v, label]) => (
+            {/* 탭 — 통합e 아동정보와 동일 */}
+            <div className="px-6 border-b border-slate-200 flex items-center gap-1">
+              {DETAIL_TABS.map(t => (
                 <button
-                  key={v}
-                  onClick={() => setTab(v)}
-                  className={`px-3 py-2 text-[12px] font-bold border-b-2 -mb-px ${tab === v ? 'border-teal-500 text-teal-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px ${tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
-                  {label}
+                  {t}
                 </button>
               ))}
             </div>
 
             {/* 탭 본문 */}
-            <div className="p-5 overflow-y-auto flex-1">
-              {/* ── 탭 1: 기본정보 ── */}
-              {tab === 'basic' && (
+            <div className="p-6 overflow-y-auto flex-1">
+              {/* ── 기본정보 ── */}
+              {tab === '기본정보' && (
                 <table className="w-full text-[12px] border-collapse">
                   <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                   <tbody>
                     <tr className="border-b border-slate-100">
-                      {/* 9 아동실명 — 목록 API 엔 CHIL_REAL_NM 이 없어(상세 API 전용) 없으면 CHIL_NM 으로 대체 표시 */}
                       <Th>아동실명</Th><Td>
-                        <input
-                          className={inputCls} readOnly={isCis}
+                        <input className={inputCls} readOnly={isCis}
                           value={vOf(cur, 'CHIL_REAL_NM') || vOf(cur, 'CHIL_NM')}
-                          onChange={e => editField(cur.CHIL_SN, 'CHIL_REAL_NM', e.target.value)}
-                        />
+                          onChange={e => editField(cur.CHIL_SN, 'CHIL_REAL_NM', e.target.value)} />
                       </Td>
-                      {/* 8 아동별칭 */}
                       <Th>아동별칭</Th><Td>
                         <input className={inputCls} readOnly={isCis} value={vOf(cur, 'CHIL_NM')} onChange={e => editField(cur.CHIL_SN, 'CHIL_NM', e.target.value)} />
                       </Td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      {/* 10 생년월일 — 달력 */}
                       <Th>생년월일</Th><Td>
-                        <input
-                          type="date" className={inputCls} readOnly={isCis}
+                        <input type="date" className={inputCls} readOnly={isCis}
                           value={fmtDate(vOf(cur, 'BRTHDY'))}
-                          onChange={e => editField(cur.CHIL_SN, 'BRTHDY', toRawDate(e.target.value))}
-                        />
+                          onChange={e => editField(cur.CHIL_SN, 'BRTHDY', toRawDate(e.target.value))} />
                       </Td>
-                      {/* 3 보육나이 — 0~5세 드롭다운 */}
                       <Th>보육나이</Th><Td>
-                        <select
-                          className={inputCls} disabled={isCis}
+                        <select className={inputCls} disabled={isCis}
                           value={vOf(cur, 'CHILD_CARE_AGE')}
-                          onChange={e => editField(cur.CHIL_SN, 'CHILD_CARE_AGE', e.target.value)}
-                        >
+                          onChange={e => editField(cur.CHIL_SN, 'CHILD_CARE_AGE', e.target.value)}>
                           <option value="">선택</option>
                           {[0, 1, 2, 3, 4, 5].map(a => <option key={a} value={a}>{a}세</option>)}
-                          {/* 0~5 밖의 값이 저장돼 있으면 그것도 유지 — 임의로 날리지 않는다 */}
                           {vOf(cur, 'CHILD_CARE_AGE') && !['0', '1', '2', '3', '4', '5'].includes(vOf(cur, 'CHILD_CARE_AGE')) && (
                             <option value={vOf(cur, 'CHILD_CARE_AGE')}>{vOf(cur, 'CHILD_CARE_AGE')}세</option>
                           )}
@@ -662,18 +756,14 @@ export default function ChildStatusPage() {
                       </Td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      {/* 2 성별 — 남/여 드롭다운. 코드(CHIL_SEXDSTN=M/F)로 다룬다 */}
                       <Th>성별</Th><Td>
-                        <select
-                          className={inputCls} disabled={isCis}
+                        <select className={inputCls} disabled={isCis}
                           value={vOf(cur, 'CHIL_SEXDSTN')}
-                          onChange={e => editField(cur.CHIL_SN, 'CHIL_SEXDSTN', e.target.value)}
-                        >
+                          onChange={e => editField(cur.CHIL_SN, 'CHIL_SEXDSTN', e.target.value)}>
                           <option value="">선택</option>
                           {SEX_OPTIONS.map(o => <option key={o.cd} value={o.cd}>{o.nm}</option>)}
                         </select>
                       </Td>
-                      {/* 7 외국인 — 예/아니오 드롭다운 */}
                       <Th>외국인</Th><Td>
                         <select className={inputCls} disabled={isCis} value={vOf(cur, 'FRGNR_SE') || 'N'} onChange={e => editField(cur.CHIL_SN, 'FRGNR_SE', e.target.value)}>
                           <option value="N">아니오</option>
@@ -682,22 +772,17 @@ export default function ChildStatusPage() {
                       </Td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      {/* 1 입소일 — 달력 */}
                       <Th>입소일</Th><Td>
-                        <input
-                          type="date" className={inputCls} readOnly={isCis}
+                        <input type="date" className={inputCls} readOnly={isCis}
                           value={fmtDate(vOf(cur, 'ENTRNC_DE'))}
-                          onChange={e => editField(cur.CHIL_SN, 'ENTRNC_DE', toRawDate(e.target.value))}
-                        />
+                          onChange={e => editField(cur.CHIL_SN, 'ENTRNC_DE', toRawDate(e.target.value))} />
                       </Td>
-                      {/* 5 상태 — 현원/퇴소/졸업 드롭다운 */}
                       <Th>상태</Th><Td>
                         <select
                           className={`${inputCls} ${vOf(cur, 'STTUS') === '000' ? 'text-emerald-600' : 'text-pink-600'}`}
                           disabled={isCis}
                           value={vOf(cur, 'STTUS')}
-                          onChange={e => editField(cur.CHIL_SN, 'STTUS', e.target.value)}
-                        >
+                          onChange={e => editField(cur.CHIL_SN, 'STTUS', e.target.value)}>
                           {CHILD_STATUS.map(st => <option key={st.cd} value={st.cd}>{st.nm}</option>)}
                         </select>
                       </Td>
@@ -706,52 +791,126 @@ export default function ChildStatusPage() {
                     {vOf(cur, 'STTUS') !== '000' && (
                       <tr className="border-b border-slate-100">
                         <Th>{vOf(cur, 'STTUS') === '999' ? '졸업일' : '퇴소일'}</Th><Td colSpan={3}>
-                          <input
-                            type="date" className={`${inputCls} !w-1/2`} readOnly={isCis}
+                          <input type="date" className={`${inputCls} !w-1/2`} readOnly={isCis}
                             value={fmtDate(vOf(cur, 'RETIRE_DE'))}
-                            onChange={e => editField(cur.CHIL_SN, 'RETIRE_DE', toRawDate(e.target.value))}
-                          />
+                            onChange={e => editField(cur.CHIL_SN, 'RETIRE_DE', toRawDate(e.target.value))} />
                         </Td>
                       </tr>
                     )}
-                    <tr className="border-b border-slate-100">
-                      {/* 2 주소 */}
-                      <Th>주소</Th><Td colSpan={3}>
-                        <input className={inputCls} readOnly={isCis} value={vOf(cur, 'ADRES')} onChange={e => editField(cur.CHIL_SN, 'ADRES', e.target.value)} />
-                      </Td>
-                    </tr>
                     <tr>
-                      {/* 4 아동고유번호 */}
                       <Th>아동고유번호</Th><Td>
                         <input className={`${inputCls} font-mono`} readOnly={isCis} value={vOf(cur, 'CHILINNB')} onChange={e => editField(cur.CHIL_SN, 'CHILINNB', e.target.value)} />
                       </Td>
-                      {/* 1 지원확정일 — 달력 */}
                       <Th>지원확정일</Th><Td>
-                        <input
-                          type="date" className={inputCls} readOnly={isCis}
+                        <input type="date" className={inputCls} readOnly={isCis}
                           value={fmtDate(vOf(cur, 'SPORT_DCSN_DE'))}
-                          onChange={e => editField(cur.CHIL_SN, 'SPORT_DCSN_DE', toRawDate(e.target.value))}
-                        />
+                          onChange={e => editField(cur.CHIL_SN, 'SPORT_DCSN_DE', toRawDate(e.target.value))} />
                       </Td>
                     </tr>
                   </tbody>
                 </table>
               )}
 
-              {/* ── 탭 2: 보호자 ── */}
-              {tab === 'guardian' && (
+              {/* ── 반·보육 ── */}
+              {tab === '반·보육' && (
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-[12px] font-bold text-slate-700 mb-1.5">반 배정</div>
+                    <table className="w-full text-[11px] border border-slate-200">
+                      <thead><tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">반유형</th>
+                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
+                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[100px]">반배정일</th>
+                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[100px]">퇴반일</th>
+                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 w-[110px]">비고</th>
+                      </tr></thead>
+                      <tbody>
+                        <tr className="border-b border-slate-100">
+                          <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{cur.DISP_NAME || '기본'}반</td>
+                          <td className="px-2 py-1.5 text-center text-slate-700 border-r border-slate-100">{cur.CLAS_NM}</td>
+                          <td className="px-2 py-1.5 text-center text-sky-600 border-r border-slate-100">{fmtDate(cur.CARERIG_STDDE)}</td>
+                          <td className="px-2 py-1.5 text-center text-pink-600 border-r border-slate-100">{fmtDate(cur.RETIRE_DE)}</td>
+                          <td className="px-2 py-1.5 text-center text-slate-400">-</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div className="mt-1 text-[10px] text-amber-600">
+                      ⚠ 현재는 아동 목록의 현재 반만 표시합니다. 반 변경 이력(연장반·방과후반 등 다중 배정)은
+                      인천시 searchClasChilHistList.do 를 아동별로 호출해야 채워집니다 — 다음 단계.
+                    </div>
+                  </div>
+
+                  <table className="w-full text-[12px] border-collapse">
+                    <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
+                    <tbody>
+                      <tr className="border-b border-slate-100">
+                        <Th>보육시간</Th><Td>
+                          {careTimeCodes.length > 0 && !isCis ? (
+                            <select className={inputCls}
+                              value={vOf(cur, 'CARETIME_CD')}
+                              onChange={e => editField(cur.CHIL_SN, 'CARETIME_CD', e.target.value)}
+                              title={'인천시 원본 코드: ' + (vOf(cur, 'CARETIME_CD') || '(없음)')}>
+                              <option value="">선택</option>
+                              {careTimeCodes.map(t => <option key={t.CD} value={t.CD}>{t.CD_NM}</option>)}
+                              {vOf(cur, 'CARETIME_CD') && !careTimeCodes.some(t => t.CD === vOf(cur, 'CARETIME_CD')) && (
+                                <option value={vOf(cur, 'CARETIME_CD')}>{(cur.TIME_NAME || vOf(cur, 'CARETIME_CD')) + ' (코드표에 없음)'}</option>
+                              )}
+                            </select>
+                          ) : (
+                            <input className={roCls} value={cur.TIME_NAME || ''} readOnly title={isCis ? '보육통합 원본 — 읽기 전용' : '코드표 미수신 — [인천시에서 가져오기] 실행 시 드롭다운으로 바뀝니다'} />
+                          )}
+                        </Td>
+                        <Th>보육기준<br />변경일</Th><Td>
+                          <input type="date" className={inputCls} readOnly={isCis}
+                            value={fmtDate(vOf(cur, 'CARERIG_STDDE'))}
+                            onChange={e => editField(cur.CHIL_SN, 'CARERIG_STDDE', toRawDate(e.target.value))} />
+                        </Td>
+                      </tr>
+                      <tr>
+                        <Th>통학차량<br />이용 시작일</Th><Td>
+                          <input type="date" className={inputCls} readOnly={isCis}
+                            value={fmtDate(vOf(cur, 'CHLDSBUS_USE_BGNDE'))}
+                            onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_BGNDE', toRawDate(e.target.value))} />
+                        </Td>
+                        <Th>통학차량<br />이용 종료일</Th><Td>
+                          <input type="date" className={inputCls} readOnly={isCis}
+                            value={fmtDate(vOf(cur, 'CHLDSBUS_USE_ENDDE'))}
+                            onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_ENDDE', toRawDate(e.target.value))} />
+                        </Td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* ── 주소 ── */}
+              {tab === '주소' && (
+                <table className="w-full text-[12px] border-collapse">
+                  <colgroup><col className="w-[110px]" /><col /></colgroup>
+                  <tbody>
+                    <tr className="border-b border-slate-100">
+                      <Th>주소</Th><Td>
+                        <input className={inputCls} readOnly={isCis} value={vOf(cur, 'ADRES')} onChange={e => editField(cur.CHIL_SN, 'ADRES', e.target.value)} />
+                      </Td>
+                    </tr>
+                    <tr>
+                      <Th>우편번호</Th><Td><input className={roCls} value={cur.ZIP || ''} readOnly /></Td>
+                    </tr>
+                  </tbody>
+                </table>
+              )}
+
+              {/* ── 보호자 ── */}
+              {tab === '보호자' && (
                 <div className="space-y-4">
                   <table className="w-full text-[12px] border-collapse">
                     <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                     <tbody>
                       <tr className="border-b border-slate-100">
-                        {/* 관계 — 인천시 화면에 있는 항목(부/모/조부/조모/기타) */}
                         <Th>관계</Th><Td>
-                          <select
-                            className={inputCls} disabled={isCis}
+                          <select className={inputCls} disabled={isCis}
                             value={vOf(cur, 'PARNTS_CHIL_RELATE')}
-                            onChange={e => editField(cur.CHIL_SN, 'PARNTS_CHIL_RELATE', e.target.value)}
-                          >
+                            onChange={e => editField(cur.CHIL_SN, 'PARNTS_CHIL_RELATE', e.target.value)}>
                             <option value="">선택</option>
                             {RELATE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                             {/* 목록에 없는 값이 저장돼 있으면 그것도 유지 */}
@@ -760,7 +919,6 @@ export default function ChildStatusPage() {
                             )}
                           </select>
                         </Td>
-                        {/* 3 성명 */}
                         <Th>성명</Th><Td>
                           <input className={inputCls} readOnly={isCis} value={vOf(cur, 'PARNTS_NM')} onChange={e => editField(cur.CHIL_SN, 'PARNTS_NM', e.target.value)} />
                         </Td>
@@ -772,7 +930,6 @@ export default function ChildStatusPage() {
                             ? <input className={roCls} value={vOf(cur, 'PARNTS_CTTPC')} readOnly />
                             : <PhoneInput value={vOf(cur, 'PARNTS_CTTPC')} onChange={v => editField(cur.CHIL_SN, 'PARNTS_CTTPC', v)} />}
                         </Td>
-                        {/* 4 핸드폰 — 010 드롭다운 + 4자리 + 4자리 */}
                         <Th>핸드폰</Th><Td>
                           {isCis
                             ? <input className={roCls} value={vOf(cur, 'PARNTS_MOBLPHON')} readOnly />
@@ -780,7 +937,6 @@ export default function ChildStatusPage() {
                         </Td>
                       </tr>
                       <tr>
-                        {/* 5 기타사항 */}
                         <Th>기타사항</Th><Td colSpan={3}>
                           <input className={inputCls} readOnly={isCis} value={vOf(cur, 'PARNTS_RM')} onChange={e => editField(cur.CHIL_SN, 'PARNTS_RM', e.target.value)} />
                         </Td>
@@ -814,100 +970,21 @@ export default function ChildStatusPage() {
                 </div>
               )}
 
-              {/* ── 탭 3: 반·보육 ── */}
-              {tab === 'class' && (
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-[12px] font-bold text-slate-700 mb-1.5">반 배정</div>
-                    <table className="w-full text-[11px] border border-slate-200">
-                      <thead><tr className="bg-teal-50 border-b border-slate-200">
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">반유형</th>
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[100px]">반배정일</th>
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[100px]">퇴반일</th>
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 w-[110px]">비고</th>
-                      </tr></thead>
-                      <tbody>
-                        <tr className="border-b border-slate-100">
-                          <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{cur.DISP_NAME || '기본'}반</td>
-                          <td className="px-2 py-1.5 text-center text-slate-700 border-r border-slate-100">{cur.CLAS_NM}</td>
-                          <td className="px-2 py-1.5 text-center text-sky-600 border-r border-slate-100">{fmtDate(cur.CARERIG_STDDE)}</td>
-                          <td className="px-2 py-1.5 text-center text-pink-600 border-r border-slate-100">{fmtDate(cur.RETIRE_DE)}</td>
-                          <td className="px-2 py-1.5 text-center text-slate-400">-</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="mt-1 text-[10px] text-amber-600">
-                      ⚠ 현재는 아동 목록의 현재 반만 표시합니다. 반 변경 이력(연장반·방과후반 등 다중 배정)은
-                      인천시 searchClasChilHistList.do 를 아동별로 호출해야 채워집니다 — 다음 단계.
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-[12px] font-bold text-slate-700 mb-1.5">보육</div>
-                    <table className="w-full text-[12px] border-collapse">
-                      <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
-                      <tbody>
-                        <tr>
-                          {/* 보육시간 — 드롭다운(인천시 공통코드). 코드표 없으면 원본 이름 텍스트로만 표시 */}
-                          <Th>보육시간</Th><Td>
-                            {careTimeCodes.length > 0 && !isCis ? (
-                              <select
-                                className={inputCls}
-                                value={vOf(cur, 'CARETIME_CD')}
-                                onChange={e => editField(cur.CHIL_SN, 'CARETIME_CD', e.target.value)}
-                                title={'인천시 원본 코드: ' + (vOf(cur, 'CARETIME_CD') || '(없음)')}
-                              >
-                                <option value="">선택</option>
-                                {careTimeCodes.map(t => <option key={t.CD} value={t.CD}>{t.CD_NM}</option>)}
-                                {vOf(cur, 'CARETIME_CD') && !careTimeCodes.some(t => t.CD === vOf(cur, 'CARETIME_CD')) && (
-                                  <option value={vOf(cur, 'CARETIME_CD')}>{(cur.TIME_NAME || vOf(cur, 'CARETIME_CD')) + ' (코드표에 없음)'}</option>
-                                )}
-                              </select>
-                            ) : (
-                              <input className={roCls} value={cur.TIME_NAME || ''} readOnly title={isCis ? '보육통합 원본 — 읽기 전용' : '코드표 미수신 — [인천시에서 가져오기] 실행 시 드롭다운으로 바뀝니다'} />
-                            )}
-                          </Td>
-                          {/* 6 보육기준 변경일 — 달력 */}
-                          <Th>보육기준<br />변경일</Th><Td>
-                            <input
-                              type="date" className={inputCls} readOnly={isCis}
-                              value={fmtDate(vOf(cur, 'CARERIG_STDDE'))}
-                              onChange={e => editField(cur.CHIL_SN, 'CARERIG_STDDE', toRawDate(e.target.value))}
-                            />
-                          </Td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div>
-                    <div className="text-[12px] font-bold text-slate-700 mb-1.5">통학차량</div>
-                    <table className="w-full text-[12px] border-collapse">
-                      <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
-                      <tbody>
-                        <tr>
-                          {/* 6 이용 시작일 — 달력 */}
-                          <Th>이용 시작일</Th><Td>
-                            <input
-                              type="date" className={inputCls} readOnly={isCis}
-                              value={fmtDate(vOf(cur, 'CHLDSBUS_USE_BGNDE'))}
-                              onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_BGNDE', toRawDate(e.target.value))}
-                            />
-                          </Td>
-                          {/* 7 이용 종료일 — 달력 */}
-                          <Th>이용 종료일</Th><Td>
-                            <input
-                              type="date" className={inputCls} readOnly={isCis}
-                              value={fmtDate(vOf(cur, 'CHLDSBUS_USE_ENDDE'))}
-                              onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_ENDDE', toRawDate(e.target.value))}
-                            />
-                          </Td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+              {/* ── 가정·기타 ── */}
+              {tab === '가정·기타' && (
+                <table className="w-full text-[12px] border-collapse">
+                  <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
+                  <tbody>
+                    <tr className="border-b border-slate-100">
+                      <Th>가정유형</Th><Td><input className={roCls} value={cur.HOME_TY_CD || ''} readOnly /></Td>
+                      <Th>보육기준</Th><Td><input className={roCls} value={String(cur.COM_CARE_NAME ?? '')} readOnly /></Td>
+                    </tr>
+                    <tr>
+                      <Th>SMS 수신</Th><Td><input className={roCls} value={cur.SMS_SE === 'Y' ? '예' : cur.SMS_SE === 'N' ? '아니오' : ''} readOnly /></Td>
+                      <Th>비고</Th><Td><input className={roCls} value={String(cur.RM ?? '')} readOnly /></Td>
+                    </tr>
+                  </tbody>
+                </table>
               )}
             </div>
           </div>
