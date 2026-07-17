@@ -27,6 +27,23 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/** PUT — 통합e 저장분 수정(반명 등). 인천시 원본에는 반영되지 않는다. */
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json().catch(() => ({}))
+    const res = await fetch(`${PLATFORM_URL}/api/incheon/children`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', cookie: req.headers.get('cookie') || '' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
+    })
+    const data = await res.json().catch(() => ({}))
+    return NextResponse.json(data, { status: res.status })
+  } catch {
+    return NextResponse.json({ error: '통합e 서버에 연결할 수 없습니다.' }, { status: 502 })
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
