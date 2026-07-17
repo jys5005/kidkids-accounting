@@ -1038,7 +1038,9 @@ export default function DataMigrationPage() {
   }, [])
 
   // 프로그램 인증 정보 (등록된 정보 자동 로드)
-  const [programAuth, setProgramAuth] = useState<{ authType: string; hasUserId?: boolean; hasUserPw?: boolean; certName?: string; hasCertPw?: boolean; savedAt?: string } | null>(null)
+  // certEndDt = 인증서 만기일(YYYYMMDD) — 백엔드(/api/settings/program-auth)가 이미 주고 있었으나
+  // 프론트 타입에 없어서 화면에 안 보였음. 등록일(savedAt)만 뜨니 "언제 만료되는지" 를 알 수 없었다(2026-07-17).
+  const [programAuth, setProgramAuth] = useState<{ authType: string; hasUserId?: boolean; hasUserPw?: boolean; certName?: string; hasCertPw?: boolean; certEndDt?: string; savedAt?: string } | null>(null)
   const [authLoading, setAuthLoading] = useState(false)
   // 업체(로그인)별 저장 인증정보
   const [savedAuthAt, setSavedAuthAt] = useState('')       // 저장 시각 (있으면 "저장됨" 표시)
@@ -2325,8 +2327,24 @@ export default function DataMigrationPage() {
                     </p>
                     <p className="text-[11px] text-emerald-600 mt-0.5">
                       통합e 인증설정에서 등록 · 바로 사용 가능
-                      {programAuth.savedAt && ` · ${new Date(programAuth.savedAt).toLocaleDateString('ko-KR')}`}
+                      {programAuth.savedAt && ` · 등록 ${new Date(programAuth.savedAt).toLocaleDateString('ko-KR')}`}
                     </p>
+                    {/* 인증서 만기일 — 만료되면 로그인이 조용히 실패하므로 D-day 로 미리 경고 */}
+                    {programAuth.authType === 'cert' && programAuth.certEndDt && (() => {
+                      const s = programAuth.certEndDt
+                      if (!/^\d{8}$/.test(s)) return null
+                      const end = new Date(Number(s.slice(0, 4)), Number(s.slice(4, 6)) - 1, Number(s.slice(6, 8)))
+                      const today = new Date(); today.setHours(0, 0, 0, 0)
+                      const dday = Math.round((end.getTime() - today.getTime()) / 86400000)
+                      const label = `${s.slice(0, 4)}.${s.slice(4, 6)}.${s.slice(6, 8)}`
+                      const tone = dday < 0 ? 'text-rose-600 font-semibold'
+                        : dday <= 30 ? 'text-amber-600 font-semibold'
+                        : 'text-emerald-600'
+                      const suffix = dday < 0 ? ` (${-dday}일 지남 · 갱신 후 재등록 필요)`
+                        : dday <= 30 ? ` (D-${dday} · 곧 만료)`
+                        : ` (D-${dday})`
+                      return <p className={`text-[11px] mt-0.5 ${tone}`}>🔐 인증서 만기: {label}{suffix}</p>
+                    })()}
                     {source === 'gyeonggi' && programAuth.authType === 'cert' && (
                       <p className="text-[11px] mt-1">
                         {ggCacheLoading ? (
