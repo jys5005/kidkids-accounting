@@ -69,6 +69,7 @@ type IncheonChild = {
   _classNight?: string       // 반(새벽)
   _classNightCare?: string   // 반(야간연장)
   _nightCareStart?: string   // 야간연장 시작일
+  _raw?: Record<string, unknown>  // CIS 원본 전체 (보육통합 소스일 때만) — 통합e 상세 팝업과 동일 렌더용
   _local?: boolean         // 통합e 에서 추가한 아동(인천시에 없음)
 }
 
@@ -110,6 +111,8 @@ type CisChild = {
   nightCareClassId: string         // 반(야간연장)
   nightCareClassStartDate: string  // 야간연장 시작일
   careTimeType: string             // 보육시간
+  _raw: Record<string, unknown>    // CIS E0003 원본 전체 — 통합e 상세 팝업과 동일 필드/라벨 재사용
+  _stat: '01' | '02'
 }
 
 /**
@@ -154,6 +157,7 @@ function cisToIncheon(c: CisChild, idx: number): IncheonChild {
     _classGeneral: c.generalClassId, _classHoliday: c.holidayClassId,
     _classExtended: c.extendedClassId, _classNight: c.nightClassId,
     _classNightCare: c.nightCareClassId, _nightCareStart: c.nightCareClassStartDate,
+    _raw: c._raw,
   }
 }
 
@@ -186,6 +190,68 @@ function toRawDate(v: string): string {
   return d.length === 8 ? d : ''
 }
 
+// ── 통합e 아동정보 상세 팝업과 동일한 표시 헬퍼 ──────────────────────────────
+/** YYYYMMDD/YYYY-MM-DD → YYYY.MM.DD (통합e fmtChildDate 와 동일) */
+function dot(v: string | null | undefined): string {
+  const raw = String(v ?? '').trim()
+  if (!raw) return '-'
+  const d = raw.replace(/[^0-9]/g, '')
+  if (d.length === 8) return `${d.slice(0, 4)}.${d.slice(4, 6)}.${d.slice(6, 8)}`
+  return raw.replace(/-/g, '.')
+}
+/** Y/N → 예/아니오 (통합e ynLabelChild 와 동일) */
+function yn(v: unknown): string {
+  const t = String(v ?? '').trim().toUpperCase()
+  if (t === 'Y') return '예'
+  if (t === 'N') return '아니오'
+  return t || '-'
+}
+/** 생년월일(YYYYMMDD/…) → 만나이 'N세' (통합e calcAge 와 동일) */
+function calcAge(v: string | null | undefined): string {
+  const d = String(v ?? '').replace(/[^0-9]/g, '')
+  if (d.length !== 8) return '-'
+  const b = new Date(Number(d.slice(0, 4)), Number(d.slice(4, 6)) - 1, Number(d.slice(6, 8)))
+  if (isNaN(b.getTime())) return '-'
+  const t = new Date()
+  let age = t.getFullYear() - b.getFullYear()
+  const m = t.getMonth() - b.getMonth()
+  if (m < 0 || (m === 0 && t.getDate() < b.getDate())) age -= 1
+  return `${age}세`
+}
+/** 자동결제 설정 라벨 — 통합e 는 Y/N 을 예/아니오로, CIS 원본이 '[자동결제 미사용]' 같은 문구면 그대로 */
+function autoPayLabel(v: string): string {
+  const t = v.trim()
+  if (!t) return '-'
+  if (t.toUpperCase() === 'Y') return '사용'
+  if (t.toUpperCase() === 'N') return '[자동결제 미사용]'
+  return t
+}
+
+/** 라벨-값 한 줄 (통합e ChildDetailField 와 동일 룩) */
+function F({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div className="flex items-baseline gap-2 py-1">
+      <span className="text-xs text-slate-400 w-24 flex-shrink-0">{label}</span>
+      <span className="text-sm text-slate-700">{value || '-'}</span>
+    </div>
+  )
+}
+/** 주민번호 — 마스킹 + 호버 시 전체 (통합e ChildRrnField 와 동일). 값은 인천시 CHILINNB 앞7자리. */
+function RrnF({ value }: { value: string | null | undefined }) {
+  const d = String(value ?? '').replace(/[^0-9]/g, '')
+  const label = '주민번호'
+  if (d.length < 6) return <F label={label} value="-" />
+  const f6 = d.slice(0, 6)
+  const b = d.slice(6)  // CHILINNB 는 앞7자리 뒤에 내부번호가 붙어 실제 뒷자리는 마스킹 표기만
+  const masked = `${f6}-${b ? b[0] : ''}******`
+  return (
+    <div className="flex items-baseline gap-2 py-1">
+      <span className="text-xs text-slate-400 w-24 flex-shrink-0">{label}</span>
+      <span className="text-sm text-slate-700">{masked}</span>
+    </div>
+  )
+}
+
 export default function ChildStatusPage() {
   const year = String(new Date().getFullYear())
   const [children, setChildren] = useState<IncheonChild[]>([])
@@ -205,6 +271,7 @@ export default function ChildStatusPage() {
   const [cisRaw, setCisRaw] = useState<CisChild[]>([])
   const [source, setSource] = useState<'incheon' | 'cis'>('incheon')
   const [tab, setTab] = useState<DetailTab>('기본정보')          // 상세 팝업 탭
+  const [editMode, setEditMode] = useState(false)               // 상세 팝업 편집 모드(인천시 소스만)
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())  // 명단 체크박스
 
   // 편집 — CHIL_SN 별로 바뀐 필드만 모아둔다(저장 시 그 아동만 PUT)
@@ -431,6 +498,9 @@ export default function ChildStatusPage() {
 
   const cur = rows.find(c => c.CHIL_SN === selected) || null
   const curKeywords = keywords.filter(k => Number(k.CHIL_SN) === selected).map(k => k.KEYWORD_NM)
+  /** CIS 원본 필드 읽기 — 통합e 상세 팝업의 get(k) 과 동일. 보육통합 소스일 때만 _raw 가 있다.
+   *  인천시 소스는 _raw 가 없어 빈 문자열 → 통합e 전용 필드(출생순위/자동결제 등)는 '-' 로 표시. */
+  const g = (k: string) => String((cur?._raw ?? {})[k] ?? '').trim()
 
   /** 탭별 건수 — 통합e 아동정보와 동일하게 탭에 숫자를 붙인다 */
   const tabCounts = {
@@ -688,14 +758,16 @@ export default function ChildStatusPage() {
         )}
       </div>
 
-      {/* 상세 팝업 — 통합e 아동정보와 동일한 5탭 구성 */}
+      {/* 상세 팝업 — 통합e 아동정보(dashboard/childcare/children) 상세 팝업을 그대로.
+          기본은 통합e 와 동일한 표시형(라벨-값). 인천시 소스에서 [수정] 을 누르면 편집 모드로
+          전환돼 입력 위젯(달력/드롭다운/전화)이 나온다(보육통합 소스는 읽기 전용). */}
       {cur && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setSelected(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setSelected(null); setEditMode(false) }}>
           <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-[880px] max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-[820px] max-h-[90vh] overflow-hidden flex flex-col"
             onClick={e => e.stopPropagation()}
           >
-            {/* 헤더 */}
+            {/* 헤더 — 통합e 와 동일 문구 */}
             <div className="px-6 py-4 border-b border-slate-200 flex items-start gap-2">
               <div>
                 <div className="text-lg font-bold text-slate-800">
@@ -704,30 +776,44 @@ export default function ChildStatusPage() {
                     ({cur.KID_STATE_NM} · {cur.CHILD_CARE_AGE}세 · {cur.CLAS_NM})
                   </span>
                   {cur._local && <span className="ml-1.5 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 추가한 아동 — 인천시에는 없습니다">통합e</span>}
-                  {/* 보육통합 아동이면 인천시 어느 아동과 연결되는지 표시 */}
                   {isCis && (() => {
                     const m = incheonMatchOf(cur)
                     return m
                       ? <span className="ml-1.5 px-1 py-0.5 text-[9px] bg-emerald-100 text-emerald-700 rounded" title={`인천시 CHIL_SN ${m.CHIL_SN} · ${m.CLAS_NM}`}>🔗 인천시 연결됨</span>
                       : <span className="ml-1.5 px-1 py-0.5 text-[9px] bg-slate-100 text-slate-500 rounded" title="인천시 명단에 같은 주민번호 앞7자리 아동이 없습니다">인천시 없음</span>
                   })()}
-                  {edits[cur.CHIL_SN] && <span className="ml-1.5 text-[10px] text-amber-600 font-medium">✏️ 수정됨 — 저장 안 됨</span>}
+                  {editMode && dirtyCount > 0 && <span className="ml-1.5 text-[10px] text-amber-600 font-medium">✏️ 수정됨 — 저장 안 됨</span>}
                 </div>
                 <div className="text-xs text-slate-400 mt-0.5">
-                  {isCis ? '아동 세부 정보 (CIS E0003 원본) — 읽기 전용' : `아동 세부 정보 (인천시 원본) · CHIL_SN ${cur.CHIL_SN}`}
+                  아동 세부 정보 (CIS E0003 원본){isCis ? ' — 읽기 전용' : ''}
                 </div>
               </div>
 
-              {/* 우측 상단 [수정] [삭제] — 보육통합(CIS)은 읽기 전용이라 숨긴다 */}
+              {/* 우측 상단 — 인천시 소스에서만 [수정]/[삭제]. 편집 모드면 [저장]/[취소] */}
               <div className="ml-auto flex items-center gap-1.5">
-                {!isCis && (
+                {!isCis && (editMode ? (
                   <>
                     <button
-                      onClick={handleSave}
-                      disabled={saving || dirtyCount === 0}
+                      onClick={async () => { await handleSave(); setEditMode(false) }}
+                      disabled={saving}
                       className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded-lg"
                     >
-                      {saving ? '저장 중…' : dirtyCount > 0 ? '수정 (' + dirtyCount + ')' : '수정'}
+                      {saving ? '저장 중…' : dirtyCount > 0 ? `저장 (${dirtyCount})` : '저장'}
+                    </button>
+                    <button
+                      onClick={() => { setEdits({}); setEditMode(false) }}
+                      className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg"
+                    >
+                      취소
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setEditMode(true)}
+                      className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-lg"
+                    >
+                      수정
                     </button>
                     <button
                       onClick={handleDelete}
@@ -737,12 +823,12 @@ export default function ChildStatusPage() {
                       삭제
                     </button>
                   </>
-                )}
-                <button onClick={() => setSelected(null)} className="ml-1 px-2 text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
+                ))}
+                <button onClick={() => { setSelected(null); setEditMode(false) }} className="ml-1 px-2 text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
               </div>
             </div>
 
-            {/* 탭 — 통합e 아동정보와 동일 */}
+            {/* 탭 — 통합e 와 동일 (기본정보/반·보육/주소/보호자/가정·기타) */}
             <div className="px-6 border-b border-slate-200 flex items-center gap-1">
               {DETAIL_TABS.map(t => (
                 <button
@@ -756,280 +842,193 @@ export default function ChildStatusPage() {
             </div>
 
             {/* 탭 본문 */}
-            <div className="p-6 overflow-y-auto flex-1">
-              {/* ── 기본정보 ── */}
+            <div className="px-6 py-5 overflow-y-auto flex-1">
+              {/* ── 기본정보 ── 통합e 와 동일 필드/라벨/배치 ── */}
               {tab === '기본정보' && (
-                <table className="w-full text-[12px] border-collapse">
-                  <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
-                  <tbody>
-                    <tr className="border-b border-slate-100">
-                      <Th>아동실명</Th><Td>
-                        <input className={inputCls} readOnly={isCis}
-                          value={vOf(cur, 'CHIL_REAL_NM') || vOf(cur, 'CHIL_NM')}
-                          onChange={e => editField(cur.CHIL_SN, 'CHIL_REAL_NM', e.target.value)} />
-                      </Td>
-                      <Th>아동별칭</Th><Td>
-                        <input className={inputCls} readOnly={isCis} value={vOf(cur, 'CHIL_NM')} onChange={e => editField(cur.CHIL_SN, 'CHIL_NM', e.target.value)} />
-                      </Td>
-                    </tr>
-                    <tr className="border-b border-slate-100">
-                      <Th>생년월일</Th><Td>
-                        <input type="date" className={inputCls} readOnly={isCis}
-                          value={fmtDate(vOf(cur, 'BRTHDY'))}
-                          onChange={e => editField(cur.CHIL_SN, 'BRTHDY', toRawDate(e.target.value))} />
-                      </Td>
-                      <Th>보육나이</Th><Td>
-                        <select className={inputCls} disabled={isCis}
-                          value={vOf(cur, 'CHILD_CARE_AGE')}
-                          onChange={e => editField(cur.CHIL_SN, 'CHILD_CARE_AGE', e.target.value)}>
-                          <option value="">선택</option>
-                          {[0, 1, 2, 3, 4, 5].map(a => <option key={a} value={a}>{a}세</option>)}
-                          {vOf(cur, 'CHILD_CARE_AGE') && !['0', '1', '2', '3', '4', '5'].includes(vOf(cur, 'CHILD_CARE_AGE')) && (
-                            <option value={vOf(cur, 'CHILD_CARE_AGE')}>{vOf(cur, 'CHILD_CARE_AGE')}세</option>
-                          )}
-                        </select>
-                      </Td>
-                    </tr>
-                    <tr className="border-b border-slate-100">
-                      <Th>성별</Th><Td>
-                        <select className={inputCls} disabled={isCis}
-                          value={vOf(cur, 'CHIL_SEXDSTN')}
-                          onChange={e => editField(cur.CHIL_SN, 'CHIL_SEXDSTN', e.target.value)}>
-                          <option value="">선택</option>
-                          {SEX_OPTIONS.map(o => <option key={o.cd} value={o.cd}>{o.nm}</option>)}
-                        </select>
-                      </Td>
-                      <Th>외국인</Th><Td>
-                        <select className={inputCls} disabled={isCis} value={vOf(cur, 'FRGNR_SE') || 'N'} onChange={e => editField(cur.CHIL_SN, 'FRGNR_SE', e.target.value)}>
-                          <option value="N">아니오</option>
-                          <option value="Y">예</option>
-                        </select>
-                      </Td>
-                    </tr>
-                    <tr className="border-b border-slate-100">
-                      <Th>입소일</Th><Td>
-                        <input type="date" className={inputCls} readOnly={isCis}
-                          value={fmtDate(vOf(cur, 'ENTRNC_DE'))}
-                          onChange={e => editField(cur.CHIL_SN, 'ENTRNC_DE', toRawDate(e.target.value))} />
-                      </Td>
-                      <Th>상태</Th><Td>
-                        <select
-                          className={`${inputCls} ${vOf(cur, 'STTUS') === '000' ? 'text-emerald-600' : 'text-pink-600'}`}
-                          disabled={isCis}
-                          value={vOf(cur, 'STTUS')}
-                          onChange={e => editField(cur.CHIL_SN, 'STTUS', e.target.value)}>
-                          {CHILD_STATUS.map(st => <option key={st.cd} value={st.cd}>{st.nm}</option>)}
-                        </select>
-                      </Td>
-                    </tr>
-                    {/* 상태가 퇴소/졸업이면 그 날짜가 필요 — 인천시도 이때만 입력받는다 */}
-                    {vOf(cur, 'STTUS') !== '000' && (
-                      <tr className="border-b border-slate-100">
-                        <Th>{vOf(cur, 'STTUS') === '999' ? '졸업일' : '퇴소일'}</Th><Td colSpan={3}>
-                          <input type="date" className={`${inputCls} !w-1/2`} readOnly={isCis}
-                            value={fmtDate(vOf(cur, 'RETIRE_DE'))}
-                            onChange={e => editField(cur.CHIL_SN, 'RETIRE_DE', toRawDate(e.target.value))} />
-                        </Td>
-                      </tr>
-                    )}
-                    <tr>
-                      <Th>아동고유번호</Th><Td>
-                        <input className={`${inputCls} font-mono`} readOnly={isCis} value={vOf(cur, 'CHILINNB')} onChange={e => editField(cur.CHIL_SN, 'CHILINNB', e.target.value)} />
-                      </Td>
-                      <Th>지원확정일</Th><Td>
-                        <input type="date" className={inputCls} readOnly={isCis}
-                          value={fmtDate(vOf(cur, 'SPORT_DCSN_DE'))}
-                          onChange={e => editField(cur.CHIL_SN, 'SPORT_DCSN_DE', toRawDate(e.target.value))} />
-                      </Td>
-                    </tr>
-                  </tbody>
-                </table>
-              )}
-
-              {/* ── 반·보육 ── 통합e 아동정보와 동일 구성
-                   반(일반)/반(휴일)/반(연장)/반(새벽)/반(야간연장)/야간연장 시작일/보육시간
-
-                   ⚠ 반유형 5종은 CIS(E0003)만 준다(generalClassId/holidayClassId/…).
-                     인천시 목록(childBasicInfoList)엔 현재 반 하나(CLAS_NM)뿐이라, 인천시
-                     소스에선 반(일반)에 그 반만 넣고 나머지는 '없음'으로 둔다. 인천시에서
-                     다중 배정을 채우려면 searchClasChilHistList.do 를 아동별로 호출해야 함. */}
-              {tab === '반·보육' && (
-                <div className="space-y-4">
+                editMode ? (
+                  // 편집 모드 — 인천시 소스에서만. 입력 위젯으로.
                   <table className="w-full text-[12px] border-collapse">
                     <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                     <tbody>
                       <tr className="border-b border-slate-100">
-                        <Th>반(일반)</Th><Td><input className={roCls} value={classOf(cur, 'general')} readOnly /></Td>
-                        <Th>반(휴일)</Th><Td><input className={roCls} value={classOf(cur, 'holiday')} readOnly /></Td>
+                        <Th>아동실명</Th><Td><input className={inputCls} value={vOf(cur, 'CHIL_REAL_NM') || vOf(cur, 'CHIL_NM')} onChange={e => editField(cur.CHIL_SN, 'CHIL_REAL_NM', e.target.value)} /></Td>
+                        <Th>아동별칭</Th><Td><input className={inputCls} value={vOf(cur, 'CHIL_NM')} onChange={e => editField(cur.CHIL_SN, 'CHIL_NM', e.target.value)} /></Td>
                       </tr>
                       <tr className="border-b border-slate-100">
-                        <Th>반(연장)</Th><Td><input className={roCls} value={classOf(cur, 'extended')} readOnly /></Td>
-                        <Th>반(새벽)</Th><Td><input className={roCls} value={classOf(cur, 'night')} readOnly /></Td>
+                        <Th>생년월일</Th><Td><input type="date" className={inputCls} value={fmtDate(vOf(cur, 'BRTHDY'))} onChange={e => editField(cur.CHIL_SN, 'BRTHDY', toRawDate(e.target.value))} /></Td>
+                        <Th>보육나이</Th><Td>
+                          <select className={inputCls} value={vOf(cur, 'CHILD_CARE_AGE')} onChange={e => editField(cur.CHIL_SN, 'CHILD_CARE_AGE', e.target.value)}>
+                            <option value="">선택</option>
+                            {[0, 1, 2, 3, 4, 5].map(a => <option key={a} value={a}>{a}세</option>)}
+                            {vOf(cur, 'CHILD_CARE_AGE') && !['0', '1', '2', '3', '4', '5'].includes(vOf(cur, 'CHILD_CARE_AGE')) && (
+                              <option value={vOf(cur, 'CHILD_CARE_AGE')}>{vOf(cur, 'CHILD_CARE_AGE')}세</option>
+                            )}
+                          </select>
+                        </Td>
                       </tr>
                       <tr className="border-b border-slate-100">
-                        <Th>반(야간연장)</Th><Td><input className={roCls} value={classOf(cur, 'nightCare')} readOnly /></Td>
-                        <Th>야간연장<br />시작일</Th><Td><input className={roCls} value={fmtDate(cur._nightCareStart) || '-'} readOnly /></Td>
+                        <Th>성별</Th><Td>
+                          <select className={inputCls} value={vOf(cur, 'CHIL_SEXDSTN')} onChange={e => editField(cur.CHIL_SN, 'CHIL_SEXDSTN', e.target.value)}>
+                            <option value="">선택</option>
+                            {SEX_OPTIONS.map(o => <option key={o.cd} value={o.cd}>{o.nm}</option>)}
+                          </select>
+                        </Td>
+                        <Th>외국인</Th><Td>
+                          <select className={inputCls} value={vOf(cur, 'FRGNR_SE') || 'N'} onChange={e => editField(cur.CHIL_SN, 'FRGNR_SE', e.target.value)}>
+                            <option value="N">아니오</option><option value="Y">예</option>
+                          </select>
+                        </Td>
                       </tr>
+                      <tr className="border-b border-slate-100">
+                        <Th>입소일</Th><Td><input type="date" className={inputCls} value={fmtDate(vOf(cur, 'ENTRNC_DE'))} onChange={e => editField(cur.CHIL_SN, 'ENTRNC_DE', toRawDate(e.target.value))} /></Td>
+                        <Th>상태</Th><Td>
+                          <select className={`${inputCls} ${vOf(cur, 'STTUS') === '000' ? 'text-emerald-600' : 'text-pink-600'}`} value={vOf(cur, 'STTUS')} onChange={e => editField(cur.CHIL_SN, 'STTUS', e.target.value)}>
+                            {CHILD_STATUS.map(st => <option key={st.cd} value={st.cd}>{st.nm}</option>)}
+                          </select>
+                        </Td>
+                      </tr>
+                      {vOf(cur, 'STTUS') !== '000' && (
+                        <tr className="border-b border-slate-100">
+                          <Th>{vOf(cur, 'STTUS') === '999' ? '졸업일' : '퇴소일'}</Th><Td colSpan={3}>
+                            <input type="date" className={`${inputCls} !w-1/2`} value={fmtDate(vOf(cur, 'RETIRE_DE'))} onChange={e => editField(cur.CHIL_SN, 'RETIRE_DE', toRawDate(e.target.value))} />
+                          </Td>
+                        </tr>
+                      )}
                       <tr>
-                        {/* 보육시간 — 인천시 소스에선 공통코드 드롭다운, CIS 는 읽기 전용 */}
-                        <Th>보육시간</Th><Td>
-                          {careTimeCodes.length > 0 && !isCis ? (
-                            <select className={inputCls}
-                              value={vOf(cur, 'CARETIME_CD')}
-                              onChange={e => editField(cur.CHIL_SN, 'CARETIME_CD', e.target.value)}
-                              title={'인천시 원본 코드: ' + (vOf(cur, 'CARETIME_CD') || '(없음)')}>
-                              <option value="">선택</option>
-                              {careTimeCodes.map(t => <option key={t.CD} value={t.CD}>{t.CD_NM}</option>)}
-                              {vOf(cur, 'CARETIME_CD') && !careTimeCodes.some(t => t.CD === vOf(cur, 'CARETIME_CD')) && (
-                                <option value={vOf(cur, 'CARETIME_CD')}>{(cur.TIME_NAME || vOf(cur, 'CARETIME_CD')) + ' (코드표에 없음)'}</option>
-                              )}
-                            </select>
-                          ) : (
-                            <input className={roCls} value={cur.TIME_NAME || ''} readOnly title={isCis ? '보육통합 원본 — 읽기 전용' : '코드표 미수신 — [인천시에서 가져오기] 실행 시 드롭다운으로 바뀝니다'} />
-                          )}
-                        </Td>
-                        <Th>보육기준<br />변경일</Th><Td>
-                          <input type="date" className={inputCls} readOnly={isCis}
-                            value={fmtDate(vOf(cur, 'CARERIG_STDDE'))}
-                            onChange={e => editField(cur.CHIL_SN, 'CARERIG_STDDE', toRawDate(e.target.value))} />
-                        </Td>
+                        <Th>아동고유번호</Th><Td><input className={`${inputCls} font-mono`} value={vOf(cur, 'CHILINNB')} onChange={e => editField(cur.CHIL_SN, 'CHILINNB', e.target.value)} /></Td>
+                        <Th>지원확정일</Th><Td><input type="date" className={inputCls} value={fmtDate(vOf(cur, 'SPORT_DCSN_DE'))} onChange={e => editField(cur.CHIL_SN, 'SPORT_DCSN_DE', toRawDate(e.target.value))} /></Td>
                       </tr>
                     </tbody>
                   </table>
-
-                  {!isCis && (
-                    <div className="text-[10px] text-amber-600">
-                      ⚠ 인천시 아동 목록은 현재 반 하나만 줍니다 — 연장·야간연장 등 다중 배정은
-                      [보육통합] 소스에서 보이거나, 인천시 searchClasChilHistList.do 를 아동별로
-                      호출해야 채워집니다(다음 단계).
-                    </div>
-                  )}
-
-                  <div>
-                    <div className="text-[12px] font-bold text-slate-700 mb-1.5">통학차량</div>
-                    <table className="w-full text-[12px] border-collapse">
-                      <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
-                      <tbody>
-                        <tr>
-                          <Th>이용 시작일</Th><Td>
-                            <input type="date" className={inputCls} readOnly={isCis}
-                              value={fmtDate(vOf(cur, 'CHLDSBUS_USE_BGNDE'))}
-                              onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_BGNDE', toRawDate(e.target.value))} />
-                          </Td>
-                          <Th>이용 종료일</Th><Td>
-                            <input type="date" className={inputCls} readOnly={isCis}
-                              value={fmtDate(vOf(cur, 'CHLDSBUS_USE_ENDDE'))}
-                              onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_ENDDE', toRawDate(e.target.value))} />
-                          </Td>
-                        </tr>
-                      </tbody>
-                    </table>
+                ) : (
+                  // 표시 모드 — 통합e 아동정보 기본정보 탭과 100% 동일한 필드/라벨/2열 배치
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1">
+                    <F label="이름" value={cur.CHIL_REAL_NM || cur.CHIL_NM} />
+                    <RrnF value={cur.CHILINNB} />
+                    <F label="주민번호 구분" value={g('residentIdType') || (cur.CHILINNB ? '주민등록번호' : '')} />
+                    <F label="성별" value={cur.CHIL_SEX_NM} />
+                    <F label="나이" value={calcAge(cur.BRTHDY)} />
+                    <F label="생년월일" value={dot(cur.BRTHDY)} />
+                    <F label="보육나이" value={g('childOrder') || String(cur.CHILD_CARE_AGE ?? '')} />
+                    <F label="출생순위" value={g('birthOrder')} />
+                    <F label="출생순위 확정" value={yn(g('birthOrderConfirmedYn'))} />
+                    <F label="보육료 지원자격" value={g('childcareEligibilityType')} />
+                    <F label="서비스 시작일" value={dot(g('serviceStartDate'))} />
+                    <F label="입소일" value={dot(cur.ENTRNC_DE)} />
+                    <F label="퇴소일" value={dot(cur.RETIRE_DE)} />
+                    <F label="상태" value={cur.KID_STATE_NM} />
+                    <F label="상해보험 가입" value={g('insuranceJoinStatus')} />
+                    <F label="예외급여 대상" value={yn(g('exBenefitYn'))} />
+                    <F label="자동결제 설정" value={autoPayLabel(g('autoPaymentEnabledYn'))} />
                   </div>
+                )
+              )}
+
+              {/* ── 반·보육 ── 통합e 와 동일 ── */}
+              {tab === '반·보육' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1">
+                  <F label="반(일반)" value={classOf(cur, 'general')} />
+                  <F label="반(휴일)" value={classOf(cur, 'holiday')} />
+                  <F label="반(연장)" value={classOf(cur, 'extended')} />
+                  <F label="반(새벽)" value={classOf(cur, 'night')} />
+                  <F label="반(야간연장)" value={classOf(cur, 'nightCare')} />
+                  <F label="야간연장 시작일" value={dot(cur._nightCareStart)} />
+                  <F label="보육시간" value={cur.TIME_NAME} />
                 </div>
               )}
 
-              {/* ── 주소 ── */}
+              {/* ── 주소 ── 통합e 와 동일 ── */}
               {tab === '주소' && (
-                <table className="w-full text-[12px] border-collapse">
-                  <colgroup><col className="w-[110px]" /><col /></colgroup>
-                  <tbody>
-                    <tr className="border-b border-slate-100">
-                      <Th>주소</Th><Td>
-                        <input className={inputCls} readOnly={isCis} value={vOf(cur, 'ADRES')} onChange={e => editField(cur.CHIL_SN, 'ADRES', e.target.value)} />
-                      </Td>
-                    </tr>
-                    <tr>
-                      <Th>우편번호</Th><Td><input className={roCls} value={cur.ZIP || ''} readOnly /></Td>
-                    </tr>
-                  </tbody>
-                </table>
+                editMode ? (
+                  <table className="w-full text-[12px] border-collapse">
+                    <colgroup><col className="w-[110px]" /><col /></colgroup>
+                    <tbody>
+                      <tr><Th>주소</Th><Td><input className={inputCls} value={vOf(cur, 'ADRES')} onChange={e => editField(cur.CHIL_SN, 'ADRES', e.target.value)} /></Td></tr>
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1">
+                    <F label="주소" value={cur.ADRES || g('address')} />
+                    <F label="주민등록(시/도)" value={g('residentCity')} />
+                    <F label="주민등록(구)" value={g('residentDistrict')} />
+                    <F label="임시등록(시/도)" value={g('tempResidenceCity')} />
+                    <F label="임시등록(구)" value={g('tempResidenceDistrict')} />
+                  </div>
+                )
               )}
 
-              {/* ── 보호자 ── */}
+              {/* ── 보호자 ── 통합e 와 동일 라벨 ── */}
               {tab === '보호자' && (
-                <div className="space-y-4">
+                editMode ? (
                   <table className="w-full text-[12px] border-collapse">
                     <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                     <tbody>
                       <tr className="border-b border-slate-100">
+                        <Th>보호자명</Th><Td><input className={inputCls} value={vOf(cur, 'PARNTS_NM')} onChange={e => editField(cur.CHIL_SN, 'PARNTS_NM', e.target.value)} /></Td>
                         <Th>관계</Th><Td>
-                          <select className={inputCls} disabled={isCis}
-                            value={vOf(cur, 'PARNTS_CHIL_RELATE')}
-                            onChange={e => editField(cur.CHIL_SN, 'PARNTS_CHIL_RELATE', e.target.value)}>
+                          <select className={inputCls} value={vOf(cur, 'PARNTS_CHIL_RELATE')} onChange={e => editField(cur.CHIL_SN, 'PARNTS_CHIL_RELATE', e.target.value)}>
                             <option value="">선택</option>
                             {RELATE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
-                            {/* 목록에 없는 값이 저장돼 있으면 그것도 유지 */}
                             {vOf(cur, 'PARNTS_CHIL_RELATE') && !RELATE_OPTIONS.includes(vOf(cur, 'PARNTS_CHIL_RELATE')) && (
                               <option value={vOf(cur, 'PARNTS_CHIL_RELATE')}>{vOf(cur, 'PARNTS_CHIL_RELATE')}</option>
                             )}
                           </select>
                         </Td>
-                        <Th>성명</Th><Td>
-                          <input className={inputCls} readOnly={isCis} value={vOf(cur, 'PARNTS_NM')} onChange={e => editField(cur.CHIL_SN, 'PARNTS_NM', e.target.value)} />
-                        </Td>
                       </tr>
                       <tr className="border-b border-slate-100">
-                        {/* 연락처 — 이 시설은 핸드폰이 아니라 여기에 번호가 들어있다(실측) */}
-                        <Th>연락처</Th><Td>
-                          {isCis
-                            ? <input className={roCls} value={vOf(cur, 'PARNTS_CTTPC')} readOnly />
-                            : <PhoneInput value={vOf(cur, 'PARNTS_CTTPC')} onChange={v => editField(cur.CHIL_SN, 'PARNTS_CTTPC', v)} />}
-                        </Td>
-                        <Th>핸드폰</Th><Td>
-                          {isCis
-                            ? <input className={roCls} value={vOf(cur, 'PARNTS_MOBLPHON')} readOnly />
-                            : <PhoneInput value={vOf(cur, 'PARNTS_MOBLPHON')} onChange={v => editField(cur.CHIL_SN, 'PARNTS_MOBLPHON', v)} />}
-                        </Td>
+                        <Th>연락처</Th><Td><PhoneInput value={vOf(cur, 'PARNTS_CTTPC')} onChange={v => editField(cur.CHIL_SN, 'PARNTS_CTTPC', v)} /></Td>
+                        <Th>핸드폰</Th><Td><PhoneInput value={vOf(cur, 'PARNTS_MOBLPHON')} onChange={v => editField(cur.CHIL_SN, 'PARNTS_MOBLPHON', v)} /></Td>
                       </tr>
                       <tr>
-                        <Th>기타사항</Th><Td colSpan={3}>
-                          <input className={inputCls} readOnly={isCis} value={vOf(cur, 'PARNTS_RM')} onChange={e => editField(cur.CHIL_SN, 'PARNTS_RM', e.target.value)} />
-                        </Td>
+                        <Th>기타사항</Th><Td colSpan={3}><input className={inputCls} value={vOf(cur, 'PARNTS_RM')} onChange={e => editField(cur.CHIL_SN, 'PARNTS_RM', e.target.value)} /></Td>
                       </tr>
                     </tbody>
                   </table>
-
-                  {/* 자동등록 키워드 — 인천시 원문 안내 그대로 */}
-                  <div>
-                    <div className="text-[12px] font-bold text-slate-700 mb-1.5">자동등록 키워드</div>
-                    <div className="border border-slate-200 rounded p-2.5 bg-slate-50/60">
-                      <div className="flex flex-wrap gap-1.5 min-h-[26px]">
-                        {curKeywords.length === 0
-                          ? <span className="text-[11px] text-slate-400 py-1">등록된 키워드가 없습니다.</span>
-                          : curKeywords.map((k, i) => (
-                              <span key={i} className="px-2 py-1 text-[11px] bg-white border border-teal-300 text-teal-700 rounded">{k}</span>
-                            ))}
-                      </div>
-                      <div className="mt-2 text-[10px] text-slate-500 leading-relaxed">
-                        ⓘ 자동등록 키워드 : 보호자가 필요경비 입금 시, 통장에 찍히는 문구를 등록하시면 자동 매칭됩니다.<br />
-                        최대 4개까지 등록 가능합니다.
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1">
+                      <F label="보호자명" value={cur.PARNTS_NM || g('guardianName')} />
+                      <F label="관계" value={cur.PARNTS_CHIL_RELATE || g('guardianRelation')} />
+                      <F label="연락처" value={cur.PARNTS_CTTPC || g('guardianPhone')} />
+                      <F label="핸드폰" value={cur.PARNTS_MOBLPHON || ''} />
+                      <F label="이메일" value={g('guardianEmail')} />
+                      <F label="기타사항" value={cur.PARNTS_RM || ''} />
+                    </div>
+                    {/* 자동등록 키워드 — 인천시 원문 안내 그대로 */}
+                    <div>
+                      <div className="text-[12px] font-bold text-slate-700 mb-1.5">자동등록 키워드</div>
+                      <div className="border border-slate-200 rounded p-2.5 bg-slate-50/60">
+                        <div className="flex flex-wrap gap-1.5 min-h-[26px]">
+                          {curKeywords.length === 0
+                            ? <span className="text-[11px] text-slate-400 py-1">등록된 키워드가 없습니다.</span>
+                            : curKeywords.map((k, i) => (
+                                <span key={i} className="px-2 py-1 text-[11px] bg-white border border-teal-300 text-teal-700 rounded">{k}</span>
+                              ))}
+                        </div>
+                        <div className="mt-2 text-[10px] text-slate-500 leading-relaxed">
+                          ⓘ 자동등록 키워드 : 보호자가 필요경비 입금 시, 통장에 찍히는 문구를 등록하시면 자동 매칭됩니다.<br />
+                          최대 4개까지 등록 가능합니다.
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  {!cur.PARNTS_NM && !cur.PARNTS_CTTPC && !isCis && (
-                    <div className="text-[10px] text-amber-600">
-                      ⚠ 보호자·성별·실명은 아동 상세 조회로만 채워집니다 — [📥 인천시에서 가져오기]를 한 번 실행해주세요.
-                    </div>
-                  )}
-                </div>
+                )
               )}
 
-              {/* ── 가정·기타 ── */}
+              {/* ── 가정·기타 ── 통합e 와 동일 ── */}
               {tab === '가정·기타' && (
-                <table className="w-full text-[12px] border-collapse">
-                  <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
-                  <tbody>
-                    <tr className="border-b border-slate-100">
-                      <Th>가정유형</Th><Td><input className={roCls} value={cur.HOME_TY_CD || ''} readOnly /></Td>
-                      <Th>보육기준</Th><Td><input className={roCls} value={String(cur.COM_CARE_NAME ?? '')} readOnly /></Td>
-                    </tr>
-                    <tr>
-                      <Th>SMS 수신</Th><Td><input className={roCls} value={cur.SMS_SE === 'Y' ? '예' : cur.SMS_SE === 'N' ? '아니오' : ''} readOnly /></Td>
-                      <Th>비고</Th><Td><input className={roCls} value={String(cur.RM ?? '')} readOnly /></Td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-1">
+                  <F label="입양아" value={yn(g('isAdoptedChild'))} />
+                  <F label="조손가정" value={yn(g('isGrandparentFamily'))} />
+                  <F label="다문화" value={yn(g('isMulticulturalFamily'))} />
+                  <F label="한부모" value={yn(g('isSingleParentFamily'))} />
+                  <F label="외국인" value={yn(g('isForeignFamily')) !== '-' ? yn(g('isForeignFamily')) : (cur.FRGNR_SE === 'Y' ? '예' : '아니오')} />
+                  <F label="공무원" value={yn(g('isPublicOfficerFamily'))} />
+                  <F label="취업여성" value={yn(g('isWorkingMotherFamily'))} />
+                  <F label="이주노동자" value={yn(g('isMigrantWorkerFamily'))} />
+                  <F label="새터민" value={yn(g('isNorthKoreanDefectorFamily'))} />
+                  <F label="가정유형 확정" value={yn(g('familyTypeConfirmedYn'))} />
+                </div>
               )}
             </div>
           </div>

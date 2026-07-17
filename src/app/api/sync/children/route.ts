@@ -27,6 +27,10 @@ interface MappedChild {
   nightCareClassId: string      // 반(야간연장)
   nightCareClassStartDate: string  // 야간연장 시작일
   careTimeType: string          // 보육시간
+  // CIS E0003 원본 전체 — 통합e 아동정보 상세 팝업이 child._raw 로 읽는 것과 동일하게
+  //   회계앱 화면도 같은 필드/라벨을 그대로 쓰도록 통째로 넘긴다.
+  _raw: Record<string, unknown>
+  _stat: '01' | '02'            // 통합e 와 동일 (01 현원 / 02 퇴소)
   _key: string
 }
 
@@ -97,6 +101,8 @@ function mapChild(raw: RawChild, statFallback: '현원' | '퇴소', idx: number)
     nightCareClassId: s(raw.nightCareClassId),
     nightCareClassStartDate: s(raw.nightCareClassStartDate),
     careTimeType: s(raw.careTimeType),
+    _raw: raw,
+    _stat: status === '퇴소' ? '02' : '01',
     _key: `${name}|${birth}|${enterDateRaw}`,
   }
 }
