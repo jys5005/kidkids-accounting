@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 
 /**
  * 반편성관리 — 인천시어린이집관리시스템 [설정 > 반설정] 인터페이스와 동일 구성.
@@ -9,17 +9,18 @@ import React, { useState, useEffect, useCallback } from 'react'
  * 필요 없게 하기 위함(사용자 설계: "인터페이스를 인천시랑 똑같이 맞추고 → 데이터를 맞추고
  * → 자동화 처리하고").
  *
- * 데이터는 통합e page_data(field='incheon-clas')에 인천시 필드명 그대로 저장돼 있고,
- * [인천시에서 가져오기]가 로컬 에이전트로 인천시를 실제 조회해 그 저장분을 갱신한다.
+ * ★ 연령(AGE_CD) 라벨은 추측하지 않는다 — 인천시 공통코드 API(/acc/common/getCodeList.do)로
+ *   받은 원본 코드표(page_data 'incheon-codes')에서 찾아 쓴다. 코드표에 없으면 원본코드 노출.
  */
 
 const inputCls = 'border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500'
 /** 표 안 인라인 편집칸 — 평소엔 테두리 없이 텍스트처럼 보이고 포커스/호버 때만 입력칸으로 드러남 */
 const editCls = 'w-full text-center text-[11px] px-1 py-0.5 rounded border border-transparent bg-transparent hover:border-slate-300 focus:outline-none focus:border-teal-500 focus:bg-white'
+const selCls = 'w-full text-center text-[11px] px-0.5 py-0.5 rounded border border-transparent bg-transparent hover:border-slate-300 focus:outline-none focus:border-teal-500 focus:bg-white'
 
 /** 인천시 반 (ClasConfigList.do → ClasList[]) — 필드명 원본 그대로 */
 type IncheonClas = {
-  CLAS_SN: number          // ★ 반 고유키
+  CLAS_SN: number          // ★ 반 고유키 (통합e 에서 추가한 반은 음수 임시키)
   CLAS_NM: string          // 반명
   AGE_CD: string           // 연령코드
   STTUS: string            // 상태
@@ -28,26 +29,26 @@ type IncheonClas = {
   CLAS_NM_NRTR: string | null   // 보육통합 반명
   GRP_CLAS_NM: string | null    // 통합반명
   PSNCPA: number | null         // 정원
+  _local?: boolean              // 통합e 에서 추가한 반(인천시에 없음)
 }
 
-/** 인천시 AGE_CD 코드표 — ⚠ 전부 유추값이다(공식 코드표 미확보).
- *
- *  근거: 실 데이터(FCLTCD 13157, 2026)의 반명↔코드 대응이 0~3세로 단조 증가.
- *    아기별꽃26=000 / 예쁜새싹26=001 / 아침햇살26=002 / 맑은샘물26=003
- *  한계: 같은 시설에 008(푸른하늘26) / M01(아기별꽃26-1) / T10(미소연장22연장반(유아)) /
- *    T11(지움연장24연장반(영아)) 이 있어 "N세" 규칙만으로는 설명이 안 된다. 즉 000~005 도
- *    확정이 아니다. 화면정의(ClasSetting.xml)의 dl_ageCode 는 선언만 있고 채우는 API 가
- *    HAR 에 없어 코드표를 못 얻었다.
- *  → 미등록 코드는 원본 그대로 노출하고, 매핑된 것도 title 에 원본코드를 달아 대조 가능하게 함.
- *    인천시 반설정 화면의 [연령] 컬럼과 다르면 이 표를 고칠 것. */
-const AGE_LABEL: Record<string, string> = {
-  '000': '0세', '001': '1세', '002': '2세', '003': '3세', '004': '4세', '005': '5세',
-}
-const STTUS_LABEL: Record<string, string> = { '000': '사용', '001': '미사용' }
+/** 인천시 공통코드 (getCodeList.do → tcmCodeList) — CD_GRP 로 그룹핑된 원본 코드표 */
+type IncheonCode = { CD_GRP: string; CD: string; CD_NM: string }
+
+/** 반 상태코드 — 인천시 ClasSetting.xml 의 <xf:choices> 실측(추측 아님).
+ *  ⚠ 미사용은 '001' 이 아니라 '999' — 옛 코드가 틀렸었다. */
+const CLAS_STATUS: Array<{ cd: string; nm: string }> = [
+  { cd: '000', nm: '사용' },
+  { cd: '999', nm: '미사용' },
+]
+const STTUS_LABEL: Record<string, string> = Object.fromEntries(CLAS_STATUS.map(s => [s.cd, s.nm]))
+
+type NewClas = { key: number; CLAS_NM: string; CLAS_NM_NRTR: string; AGE_CD: string; STTUS: string; RM: string }
 
 export default function ClassPage() {
   const year = String(new Date().getFullYear())
   const [rows, setRows] = useState<IncheonClas[]>([])
+  const [codes, setCodes] = useState<IncheonCode[]>([])
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [loading, setLoading] = useState(true)
@@ -56,16 +57,45 @@ export default function ClassPage() {
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const [checked, setChecked] = useState<Set<number>>(new Set())
 
-  // 편집 — CLAS_SN 별로 바뀐 필드만 모아둔다(저장 시 그 행만 PUT)
   const [edits, setEdits] = useState<Record<number, Partial<IncheonClas>>>({})
+  const [news, setNews] = useState<NewClas[]>([])
   const [saving, setSaving] = useState(false)
-  const dirtyCount = Object.keys(edits).length
+  const dirtyCount = Object.keys(edits).length + news.length
 
-  const editField = (sn: number, field: 'CLAS_NM' | 'CLAS_NM_NRTR' | 'RM', value: string) => {
+  /**
+   * 연령 코드 후보 — 인천시 공통코드에서 찾는다.
+   * 어느 CD_GRP 가 연령인지는 실 데이터의 AGE_CD 값이 그 그룹의 CD 에 들어있는지로 판정
+   * (그룹명을 추측하지 않기 위함). 못 찾으면 빈 배열 → 연령은 원본코드 텍스트로만 표시.
+   */
+  const ageCodes = useMemo(() => {
+    if (codes.length === 0) return []
+    const used = new Set(rows.map(r => r.AGE_CD).filter(Boolean))
+    if (used.size === 0) return []
+    const byGrp = new Map<string, IncheonCode[]>()
+    for (const c of codes) {
+      if (!byGrp.has(c.CD_GRP)) byGrp.set(c.CD_GRP, [])
+      byGrp.get(c.CD_GRP)!.push(c)
+    }
+    let best: IncheonCode[] = []
+    let bestHit = 0
+    for (const list of byGrp.values()) {
+      const cds = new Set(list.map(c => c.CD))
+      const hit = Array.from(used).filter(u => cds.has(u)).length
+      if (hit > bestHit) { bestHit = hit; best = list }
+    }
+    // 실제 쓰이는 코드를 과반 이상 설명하는 그룹만 채택 — 우연히 겹친 그룹 오채택 방지
+    return bestHit >= Math.ceil(used.size / 2) ? best : []
+  }, [codes, rows])
+
+  const ageLabel = useCallback((cd: string): string => {
+    const hit = ageCodes.find(c => c.CD === cd)
+    return hit?.CD_NM ?? (cd || '-')
+  }, [ageCodes])
+
+  const editField = (sn: number, field: keyof IncheonClas, value: string) => {
     setEdits(prev => {
       const orig = rows.find(r => r.CLAS_SN === sn)
       const nextRow = { ...(prev[sn] || {}), [field]: value }
-      // 원본과 같아지면 dirty 해제 — 되돌린 걸 저장 대상으로 남기지 않는다
       const changed = (Object.keys(nextRow) as Array<keyof IncheonClas>)
         .some(k => String(nextRow[k] ?? '') !== String(orig?.[k] ?? ''))
       const next = { ...prev }
@@ -74,13 +104,12 @@ export default function ClassPage() {
       return next
     })
   }
-  const valueOf = (c: IncheonClas, field: 'CLAS_NM' | 'CLAS_NM_NRTR' | 'RM'): string => {
+  const valueOf = (c: IncheonClas, field: keyof IncheonClas): string => {
     const e = edits[c.CLAS_SN]
     if (e && field in e) return String(e[field] ?? '')
     return String(c[field] ?? '')
   }
 
-  /** 통합e 저장분 조회 (인천시 호출 없음) */
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -88,6 +117,7 @@ export default function ClassPage() {
       const j = await res.json()
       if (j.success) {
         setRows((j.clasList || []) as IncheonClas[])
+        setCodes((j.codes || []) as IncheonCode[])
         setSavedAt(j.savedAt || null)
       } else {
         setMsg(j.error || '조회 실패')
@@ -101,21 +131,30 @@ export default function ClassPage() {
 
   useEffect(() => { load() }, [load])
 
-  /** 수정 저장 — 통합e 저장소만 갱신(인천시 원본은 안 바뀜) */
+  /** 저장 — 수정 + 신규. 통합e 저장소만 갱신(인천시 원본은 안 바뀜) */
   const handleSave = async () => {
     if (dirtyCount === 0) return
+    const valid = news.filter(n => n.CLAS_NM.trim() !== '')
+    if (news.length > 0 && valid.length !== news.length) {
+      setMsg('❌ 새 반의 반명을 입력해주세요.')
+      return
+    }
     setSaving(true); setMsg('')
     try {
-      const clasEdits = Object.entries(edits).map(([sn, patch]) => ({ CLAS_SN: Number(sn), ...patch }))
       const res = await fetch('/api/incheon/children', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year, clasEdits }),
+        body: JSON.stringify({
+          year,
+          clasEdits: Object.entries(edits).map(([sn, patch]) => ({ CLAS_SN: Number(sn), ...patch })),
+          clasAdds: valid.map(({ key: _key, ...rest }) => rest),  // eslint-disable-line @typescript-eslint/no-unused-vars
+        }),
       })
       const j = await res.json()
       if (j.success) {
-        setMsg(`💾 ${j.updated}개 반 수정 저장 (통합e 에만 저장 — 인천시 원본은 그대로입니다)`)
-        setEdits({})
+        const parts = [j.updated ? `수정 ${j.updated}` : '', j.added ? `추가 ${j.added}` : ''].filter(Boolean).join(' · ')
+        setMsg(`💾 ${parts} 저장 (통합e 에만 저장 — 인천시 원본은 그대로입니다)`)
+        setEdits({}); setNews([])
         await load()
       } else {
         setMsg(`❌ ${j.error || '저장 실패'}`)
@@ -127,7 +166,38 @@ export default function ClassPage() {
     }
   }
 
-  /** 인천시에서 실제로 가져오기 — 로컬 에이전트 경유라 수십 초 걸릴 수 있음 */
+  /** 통합e 에서 추가한 반 삭제 (인천시에서 온 반은 서버가 거부) */
+  const handleDelete = async () => {
+    const targets = filtered.filter(c => checked.has(c.CLAS_SN))
+    const localOnly = targets.filter(c => c._local)
+    if (targets.length === 0) { setMsg('삭제할 반을 선택해주세요.'); return }
+    if (localOnly.length === 0) {
+      setMsg('❌ 인천시에서 가져온 반은 삭제할 수 없습니다 (지워도 인천시엔 남아있어 다시 가져오면 되살아납니다). 통합e 에서 추가한 반만 삭제됩니다.')
+      return
+    }
+    if (!confirm(`통합e 에서 추가한 반 ${localOnly.length}개를 삭제합니다.${targets.length > localOnly.length ? `\n(인천시에서 가져온 ${targets.length - localOnly.length}개는 제외됩니다)` : ''}\n\n계속할까요?`)) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/incheon/children', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, clasDeletes: localOnly.map(c => c.CLAS_SN) }),
+      })
+      const j = await res.json()
+      if (j.success) {
+        setMsg(`🗑 ${j.deleted}개 반 삭제`)
+        setChecked(new Set())
+        await load()
+      } else {
+        setMsg(`❌ ${j.error || '삭제 실패'}`)
+      }
+    } catch {
+      setMsg('❌ 통합e 서버에 연결할 수 없습니다.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleSync = async () => {
     if (dirtyCount > 0 && !confirm(`저장하지 않은 수정 ${dirtyCount}건이 있습니다.\n\n인천시에서 가져오면 인천시 값으로 덮어써져 수정 내용이 사라집니다.\n계속할까요?`)) return
     setSyncing(true); setMsg('인천시 조회 중… (로컬 에이전트 경유, 수십 초 걸립니다)')
@@ -139,8 +209,8 @@ export default function ClassPage() {
       })
       const j = await res.json()
       if (j.success) {
-        setMsg(`✅ 반 ${j.clasCount}개 · 아동 ${j.childCount}명 가져왔습니다.`)
-        setEdits({})
+        setMsg(`✅ 반 ${j.clasCount}개 · 아동 ${j.childCount}명 · 키워드 ${j.keywordCount}건${j.codeCount ? ` · 코드 ${j.codeCount}건` : ''} 가져왔습니다.`)
+        setEdits({}); setNews([])
         await load()
       } else {
         setMsg(`❌ ${j.error || '가져오기 실패'}`)
@@ -166,6 +236,13 @@ export default function ClassPage() {
   }
   const allChecked = filtered.length > 0 && filtered.every(c => checked.has(c.CLAS_SN))
 
+  const addRow = () => setNews(prev => [...prev, {
+    key: Date.now() + prev.length,
+    CLAS_NM: '', CLAS_NM_NRTR: '', AGE_CD: '', STTUS: '000', RM: '',
+  }])
+  const editNew = (key: number, field: keyof Omit<NewClas, 'key'>, v: string) =>
+    setNews(prev => prev.map(n => n.key === key ? { ...n, [field]: v } : n))
+
   return (
     <div className="p-3 space-y-3">
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
@@ -182,10 +259,20 @@ export default function ClassPage() {
             <button type="submit" className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">조회</button>
           </form>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1.5">
             {savedAt && (
-              <span className="text-[11px] text-slate-400">최근 동기화 {new Date(savedAt).toLocaleString('ko-KR')}</span>
+              <span className="text-[11px] text-slate-400 mr-1">최근 동기화 {new Date(savedAt).toLocaleString('ko-KR')}</span>
             )}
+            <button onClick={addRow} className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">
+              + 반정보추가
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={saving || checked.size === 0}
+              className="px-3 py-1.5 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 rounded"
+            >
+              🗑 삭제
+            </button>
             <button
               onClick={handleSave}
               disabled={saving || dirtyCount === 0}
@@ -218,16 +305,16 @@ export default function ClassPage() {
               />
             </th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[160px]">통합반명</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[200px]">반명</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[200px]">보육통합 반명</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">연령</th>
+            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[190px]">반명</th>
+            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[190px]">보육통합 반명</th>
+            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[150px]">연령</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">상태</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600">비고</th>
           </tr></thead>
           <tbody>
             {loading ? (
               <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">불러오는 중…</td></tr>
-            ) : filtered.length === 0 ? (
+            ) : filtered.length === 0 && news.length === 0 ? (
               <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">
                 {rows.length === 0
                   ? '저장된 반이 없습니다. [📥 인천시에서 가져오기]를 눌러주세요.'
@@ -240,49 +327,92 @@ export default function ClassPage() {
                 <td className="px-2 py-1.5 text-center border-r border-slate-100">
                   <input type="checkbox" checked={checked.has(c.CLAS_SN)} onChange={() => toggle(c.CLAS_SN)} />
                 </td>
-                <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.GRP_CLAS_NM || '-'}</td>
-                {/* 반명 / 보육통합 반명 / 비고 — 수정 가능 (통합e 저장분만 바뀜) */}
-                <td className="px-1 py-1 border-r border-slate-100">
-                  <input
-                    value={valueOf(c, 'CLAS_NM')}
-                    onChange={e => editField(c.CLAS_SN, 'CLAS_NM', e.target.value)}
-                    className={editCls}
-                  />
+                <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">
+                  {c.GRP_CLAS_NM || '-'}
+                  {c._local && <span className="ml-1 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 추가한 반 — 인천시에는 없습니다">통합e</span>}
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
-                  <input
-                    value={valueOf(c, 'CLAS_NM_NRTR')}
-                    onChange={e => editField(c.CLAS_SN, 'CLAS_NM_NRTR', e.target.value)}
-                    className={editCls}
-                  />
+                  <input value={valueOf(c, 'CLAS_NM')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM', e.target.value)} className={editCls} />
                 </td>
-                <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100" title={`인천시 원본 코드: ${c.AGE_CD || '(없음)'}`}>
-                  {AGE_LABEL[c.AGE_CD] ?? (c.AGE_CD || '-')}
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <input value={valueOf(c, 'CLAS_NM_NRTR')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM_NRTR', e.target.value)} className={editCls} />
                 </td>
-                <td className="px-2 py-1.5 text-center border-r border-slate-100">
-                  <span className={c.STTUS === '000' ? 'text-emerald-600' : 'text-slate-400'}>
-                    {STTUS_LABEL[c.STTUS] ?? c.STTUS}
-                  </span>
+                <td className="px-1 py-1 border-r border-slate-100" title={`인천시 원본 코드: ${valueOf(c, 'AGE_CD') || '(없음)'}`}>
+                  {ageCodes.length > 0 ? (
+                    <select value={valueOf(c, 'AGE_CD')} onChange={e => editField(c.CLAS_SN, 'AGE_CD', e.target.value)} className={selCls}>
+                      <option value="">선택</option>
+                      {ageCodes.map(a => <option key={a.CD} value={a.CD}>{a.CD_NM}</option>)}
+                      {/* 코드표에 없는 값이 저장돼 있으면 그것도 선택지로 유지 — 임의로 날리지 않는다 */}
+                      {valueOf(c, 'AGE_CD') && !ageCodes.some(a => a.CD === valueOf(c, 'AGE_CD')) && (
+                        <option value={valueOf(c, 'AGE_CD')}>{valueOf(c, 'AGE_CD')} (코드표에 없음)</option>
+                      )}
+                    </select>
+                  ) : (
+                    <span className="text-slate-600">{ageLabel(valueOf(c, 'AGE_CD'))}</span>
+                  )}
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <select
+                    value={valueOf(c, 'STTUS')}
+                    onChange={e => editField(c.CLAS_SN, 'STTUS', e.target.value)}
+                    className={`${selCls} ${valueOf(c, 'STTUS') === '000' ? 'text-emerald-600' : 'text-slate-400'}`}
+                  >
+                    {CLAS_STATUS.map(s => <option key={s.cd} value={s.cd}>{s.nm}</option>)}
+                    {valueOf(c, 'STTUS') && !STTUS_LABEL[valueOf(c, 'STTUS')] && (
+                      <option value={valueOf(c, 'STTUS')}>{valueOf(c, 'STTUS')}</option>
+                    )}
+                  </select>
                 </td>
                 <td className="px-1 py-1">
-                  <input
-                    value={valueOf(c, 'RM')}
-                    onChange={e => editField(c.CLAS_SN, 'RM', e.target.value)}
-                    className={editCls}
-                  />
+                  <input value={valueOf(c, 'RM')} onChange={e => editField(c.CLAS_SN, 'RM', e.target.value)} className={editCls} />
                 </td>
               </tr>
               )
             })}
+
+            {/* 신규 등록 행 — 저장 전까지는 통합e 에도 안 들어감 */}
+            {news.map(n => (
+              <tr key={n.key} className="border-b border-slate-100 bg-violet-50">
+                <td className="px-2 py-1.5 text-center border-r border-slate-100">
+                  <button onClick={() => setNews(p => p.filter(x => x.key !== n.key))} className="text-rose-500 hover:text-rose-700" title="이 행 취소">✕</button>
+                </td>
+                <td className="px-2 py-1.5 text-center text-slate-400 border-r border-slate-100">
+                  <span className="px-1 py-0.5 text-[9px] bg-violet-200 text-violet-800 rounded">신규</span>
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <input value={n.CLAS_NM} onChange={e => editNew(n.key, 'CLAS_NM', e.target.value)} placeholder="반명 (필수)" className={`${editCls} border-slate-300 bg-white`} />
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <input value={n.CLAS_NM_NRTR} onChange={e => editNew(n.key, 'CLAS_NM_NRTR', e.target.value)} placeholder="보육통합 반명" className={`${editCls} border-slate-300 bg-white`} />
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <select value={n.AGE_CD} onChange={e => editNew(n.key, 'AGE_CD', e.target.value)} className={`${selCls} border-slate-300 bg-white`}>
+                    <option value="">선택</option>
+                    {ageCodes.map(a => <option key={a.CD} value={a.CD}>{a.CD_NM}</option>)}
+                  </select>
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <select value={n.STTUS} onChange={e => editNew(n.key, 'STTUS', e.target.value)} className={`${selCls} border-slate-300 bg-white`}>
+                    {CLAS_STATUS.map(s => <option key={s.cd} value={s.cd}>{s.nm}</option>)}
+                  </select>
+                </td>
+                <td className="px-1 py-1">
+                  <input value={n.RM} onChange={e => editNew(n.key, 'RM', e.target.value)} className={`${editCls} border-slate-300 bg-white`} />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
-        {!loading && filtered.length > 0 && (
+        {!loading && (filtered.length > 0 || news.length > 0) && (
           <div className="px-4 py-2 border-t border-slate-200 text-[11px] text-slate-500 flex items-center gap-3 flex-wrap">
             <span>총 {filtered.length}개 반{checked.size > 0 && <> · 선택 {checked.size}개</>}</span>
-            {dirtyCount > 0 && <span className="text-amber-600 font-medium">✏️ 수정 {dirtyCount}건 — 저장 안 됨</span>}
+            {dirtyCount > 0 && <span className="text-amber-600 font-medium">✏️ 미저장 {dirtyCount}건</span>}
+            {ageCodes.length === 0 && rows.length > 0 && (
+              <span className="text-amber-600">⚠ 연령 코드표 미수신 — [인천시에서 가져오기]를 한 번 실행하면 연령을 이름으로 표시합니다</span>
+            )}
             <span className="ml-auto text-slate-400">
-              ⓘ 반명·보육통합 반명·비고는 수정 가능합니다. <b className="text-slate-500">수정은 통합e 에만 저장되고 인천시 원본은 바뀌지 않습니다</b>
+              <b className="text-slate-500">수정·추가는 통합e 에만 저장되고 인천시 원본은 바뀌지 않습니다</b>
               {' '}— [인천시에서 가져오기]를 다시 누르면 인천시 값으로 덮어써집니다.
             </span>
           </div>

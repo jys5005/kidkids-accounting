@@ -51,6 +51,14 @@ type IncheonChild = {
 
 type IncheonKeyword = { CHIL_SN: number; KEYWORD_NM: string }
 
+/** 아동 상태코드 — 인천시 childRegUdt.xml 의 <xf:choices> 실측(추측 아님).
+ *  childBasicInfoList.do 의 SCH_STTUS 파라미터 값이기도 하다. */
+const CHILD_STATUS: Array<{ cd: string; nm: string }> = [
+  { cd: '000', nm: '현원' },
+  { cd: '001', nm: '퇴소' },
+  { cd: '999', nm: '졸업' },
+]
+
 /** YYYYMMDD → YYYY-MM-DD */
 function fmtDate(v: string | null | undefined): string {
   if (!v) return ''
@@ -68,9 +76,8 @@ export default function ChildStatusPage() {
   const [msg, setMsg] = useState('')
   const [savedAt, setSavedAt] = useState<string | null>(null)
 
-  // 인천시 화면의 검색 조건 — 반 / 성명
-  // ⚠ 상태 필터는 두지 않는다 — 현재 가져오는 건 현원(SCH_STTUS='000')뿐이라
-  //   "전체" 옵션을 두면 퇴소 아동도 있는 것처럼 오해를 준다. 퇴소 상태코드 확정 후 추가.
+  // 인천시 화면의 검색 조건 — 상태 / 반 / 성명
+  const [schSttus, setSchSttus] = useState('000')   // 기본 현원 (인천시 화면과 동일)
   const [schClas, setSchClas] = useState('all')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
@@ -127,10 +134,11 @@ export default function ChildStatusPage() {
   }, [children])
 
   const filtered = useMemo(() => children.filter(c => {
+    if (schSttus && c.STTUS !== schSttus) return false
     if (schClas !== 'all' && String(c.CLAS_SN) !== schClas) return false
     if (search && !(c.CHIL_NM || '').includes(search)) return false
     return true
-  }), [children, schClas, search])
+  }), [children, schSttus, schClas, search])
 
   const cur = children.find(c => c.CHIL_SN === selected) || null
   const curKeywords = keywords.filter(k => Number(k.CHIL_SN) === selected).map(k => k.KEYWORD_NM)
@@ -144,7 +152,10 @@ export default function ChildStatusPage() {
           <span className="text-[11px] text-slate-500">보육년도 {year}년</span>
 
           <form onSubmit={e => { e.preventDefault(); setSearch(searchInput) }} className="flex items-center gap-2 ml-4">
-            <span className="text-[11px] text-slate-500 whitespace-nowrap">현원</span>
+            <select value={schSttus} onChange={e => setSchSttus(e.target.value)} className={`${inputCls} !w-24`}>
+              <option value="">전체</option>
+              {CHILD_STATUS.map(s => <option key={s.cd} value={s.cd}>{s.nm}</option>)}
+            </select>
             <select value={schClas} onChange={e => setSchClas(e.target.value)} className={`${inputCls} !w-36`}>
               <option value="all">전체 반</option>
               {clasOptions.map(o => <option key={o.sn} value={o.sn}>{o.nm}</option>)}
@@ -206,7 +217,15 @@ export default function ChildStatusPage() {
             </table>
           </div>
           {!loading && (
-            <div className="px-3 py-2 border-t border-slate-200 text-[11px] text-slate-500">총 {filtered.length}명</div>
+            <div className="px-3 py-2 border-t border-slate-200 text-[11px] text-slate-500">
+              총 {filtered.length}명
+              {/* 상태별 내역 — "전체"로 봐도 현원/퇴소/졸업이 몇 명인지 바로 보이게 */}
+              {children.length > 0 && (
+                <span className="ml-1 text-slate-400">
+                  ({CHILD_STATUS.map(s => `${s.nm} ${children.filter(c => c.STTUS === s.cd).length}`).join(' · ')})
+                </span>
+              )}
+            </div>
           )}
         </div>
 
