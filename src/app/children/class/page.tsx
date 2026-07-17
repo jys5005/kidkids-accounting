@@ -36,25 +36,47 @@ type IncheonClas = {
 type IncheonCode = { CD_GRP: string; CD: string; CD_NM: string }
 
 /**
- * 인천시 연령(AGE_CD) 코드표 — 인천시 반설정 실제 화면(스크린샷 2026-07-18)에서 확정.
- * ⚠ 추측 아님. 인천시 [설정 > 반설정]의 [연령] 컬럼에 실제로 표시되는 이름 그대로다.
- * 공통코드 API(getCodeList.do) 저장분이 있으면 그걸 우선하고(더 완전), 없으면 이 표로 표시.
+ * 인천시 반구분(연령) 전체 목록 — 인천시 어린이집관리시스템 [반 추가] 드롭다운 실제 화면 순서 그대로.
+ * (스크린샷 2026-07-18: 반구분 셀렉트 전체 스크롤 캡처)
+ *
+ * cd  = AGE_CD (실측 확인된 8개만 코드값, 나머지는 코드 미상 → 이름 자체를 값으로 사용)
+ * nm  = 인천시 화면 표기 그대로 (구분자 '.' 포함 — 예: '연령혼합반(0.1세)', '4.5세이상 반')
+ *
+ * ✅ 실측 대조 완료 (미소지움 10개 반, page_data incheon-clas):
+ *    000=0세아 반 / 001=1세아 반 / 002=2세아 반 / 003=3세아 반 / 008=4.5세이상 반
+ *    M01=연령혼합반(0.1세) / T10=연장반(영아) / T11=연장반(유아)   — 전부 일치.
  */
-const AGE_CODE_MAP: Record<string, string> = {
-  '000': '0세아 반',
-  '001': '1세아 반',
-  '002': '2세아 반',
-  '003': '3세아 반',
-  '004': '4세아 반',   // 실측: 3세까지 확인. 4/5세는 규칙 연장(008=4,5세이상 이라 단독 4세반은 미확인)
-  '005': '5세아 반',
-  '008': '4,5세이상 반',
-  'M01': '연령혼합반(0,1세)',
-  'T10': '연장반(영아)',
-  'T11': '연장반(유아)',
-}
+const AGE_OPTIONS: Array<{ cd: string; nm: string }> = [
+  { cd: '000', nm: '0세아 반' },
+  { cd: 'M01', nm: '연령혼합반(0.1세)' },
+  { cd: '001', nm: '1세아 반' },
+  { cd: '연령혼합반(1.2세)', nm: '연령혼합반(1.2세)' },
+  { cd: '002', nm: '2세아 반' },
+  { cd: '연령혼합반(2.3세)', nm: '연령혼합반(2.3세)' },
+  { cd: '003', nm: '3세아 반' },
+  { cd: '연령혼합반(3.4세 이상)', nm: '연령혼합반(3.4세 이상)' },
+  { cd: '4세아 반', nm: '4세아 반' },
+  { cd: '008', nm: '4.5세이상 반' },
+  { cd: '5세아 반', nm: '5세아 반' },
+  { cd: '방과후반', nm: '방과후반' },
+  { cd: '야간연장반', nm: '야간연장반' },
+  { cd: '장애아기본반', nm: '장애아기본반' },
+  { cd: '장애아방과후반', nm: '장애아방과후반' },
+  { cd: '누리장애아반', nm: '누리장애아반' },
+  { cd: '휴일반', nm: '휴일반' },
+  { cd: '시간제독립반(1:3)', nm: '시간제독립반(1:3)' },
+  { cd: '시간제독립반(1:2)', nm: '시간제독립반(1:2)' },
+  { cd: '연장반(0세)', nm: '연장반(0세)' },
+  { cd: 'T10', nm: '연장반(영아)' },
+  { cd: 'T11', nm: '연장반(유아)' },
+  { cd: '연장반(장애아)', nm: '연장반(장애아)' },
+  { cd: '연장반(0~2세영아)', nm: '연장반(0~2세영아)' },
+  { cd: '영·유아 연장반(2~3세)', nm: '영·유아 연장반(2~3세)' },
+  { cd: '영·유아 연장반(2~5세)', nm: '영·유아 연장반(2~5세)' },
+]
+/** cd → nm 빠른 조회 (표시용). 실측 코드(003 등)와 이름코드(방과후반 등) 모두 커버. */
+const AGE_CODE_MAP: Record<string, string> = Object.fromEntries(AGE_OPTIONS.map(o => [o.cd, o.nm]))
 
-/** 반 상태코드 — 인천시 ClasSetting.xml 의 <xf:choices> 실측(추측 아님).
- *  ⚠ 미사용은 '001' 이 아니라 '999' — 옛 코드가 틀렸었다. */
 const CLAS_STATUS: Array<{ cd: string; nm: string }> = [
   { cd: '000', nm: '사용' },
   { cd: '999', nm: '미사용' },
@@ -375,18 +397,15 @@ export default function ClassPage() {
                   <input value={valueOf(c, 'CLAS_NM_NRTR')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM_NRTR', e.target.value)} className={editCls} />
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100" title={`인천시 원본 코드: ${valueOf(c, 'AGE_CD') || '(없음)'}`}>
-                  {ageCodes.length > 0 ? (
-                    <select value={valueOf(c, 'AGE_CD')} onChange={e => editField(c.CLAS_SN, 'AGE_CD', e.target.value)} className={selCls}>
-                      <option value="">선택</option>
-                      {ageCodes.map(a => <option key={a.CD} value={a.CD}>{a.CD_NM}</option>)}
-                      {/* 코드표에 없는 값이 저장돼 있으면 그것도 선택지로 유지 — 임의로 날리지 않는다 */}
-                      {valueOf(c, 'AGE_CD') && !ageCodes.some(a => a.CD === valueOf(c, 'AGE_CD')) && (
-                        <option value={valueOf(c, 'AGE_CD')}>{valueOf(c, 'AGE_CD')} (코드표에 없음)</option>
-                      )}
-                    </select>
-                  ) : (
-                    <span className="text-slate-600">{ageLabel(valueOf(c, 'AGE_CD'))}</span>
-                  )}
+                  {/* 인천시 [반 추가] 반구분 드롭다운 순서·이름 그대로 (AGE_OPTIONS) */}
+                  <select value={valueOf(c, 'AGE_CD')} onChange={e => editField(c.CLAS_SN, 'AGE_CD', e.target.value)} className={selCls}>
+                    <option value="">선택</option>
+                    {AGE_OPTIONS.map(a => <option key={a.cd} value={a.cd}>{a.nm}</option>)}
+                    {/* 저장된 값이 목록에 없으면(다른 시설의 낯선 코드 등) 그것도 유지 — 임의로 날리지 않는다 */}
+                    {valueOf(c, 'AGE_CD') && !AGE_OPTIONS.some(a => a.cd === valueOf(c, 'AGE_CD')) && (
+                      <option value={valueOf(c, 'AGE_CD')}>{ageLabel(valueOf(c, 'AGE_CD'))}</option>
+                    )}
+                  </select>
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <select
@@ -423,9 +442,10 @@ export default function ClassPage() {
                   <input value={n.CLAS_NM_NRTR} onChange={e => editNew(n.key, 'CLAS_NM_NRTR', e.target.value)} placeholder="보육통합 반명" className={`${editCls} border-slate-300 bg-white`} />
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
+                  {/* 반 추가 시 반구분 — 인천시 [반 추가] 드롭다운 그대로 */}
                   <select value={n.AGE_CD} onChange={e => editNew(n.key, 'AGE_CD', e.target.value)} className={`${selCls} border-slate-300 bg-white`}>
                     <option value="">선택</option>
-                    {ageCodes.map(a => <option key={a.CD} value={a.CD}>{a.CD_NM}</option>)}
+                    {AGE_OPTIONS.map(a => <option key={a.cd} value={a.cd}>{a.nm}</option>)}
                   </select>
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
