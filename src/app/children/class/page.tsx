@@ -35,6 +35,24 @@ type IncheonClas = {
 /** 인천시 공통코드 (getCodeList.do → tcmCodeList) — CD_GRP 로 그룹핑된 원본 코드표 */
 type IncheonCode = { CD_GRP: string; CD: string; CD_NM: string }
 
+/**
+ * 인천시 연령(AGE_CD) 코드표 — 인천시 반설정 실제 화면(스크린샷 2026-07-18)에서 확정.
+ * ⚠ 추측 아님. 인천시 [설정 > 반설정]의 [연령] 컬럼에 실제로 표시되는 이름 그대로다.
+ * 공통코드 API(getCodeList.do) 저장분이 있으면 그걸 우선하고(더 완전), 없으면 이 표로 표시.
+ */
+const AGE_CODE_MAP: Record<string, string> = {
+  '000': '0세아 반',
+  '001': '1세아 반',
+  '002': '2세아 반',
+  '003': '3세아 반',
+  '004': '4세아 반',   // 실측: 3세까지 확인. 4/5세는 규칙 연장(008=4,5세이상 이라 단독 4세반은 미확인)
+  '005': '5세아 반',
+  '008': '4,5세이상 반',
+  'M01': '연령혼합반(0,1세)',
+  'T10': '연장반(영아)',
+  'T11': '연장반(유아)',
+}
+
 /** 반 상태코드 — 인천시 ClasSetting.xml 의 <xf:choices> 실측(추측 아님).
  *  ⚠ 미사용은 '001' 이 아니라 '999' — 옛 코드가 틀렸었다. */
 const CLAS_STATUS: Array<{ cd: string; nm: string }> = [
@@ -90,12 +108,15 @@ export default function ClassPage() {
       if (hit > bestHit) { bestHit = hit; best = list }
     }
     // 실제 쓰이는 코드를 과반 이상 설명하는 그룹만 채택 — 우연히 겹친 그룹 오채택 방지
-    return bestHit >= Math.ceil(used.size / 2) ? best : []
+    if (bestHit >= Math.ceil(used.size / 2)) return best
+    // 공통코드 API 미저장 → 인천시 실측 상수표(AGE_CODE_MAP)로 폴백. 실제 쓰이는 코드 + 표준 코드 노출.
+    const codeSet = new Set([...used, ...Object.keys(AGE_CODE_MAP)])
+    return Array.from(codeSet).sort().map(cd => ({ CD_GRP: 'AGE', CD: cd, CD_NM: AGE_CODE_MAP[cd] ?? cd }))
   }, [codes, rows])
 
   const ageLabel = useCallback((cd: string): string => {
     const hit = ageCodes.find(c => c.CD === cd)
-    return hit?.CD_NM ?? (cd || '-')
+    return hit?.CD_NM ?? AGE_CODE_MAP[cd] ?? (cd || '-')
   }, [ageCodes])
 
   const editField = (sn: number, field: keyof IncheonClas, value: string) => {
@@ -424,9 +445,6 @@ export default function ClassPage() {
           <div className="px-4 py-2 border-t border-slate-200 text-[11px] text-slate-500 flex items-center gap-3 flex-wrap">
             <span>총 {filtered.length}개 반{checked.size > 0 && <> · 선택 {checked.size}개</>}</span>
             {dirtyCount > 0 && <span className="text-amber-600 font-medium">✏️ 미저장 {dirtyCount}건</span>}
-            {ageCodes.length === 0 && rows.length > 0 && (
-              <span className="text-amber-600">⚠ 연령 코드표 미수신 — [인천시에서 가져오기]를 한 번 실행하면 연령을 이름으로 표시합니다</span>
-            )}
             <span className="ml-auto text-slate-400">
               <b className="text-slate-500">수정·추가는 통합e 에만 저장되고 인천시 원본은 바뀌지 않습니다</b>
               {' '}— [인천시에서 가져오기]를 다시 누르면 인천시 값으로 덮어써집니다.
