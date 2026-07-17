@@ -1058,6 +1058,33 @@ export default function DataMigrationPage() {
   }, [source])
   useEffect(() => { setProgramAuth(null); setError(''); reloadProgramAuth() }, [source, reloadProgramAuth])
 
+  // 등록된 인증정보 삭제.
+  // ⚠ [수정] 링크는 통합e 인증설정 페이지를 새 탭으로 열 뿐이라, 거기서 인증서를 지워도
+  //   이 화면이 쓰는 program_auth 등록정보(인증서명·비번·만기)는 그대로 남는다 — 저장소가 다름.
+  //   그래서 여기서 직접 지울 수단이 필요(2026-07-17 사용자 지적: "수정 들어가니 통합e 꺼만 삭제됨").
+  //   통합e 의 인증서 보관(cert_signcert)은 건드리지 않는다 — 이 화면 등록정보만 지움.
+  const [authDeleting, setAuthDeleting] = useState(false)
+  const handleDeleteProgramAuth = useCallback(async () => {
+    const label = SOURCE_OPTIONS.find(o => o.value === source)?.label || source
+    if (!confirm(`${label} 등록 인증정보를 삭제합니다.\n\n· 이 화면의 등록정보(인증서명·비밀번호·만기)만 지웁니다\n· 통합e 의 인증서 보관함은 그대로 유지됩니다\n\n삭제 후 다시 등록하셔야 조회가 됩니다. 계속할까요?`)) return
+    setAuthDeleting(true)
+    try {
+      const res = await fetch(`/api/settings/program-auth?programId=${encodeURIComponent(source)}`, { method: 'DELETE' })
+      const json = await res.json().catch(() => ({}))
+      if (res.ok && json.success) {
+        setProgramAuth(null)
+        setAuthSaveMsg('🗑 등록 인증정보를 삭제했습니다. 다시 등록해주세요.')
+        await reloadProgramAuth()
+      } else {
+        setAuthSaveMsg(`삭제 실패: ${json.message || res.status}`)
+      }
+    } catch (e) {
+      setAuthSaveMsg(`삭제 실패: ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setAuthDeleting(false)
+    }
+  }, [source, reloadProgramAuth])
+
   // 경기도(accgg) 자동로그인 자격증명 캐시 등록 여부 (등록돼 있으면 CROSSCERT 없이 빠른 로그인)
   const [ggCache, setGgCache] = useState<{ exists: boolean; updatedAt?: string } | null>(null)
   const [ggCacheLoading, setGgCacheLoading] = useState(false)
@@ -2362,11 +2389,20 @@ export default function DataMigrationPage() {
                       </p>
                     )}
                   </div>
-                  <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="text-[11px] text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50">
-                    수정
-                  </a>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <a href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000'}/dashboard/settings/cis-auth`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-[11px] text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50">
+                      수정
+                    </a>
+                    {/* 삭제 — [수정]은 통합e 인증설정을 새 탭으로 열 뿐이라 거기서 지워도 이 등록정보는 남는다.
+                        비번이 틀렸을 때 여기서 지우고 다시 등록할 수 있어야 함. */}
+                    <button type="button" onClick={handleDeleteProgramAuth} disabled={authDeleting}
+                      title="이 화면의 등록 인증정보만 삭제합니다 (통합e 인증서 보관함은 유지)"
+                      className="text-[11px] text-rose-600 hover:text-rose-700 px-2 py-1 rounded hover:bg-rose-50 disabled:opacity-50">
+                      {authDeleting ? '삭제 중…' : '삭제'}
+                    </button>
+                  </div>
                 </div>
                 {/* 경기도 자동로그인 — cert 자격 캐시가 등록됐을 때만. 에이전트가 로그인된 accgg 새창을 엶 */}
                 {source === 'gyeonggi' && ggCache?.exists && (
