@@ -47,9 +47,14 @@ type IncheonChild = {
   SPORT_RT: string | null  // 지원율
   CHLDSBUS_USE_BGNDE: string | null  // 통학차량 이용 시작일
   CHLDSBUS_USE_ENDDE: string | null  // 통학차량 이용 종료일
+  CHIL_REAL_NM?: string    // 아동실명 — 목록 API 엔 없고 상세 API(getChildDetailInfo)에만 있음
+  _local?: boolean         // 통합e 에서 추가한 아동(인천시에 없음)
 }
 
 type IncheonKeyword = { CHIL_SN: number; KEYWORD_NM: string }
+
+/** 인천시 공통코드 (getCodeList.do → tcmCodeList) — 보육시간 등 라벨의 원본 */
+type IncheonCode = { CD_GRP: string; CD: string; CD_NM: string }
 
 /** 아동 상태코드 — 인천시 childRegUdt.xml 의 <xf:choices> 실측(추측 아님).
  *  childBasicInfoList.do 의 SCH_STTUS 파라미터 값이기도 하다. */
@@ -59,12 +64,17 @@ const CHILD_STATUS: Array<{ cd: string; nm: string }> = [
   { cd: '999', nm: '졸업' },
 ]
 
-/** YYYYMMDD → YYYY-MM-DD */
+/** YYYYMMDD → YYYY-MM-DD (<input type="date"> 가 요구하는 형식) */
 function fmtDate(v: string | null | undefined): string {
   if (!v) return ''
   const d = String(v).replace(/[^0-9]/g, '')
   if (d.length !== 8) return String(v)
   return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`
+}
+/** YYYY-MM-DD → YYYYMMDD (인천시 저장 형식) — 빈값은 빈값 그대로 */
+function toRawDate(v: string): string {
+  const d = v.replace(/[^0-9]/g, '')
+  return d.length === 8 ? d : ''
 }
 
 export default function ChildStatusPage() {
@@ -82,6 +92,12 @@ export default function ChildStatusPage() {
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<number | null>(null)  // CHIL_SN
+  const [codes, setCodes] = useState<IncheonCode[]>([])
+
+  // 편집 — CHIL_SN 별로 바뀐 필드만 모아둔다(저장 시 그 아동만 PUT)
+  const [edits, setEdits] = useState<Record<number, Partial<IncheonChild>>>({})
+  const [saving, setSaving] = useState(false)
+  const dirtyCount = Object.keys(edits).length
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -91,6 +107,7 @@ export default function ChildStatusPage() {
       if (j.success) {
         setChildren((j.children || []) as IncheonChild[])
         setKeywords((j.keywords || []) as IncheonKeyword[])
+        setCodes((j.codes || []) as IncheonCode[])
         setSavedAt(j.savedAt || null)
       } else {
         setMsg(j.error || '조회 실패')
@@ -105,6 +122,10 @@ export default function ChildStatusPage() {
   useEffect(() => { load() }, [load])
 
   const handleSync = async () => {
+    if (dirtyCount > 0 && !confirm(`저장하지 않은 수정 ${dirtyCount}건이 있습니다.
+
+인천시에서 가져오면 인천시 값으로 덮어써져 수정 내용이 사라집니다.
+계속할까요?`)) return
     setSyncing(true); setMsg('인천시 조회 중… (로컬 에이전트 경유, 수십 초 걸립니다)')
     try {
       const res = await fetch('/api/incheon/children', {
@@ -114,7 +135,8 @@ export default function ChildStatusPage() {
       })
       const j = await res.json()
       if (j.success) {
-        setMsg(`✅ 아동 ${j.childCount}명 · 반 ${j.clasCount}개 · 키워드 ${j.keywordCount}건 가져왔습니다.`)
+        setMsg(`✅ 아동 ${j.childCount}명 · 반 ${j.clasCount}개 · 키워드 ${j.keywordCount}건${j.codeCount ? ` · 코드 ${j.codeCount}건` : ''} 가져왔습니다.`)
+        setEdits({})
         await load()
       } else {
         setMsg(`❌ ${j.error || '가져오기 실패'}`)
@@ -139,6 +161,93 @@ export default function ChildStatusPage() {
     if (search && !(c.CHIL_NM || '').includes(search)) return false
     return true
   }), [children, schSttus, schClas, search])
+
+  /**
+   * 보육시간 코드 후보 — 인천시 공통코드에서 찾는다.
+   * 어느 CD_GRP 가 보육시간인지는 실 데이터의 CARETIME_CD 가 그 그룹 CD 에 들어있는지로 판정
+   * (그룹명을 추측하지 않기 위함). 실제 쓰이는 코드를 과반 이상 설명하는 그룹만 채택.
+   */
+  const careTimeCodes = useMemo(() => {
+    if (codes.length === 0) return []
+    const used = new Set(children.map(c => c.CARETIME_CD).filter(Boolean))
+    if (used.size === 0) return []
+    const byGrp = new Map<string, IncheonCode[]>()
+    for (const c of codes) {
+      if (!byGrp.has(c.CD_GRP)) byGrp.set(c.CD_GRP, [])
+      byGrp.get(c.CD_GRP)!.push(c)
+    }
+    let best: IncheonCode[] = []; let bestHit = 0
+    for (const list of byGrp.values()) {
+      const cds = new Set(list.map(c => c.CD))
+      const hit = Array.from(used).filter(u => cds.has(u)).length
+      if (hit > bestHit) { bestHit = hit; best = list }
+    }
+    return bestHit >= Math.ceil(used.size / 2) ? best : []
+  }, [codes, children])
+
+  const editField = (sn: number, field: keyof IncheonChild, value: string) => {
+    setEdits(prev => {
+      const orig = children.find(c => c.CHIL_SN === sn)
+      const nextRow = { ...(prev[sn] || {}), [field]: value }
+      // 원본과 같아지면 dirty 해제 — 되돌린 걸 저장 대상으로 남기지 않는다
+      const changed = (Object.keys(nextRow) as Array<keyof IncheonChild>)
+        .some(k => String(nextRow[k] ?? '') !== String(orig?.[k] ?? ''))
+      const next = { ...prev }
+      if (changed) next[sn] = nextRow
+      else delete next[sn]
+      return next
+    })
+  }
+  const vOf = (c: IncheonChild, field: keyof IncheonChild): string => {
+    const e = edits[c.CHIL_SN]
+    if (e && field in e) return String(e[field] ?? '')
+    return String(c[field] ?? '')
+  }
+
+  /** 수정 저장 — 통합e 저장분만 갱신(인천시 원본은 안 바뀜) */
+  const handleSave = async () => {
+    if (dirtyCount === 0) return
+    setSaving(true); setMsg('')
+    try {
+      const res = await fetch('/api/incheon/children', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          year,
+          childEdits: Object.entries(edits).map(([sn, patch]) => ({ CHIL_SN: Number(sn), ...patch })),
+        }),
+      })
+      const j = await res.json()
+      if (j.success) {
+        setMsg(`💾 ${j.updated}명 수정 저장 (통합e 에만 저장 — 인천시 원본은 그대로입니다)`)
+        setEdits({})
+        await load()
+      } else { setMsg(`❌ ${j.error || '저장 실패'}`) }
+    } catch { setMsg('❌ 통합e 서버에 연결할 수 없습니다.') }
+    finally { setSaving(false) }
+  }
+
+  /** 삭제 — 통합e 에서 추가한 아동만(인천시에서 온 아동은 서버가 거부) */
+  const handleDelete = async () => {
+    if (!cur) return
+    if (!cur._local) {
+      setMsg('❌ 인천시에서 가져온 아동은 삭제할 수 없습니다 — 지워도 인천시엔 남아있어 다시 가져오면 되살아납니다. 퇴소/졸업이면 [상태]를 바꿔주세요.')
+      return
+    }
+    if (!confirm(`${cur.CHIL_NM} 아동을 삭제합니다. 계속할까요?`)) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/incheon/children', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, childDeletes: [cur.CHIL_SN] }),
+      })
+      const j = await res.json()
+      if (j.success) { setMsg(`🗑 ${j.deleted}명 삭제`); setSelected(null); await load() }
+      else { setMsg(`❌ ${j.error || '삭제 실패'}`) }
+    } catch { setMsg('❌ 통합e 서버에 연결할 수 없습니다.') }
+    finally { setSaving(false) }
+  }
 
   const cur = children.find(c => c.CHIL_SN === selected) || null
   const curKeywords = keywords.filter(k => Number(k.CHIL_SN) === selected).map(k => k.KEYWORD_NM)
@@ -239,40 +348,153 @@ export default function ChildStatusPage() {
             </div>
           ) : (
             <div className="p-4 space-y-3">
-              {/* 기본정보 — 인천시 childRegUdt.xml 필드 순서 그대로 */}
+              {/* 기본정보 — 인천시 childRegUdt.xml 필드 순서 그대로. 전부 수정 가능. */}
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="text-[12px] font-bold text-slate-700">
+                  기본정보
+                  {cur._local && <span className="ml-1.5 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 추가한 아동 — 인천시에는 없습니다">통합e</span>}
+                  {edits[cur.CHIL_SN] && <span className="ml-1.5 text-[10px] text-amber-600 font-medium">✏️ 수정됨 — 저장 안 됨</span>}
+                </div>
+                {/* 우측 상단 [수정] [삭제] */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving || dirtyCount === 0}
+                    className="px-3 py-1 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded"
+                  >
+                    {saving ? '저장 중…' : dirtyCount > 0 ? '수정 (' + dirtyCount + ')' : '수정'}
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={saving}
+                    className="px-3 py-1 text-[11px] font-bold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 rounded"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
               <div>
-                <div className="text-[12px] font-bold text-slate-700 mb-1.5">기본정보</div>
                 <table className="w-full text-[12px] border-collapse">
                   <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                   <tbody>
                     <tr className="border-b border-slate-100">
-                      <Th>아동실명</Th><Td><input className={roCls} value={cur.CHIL_NM} readOnly /></Td>
-                      <Th>아동별칭</Th><Td><input className={roCls} value={cur.CHIL_NM} readOnly /></Td>
-                    </tr>
-                    <tr className="border-b border-slate-100">
-                      <Th>생년월일</Th><Td><input className={roCls} value={fmtDate(cur.BRTHDY)} readOnly /></Td>
-                      <Th>보육나이</Th><Td><input className={roCls} value={`${cur.CHILD_CARE_AGE}세`} readOnly /></Td>
-                    </tr>
-                    <tr className="border-b border-slate-100">
-                      <Th>입소일</Th><Td><input className={roCls} value={fmtDate(cur.ENTRNC_DE)} readOnly /></Td>
-                      <Th>상태</Th><Td>
+                      {/* 9 아동실명 — 목록 API 엔 CHIL_REAL_NM 이 없어(상세 API 전용) 없으면 CHIL_NM 으로 대체 표시 */}
+                      <Th>아동실명</Th><Td>
                         <input
-                          className={`${roCls} ${cur.STTUS === '000' ? 'text-emerald-600' : 'text-pink-600'}`}
-                          value={cur.KID_STATE_NM + (cur.RETIRE_DE ? ` (${fmtDate(cur.RETIRE_DE)})` : '')}
-                          readOnly
+                          className={inputCls}
+                          value={vOf(cur, 'CHIL_REAL_NM') || vOf(cur, 'CHIL_NM')}
+                          onChange={e => editField(cur.CHIL_SN, 'CHIL_REAL_NM', e.target.value)}
                         />
+                      </Td>
+                      {/* 8 아동별칭 */}
+                      <Th>아동별칭</Th><Td>
+                        <input className={inputCls} value={vOf(cur, 'CHIL_NM')} onChange={e => editField(cur.CHIL_SN, 'CHIL_NM', e.target.value)} />
                       </Td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      <Th>보육시간</Th><Td><input className={roCls} value={cur.TIME_NAME || ''} readOnly /></Td>
-                      <Th>보육기준<br />변경일</Th><Td><input className={roCls} value={fmtDate(cur.CARERIG_STDDE)} readOnly /></Td>
+                      {/* 10 생년월일 — 달력 */}
+                      <Th>생년월일</Th><Td>
+                        <input
+                          type="date" className={inputCls}
+                          value={fmtDate(vOf(cur, 'BRTHDY'))}
+                          onChange={e => editField(cur.CHIL_SN, 'BRTHDY', toRawDate(e.target.value))}
+                        />
+                      </Td>
+                      {/* 3 보육나이 — 0~5세 드롭다운 */}
+                      <Th>보육나이</Th><Td>
+                        <select
+                          className={inputCls}
+                          value={vOf(cur, 'CHILD_CARE_AGE')}
+                          onChange={e => editField(cur.CHIL_SN, 'CHILD_CARE_AGE', e.target.value)}
+                        >
+                          <option value="">선택</option>
+                          {[0, 1, 2, 3, 4, 5].map(a => <option key={a} value={a}>{a}세</option>)}
+                          {/* 0~5 밖의 값이 저장돼 있으면 그것도 유지 — 임의로 날리지 않는다 */}
+                          {vOf(cur, 'CHILD_CARE_AGE') && !['0', '1', '2', '3', '4', '5'].includes(vOf(cur, 'CHILD_CARE_AGE')) && (
+                            <option value={vOf(cur, 'CHILD_CARE_AGE')}>{vOf(cur, 'CHILD_CARE_AGE')}세</option>
+                          )}
+                        </select>
+                      </Td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      <Th>주소</Th><Td colSpan={3}><input className={roCls} value={cur.ADRES || ''} readOnly /></Td>
+                      {/* 1 입소일 — 달력 */}
+                      <Th>입소일</Th><Td>
+                        <input
+                          type="date" className={inputCls}
+                          value={fmtDate(vOf(cur, 'ENTRNC_DE'))}
+                          onChange={e => editField(cur.CHIL_SN, 'ENTRNC_DE', toRawDate(e.target.value))}
+                        />
+                      </Td>
+                      {/* 5 상태 — 현원/퇴소/졸업 드롭다운 */}
+                      <Th>상태</Th><Td>
+                        <select
+                          className={inputCls + ' ' + (vOf(cur, 'STTUS') === '000' ? 'text-emerald-600' : 'text-pink-600')}
+                          value={vOf(cur, 'STTUS')}
+                          onChange={e => editField(cur.CHIL_SN, 'STTUS', e.target.value)}
+                        >
+                          {CHILD_STATUS.map(st => <option key={st.cd} value={st.cd}>{st.nm}</option>)}
+                        </select>
+                      </Td>
+                    </tr>
+                    <tr className="border-b border-slate-100">
+                      {/* 보육시간 — 드롭다운(인천시 공통코드). 코드표 없으면 원본 이름 텍스트로만 표시 */}
+                      <Th>보육시간</Th><Td>
+                        {careTimeCodes.length > 0 ? (
+                          <select
+                            className={inputCls}
+                            value={vOf(cur, 'CARETIME_CD')}
+                            onChange={e => editField(cur.CHIL_SN, 'CARETIME_CD', e.target.value)}
+                            title={'인천시 원본 코드: ' + (vOf(cur, 'CARETIME_CD') || '(없음)')}
+                          >
+                            <option value="">선택</option>
+                            {careTimeCodes.map(t => <option key={t.CD} value={t.CD}>{t.CD_NM}</option>)}
+                            {vOf(cur, 'CARETIME_CD') && !careTimeCodes.some(t => t.CD === vOf(cur, 'CARETIME_CD')) && (
+                              <option value={vOf(cur, 'CARETIME_CD')}>{(cur.TIME_NAME || vOf(cur, 'CARETIME_CD')) + ' (코드표에 없음)'}</option>
+                            )}
+                          </select>
+                        ) : (
+                          <input className={roCls} value={cur.TIME_NAME || ''} readOnly title="코드표 미수신 — [인천시에서 가져오기] 실행 시 드롭다운으로 바뀝니다" />
+                        )}
+                      </Td>
+                      {/* 6 보육기준 변경일 — 달력 */}
+                      <Th>보육기준<br />변경일</Th><Td>
+                        <input
+                          type="date" className={inputCls}
+                          value={fmtDate(vOf(cur, 'CARERIG_STDDE'))}
+                          onChange={e => editField(cur.CHIL_SN, 'CARERIG_STDDE', toRawDate(e.target.value))}
+                        />
+                      </Td>
+                    </tr>
+                    {/* 상태가 퇴소/졸업이면 그 날짜가 필요 — 인천시도 이때만 입력받는다 */}
+                    {vOf(cur, 'STTUS') !== '000' && (
+                      <tr className="border-b border-slate-100">
+                        <Th>{vOf(cur, 'STTUS') === '999' ? '졸업일' : '퇴소일'}</Th><Td colSpan={3}>
+                          <input
+                            type="date" className={inputCls + ' !w-1/2'}
+                            value={fmtDate(vOf(cur, 'RETIRE_DE'))}
+                            onChange={e => editField(cur.CHIL_SN, 'RETIRE_DE', toRawDate(e.target.value))}
+                          />
+                        </Td>
+                      </tr>
+                    )}
+                    <tr className="border-b border-slate-100">
+                      {/* 2 주소 */}
+                      <Th>주소</Th><Td colSpan={3}>
+                        <input className={inputCls} value={vOf(cur, 'ADRES')} onChange={e => editField(cur.CHIL_SN, 'ADRES', e.target.value)} />
+                      </Td>
                     </tr>
                     <tr>
-                      <Th>아동고유번호</Th><Td><input className={`${roCls} font-mono`} value={cur.CHILINNB || ''} readOnly /></Td>
-                      <Th>외국인</Th><Td><input className={roCls} value={cur.FRGNR_SE === 'Y' ? '예' : '아니오'} readOnly /></Td>
+                      {/* 4 아동고유번호 */}
+                      <Th>아동고유번호</Th><Td>
+                        <input className={inputCls + ' font-mono'} value={vOf(cur, 'CHILINNB')} onChange={e => editField(cur.CHIL_SN, 'CHILINNB', e.target.value)} />
+                      </Td>
+                      {/* 7 외국인 — 예/아니오 드롭다운 */}
+                      <Th>외국인</Th><Td>
+                        <select className={inputCls} value={vOf(cur, 'FRGNR_SE') || 'N'} onChange={e => editField(cur.CHIL_SN, 'FRGNR_SE', e.target.value)}>
+                          <option value="N">아니오</option>
+                          <option value="Y">예</option>
+                        </select>
+                      </Td>
                     </tr>
                   </tbody>
                 </table>
