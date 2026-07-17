@@ -43,10 +43,16 @@ const CLAS_STATUS: Array<{ cd: string; nm: string }> = [
 ]
 const STTUS_LABEL: Record<string, string> = Object.fromEntries(CLAS_STATUS.map(s => [s.cd, s.nm]))
 
+/** 보육년도 선택지 — 올해 기준 위로 1년(예산 미리작성) + 아래로 4년 */
+const YEAR_OPTIONS: string[] = (() => {
+  const y = new Date().getFullYear()
+  return Array.from({ length: 6 }, (_, i) => String(y + 1 - i))
+})()
+
 type NewClas = { key: number; CLAS_NM: string; CLAS_NM_NRTR: string; AGE_CD: string; STTUS: string; RM: string }
 
 export default function ClassPage() {
-  const year = String(new Date().getFullYear())
+  const [year, setYear] = useState(String(new Date().getFullYear()))
   const [rows, setRows] = useState<IncheonClas[]>([])
   const [codes, setCodes] = useState<IncheonCode[]>([])
   const [search, setSearch] = useState('')
@@ -248,7 +254,17 @@ export default function ClassPage() {
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2 flex-wrap">
           <span className="text-[11px] font-bold text-slate-700">반설정</span>
-          <span className="text-[11px] text-slate-500">보육년도 {year}년</span>
+          {/* 보육년도 — 연도별 관리. 변경 시 그 연도 저장분을 조회(각 연도는 독립 저장). */}
+          <label className="text-[11px] text-slate-500 flex items-center gap-1">
+            보육년도
+            <select
+              value={year}
+              onChange={e => { setYear(e.target.value); setEdits({}); setNews([]); setChecked(new Set()) }}
+              className={`${inputCls} !w-20`}
+            >
+              {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}년</option>)}
+            </select>
+          </label>
 
           {/* 검색은 조회 버튼/엔터 방식 — 실시간 검색 금지(프로젝트 UX 규칙) */}
           <form onSubmit={e => { e.preventDefault(); setSearch(searchInput) }} className="flex items-center gap-2 ml-4">

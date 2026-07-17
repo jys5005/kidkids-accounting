@@ -161,6 +161,12 @@ function cisToIncheon(c: CisChild, idx: number): IncheonChild {
   }
 }
 
+/** 보육년도 선택지 — 올해 기준 위로 1년 + 아래로 4년 (반설정과 동일) */
+const YEAR_OPTIONS: string[] = (() => {
+  const y = new Date().getFullYear()
+  return Array.from({ length: 6 }, (_, i) => String(y + 1 - i))
+})()
+
 /** 상세 팝업 탭 — 통합e 아동정보(dashboard/childcare/children)와 동일 구성 */
 type DetailTab = '기본정보' | '반·보육' | '주소' | '보호자' | '가정·기타'
 const DETAIL_TABS: DetailTab[] = ['기본정보', '반·보육', '주소', '보호자', '가정·기타']
@@ -253,7 +259,7 @@ function RrnF({ value }: { value: string | null | undefined }) {
 }
 
 export default function ChildStatusPage() {
-  const year = String(new Date().getFullYear())
+  const [year, setYear] = useState(String(new Date().getFullYear()))
   const [children, setChildren] = useState<IncheonChild[]>([])
   const [keywords, setKeywords] = useState<IncheonKeyword[]>([])
   const [loading, setLoading] = useState(true)
@@ -539,8 +545,25 @@ export default function ChildStatusPage() {
       {/* 제목 */}
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold text-slate-800">아동정보</h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">어린이집 아동 현황을 조회합니다.</p>
+          <h1 className="text-xl font-bold text-slate-800">
+            아동정보
+            {source === 'incheon' && (
+              <label className="ml-2 text-[11px] font-normal text-slate-500 inline-flex items-center gap-1 align-middle">
+                보육년도
+                <select
+                  value={year}
+                  onChange={e => { setYear(e.target.value); setEdits({}); setSelected(null); setSelectedRows(new Set()) }}
+                  className="border border-slate-300 rounded px-1.5 py-0.5 text-[11px] text-slate-600"
+                >
+                  {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}년</option>)}
+                </select>
+              </label>
+            )}
+          </h1>
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            어린이집 아동 현황을 조회합니다.
+            {source === 'cis' && <span className="ml-1 text-slate-400">(보육통합은 현재 명단 — 연도 구분 없음)</span>}
+          </p>
         </div>
         <div className="flex items-center gap-1.5">
           {savedAt && <span className="text-xs text-slate-400 mr-1">최근조회일시: {new Date(savedAt).toLocaleString('ko-KR')}</span>}
