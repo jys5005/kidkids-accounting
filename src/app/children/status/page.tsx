@@ -62,6 +62,13 @@ type IncheonChild = {
   ZIP?: string               // 우편번호
   SMS_SE?: string            // SMS 수신여부
   RM?: string                // 비고
+  // ── 반·보육 (CIS 소스일 때만 채워짐) — 인천시 목록엔 현재 반 하나뿐이라 다중 배정이 없다 ──
+  _classGeneral?: string     // 반(일반)
+  _classHoliday?: string     // 반(휴일)
+  _classExtended?: string    // 반(연장)
+  _classNight?: string       // 반(새벽)
+  _classNightCare?: string   // 반(야간연장)
+  _nightCareStart?: string   // 야간연장 시작일
   _local?: boolean         // 통합e 에서 추가한 아동(인천시에 없음)
 }
 
@@ -95,6 +102,14 @@ type CisChild = {
   guardianRelation: string
   phone: string
   status: '현원' | '퇴소'
+  // 반·보육 (CIS E0003) — 통합e 아동정보 [반·보육] 탭과 동일
+  generalClassId: string           // 반(일반)  '[1][ 4.5세이상 반 ] 푸른하늘26'
+  holidayClassId: string           // 반(휴일)
+  extendedClassId: string          // 반(연장)
+  nightClassId: string             // 반(새벽)
+  nightCareClassId: string         // 반(야간연장)
+  nightCareClassStartDate: string  // 야간연장 시작일
+  careTimeType: string             // 보육시간
 }
 
 /**
@@ -124,17 +139,21 @@ function cisToIncheon(c: CisChild, idx: number): IncheonChild {
     CHILINNB: c.residentNo,
     BRTHDY: c.birth.replace(/-/g, ''),
     CHILD_CARE_AGE: Number(String(c.age).replace(/[^0-9]/g, '')) || 0,
-    CLAS_SN: '', CLAS_NM: c.className,
+    CLAS_SN: '', CLAS_NM: c.className,   // className = generalClassId ('[1][ 4.5세이상 반 ] 푸른하늘26')
     ENTRNC_DE: c.enterDate.replace(/-/g, ''),
     RETIRE_DE: c.leaveDate ? c.leaveDate.replace(/-/g, '') : null,
     STTUS: c.status === '퇴소' ? '001' : '000',
     KID_STATE_NM: c.status,
-    CARETIME_CD: '', TIME_NAME: '', CARERIG_CD: '', CARERIG_STDDE: '',
+    CARETIME_CD: '', TIME_NAME: c.careTimeType, CARERIG_CD: '', CARERIG_STDDE: '',
     ADRES: null, DISP_NAME: '', FRGNR_SE: ['5', '6', '7', '8'].includes(back1) ? 'Y' : 'N',
     NRTR_CHRGE: 0, SPORT_RT: null,
     CHLDSBUS_USE_BGNDE: null, CHLDSBUS_USE_ENDDE: null,
     CHIL_SEXDSTN: sex, CHIL_SEX_NM: sex === 'M' ? '남' : sex === 'F' ? '여' : '',
     PARNTS_NM: c.guardian, PARNTS_CHIL_RELATE: c.guardianRelation, PARNTS_CTTPC: c.phone,
+    // 반·보육 — CIS 는 반유형 5종을 전부 준다(인천시 목록엔 현재 반 하나뿐)
+    _classGeneral: c.generalClassId, _classHoliday: c.holidayClassId,
+    _classExtended: c.extendedClassId, _classNight: c.nightClassId,
+    _classNightCare: c.nightCareClassId, _nightCareStart: c.nightCareClassStartDate,
   }
 }
 
@@ -280,6 +299,22 @@ export default function ChildStatusPage() {
     }
     return { matched, cis: cisChildren.length, incheon: children.length }
   }, [cisChildren, children, incheonByRrn])
+
+  /**
+   * 반유형별 반명 — 통합e 아동정보와 동일하게 값이 없으면 '없음'.
+   * CIS 는 5종을 전부 주고(general/holiday/extended/night/nightCare), 인천시 목록은
+   * 현재 반(CLAS_NM) 하나뿐이라 반(일반)에만 넣는다.
+   */
+  const classOf = (c: IncheonChild, kind: 'general' | 'holiday' | 'extended' | 'night' | 'nightCare'): string => {
+    const v = {
+      general: c._classGeneral ?? (source === 'incheon' ? c.CLAS_NM : ''),
+      holiday: c._classHoliday,
+      extended: c._classExtended,
+      night: c._classNight,
+      nightCare: c._classNightCare,
+    }[kind]
+    return v && String(v).trim() !== '' ? String(v) : '없음'
+  }
 
   /** 이 아동에 대응하는 인천시 아동(있으면) */
   const incheonMatchOf = (c: IncheonChild): IncheonChild | null => {
@@ -811,39 +846,32 @@ export default function ChildStatusPage() {
                 </table>
               )}
 
-              {/* ── 반·보육 ── */}
+              {/* ── 반·보육 ── 통합e 아동정보와 동일 구성
+                   반(일반)/반(휴일)/반(연장)/반(새벽)/반(야간연장)/야간연장 시작일/보육시간
+
+                   ⚠ 반유형 5종은 CIS(E0003)만 준다(generalClassId/holidayClassId/…).
+                     인천시 목록(childBasicInfoList)엔 현재 반 하나(CLAS_NM)뿐이라, 인천시
+                     소스에선 반(일반)에 그 반만 넣고 나머지는 '없음'으로 둔다. 인천시에서
+                     다중 배정을 채우려면 searchClasChilHistList.do 를 아동별로 호출해야 함. */}
               {tab === '반·보육' && (
                 <div className="space-y-4">
-                  <div>
-                    <div className="text-[12px] font-bold text-slate-700 mb-1.5">반 배정</div>
-                    <table className="w-full text-[11px] border border-slate-200">
-                      <thead><tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">반유형</th>
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[100px]">반배정일</th>
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[100px]">퇴반일</th>
-                        <th className="px-2 py-1.5 text-center font-bold text-slate-600 w-[110px]">비고</th>
-                      </tr></thead>
-                      <tbody>
-                        <tr className="border-b border-slate-100">
-                          <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{cur.DISP_NAME || '기본'}반</td>
-                          <td className="px-2 py-1.5 text-center text-slate-700 border-r border-slate-100">{cur.CLAS_NM}</td>
-                          <td className="px-2 py-1.5 text-center text-sky-600 border-r border-slate-100">{fmtDate(cur.CARERIG_STDDE)}</td>
-                          <td className="px-2 py-1.5 text-center text-pink-600 border-r border-slate-100">{fmtDate(cur.RETIRE_DE)}</td>
-                          <td className="px-2 py-1.5 text-center text-slate-400">-</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="mt-1 text-[10px] text-amber-600">
-                      ⚠ 현재는 아동 목록의 현재 반만 표시합니다. 반 변경 이력(연장반·방과후반 등 다중 배정)은
-                      인천시 searchClasChilHistList.do 를 아동별로 호출해야 채워집니다 — 다음 단계.
-                    </div>
-                  </div>
-
                   <table className="w-full text-[12px] border-collapse">
                     <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                     <tbody>
                       <tr className="border-b border-slate-100">
+                        <Th>반(일반)</Th><Td><input className={roCls} value={classOf(cur, 'general')} readOnly /></Td>
+                        <Th>반(휴일)</Th><Td><input className={roCls} value={classOf(cur, 'holiday')} readOnly /></Td>
+                      </tr>
+                      <tr className="border-b border-slate-100">
+                        <Th>반(연장)</Th><Td><input className={roCls} value={classOf(cur, 'extended')} readOnly /></Td>
+                        <Th>반(새벽)</Th><Td><input className={roCls} value={classOf(cur, 'night')} readOnly /></Td>
+                      </tr>
+                      <tr className="border-b border-slate-100">
+                        <Th>반(야간연장)</Th><Td><input className={roCls} value={classOf(cur, 'nightCare')} readOnly /></Td>
+                        <Th>야간연장<br />시작일</Th><Td><input className={roCls} value={fmtDate(cur._nightCareStart) || '-'} readOnly /></Td>
+                      </tr>
+                      <tr>
+                        {/* 보육시간 — 인천시 소스에선 공통코드 드롭다운, CIS 는 읽기 전용 */}
                         <Th>보육시간</Th><Td>
                           {careTimeCodes.length > 0 && !isCis ? (
                             <select className={inputCls}
@@ -866,20 +894,37 @@ export default function ChildStatusPage() {
                             onChange={e => editField(cur.CHIL_SN, 'CARERIG_STDDE', toRawDate(e.target.value))} />
                         </Td>
                       </tr>
-                      <tr>
-                        <Th>통학차량<br />이용 시작일</Th><Td>
-                          <input type="date" className={inputCls} readOnly={isCis}
-                            value={fmtDate(vOf(cur, 'CHLDSBUS_USE_BGNDE'))}
-                            onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_BGNDE', toRawDate(e.target.value))} />
-                        </Td>
-                        <Th>통학차량<br />이용 종료일</Th><Td>
-                          <input type="date" className={inputCls} readOnly={isCis}
-                            value={fmtDate(vOf(cur, 'CHLDSBUS_USE_ENDDE'))}
-                            onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_ENDDE', toRawDate(e.target.value))} />
-                        </Td>
-                      </tr>
                     </tbody>
                   </table>
+
+                  {!isCis && (
+                    <div className="text-[10px] text-amber-600">
+                      ⚠ 인천시 아동 목록은 현재 반 하나만 줍니다 — 연장·야간연장 등 다중 배정은
+                      [보육통합] 소스에서 보이거나, 인천시 searchClasChilHistList.do 를 아동별로
+                      호출해야 채워집니다(다음 단계).
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="text-[12px] font-bold text-slate-700 mb-1.5">통학차량</div>
+                    <table className="w-full text-[12px] border-collapse">
+                      <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
+                      <tbody>
+                        <tr>
+                          <Th>이용 시작일</Th><Td>
+                            <input type="date" className={inputCls} readOnly={isCis}
+                              value={fmtDate(vOf(cur, 'CHLDSBUS_USE_BGNDE'))}
+                              onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_BGNDE', toRawDate(e.target.value))} />
+                          </Td>
+                          <Th>이용 종료일</Th><Td>
+                            <input type="date" className={inputCls} readOnly={isCis}
+                              value={fmtDate(vOf(cur, 'CHLDSBUS_USE_ENDDE'))}
+                              onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_ENDDE', toRawDate(e.target.value))} />
+                          </Td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 

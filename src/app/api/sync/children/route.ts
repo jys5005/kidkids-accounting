@@ -18,6 +18,15 @@ interface MappedChild {
   guardianRelation: string
   phone: string
   status: '현원' | '퇴소'
+  // ── 반·보육 (CIS E0003) — 통합e 아동정보 [반·보육] 탭과 동일 필드.
+  //    인천시 목록엔 현재 반 하나뿐이라 다중 배정(연장·야간연장 등)은 CIS 쪽에만 있다.
+  generalClassId: string        // 반(일반)  예: '[1][ 4.5세이상 반 ] 푸른하늘26'
+  holidayClassId: string        // 반(휴일)
+  extendedClassId: string       // 반(연장)
+  nightClassId: string          // 반(새벽)
+  nightCareClassId: string      // 반(야간연장)
+  nightCareClassStartDate: string  // 야간연장 시작일
+  careTimeType: string          // 보육시간
   _key: string
 }
 
@@ -81,6 +90,13 @@ function mapChild(raw: RawChild, statFallback: '현원' | '퇴소', idx: number)
     guardianRelation: s(raw.guardianRelation),
     phone: s(raw.guardianPhone ?? raw.parentTel),
     status,
+    generalClassId: s(raw.generalClassId),
+    holidayClassId: s(raw.holidayClassId),
+    extendedClassId: s(raw.extendedClassId),
+    nightClassId: s(raw.nightClassId),
+    nightCareClassId: s(raw.nightCareClassId),
+    nightCareClassStartDate: s(raw.nightCareClassStartDate),
+    careTimeType: s(raw.careTimeType),
     _key: `${name}|${birth}|${enterDateRaw}`,
   }
 }
