@@ -48,14 +48,16 @@ type IncheonChild = {
   CHLDSBUS_USE_BGNDE: string | null  // 통학차량 이용 시작일
   CHLDSBUS_USE_ENDDE: string | null  // 통학차량 이용 종료일
   // ── 아래는 목록 API 엔 없고 상세 API(getChildDetailInfo)로 보강되는 필드 ──
-  CHIL_REAL_NM?: string    // 아동실명 (목록의 CHIL_NM 은 아동'별칭')
-  CHIL_SEX_NM?: string     // 성별
-  HOME_TY_CD?: string      // 가정유형
-  SPORT_DCSN_DE?: string   // 지원확정일
-  PARNTS_NM?: string       // 보호자명
-  PARNTS_CTTPC?: string    // 보호자 연락처
-  PARNTS_MOBLPHON?: string // 보호자 휴대폰
-  PARNTS_RM?: string       // 기타사항
+  CHIL_REAL_NM?: string      // 아동실명 (목록의 CHIL_NM 은 아동'별칭')
+  CHIL_SEXDSTN?: string      // 성별 코드 (M=남 / F=여)
+  CHIL_SEX_NM?: string       // 성별 한글명
+  HOME_TY_CD?: string        // 가정유형
+  SPORT_DCSN_DE?: string     // 지원확정일
+  PARNTS_CHIL_RELATE?: string// 보호자 관계
+  PARNTS_NM?: string         // 보호자 성명
+  PARNTS_CTTPC?: string      // 보호자 연락처
+  PARNTS_MOBLPHON?: string   // 보호자 핸드폰
+  PARNTS_RM?: string         // 기타사항
   _local?: boolean         // 통합e 에서 추가한 아동(인천시에 없음)
 }
 
@@ -71,6 +73,18 @@ const CHILD_STATUS: Array<{ cd: string; nm: string }> = [
   { cd: '001', nm: '퇴소' },
   { cd: '999', nm: '졸업' },
 ]
+
+/** 성별 코드 — childRegUdt.xml 의 <xf:choices> 실측 (M=남 / F=여) */
+const SEX_OPTIONS: Array<{ cd: string; nm: string }> = [
+  { cd: 'M', nm: '남' },
+  { cd: 'F', nm: '여' },
+]
+
+/** 보호자 관계 — childRegUdt.xml 의 <xf:choices> 실측 (값=라벨 동일) */
+const RELATE_OPTIONS = ['부', '모', '조부', '조모', '기타']
+
+/** 휴대폰 앞자리 — 010 기본 */
+const PHONE_PREFIXES = ['010', '011', '016', '017', '018', '019']
 
 /** YYYYMMDD → YYYY-MM-DD (<input type="date"> 가 요구하는 형식) */
 function fmtDate(v: string | null | undefined): string {
@@ -505,9 +519,25 @@ export default function ChildStatusPage() {
                       </Td>
                     </tr>
                     <tr>
-                      {/* 성별 — 인천시 코드값 M/F 가 아니라 이미 한글명(CHIL_SEX_NM)으로 온다 */}
-                      <Th>성별</Th><Td><input className={roCls} value={cur.CHIL_SEX_NM || ''} readOnly /></Td>
-                      <Th>지원확정일</Th><Td><input className={roCls} value={fmtDate(cur.SPORT_DCSN_DE)} readOnly /></Td>
+                      {/* 2 성별 — 남/여 드롭다운. 코드(CHIL_SEXDSTN=M/F)로 다룬다 */}
+                      <Th>성별</Th><Td>
+                        <select
+                          className={inputCls}
+                          value={vOf(cur, 'CHIL_SEXDSTN')}
+                          onChange={e => editField(cur.CHIL_SN, 'CHIL_SEXDSTN', e.target.value)}
+                        >
+                          <option value="">선택</option>
+                          {SEX_OPTIONS.map(o => <option key={o.cd} value={o.cd}>{o.nm}</option>)}
+                        </select>
+                      </Td>
+                      {/* 1 지원확정일 — 달력 */}
+                      <Th>지원확정일</Th><Td>
+                        <input
+                          type="date" className={inputCls}
+                          value={fmtDate(vOf(cur, 'SPORT_DCSN_DE'))}
+                          onChange={e => editField(cur.CHIL_SN, 'SPORT_DCSN_DE', toRawDate(e.target.value))}
+                        />
+                      </Td>
                     </tr>
                   </tbody>
                 </table>
@@ -521,15 +551,41 @@ export default function ChildStatusPage() {
                   <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                   <tbody>
                     <tr className="border-b border-slate-100">
-                      <Th>성명</Th><Td><input className={roCls} value={cur.PARNTS_NM || ''} readOnly /></Td>
-                      <Th>휴대폰</Th><Td><input className={roCls} value={cur.PARNTS_MOBLPHON || cur.PARNTS_CTTPC || ''} readOnly /></Td>
+                      {/* 관계 — 인천시 화면에 있는 항목(부/모/조부/조모/기타) */}
+                      <Th>관계</Th><Td>
+                        <select
+                          className={inputCls}
+                          value={vOf(cur, 'PARNTS_CHIL_RELATE')}
+                          onChange={e => editField(cur.CHIL_SN, 'PARNTS_CHIL_RELATE', e.target.value)}
+                        >
+                          <option value="">선택</option>
+                          {RELATE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      </Td>
+                      {/* 3 성명 */}
+                      <Th>성명</Th><Td>
+                        <input className={inputCls} value={vOf(cur, 'PARNTS_NM')} onChange={e => editField(cur.CHIL_SN, 'PARNTS_NM', e.target.value)} />
+                      </Td>
+                    </tr>
+                    <tr className="border-b border-slate-100">
+                      {/* 연락처 — 이 시설은 휴대폰이 아니라 여기에 번호가 들어있다(실측) */}
+                      <Th>연락처</Th><Td>
+                        <PhoneInput value={vOf(cur, 'PARNTS_CTTPC')} onChange={v => editField(cur.CHIL_SN, 'PARNTS_CTTPC', v)} />
+                      </Td>
+                      {/* 4 핸드폰 — 010 드롭다운 + 4자리 + 4자리 */}
+                      <Th>핸드폰</Th><Td>
+                        <PhoneInput value={vOf(cur, 'PARNTS_MOBLPHON')} onChange={v => editField(cur.CHIL_SN, 'PARNTS_MOBLPHON', v)} />
+                      </Td>
                     </tr>
                     <tr>
-                      <Th>기타사항</Th><Td colSpan={3}><input className={roCls} value={cur.PARNTS_RM || ''} readOnly /></Td>
+                      {/* 5 기타사항 */}
+                      <Th>기타사항</Th><Td colSpan={3}>
+                        <input className={inputCls} value={vOf(cur, 'PARNTS_RM')} onChange={e => editField(cur.CHIL_SN, 'PARNTS_RM', e.target.value)} />
+                      </Td>
                     </tr>
                   </tbody>
                 </table>
-                {!cur.PARNTS_NM && !cur.CHIL_SEX_NM && (
+                {!cur.PARNTS_NM && !cur.PARNTS_CTTPC && !cur.CHIL_SEX_NM && (
                   <div className="mt-1 text-[10px] text-amber-600">
                     ⚠ 보호자·성별·실명은 아동 상세 조회로만 채워집니다 — [📥 인천시에서 가져오기]를 한 번 실행해주세요.
                   </div>
@@ -588,8 +644,22 @@ export default function ChildStatusPage() {
                   <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                   <tbody>
                     <tr>
-                      <Th>이용 시작일</Th><Td><input className={roCls} value={fmtDate(cur.CHLDSBUS_USE_BGNDE)} readOnly /></Td>
-                      <Th>이용 종료일</Th><Td><input className={roCls} value={fmtDate(cur.CHLDSBUS_USE_ENDDE)} readOnly /></Td>
+                      {/* 6 이용 시작일 — 달력 */}
+                      <Th>이용 시작일</Th><Td>
+                        <input
+                          type="date" className={inputCls}
+                          value={fmtDate(vOf(cur, 'CHLDSBUS_USE_BGNDE'))}
+                          onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_BGNDE', toRawDate(e.target.value))}
+                        />
+                      </Td>
+                      {/* 7 이용 종료일 — 달력 */}
+                      <Th>이용 종료일</Th><Td>
+                        <input
+                          type="date" className={inputCls}
+                          value={fmtDate(vOf(cur, 'CHLDSBUS_USE_ENDDE'))}
+                          onChange={e => editField(cur.CHIL_SN, 'CHLDSBUS_USE_ENDDE', toRawDate(e.target.value))}
+                        />
+                      </Td>
                     </tr>
                   </tbody>
                 </table>
@@ -604,6 +674,44 @@ export default function ChildStatusPage() {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * 휴대폰 입력 — [앞자리 드롭다운(기본 010)] - [4자리] - [4자리].
+ * 저장은 '010-1234-5678' 한 문자열(인천시 PARNTS_CTTPC 실측 형식과 동일).
+ * 앞자리가 목록에 없는 값(지역번호 등)이면 그 값도 선택지로 유지 — 임의로 날리지 않는다.
+ */
+function PhoneInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const parts = (value || '').split('-')
+  const p0 = parts[0] || '010'
+  const p1 = parts[1] || ''
+  const p2 = parts[2] || ''
+  const emit = (a: string, b: string, c: string) => onChange(!b && !c ? '' : `${a}-${b}-${c}`)
+  const only = (v: string, n: number) => v.replace(/[^0-9]/g, '').slice(0, n)
+  return (
+    <div className="flex items-center gap-1">
+      <select
+        value={p0}
+        onChange={e => emit(e.target.value, p1, p2)}
+        className="border border-teal-300 rounded px-1 py-1 text-[12px] w-[68px] focus:outline-none focus:border-teal-500"
+      >
+        {PHONE_PREFIXES.map(x => <option key={x} value={x}>{x}</option>)}
+        {p0 && !PHONE_PREFIXES.includes(p0) && <option value={p0}>{p0}</option>}
+      </select>
+      <span className="text-slate-400">-</span>
+      <input
+        value={p1} onChange={e => emit(p0, only(e.target.value, 4), p2)}
+        inputMode="numeric" placeholder="0000"
+        className="border border-teal-300 rounded px-2 py-1 text-[12px] w-[64px] text-center focus:outline-none focus:border-teal-500"
+      />
+      <span className="text-slate-400">-</span>
+      <input
+        value={p2} onChange={e => emit(p0, p1, only(e.target.value, 4))}
+        inputMode="numeric" placeholder="0000"
+        className="border border-teal-300 rounded px-2 py-1 text-[12px] w-[64px] text-center focus:outline-none focus:border-teal-500"
+      />
     </div>
   )
 }
