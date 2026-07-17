@@ -74,6 +74,66 @@ const CHILD_STATUS: Array<{ cd: string; nm: string }> = [
   { cd: '999', nm: '졸업' },
 ]
 
+/**
+ * 보육통합(CIS E0003) 아동 — 회계앱 /api/sync/children 이 정규화해 주는 형태.
+ * 통합e 가 CIS 에서 수집해 page_data(child-cur/child-leave)에 넣어둔 것을 읽는다.
+ */
+type CisChild = {
+  id: number
+  name: string
+  birth: string            // YYYY-MM-DD
+  age: string
+  residentNo: string       // '230215-3******' (뒷자리 마스킹)
+  className: string
+  enterDate: string
+  leaveDate: string
+  guardian: string
+  guardianRelation: string
+  phone: string
+  status: '현원' | '퇴소'
+}
+
+/**
+ * 주민번호 앞 7자리(생년월일 6 + 뒷1자리) 추출 — CIS ↔ 인천시 매칭 키.
+ *
+ * ★ 인천시 CHILINNB 는 주민번호 앞7자리로 시작한다(실측):
+ *     강하윤   BRTHDY 20230215 · CHILINNB 230215320028529284 → 앞7 '2302153'
+ *     YINXIUYAN BRTHDY 20210409 · CHILINNB 210409820031411549 → 앞7 '2104098'
+ *       (뒷1자리 8 = 외국인·2000년대·여 → 인천시 CHIL_SEXDSTN 'F' 와 일치)
+ *   CIS 는 residentNo 를 '230215-3******' 로 주므로 앞7자리가 그대로 대응된다.
+ *   → 이름+반 매칭(동명이인 충돌 위험)보다 훨씬 정확하다.
+ */
+function rrn7(v: string | null | undefined): string {
+  const d = String(v || '').replace(/[^0-9]/g, '')
+  return d.length >= 7 ? d.slice(0, 7) : ''
+}
+
+/** CIS 아동 → 인천시 스키마로 매핑 (같은 화면을 재사용하기 위함) */
+function cisToIncheon(c: CisChild, idx: number): IncheonChild {
+  const back1 = (c.residentNo.split('-')[1] || '')[0] || ''
+  // 주민 뒷1자리: 1·3·5·7 = 남 / 2·4·6·8 = 여 (5~8 은 외국인)
+  const sex = ['1', '3', '5', '7'].includes(back1) ? 'M' : ['2', '4', '6', '8'].includes(back1) ? 'F' : ''
+  return {
+    CHIL_SN: -1_000_000 - idx,      // CIS 아동엔 인천시 CHIL_SN 이 없다 → 화면 key 용 음수 임시값
+    CHIL_NM: c.name,
+    CHIL_REAL_NM: c.name,
+    CHILINNB: c.residentNo,
+    BRTHDY: c.birth.replace(/-/g, ''),
+    CHILD_CARE_AGE: Number(String(c.age).replace(/[^0-9]/g, '')) || 0,
+    CLAS_SN: '', CLAS_NM: c.className,
+    ENTRNC_DE: c.enterDate.replace(/-/g, ''),
+    RETIRE_DE: c.leaveDate ? c.leaveDate.replace(/-/g, '') : null,
+    STTUS: c.status === '퇴소' ? '001' : '000',
+    KID_STATE_NM: c.status,
+    CARETIME_CD: '', TIME_NAME: '', CARERIG_CD: '', CARERIG_STDDE: '',
+    ADRES: null, DISP_NAME: '', FRGNR_SE: ['5', '6', '7', '8'].includes(back1) ? 'Y' : 'N',
+    NRTR_CHRGE: 0, SPORT_RT: null,
+    CHLDSBUS_USE_BGNDE: null, CHLDSBUS_USE_ENDDE: null,
+    CHIL_SEXDSTN: sex, CHIL_SEX_NM: sex === 'M' ? '남' : sex === 'F' ? '여' : '',
+    PARNTS_NM: c.guardian, PARNTS_CHIL_RELATE: c.guardianRelation, PARNTS_CTTPC: c.phone,
+  }
+}
+
 /** 성별 코드 — childRegUdt.xml 의 <xf:choices> 실측 (M=남 / F=여) */
 const SEX_OPTIONS: Array<{ cd: string; nm: string }> = [
   { cd: 'M', nm: '남' },
@@ -115,6 +175,8 @@ export default function ChildStatusPage() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<number | null>(null)  // CHIL_SN
   const [codes, setCodes] = useState<IncheonCode[]>([])
+  const [cisRaw, setCisRaw] = useState<CisChild[]>([])
+  const [source, setSource] = useState<'incheon' | 'cis'>('incheon')
 
   // 편집 — CHIL_SN 별로 바뀐 필드만 모아둔다(저장 시 그 아동만 PUT)
   const [edits, setEdits] = useState<Record<number, Partial<IncheonChild>>>({})
@@ -143,6 +205,15 @@ export default function ChildStatusPage() {
 
   useEffect(() => { load() }, [load])
 
+  // 보육통합(CIS) 아동 — 통합e 가 CIS 에서 수집해둔 것. 인천시와 별개 소스라 항상 같이 읽어
+  // 매칭(인천시 CHIL_SN 연결)까지 계산한다.
+  useEffect(() => {
+    fetch('/api/sync/children', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(j => { if (j?.children) setCisRaw(j.children as CisChild[]) })
+      .catch(() => { /* CIS 미수집이면 그냥 빈 목록 */ })
+  }, [])
+
   const handleSync = async () => {
     if (dirtyCount > 0 && !confirm(`저장하지 않은 수정 ${dirtyCount}건이 있습니다.
 
@@ -170,19 +241,55 @@ export default function ChildStatusPage() {
     }
   }
 
+  /** 보육통합(CIS) 아동을 인천시 스키마로 변환한 목록 */
+  const cisChildren = useMemo(() => cisRaw.map(cisToIncheon), [cisRaw])
+
+  /** 지금 화면에 보여줄 목록 — 소스 토글에 따라 전환 */
+  const rows = source === 'cis' ? cisChildren : children
+  const isCis = source === 'cis'
+
+  /**
+   * CIS ↔ 인천시 매칭 — 주민번호 앞7자리(CHILINNB 앞7 = CIS residentNo 앞7) 기준.
+   * 정산 자동화는 인천시 CHIL_SN 으로 써야 하므로, CIS 아동이 인천시 어느 아동인지 알아야 한다.
+   */
+  const incheonByRrn = useMemo(() => {
+    const m = new Map<string, IncheonChild>()
+    for (const c of children) {
+      const k = rrn7(c.CHILINNB)
+      if (k) m.set(k, c)
+    }
+    return m
+  }, [children])
+
+  const matchStats = useMemo(() => {
+    if (cisChildren.length === 0 || children.length === 0) return null
+    let matched = 0
+    for (const c of cisChildren) {
+      const k = rrn7(c.CHILINNB)
+      if (k && incheonByRrn.has(k)) matched++
+    }
+    return { matched, cis: cisChildren.length, incheon: children.length }
+  }, [cisChildren, children, incheonByRrn])
+
+  /** 이 아동에 대응하는 인천시 아동(있으면) */
+  const incheonMatchOf = (c: IncheonChild): IncheonChild | null => {
+    const k = rrn7(c.CHILINNB)
+    return k ? (incheonByRrn.get(k) ?? null) : null
+  }
+
   // 반 목록 — 아동 데이터에서 도출(반설정 화면과 별개 호출 없이)
   const clasOptions = useMemo(() => {
     const m = new Map<string, string>()
-    children.forEach(c => { if (c.CLAS_SN) m.set(String(c.CLAS_SN), c.CLAS_NM) })
+    rows.forEach(c => { if (c.CLAS_NM) m.set(String(c.CLAS_SN || c.CLAS_NM), c.CLAS_NM) })
     return Array.from(m, ([sn, nm]) => ({ sn, nm })).sort((a, b) => a.nm.localeCompare(b.nm, 'ko'))
-  }, [children])
+  }, [rows])
 
-  const filtered = useMemo(() => children.filter(c => {
+  const filtered = useMemo(() => rows.filter(c => {
     if (schSttus && c.STTUS !== schSttus) return false
-    if (schClas !== 'all' && String(c.CLAS_SN) !== schClas) return false
+    if (schClas !== 'all' && String(c.CLAS_SN || c.CLAS_NM) !== schClas) return false
     if (search && !(c.CHIL_NM || '').includes(search)) return false
     return true
-  }), [children, schSttus, schClas, search])
+  }), [rows, schSttus, schClas, search])
 
   /**
    * 보육시간 코드 후보 — 인천시 공통코드에서 찾는다.
@@ -208,6 +315,8 @@ export default function ChildStatusPage() {
   }, [codes, children])
 
   const editField = (sn: number, field: keyof IncheonChild, value: string) => {
+    // 보육통합(CIS)은 원본이 CIS 라 통합e 에서 고쳐도 반영되지 않는다 → 편집 자체를 막는다
+    if (source === 'cis') return
     setEdits(prev => {
       const orig = children.find(c => c.CHIL_SN === sn)
       const nextRow = { ...(prev[sn] || {}), [field]: value }
@@ -271,7 +380,7 @@ export default function ChildStatusPage() {
     finally { setSaving(false) }
   }
 
-  const cur = children.find(c => c.CHIL_SN === selected) || null
+  const cur = rows.find(c => c.CHIL_SN === selected) || null
   const curKeywords = keywords.filter(k => Number(k.CHIL_SN) === selected).map(k => k.KEYWORD_NM)
 
   return (
@@ -281,6 +390,19 @@ export default function ChildStatusPage() {
         <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2 flex-wrap">
           <span className="text-sm font-bold text-slate-700">아동 등록/수정</span>
           <span className="text-[11px] text-slate-500">보육년도 {year}년</span>
+
+          {/* 소스 토글 — 보육통합(CIS)은 통합e 가 이미 수집해둔 원본, 인천시는 회계 시스템 */}
+          <div className="flex items-center rounded border border-slate-300 overflow-hidden ml-1">
+            {([['incheon', '인천시'], ['cis', '보육통합']] as const).map(([v, label]) => (
+              <button
+                key={v}
+                onClick={() => { setSource(v); setSelected(null) }}
+                className={`px-2.5 py-1 text-[11px] font-bold ${source === v ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+              >
+                {label} {v === 'cis' ? cisChildren.length : children.length}
+              </button>
+            ))}
+          </div>
 
           <form onSubmit={e => { e.preventDefault(); setSearch(searchInput) }} className="flex items-center gap-2 ml-4">
             <select value={schSttus} onChange={e => setSchSttus(e.target.value)} className={`${inputCls} !w-24`}>
@@ -311,6 +433,24 @@ export default function ChildStatusPage() {
           </div>
         </div>
         {msg && <div className="px-4 py-2 text-[11px] border-t border-slate-100 text-slate-600 bg-slate-50">{msg}</div>}
+
+        {/* 매칭 현황 — 정산 자동화는 인천시 CHIL_SN 으로 써야 하므로 CIS 아동이 인천시와
+            얼마나 연결되는지가 핵심 지표다. 매칭 키 = 주민번호 앞7자리. */}
+        {matchStats && (
+          <div className="px-4 py-2 text-[11px] border-t border-slate-100 bg-sky-50/60 text-slate-600 flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-slate-700">🔗 소스 매칭</span>
+            <span>보육통합 {matchStats.cis}명 · 인천시 {matchStats.incheon}명</span>
+            <span className={matchStats.matched === matchStats.incheon ? 'text-emerald-600 font-medium' : 'text-amber-600 font-medium'}>
+              연결 {matchStats.matched}명
+            </span>
+            {matchStats.matched < matchStats.incheon && (
+              <span className="text-amber-600">
+                — 인천시 {matchStats.incheon - matchStats.matched}명이 보육통합에서 안 찾아집니다
+              </span>
+            )}
+            <span className="ml-auto text-slate-400">주민번호 앞7자리 기준 (인천시 아동고유번호 = 주민 앞7 + 내부번호)</span>
+          </div>
+        )}
       </div>
 
       {/* 본문 — 인천시와 동일: 좌측 목록(나이/성명/반명) + 우측 상세 */}
@@ -351,9 +491,9 @@ export default function ChildStatusPage() {
             <div className="px-3 py-2 border-t border-slate-200 text-[11px] text-slate-500">
               총 {filtered.length}명
               {/* 상태별 내역 — "전체"로 봐도 현원/퇴소/졸업이 몇 명인지 바로 보이게 */}
-              {children.length > 0 && (
+              {rows.length > 0 && (
                 <span className="ml-1 text-slate-400">
-                  ({CHILD_STATUS.map(s => `${s.nm} ${children.filter(c => c.STTUS === s.cd).length}`).join(' · ')})
+                  ({CHILD_STATUS.map(st => `${st.nm} ${rows.filter(c => c.STTUS === st.cd).length}`).join(' · ')})
                 </span>
               )}
             </div>
@@ -375,25 +515,37 @@ export default function ChildStatusPage() {
                 <div className="text-[12px] font-bold text-slate-700">
                   기본정보
                   {cur._local && <span className="ml-1.5 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 추가한 아동 — 인천시에는 없습니다">통합e</span>}
+                  {/* 보육통합 아동이면 인천시 어느 아동과 연결되는지 표시 */}
+                  {isCis && (() => {
+                    const m = incheonMatchOf(cur)
+                    return m
+                      ? <span className="ml-1.5 px-1 py-0.5 text-[9px] bg-emerald-100 text-emerald-700 rounded" title={`인천시 CHIL_SN ${m.CHIL_SN} · ${m.CLAS_NM}`}>🔗 인천시 연결됨</span>
+                      : <span className="ml-1.5 px-1 py-0.5 text-[9px] bg-slate-100 text-slate-500 rounded" title="인천시 명단에 같은 주민번호 앞7자리 아동이 없습니다">인천시 없음</span>
+                  })()}
                   {edits[cur.CHIL_SN] && <span className="ml-1.5 text-[10px] text-amber-600 font-medium">✏️ 수정됨 — 저장 안 됨</span>}
                 </div>
-                {/* 우측 상단 [수정] [삭제] */}
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={handleSave}
-                    disabled={saving || dirtyCount === 0}
-                    className="px-3 py-1 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded"
-                  >
-                    {saving ? '저장 중…' : dirtyCount > 0 ? '수정 (' + dirtyCount + ')' : '수정'}
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={saving}
-                    className="px-3 py-1 text-[11px] font-bold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 rounded"
-                  >
-                    삭제
-                  </button>
-                </div>
+                {/* 우측 상단 [수정] [삭제] — 보육통합(CIS)은 읽기 전용이라 숨긴다.
+                    CIS 는 보육통합 원본이라 통합e 에서 고쳐도 CIS 에 반영되지 않는다. */}
+                {!isCis ? (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={handleSave}
+                      disabled={saving || dirtyCount === 0}
+                      className="px-3 py-1 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded"
+                    >
+                      {saving ? '저장 중…' : dirtyCount > 0 ? '수정 (' + dirtyCount + ')' : '수정'}
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={saving}
+                      className="px-3 py-1 text-[11px] font-bold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 rounded"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-[10px] text-slate-400">보육통합 원본 — 읽기 전용</span>
+                )}
               </div>
               <div>
                 <table className="w-full text-[12px] border-collapse">
