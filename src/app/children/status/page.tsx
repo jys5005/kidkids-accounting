@@ -47,7 +47,15 @@ type IncheonChild = {
   SPORT_RT: string | null  // 지원율
   CHLDSBUS_USE_BGNDE: string | null  // 통학차량 이용 시작일
   CHLDSBUS_USE_ENDDE: string | null  // 통학차량 이용 종료일
-  CHIL_REAL_NM?: string    // 아동실명 — 목록 API 엔 없고 상세 API(getChildDetailInfo)에만 있음
+  // ── 아래는 목록 API 엔 없고 상세 API(getChildDetailInfo)로 보강되는 필드 ──
+  CHIL_REAL_NM?: string    // 아동실명 (목록의 CHIL_NM 은 아동'별칭')
+  CHIL_SEX_NM?: string     // 성별
+  HOME_TY_CD?: string      // 가정유형
+  SPORT_DCSN_DE?: string   // 지원확정일
+  PARNTS_NM?: string       // 보호자명
+  PARNTS_CTTPC?: string    // 보호자 연락처
+  PARNTS_MOBLPHON?: string // 보호자 휴대폰
+  PARNTS_RM?: string       // 기타사항
   _local?: boolean         // 통합e 에서 추가한 아동(인천시에 없음)
 }
 
@@ -483,7 +491,7 @@ export default function ChildStatusPage() {
                         <input className={inputCls} value={vOf(cur, 'ADRES')} onChange={e => editField(cur.CHIL_SN, 'ADRES', e.target.value)} />
                       </Td>
                     </tr>
-                    <tr>
+                    <tr className="border-b border-slate-100">
                       {/* 4 아동고유번호 */}
                       <Th>아동고유번호</Th><Td>
                         <input className={inputCls + ' font-mono'} value={vOf(cur, 'CHILINNB')} onChange={e => editField(cur.CHIL_SN, 'CHILINNB', e.target.value)} />
@@ -496,8 +504,36 @@ export default function ChildStatusPage() {
                         </select>
                       </Td>
                     </tr>
+                    <tr>
+                      {/* 성별 — 인천시 코드값 M/F 가 아니라 이미 한글명(CHIL_SEX_NM)으로 온다 */}
+                      <Th>성별</Th><Td><input className={roCls} value={cur.CHIL_SEX_NM || ''} readOnly /></Td>
+                      <Th>지원확정일</Th><Td><input className={roCls} value={fmtDate(cur.SPORT_DCSN_DE)} readOnly /></Td>
+                    </tr>
                   </tbody>
                 </table>
+              </div>
+
+              {/* 보호자 — 상세 API 보강분. 자동등록 키워드가 "보호자가 입금 시 통장 문구"라
+                  필요경비 정산에서 실제로 쓰이는 정보다. */}
+              <div>
+                <div className="text-[12px] font-bold text-slate-700 mb-1.5">보호자</div>
+                <table className="w-full text-[12px] border-collapse">
+                  <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
+                  <tbody>
+                    <tr className="border-b border-slate-100">
+                      <Th>성명</Th><Td><input className={roCls} value={cur.PARNTS_NM || ''} readOnly /></Td>
+                      <Th>휴대폰</Th><Td><input className={roCls} value={cur.PARNTS_MOBLPHON || cur.PARNTS_CTTPC || ''} readOnly /></Td>
+                    </tr>
+                    <tr>
+                      <Th>기타사항</Th><Td colSpan={3}><input className={roCls} value={cur.PARNTS_RM || ''} readOnly /></Td>
+                    </tr>
+                  </tbody>
+                </table>
+                {!cur.PARNTS_NM && !cur.CHIL_SEX_NM && (
+                  <div className="mt-1 text-[10px] text-amber-600">
+                    ⚠ 보호자·성별·실명은 아동 상세 조회로만 채워집니다 — [📥 인천시에서 가져오기]를 한 번 실행해주세요.
+                  </div>
+                )}
               </div>
 
               {/* 자동등록 키워드 — 인천시 원문 안내 그대로 */}
