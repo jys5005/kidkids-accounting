@@ -20,8 +20,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
  * 그대로 저장돼 있고, [인천시에서 가져오기]가 로컬 에이전트로 실제 조회해 갱신한다.
  */
 
-const inputCls = 'border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500 w-full'
-const roCls = 'border border-slate-200 bg-slate-50 rounded px-2 py-1 text-[12px] w-full text-slate-600'
+const inputCls = 'border border-teal-300 rounded px-2 py-1 text-[11px] focus:outline-none focus:border-teal-500 w-full'
+const roCls = 'border border-slate-200 bg-slate-50 rounded px-2 py-1 text-[11px] w-full text-slate-600'
 
 /** 인천시 아동 (childBasicInfoList.do → childBasicInfoList[]) — 필드명 원본 그대로 */
 type IncheonChild = {
@@ -231,8 +231,8 @@ function autoPayLabel(v: string): string {
 function F({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="flex items-baseline gap-2 py-1">
-      <span className="text-xs text-slate-400 w-24 flex-shrink-0">{label}</span>
-      <span className="text-sm text-slate-700">{value || '-'}</span>
+      <span className="text-[11px] text-slate-400 w-24 flex-shrink-0">{label}</span>
+      <span className="text-[11px] text-slate-700">{value || '-'}</span>
     </div>
   )
 }
@@ -246,8 +246,8 @@ function RrnF({ value }: { value: string | null | undefined }) {
   const masked = `${f6}-${b ? b[0] : ''}******`
   return (
     <div className="flex items-baseline gap-2 py-1">
-      <span className="text-xs text-slate-400 w-24 flex-shrink-0">{label}</span>
-      <span className="text-sm text-slate-700">{masked}</span>
+      <span className="text-[11px] text-slate-400 w-24 flex-shrink-0">{label}</span>
+      <span className="text-[11px] text-slate-700">{masked}</span>
     </div>
   )
 }
@@ -847,7 +847,7 @@ export default function ChildStatusPage() {
               {tab === '기본정보' && (
                 editMode ? (
                   // 편집 모드 — 인천시 소스에서만. 입력 위젯으로.
-                  <table className="w-full text-[12px] border-collapse">
+                  <table className="w-full text-[11px] border-collapse">
                     <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                     <tbody>
                       <tr className="border-b border-slate-100">
@@ -940,7 +940,7 @@ export default function ChildStatusPage() {
               {/* ── 주소 ── 통합e 와 동일 ── */}
               {tab === '주소' && (
                 editMode ? (
-                  <table className="w-full text-[12px] border-collapse">
+                  <table className="w-full text-[11px] border-collapse">
                     <colgroup><col className="w-[110px]" /><col /></colgroup>
                     <tbody>
                       <tr><Th>주소</Th><Td><input className={inputCls} value={vOf(cur, 'ADRES')} onChange={e => editField(cur.CHIL_SN, 'ADRES', e.target.value)} /></Td></tr>
@@ -960,7 +960,7 @@ export default function ChildStatusPage() {
               {/* ── 보호자 ── 통합e 와 동일 라벨 ── */}
               {tab === '보호자' && (
                 editMode ? (
-                  <table className="w-full text-[12px] border-collapse">
+                  <table className="w-full text-[11px] border-collapse">
                     <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
                     <tbody>
                       <tr className="border-b border-slate-100">
@@ -996,7 +996,7 @@ export default function ChildStatusPage() {
                     </div>
                     {/* 자동등록 키워드 — 인천시 원문 안내 그대로 */}
                     <div>
-                      <div className="text-[12px] font-bold text-slate-700 mb-1.5">자동등록 키워드</div>
+                      <div className="text-[11px] font-bold text-slate-700 mb-1.5">자동등록 키워드</div>
                       <div className="border border-slate-200 rounded p-2.5 bg-slate-50/60">
                         <div className="flex flex-wrap gap-1.5 min-h-[26px]">
                           {curKeywords.length === 0
@@ -1055,7 +1055,7 @@ function PhoneInput({ value, onChange }: { value: string; onChange: (v: string) 
       <select
         value={p0}
         onChange={e => emit(e.target.value, p1, p2)}
-        className="border border-teal-300 rounded px-1 py-1 text-[12px] w-[68px] focus:outline-none focus:border-teal-500"
+        className="border border-teal-300 rounded px-1 py-1 text-[11px] w-[68px] focus:outline-none focus:border-teal-500"
       >
         {PHONE_PREFIXES.map(x => <option key={x} value={x}>{x}</option>)}
         {p0 && !PHONE_PREFIXES.includes(p0) && <option value={p0}>{p0}</option>}
@@ -1064,13 +1064,13 @@ function PhoneInput({ value, onChange }: { value: string; onChange: (v: string) 
       <input
         value={p1} onChange={e => emit(p0, only(e.target.value, 4), p2)}
         inputMode="numeric" placeholder="0000"
-        className="border border-teal-300 rounded px-2 py-1 text-[12px] w-[64px] text-center focus:outline-none focus:border-teal-500"
+        className="border border-teal-300 rounded px-2 py-1 text-[11px] w-[64px] text-center focus:outline-none focus:border-teal-500"
       />
       <span className="text-slate-400">-</span>
       <input
         value={p2} onChange={e => emit(p0, p1, only(e.target.value, 4))}
         inputMode="numeric" placeholder="0000"
-        className="border border-teal-300 rounded px-2 py-1 text-[12px] w-[64px] text-center focus:outline-none focus:border-teal-500"
+        className="border border-teal-300 rounded px-2 py-1 text-[11px] w-[64px] text-center focus:outline-none focus:border-teal-500"
       />
     </div>
   )
