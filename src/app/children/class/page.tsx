@@ -30,9 +30,16 @@ type IncheonClas = {
   PSNCPA: number | null         // 정원
 }
 
-/** 인천시 AGE_CD 코드표.
- *  ⚠ 실측 확인된 건 '003'(3세반) 하나뿐 — 나머지는 자릿수 규칙으로 유추한 값이다.
- *    인천시 화면에서 다른 연령 반을 확인하면 여기에 채울 것. 미등록 코드는 원본코드 그대로 노출. */
+/** 인천시 AGE_CD 코드표 — ⚠ 전부 유추값이다(공식 코드표 미확보).
+ *
+ *  근거: 실 데이터(FCLTCD 13157, 2026)의 반명↔코드 대응이 0~3세로 단조 증가.
+ *    아기별꽃26=000 / 예쁜새싹26=001 / 아침햇살26=002 / 맑은샘물26=003
+ *  한계: 같은 시설에 008(푸른하늘26) / M01(아기별꽃26-1) / T10(미소연장22연장반(유아)) /
+ *    T11(지움연장24연장반(영아)) 이 있어 "N세" 규칙만으로는 설명이 안 된다. 즉 000~005 도
+ *    확정이 아니다. 화면정의(ClasSetting.xml)의 dl_ageCode 는 선언만 있고 채우는 API 가
+ *    HAR 에 없어 코드표를 못 얻었다.
+ *  → 미등록 코드는 원본 그대로 노출하고, 매핑된 것도 title 에 원본코드를 달아 대조 가능하게 함.
+ *    인천시 반설정 화면의 [연령] 컬럼과 다르면 이 표를 고칠 것. */
 const AGE_LABEL: Record<string, string> = {
   '000': '0세', '001': '1세', '002': '2세', '003': '3세', '004': '4세', '005': '5세',
 }
@@ -249,7 +256,9 @@ export default function ClassPage() {
                     className={editCls}
                   />
                 </td>
-                <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{AGE_LABEL[c.AGE_CD] ?? (c.AGE_CD || '-')}</td>
+                <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100" title={`인천시 원본 코드: ${c.AGE_CD || '(없음)'}`}>
+                  {AGE_LABEL[c.AGE_CD] ?? (c.AGE_CD || '-')}
+                </td>
                 <td className="px-2 py-1.5 text-center border-r border-slate-100">
                   <span className={c.STTUS === '000' ? 'text-emerald-600' : 'text-slate-400'}>
                     {STTUS_LABEL[c.STTUS] ?? c.STTUS}
