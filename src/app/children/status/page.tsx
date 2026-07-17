@@ -540,7 +540,7 @@ export default function ChildStatusPage() {
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-slate-800">아동정보</h1>
-          <p className="text-sm text-slate-500 mt-0.5">어린이집 아동 현황을 조회합니다.</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">어린이집 아동 현황을 조회합니다.</p>
         </div>
         <div className="flex items-center gap-1.5">
           {savedAt && <span className="text-xs text-slate-400 mr-1">최근조회일시: {new Date(savedAt).toLocaleString('ko-KR')}</span>}
@@ -587,7 +587,7 @@ export default function ChildStatusPage() {
               <button
                 key={v || 'all'}
                 onClick={() => { setSchSttus(v); setSelectedRows(new Set()) }}
-                className="px-5 py-2.5 text-sm font-medium transition-colors"
+                className="px-5 py-2.5 text-[11px] font-medium transition-colors"
                 style={
                   schSttus === v
                     ? { background: '#1a3a6b', color: '#fff', borderRadius: '7px' }
@@ -603,17 +603,24 @@ export default function ChildStatusPage() {
               </button>
             ))}
 
-            {/* 소스 토글 — 보육통합(CIS)은 통합e 가 이미 수집해둔 원본, 인천시는 회계 시스템 */}
+            {/* 소스 토글 — 보육통합(CIS)은 통합e 가 이미 수집해둔 원본, 인천시는 회계 시스템.
+                카운트는 현원/퇴소 로 나눠 표시(예: 32/20 = 현원 32 · 퇴소 20). */}
             <div className="flex items-center rounded-[7px] border border-slate-300 overflow-hidden ml-2">
-              {([['incheon', '인천시'], ['cis', '보육통합']] as const).map(([v, label]) => (
-                <button
-                  key={v}
-                  onClick={() => { setSource(v); setSelected(null); setSelectedRows(new Set()) }}
-                  className={`px-3 py-2 text-xs font-bold ${source === v ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
-                >
-                  {label} {v === 'cis' ? cisChildren.length : children.length}
-                </button>
-              ))}
+              {([['incheon', '인천시'], ['cis', '보육통합']] as const).map(([v, label]) => {
+                const list = v === 'cis' ? cisChildren : children
+                const cur = list.filter(c => c.STTUS === '000').length
+                const out = list.length - cur   // 현원 아닌 나머지(퇴소+졸업)
+                return (
+                  <button
+                    key={v}
+                    onClick={() => { setSource(v); setSelected(null); setSelectedRows(new Set()) }}
+                    className={`px-3 py-2 text-[11px] font-bold ${source === v ? 'bg-teal-500 text-white' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
+                    title="현원 / 퇴소"
+                  >
+                    {label} {cur}/{out}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
@@ -628,7 +635,7 @@ export default function ChildStatusPage() {
             </select>
             <form onSubmit={e => { e.preventDefault(); setSearch(searchInput) }} className="flex items-center gap-1.5">
               <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]">🔍</span>
                 <input
                   type="text" placeholder="이름, 반, 보호자 검색"
                   value={searchInput} onChange={e => setSearchInput(e.target.value)}
@@ -642,7 +649,7 @@ export default function ChildStatusPage() {
 
         {/* 테이블 */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-[11px]">
             <thead>
               <tr className="border-b border-slate-200">
                 <th className="text-center px-3 py-3 w-10">
@@ -653,25 +660,25 @@ export default function ChildStatusPage() {
                     className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 w-12">No</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">이름</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">성별</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">보육나이</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">생년월일</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">반</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">보육시간</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">입소일</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">퇴소일</th>
-                {schSttus === '' && <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500">상태</th>}
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">보호자(관계)</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500">연락처</th>
+                <th className="text-left px-5 py-3 text-[11px] font-semibold text-slate-500 w-12">No</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">이름</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">성별</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">보육나이</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">생년월일</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">반</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">보육시간</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">입소일</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">퇴소일</th>
+                {schSttus === '' && <th className="text-center px-4 py-3 text-[11px] font-semibold text-slate-500">상태</th>}
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">보호자(관계)</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-500">연락처</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr><td colSpan={schSttus === '' ? 13 : 12} className="py-12 text-center text-sm text-slate-400">데이터를 불러오는 중...</td></tr>
+                <tr><td colSpan={schSttus === '' ? 13 : 12} className="py-12 text-center text-[11px] text-slate-400">데이터를 불러오는 중...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={schSttus === '' ? 13 : 12} className="py-12 text-center text-sm text-slate-400">
+                <tr><td colSpan={schSttus === '' ? 13 : 12} className="py-12 text-center text-[11px] text-slate-400">
                   {rows.length === 0
                     ? (isCis
                         ? '보육통합에서 수집된 아동이 없습니다. 통합e 아동정보에서 [CIS 갱신]을 먼저 실행해주세요.'
@@ -694,7 +701,7 @@ export default function ChildStatusPage() {
                         className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                       />
                     </td>
-                    <td className="px-5 py-3 text-slate-400 text-xs">{idx + 1}</td>
+                    <td className="px-5 py-3 text-slate-400 text-[11px]">{idx + 1}</td>
                     {/* 이름 클릭 → 상세 팝업 */}
                     <td className="px-4 py-3">
                       <button
@@ -709,31 +716,31 @@ export default function ChildStatusPage() {
                     </td>
                     <td className="px-4 py-3">
                       {c.CHIL_SEX_NM
-                        ? <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${c.CHIL_SEXDSTN === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}`}>{c.CHIL_SEX_NM}</span>
-                        : <span className="text-slate-300 text-xs">-</span>}
+                        ? <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${c.CHIL_SEXDSTN === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}`}>{c.CHIL_SEX_NM}</span>
+                        : <span className="text-slate-300 text-[11px]">-</span>}
                     </td>
                     <td className="px-4 py-3 text-slate-600">{c.CHILD_CARE_AGE}</td>
                     <td className="px-4 py-3 text-slate-600">{fmtDate(c.BRTHDY)}</td>
                     <td className="px-4 py-3">
                       {c.CLAS_NM
-                        ? <span className="bg-slate-100 px-1.5 py-0.5 rounded text-xs text-slate-600">{c.CLAS_NM}</span>
-                        : <span className="text-slate-300 text-xs">-</span>}
+                        ? <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[11px] text-slate-600">{c.CLAS_NM}</span>
+                        : <span className="text-slate-300 text-[11px]">-</span>}
                     </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{c.TIME_NAME || '-'}</td>
+                    <td className="px-4 py-3 text-slate-500 text-[11px]">{c.TIME_NAME || '-'}</td>
                     <td className="px-4 py-3 text-sky-600">{fmtDate(c.ENTRNC_DE) || '-'}</td>
                     <td className="px-4 py-3 text-pink-600">{fmtDate(c.RETIRE_DE) || '-'}</td>
                     {schSttus === '' && (
                       <td className="px-4 py-3 text-center">
-                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${c.STTUS === '000' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                        <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${c.STTUS === '000' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
                           {c.KID_STATE_NM || '-'}
                         </span>
                       </td>
                     )}
-                    <td className="px-4 py-3 text-slate-600 text-xs">
+                    <td className="px-4 py-3 text-slate-600 text-[11px]">
                       {c.PARNTS_NM || <span className="text-slate-300">-</span>}
                       {c.PARNTS_CHIL_RELATE && <span className="text-slate-400"> ({c.PARNTS_CHIL_RELATE})</span>}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 text-xs">{c.PARNTS_MOBLPHON || c.PARNTS_CTTPC || <span className="text-slate-300">-</span>}</td>
+                    <td className="px-4 py-3 text-slate-600 text-[11px]">{c.PARNTS_MOBLPHON || c.PARNTS_CTTPC || <span className="text-slate-300">-</span>}</td>
                   </tr>
                 )
               })}
@@ -742,7 +749,7 @@ export default function ChildStatusPage() {
         </div>
 
         {!loading && (
-          <div className="px-5 py-3 border-t border-slate-200 text-xs text-slate-500 flex items-center gap-3 flex-wrap">
+          <div className="px-5 py-3 border-t border-slate-200 text-[11px] text-slate-500 flex items-center gap-3 flex-wrap">
             <span>총 {filtered.length}명</span>
             {selectedRows.size > 0 && <span className="text-blue-600">선택 {selectedRows.size}명</span>}
             {dirtyCount > 0 && (
@@ -834,7 +841,7 @@ export default function ChildStatusPage() {
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px ${tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                  className={`px-4 py-2.5 text-[11px] font-medium border-b-2 -mb-px ${tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
                   {t}
                 </button>

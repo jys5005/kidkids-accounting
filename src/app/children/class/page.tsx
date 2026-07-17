@@ -13,7 +13,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
  *   받은 원본 코드표(page_data 'incheon-codes')에서 찾아 쓴다. 코드표에 없으면 원본코드 노출.
  */
 
-const inputCls = 'border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500'
+const inputCls = 'border border-teal-300 rounded px-2 py-1 text-[11px] focus:outline-none focus:border-teal-500'
 /** 표 안 인라인 편집칸 — 평소엔 테두리 없이 텍스트처럼 보이고 포커스/호버 때만 입력칸으로 드러남 */
 const editCls = 'w-full text-center text-[11px] px-1 py-0.5 rounded border border-transparent bg-transparent hover:border-slate-300 focus:outline-none focus:border-teal-500 focus:bg-white'
 const selCls = 'w-full text-center text-[11px] px-0.5 py-0.5 rounded border border-transparent bg-transparent hover:border-slate-300 focus:outline-none focus:border-teal-500 focus:bg-white'
@@ -247,7 +247,7 @@ export default function ClassPage() {
     <div className="p-3 space-y-3">
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
         <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-bold text-slate-700">반설정</span>
+          <span className="text-[11px] font-bold text-slate-700">반설정</span>
           <span className="text-[11px] text-slate-500">보육년도 {year}년</span>
 
           {/* 검색은 조회 버튼/엔터 방식 — 실시간 검색 금지(프로젝트 UX 규칙) */}
@@ -256,34 +256,34 @@ export default function ClassPage() {
               <option>반명</option>
             </select>
             <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} className={`${inputCls} w-40`} />
-            <button type="submit" className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">조회</button>
+            <button type="submit" className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">조회</button>
           </form>
 
           <div className="ml-auto flex items-center gap-1.5">
             {savedAt && (
               <span className="text-[11px] text-slate-400 mr-1">최근 동기화 {new Date(savedAt).toLocaleString('ko-KR')}</span>
             )}
-            <button onClick={addRow} className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">
+            <button onClick={addRow} className="px-3 py-1.5 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">
               + 반정보추가
             </button>
             <button
               onClick={handleDelete}
               disabled={saving || checked.size === 0}
-              className="px-3 py-1.5 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 rounded"
+              className="px-3 py-1.5 text-[11px] font-bold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 rounded"
             >
               🗑 삭제
             </button>
             <button
               onClick={handleSave}
               disabled={saving || dirtyCount === 0}
-              className="px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded"
+              className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded"
             >
               {saving ? '저장 중…' : dirtyCount > 0 ? `💾 저장 (${dirtyCount})` : '💾 저장'}
             </button>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded"
+              className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded"
             >
               {syncing ? '가져오는 중…' : '📥 인천시에서 가져오기'}
             </button>
