@@ -1,289 +1,342 @@
 'use client'
-import React, { useState } from 'react'
-import DraggableModal from '@/components/DraggableModal'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 
-const fmt = (n: number) => n.toLocaleString('ko-KR')
-const inputCls = "border border-teal-300 rounded px-2 py-1.5 text-[12px] focus:outline-none focus:border-teal-500 w-full"
-const fmtPhone = (v: string) => {
-  const n = v.replace(/[^0-9]/g, '').slice(0, 11)
-  if (n.length <= 3) return n
-  if (n.length <= 7) return n.slice(0, 3) + '-' + n.slice(3)
-  return n.slice(0, 3) + '-' + n.slice(3, 7) + '-' + n.slice(7)
+/**
+ * 아동현황 — 인천시어린이집관리시스템 [아동 > 아동 등록/수정] 인터페이스와 동일 구성.
+ *
+ * 인천시 화면정의(childRegUdt.xml) + API(childBasicInfoList.do / getChildDetailInfo.do /
+ * searchChildClasList.do / getKidBillKeywordList.do)를 그대로 옮긴 것. 좌측 목록(나이/성명/반명)
+ * → 우측 상세 폼 레이아웃까지 동일.
+ *
+ * ★ CHIL_SN(아동 고유키)
+ *   인천시 필요경비 정산 화면은 키가 이름+반뿐이라 동명이인 충돌 위험이 있었는데(실측 5,863명
+ *   중 3건), 아동 API 는 CHIL_SN 을 준다. 정산 자동화는 이 CHIL_SN 을 기준키로 쓴다.
+ *
+ * ★ 자동등록 키워드
+ *   인천시 원문 안내: "보호자가 필요경비 입금 시, 통장에 찍히는 문구를 등록하시면 자동
+ *   매칭됩니다. 최대 4개까지 등록 가능합니다." → 필요경비정산 자동화의 핵심 축이라 그대로 노출.
+ *
+ * 데이터는 통합e page_data(field='incheon-children' / 'incheon-keywords')에 인천시 필드명
+ * 그대로 저장돼 있고, [인천시에서 가져오기]가 로컬 에이전트로 실제 조회해 갱신한다.
+ */
+
+const inputCls = 'border border-teal-300 rounded px-2 py-1 text-[12px] focus:outline-none focus:border-teal-500 w-full'
+const roCls = 'border border-slate-200 bg-slate-50 rounded px-2 py-1 text-[12px] w-full text-slate-600'
+
+/** 인천시 아동 (childBasicInfoList.do → childBasicInfoList[]) — 필드명 원본 그대로 */
+type IncheonChild = {
+  CHIL_SN: number          // ★ 아동 고유키
+  CHIL_NM: string          // 성명
+  CHILINNB: string         // 아동고유번호
+  BRTHDY: string           // 생년월일 YYYYMMDD
+  CHILD_CARE_AGE: number   // 보육나이
+  CLAS_SN: string          // 반 고유키
+  CLAS_NM: string          // 반명
+  ENTRNC_DE: string        // 입소일
+  RETIRE_DE: string | null // 퇴소일
+  STTUS: string            // 상태코드
+  KID_STATE_NM: string     // 상태명 (현원/퇴소)
+  CARETIME_CD: string
+  TIME_NAME: string        // 보육시간명
+  CARERIG_CD: string
+  CARERIG_STDDE: string    // 보육기준일
+  ADRES: string | null     // 주소
+  DISP_NAME: string        // 반유형 표시
+  FRGNR_SE: string         // 외국인 여부
+  NRTR_CHRGE: number       // 보육료
+  SPORT_RT: string | null  // 지원율
+  CHLDSBUS_USE_BGNDE: string | null  // 통학차량 이용 시작일
+  CHLDSBUS_USE_ENDDE: string | null  // 통학차량 이용 종료일
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ChildDetailModal({ child, onClose }: { child: any; onClose: () => void }) {
-  const [form, setForm] = useState({
-    name: child.name, birth: child.birth, age: child.age,
-    className: child.className, enterDate: child.enterDate,
-    leaveDate: child.leaveDate || '', guardian: child.guardian,
-    phone: child.phone, status: child.status,
-    careType: '기본보육', careTime: '기본',
-    careFee: '0', etcFee: '0', etcExpense: '0', specialFee: '0',
-    leaveReason: '',
-    relation: '부',
-  })
-  const u = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }))
+type IncheonKeyword = { CHIL_SN: number; KEYWORD_NM: string }
 
-  return (
-    <DraggableModal onClose={onClose} title="원아 상세정보" className="w-[720px] max-h-[90vh] overflow-y-auto">
-        {/* 기본정보 */}
-        <div className="px-5 py-3">
-          <div className="bg-slate-100 px-3 py-2 rounded font-bold text-[13px] text-slate-700 mb-2">기본정보</div>
-          <table className="w-full text-[12px] border-collapse border border-slate-200">
-            <tbody>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200 w-[100px]">원아명</td>
-                <td className="px-3 py-2"><input value={form.name} onChange={e => u('name', e.target.value)} className={inputCls} /></td>
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200 w-[100px]">상태</td>
-                <td className="px-3 py-2">
-                  <select value={form.status} onChange={e => u('status', e.target.value)} className={inputCls}>
-                    <option>현원</option><option>퇴소</option>
-                  </select>
-                </td>
-              </tr>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">생년월일</td>
-                <td className="px-3 py-2"><input type="date" value={form.birth} onChange={e => u('birth', e.target.value)} className={inputCls} /></td>
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">연령</td>
-                <td className="px-3 py-2"><input value={form.age} onChange={e => u('age', e.target.value)} className={inputCls} /></td>
-              </tr>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">반 편성</td>
-                <td className="px-3 py-2" colSpan={3}>
-                  <select value={form.className} onChange={e => u('className', e.target.value)} className={inputCls}>
-                    <option>새싹반</option><option>꽃잎반</option><option>별빛반</option><option>달님반</option><option>해님반</option><option>무지개반</option>
-                  </select>
-                </td>
-              </tr>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">입소일</td>
-                <td className="px-3 py-2"><input type="date" value={form.enterDate} onChange={e => u('enterDate', e.target.value)} className={inputCls} /></td>
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">퇴소일</td>
-                <td className="px-3 py-2"><input type="date" value={form.leaveDate} onChange={e => u('leaveDate', e.target.value)} className={inputCls} /></td>
-              </tr>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">퇴소사유</td>
-                <td className="px-3 py-2" colSpan={3}><input value={form.leaveReason} onChange={e => u('leaveReason', e.target.value)} className={inputCls} placeholder="퇴소 시 사유 입력" /></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        {/* 보육료정보 */}
-        <div className="px-5 py-3">
-          <div className="bg-slate-100 px-3 py-2 rounded font-bold text-[13px] text-slate-700 mb-2">보육료정보</div>
-          <table className="w-full text-[12px] border-collapse border border-slate-200">
-            <tbody>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200 w-[100px]">보육료기준</td>
-                <td className="px-3 py-2">
-                  <select value={form.careType} onChange={e => u('careType', e.target.value)} className={inputCls}>
-                    <option>선 택</option>
-                    <option>일반아동</option>
-                    <option>기본보육</option>
-                    <option>연장보육(만0~2세)</option>
-                    <option>연장보육(만0~2세법정)</option>
-                    <option>연장보육(만0~2세다문화)</option>
-                    <option>누리(만3~5세)</option>
-                    <option>누리(만3~5세법정)</option>
-                    <option>누리(만3~5세다문화)</option>
-                    <option>누리(만3~5세장애아)</option>
-                    <option>장애아</option>
-                    <option>장애아방과후</option>
-                    <option>방과후</option>
-                  </select>
-                </td>
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200 w-[100px]">보육시간</td>
-                <td className="px-3 py-2">
-                  <select value={form.careTime} onChange={e => u('careTime', e.target.value)} className={inputCls}>
-                    <option>선 택</option>
-                    <option>기본</option>
-                    <option>야간12시간</option>
-                    <option>24시간</option>
-                    <option>야간연장</option>
-                    <option>휴일</option>
-                    <option>방과후</option>
-                    <option>시간제보육</option>
-                    <option>맞춤</option>
-                    <option>긴급보육</option>
-                    <option>반일</option>
-                    <option>시간연장</option>
-                    <option>종일+시간연장</option>
-                    <option>종일+야간</option>
-                    <option>종일+24시간</option>
-                  </select>
-                </td>
-              </tr>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">보육료 납부액</td>
-                <td className="px-3 py-2"><input value={form.careFee} onChange={e => u('careFee', e.target.value)} className={`${inputCls} text-right`} /></td>
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">기타납부액</td>
-                <td className="px-3 py-2"><input value={form.etcFee} onChange={e => u('etcFee', e.target.value)} className={`${inputCls} text-right`} /></td>
-              </tr>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">기타필요경비</td>
-                <td className="px-3 py-2"><input value={form.etcExpense} onChange={e => u('etcExpense', e.target.value)} className={`${inputCls} text-right`} /></td>
-                <td className="px-3 py-2 bg-amber-50 font-bold text-slate-700 border-r border-slate-200">특별활동비</td>
-                <td className="px-3 py-2"><input value={form.specialFee} onChange={e => u('specialFee', e.target.value)} className={`${inputCls} text-right`} /></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        {/* 보호자정보 */}
-        <div className="px-5 py-3">
-          <div className="bg-slate-100 px-3 py-2 rounded font-bold text-[13px] text-slate-700 mb-2">보호자정보</div>
-          <table className="w-full text-[12px] border-collapse border border-slate-200">
-            <thead><tr className="bg-slate-50 border-b border-slate-200">
-              <th className="px-3 py-2 text-center font-bold text-slate-600 border-r border-slate-200">보호자명</th>
-              <th className="px-3 py-2 text-center font-bold text-slate-600 border-r border-slate-200">휴대폰번호</th>
-              <th className="px-3 py-2 text-center font-bold text-slate-600">관계</th>
-            </tr></thead>
-            <tbody>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-2 border-r border-slate-200"><input value={form.guardian} onChange={e => u('guardian', e.target.value.replace(/[0-9]/g, ''))} className={inputCls} /></td>
-                <td className="px-3 py-2 border-r border-slate-200"><input value={form.phone} onChange={e => u('phone', fmtPhone(e.target.value))} className={inputCls} /></td>
-                <td className="px-3 py-2">
-                  <select value={form.relation || '부'} onChange={e => u('relation', e.target.value)} className={inputCls}>
-                    <option>부</option><option>모</option><option>조부</option><option>조모</option>
-                  </select>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div className="px-5 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
-          <button onClick={() => alert('저장되었습니다.')} className="px-6 py-1.5 text-[12px] font-bold text-white bg-teal-600 rounded hover:bg-teal-700">수정</button>
-          <button onClick={onClose} className="px-6 py-1.5 text-[12px] font-bold text-slate-600 bg-slate-100 border border-slate-300 rounded hover:bg-slate-200">취소</button>
-          <button className="px-6 py-1.5 text-[12px] font-bold text-slate-500 bg-slate-200 border border-slate-300 rounded hover:bg-slate-300">완전삭제</button>
-        </div>
-    </DraggableModal>
-  )
+/** YYYYMMDD → YYYY-MM-DD */
+function fmtDate(v: string | null | undefined): string {
+  if (!v) return ''
+  const d = String(v).replace(/[^0-9]/g, '')
+  if (d.length !== 8) return String(v)
+  return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`
 }
 
-type ChildRow = {
-  id: number; name: string; birth: string; age: string; className: string;
-  enterDate: string; guardian: string; phone: string; leaveDate: string; status: string;
-  guardianRelation?: string;
-}
-
-export default function ChildrenStatusPage() {
-  const [search, setSearch] = useState('')
-  const [filterAge, setFilterAge] = useState('전체')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedChild, setSelectedChild] = useState<any>(null)
-  const [children, setChildren] = useState<ChildRow[]>([])
+export default function ChildStatusPage() {
+  const year = String(new Date().getFullYear())
+  const [children, setChildren] = useState<IncheonChild[]>([])
+  const [keywords, setKeywords] = useState<IncheonKeyword[]>([])
+  const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
-  const [lastSynced, setLastSynced] = useState<string | null>(null)
+  const [msg, setMsg] = useState('')
+  const [savedAt, setSavedAt] = useState<string | null>(null)
 
-  // 통합e 동기화 — 회계앱 server proxy → 통합e page_data (child-cur + child-leave) read
-  const handleSyncFromPlatform = async () => {
-    if (syncing) return
-    setSyncing(true)
+  // 인천시 화면의 검색 조건 — 상태 / 반 / 성명
+  const [schSttus, setSchSttus] = useState('000')   // 000 현원, '' 전체
+  const [schClas, setSchClas] = useState('all')
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<number | null>(null)  // CHIL_SN
+
+  const load = useCallback(async () => {
+    setLoading(true)
     try {
-      const r = await fetch('/api/sync/children', { cache: 'no-store' })
-      if (r.status === 401) { alert('통합e 로그인이 필요합니다. 통합e에서 다시 로그인해주세요.'); return }
-      const j = await r.json()
-      if (!j.success) { alert(j.error || '동기화 실패'); return }
-      setChildren(j.children || [])
-      setLastSynced(new Date().toLocaleString('ko-KR'))
-      const src = j.source || {}
-      alert(`✅ 통합e 동기화 완료\n\n총 ${j.count}명 (현원 ${src['child-cur'] ?? 0} / 퇴소 ${src['child-leave'] ?? 0})`)
-    } catch (e) {
-      alert('동기화 실패: ' + (e instanceof Error ? e.message : String(e)))
+      const res = await fetch(`/api/incheon/children?year=${year}`)
+      const j = await res.json()
+      if (j.success) {
+        setChildren((j.children || []) as IncheonChild[])
+        setKeywords((j.keywords || []) as IncheonKeyword[])
+        setSavedAt(j.savedAt || null)
+      } else {
+        setMsg(j.error || '조회 실패')
+      }
+    } catch {
+      setMsg('통합e 서버에 연결할 수 없습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }, [year])
+
+  useEffect(() => { load() }, [load])
+
+  const handleSync = async () => {
+    setSyncing(true); setMsg('인천시 조회 중… (로컬 에이전트 경유, 수십 초 걸립니다)')
+    try {
+      const res = await fetch('/api/incheon/children', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year }),
+      })
+      const j = await res.json()
+      if (j.success) {
+        setMsg(`✅ 아동 ${j.childCount}명 · 반 ${j.clasCount}개 · 키워드 ${j.keywordCount}건 가져왔습니다.`)
+        await load()
+      } else {
+        setMsg(`❌ ${j.error || '가져오기 실패'}`)
+      }
+    } catch {
+      setMsg('❌ 통합e 서버에 연결할 수 없습니다.')
     } finally {
       setSyncing(false)
     }
   }
 
-  const filtered = children.filter(c =>
-    (filterAge === '전체' || c.age === filterAge) &&
-    (search === '' || c.name.includes(search) || c.guardian.includes(search))
-  )
+  // 반 목록 — 아동 데이터에서 도출(반설정 화면과 별개 호출 없이)
+  const clasOptions = useMemo(() => {
+    const m = new Map<string, string>()
+    children.forEach(c => { if (c.CLAS_SN) m.set(String(c.CLAS_SN), c.CLAS_NM) })
+    return Array.from(m, ([sn, nm]) => ({ sn, nm })).sort((a, b) => a.nm.localeCompare(b.nm, 'ko'))
+  }, [children])
+
+  const filtered = useMemo(() => children.filter(c => {
+    if (schSttus && c.STTUS !== schSttus) return false
+    if (schClas !== 'all' && String(c.CLAS_SN) !== schClas) return false
+    if (search && !(c.CHIL_NM || '').includes(search)) return false
+    return true
+  }), [children, schSttus, schClas, search])
+
+  const cur = children.find(c => c.CHIL_SN === selected) || null
+  const curKeywords = keywords.filter(k => Number(k.CHIL_SN) === selected).map(k => k.KEYWORD_NM)
 
   return (
     <div className="p-3 space-y-3">
-      {/* 원아 상세/수정 팝업 */}
-      {selectedChild && <ChildDetailModal child={selectedChild} onClose={() => setSelectedChild(null)} />}
+      {/* 헤더 — 인천시 childRegUdt.xml 상단 (보육년도 + 조회조건) */}
       <div className="bg-white rounded-xl border border-teal-400/30 shadow-sm">
-        <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700">아동현황</span>
-          <span className="text-xs text-slate-400">등록된 아동 정보를 조회하고 관리합니다.</span>
-        </div>
-        <div className="px-4 py-3 flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-bold text-slate-700">연령</span>
-          <select value={filterAge} onChange={e => setFilterAge(e.target.value)} className="border border-teal-300 rounded px-2 py-1.5 text-xs">
-            <option>전체</option>
-            <option>만0세</option><option>만1세</option><option>만2세</option><option>만3세</option><option>만4세</option><option>만5세</option>
-          </select>
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="이름/보호자 검색" className="border border-teal-300 rounded px-2 py-1.5 text-xs w-40" />
-          <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">조회</button>
-          <div className="ml-auto flex items-center gap-1.5">
+        <div className="px-4 py-3 border-b border-teal-400/20 flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-bold text-slate-700">아동 등록/수정</span>
+          <span className="text-[11px] text-slate-500">보육년도 {year}년</span>
+
+          <form onSubmit={e => { e.preventDefault(); setSearch(searchInput) }} className="flex items-center gap-2 ml-4">
+            <select value={schSttus} onChange={e => setSchSttus(e.target.value)} className={`${inputCls} !w-24`}>
+              <option value="000">현원</option>
+              <option value="">전체</option>
+            </select>
+            <select value={schClas} onChange={e => setSchClas(e.target.value)} className={`${inputCls} !w-36`}>
+              <option value="all">전체 반</option>
+              {clasOptions.map(o => <option key={o.sn} value={o.sn}>{o.nm}</option>)}
+            </select>
+            <input
+              type="text" placeholder="성명"
+              value={searchInput} onChange={e => setSearchInput(e.target.value)}
+              className={`${inputCls} !w-32`}
+            />
+            <button type="submit" className="px-3 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded whitespace-nowrap">조회</button>
+          </form>
+
+          <div className="ml-auto flex items-center gap-2">
+            {savedAt && <span className="text-[11px] text-slate-400">최근 동기화 {new Date(savedAt).toLocaleString('ko-KR')}</span>}
             <button
-              onClick={handleSyncFromPlatform}
+              onClick={handleSync}
               disabled={syncing}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-500 hover:to-pink-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="통합e의 원아명단(CIS E0003 현원+퇴소)을 불러와 표를 채웁니다"
+              className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded whitespace-nowrap"
             >
-              {syncing ? (
-                <>
-                  <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  동기화 중…
-                </>
-              ) : (
-                <>🔄 통합e 동기화</>
-              )}
-            </button>
-            {lastSynced && <span className="text-[10px] text-slate-400 ml-1">최근: {lastSynced}</span>}
-            <button className="px-4 py-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 rounded transition-colors">신규등록</button>
-            <button className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 rounded text-xs text-slate-600 transition-colors">
-              <svg className="w-3.5 h-3.5 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M14.2 1H5.8C4.81 1 4 1.81 4 2.8v18.4c0 .99.81 1.8 1.8 1.8h12.4c.99 0 1.8-.81 1.8-1.8V6.8L14.2 1zM15.8 19.3l-2.1-3.5-2.1 3.5H9.8l3.2-5-2.9-4.7h1.8l2.1 3.3 2-3.3h1.8l-2.9 4.7 3.2 5h-2.3z" /></svg>
-              엑셀
+              {syncing ? '가져오는 중…' : '📥 인천시에서 가져오기'}
             </button>
           </div>
         </div>
+        {msg && <div className="px-4 py-2 text-[11px] border-t border-slate-100 text-slate-600 bg-slate-50">{msg}</div>}
       </div>
-      <div className="flex items-center gap-4 text-xs text-slate-500">
-        <span>총 <strong className="text-slate-700">{filtered.length}</strong>명</span>
-        <span>현원 <strong className="text-blue-700">{filtered.filter(c => c.status === '현원').length}</strong>명</span>
-        <span>퇴소 <strong className="text-red-600">{filtered.filter(c => c.status === '퇴소').length}</strong>명</span>
-      </div>
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-[11px]">
-          <thead><tr className="bg-teal-50 border-b border-slate-300">
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[40px]">No</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">이름</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">생년월일</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">연령</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">입소일</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">퇴소일</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">보호자</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">연락처</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">상태</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 w-[50px]">상세</th>
-          </tr></thead>
-          <tbody>
-            {filtered.map((c, i) => (
-              <tr key={c.id} className="border-b border-slate-100 hover:bg-blue-50/40 transition-colors cursor-pointer">
-                <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{i + 1}</td>
-                <td className="px-2 py-1.5 text-slate-700 font-medium border-r border-slate-100">{c.name}</td>
-                <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.birth}</td>
-                <td className="px-2 py-1.5 text-center border-r border-slate-100"><span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded">{c.age}</span></td>
-                <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.className}</td>
-                <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{c.enterDate}</td>
-                <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{c.leaveDate || '-'}</td>
-                <td className="px-2 py-1.5 text-slate-600 border-r border-slate-100">{c.guardian}</td>
-                <td className="px-2 py-1.5 text-slate-500 border-r border-slate-100">{c.phone}</td>
-                <td className="px-2 py-1.5 text-center border-r border-slate-100"><span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${c.status === '현원' ? 'text-blue-700 bg-blue-50' : 'text-red-600 bg-red-50'}`}>{c.status}</span></td>
-                <td className="px-2 py-1.5 text-center whitespace-nowrap"><button onClick={() => setSelectedChild(c)} className="text-[10px] font-bold text-white bg-teal-500 hover:bg-teal-500 px-3 py-0.5 rounded whitespace-nowrap">보기</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      {/* 본문 — 인천시와 동일: 좌측 목록(나이/성명/반명) + 우측 상세 */}
+      <div className="flex gap-3 items-start">
+        {/* 좌측 목록 */}
+        <div className="w-[280px] shrink-0 bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <table className="w-full text-[11px]">
+            <thead><tr className="bg-teal-50 border-b border-slate-300">
+              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[45px]">나이</th>
+              <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">성명</th>
+              <th className="px-2 py-2 text-center font-bold text-slate-600">반명</th>
+            </tr></thead>
+          </table>
+          <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+            <table className="w-full text-[11px]">
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={3} className="px-2 py-8 text-center text-slate-400">불러오는 중…</td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr><td colSpan={3} className="px-2 py-8 text-center text-slate-400">
+                    {children.length === 0 ? '저장된 아동이 없습니다.' : '검색 결과 없음'}
+                  </td></tr>
+                ) : filtered.map(c => (
+                  <tr
+                    key={c.CHIL_SN}
+                    onClick={() => setSelected(c.CHIL_SN)}
+                    className={`border-b border-slate-100 cursor-pointer ${selected === c.CHIL_SN ? 'bg-blue-100' : 'hover:bg-blue-50/40'}`}
+                  >
+                    <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100 w-[45px]">{c.CHILD_CARE_AGE}</td>
+                    <td className="px-2 py-1.5 text-center text-slate-700 border-r border-slate-100 w-[80px]">{c.CHIL_NM}</td>
+                    <td className="px-2 py-1.5 text-center text-slate-600">{c.CLAS_NM}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!loading && (
+            <div className="px-3 py-2 border-t border-slate-200 text-[11px] text-slate-500">총 {filtered.length}명</div>
+          )}
+        </div>
+
+        {/* 우측 상세 */}
+        <div className="flex-1 bg-white rounded-xl border border-slate-200 overflow-hidden min-w-0">
+          {!cur ? (
+            <div className="px-4 py-20 text-center text-slate-400 text-xs">
+              {children.length === 0
+                ? '저장된 아동이 없습니다. [📥 인천시에서 가져오기]를 눌러주세요.'
+                : '좌측 목록에서 아동을 선택하세요.'}
+            </div>
+          ) : (
+            <div className="p-4 space-y-3">
+              {/* 기본정보 — 인천시 childRegUdt.xml 필드 순서 그대로 */}
+              <div>
+                <div className="text-[12px] font-bold text-slate-700 mb-1.5">기본정보</div>
+                <table className="w-full text-[12px] border-collapse">
+                  <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
+                  <tbody>
+                    <tr className="border-b border-slate-100">
+                      <Th>아동실명</Th><Td><input className={roCls} value={cur.CHIL_NM} readOnly /></Td>
+                      <Th>아동별칭</Th><Td><input className={roCls} value={cur.CHIL_NM} readOnly /></Td>
+                    </tr>
+                    <tr className="border-b border-slate-100">
+                      <Th>생년월일</Th><Td><input className={roCls} value={fmtDate(cur.BRTHDY)} readOnly /></Td>
+                      <Th>보육나이</Th><Td><input className={roCls} value={`${cur.CHILD_CARE_AGE}세`} readOnly /></Td>
+                    </tr>
+                    <tr className="border-b border-slate-100">
+                      <Th>입소일</Th><Td><input className={roCls} value={fmtDate(cur.ENTRNC_DE)} readOnly /></Td>
+                      <Th>상태</Th><Td>
+                        <input
+                          className={`${roCls} ${cur.STTUS === '000' ? 'text-emerald-600' : 'text-pink-600'}`}
+                          value={cur.KID_STATE_NM + (cur.RETIRE_DE ? ` (${fmtDate(cur.RETIRE_DE)})` : '')}
+                          readOnly
+                        />
+                      </Td>
+                    </tr>
+                    <tr className="border-b border-slate-100">
+                      <Th>보육시간</Th><Td><input className={roCls} value={cur.TIME_NAME || ''} readOnly /></Td>
+                      <Th>보육기준<br />변경일</Th><Td><input className={roCls} value={fmtDate(cur.CARERIG_STDDE)} readOnly /></Td>
+                    </tr>
+                    <tr className="border-b border-slate-100">
+                      <Th>주소</Th><Td colSpan={3}><input className={roCls} value={cur.ADRES || ''} readOnly /></Td>
+                    </tr>
+                    <tr>
+                      <Th>아동고유번호</Th><Td><input className={`${roCls} font-mono`} value={cur.CHILINNB || ''} readOnly /></Td>
+                      <Th>외국인</Th><Td><input className={roCls} value={cur.FRGNR_SE === 'Y' ? '예' : '아니오'} readOnly /></Td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 자동등록 키워드 — 인천시 원문 안내 그대로 */}
+              <div>
+                <div className="text-[12px] font-bold text-slate-700 mb-1.5">자동등록 키워드</div>
+                <div className="border border-slate-200 rounded p-2.5 bg-slate-50/60">
+                  <div className="flex flex-wrap gap-1.5 min-h-[26px]">
+                    {curKeywords.length === 0
+                      ? <span className="text-[11px] text-slate-400 py-1">등록된 키워드가 없습니다.</span>
+                      : curKeywords.map((k, i) => (
+                          <span key={i} className="px-2 py-1 text-[11px] bg-white border border-teal-300 text-teal-700 rounded">{k}</span>
+                        ))}
+                  </div>
+                  <div className="mt-2 text-[10px] text-slate-500 leading-relaxed">
+                    ⓘ 자동등록 키워드 : 보호자가 필요경비 입금 시, 통장에 찍히는 문구를 등록하시면 자동 매칭됩니다.<br />
+                    최대 4개까지 등록 가능합니다.
+                  </div>
+                </div>
+              </div>
+
+              {/* 반 배정 — 인천시는 반 변경 내역을 이력으로 관리(반유형/반명/반배정일/퇴반일/비고) */}
+              <div>
+                <div className="text-[12px] font-bold text-slate-700 mb-1.5">반 배정</div>
+                <table className="w-full text-[11px] border border-slate-200">
+                  <thead><tr className="bg-teal-50 border-b border-slate-200">
+                    <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">반유형</th>
+                    <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
+                    <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[100px]">반배정일</th>
+                    <th className="px-2 py-1.5 text-center font-bold text-slate-600 border-r border-slate-200 w-[100px]">퇴반일</th>
+                    <th className="px-2 py-1.5 text-center font-bold text-slate-600 w-[110px]">비고</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr className="border-b border-slate-100">
+                      <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{cur.DISP_NAME || '기본'}반</td>
+                      <td className="px-2 py-1.5 text-center text-slate-700 border-r border-slate-100">{cur.CLAS_NM}</td>
+                      <td className="px-2 py-1.5 text-center text-sky-600 border-r border-slate-100">{fmtDate(cur.CARERIG_STDDE)}</td>
+                      <td className="px-2 py-1.5 text-center text-pink-600 border-r border-slate-100">{fmtDate(cur.RETIRE_DE)}</td>
+                      <td className="px-2 py-1.5 text-center text-slate-400">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="mt-1 text-[10px] text-amber-600">
+                  ⚠ 현재는 아동 목록의 현재 반만 표시합니다. 반 변경 이력(연장반·방과후반 등 다중 배정)은
+                  인천시 searchClasChilHistList.do 를 아동별로 호출해야 채워집니다 — 다음 단계.
+                </div>
+              </div>
+
+              {/* 통학차량 */}
+              <div>
+                <div className="text-[12px] font-bold text-slate-700 mb-1.5">통학차량</div>
+                <table className="w-full text-[12px] border-collapse">
+                  <colgroup><col className="w-[110px]" /><col /><col className="w-[110px]" /><col /></colgroup>
+                  <tbody>
+                    <tr>
+                      <Th>이용 시작일</Th><Td><input className={roCls} value={fmtDate(cur.CHLDSBUS_USE_BGNDE)} readOnly /></Td>
+                      <Th>이용 종료일</Th><Td><input className={roCls} value={fmtDate(cur.CHLDSBUS_USE_ENDDE)} readOnly /></Td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="pt-1 text-[10px] text-slate-400">
+                아동 고유키 CHIL_SN = <span className="font-mono text-slate-600">{cur.CHIL_SN}</span>
+                {' · '}반 고유키 CLAS_SN = <span className="font-mono text-slate-600">{cur.CLAS_SN}</span>
+                {' — 필요경비 정산 자동화가 이 키로 인천시와 대조합니다.'}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return <td className="font-medium text-slate-700 bg-slate-100 px-3 py-2 border-r border-slate-200 text-center align-middle">{children}</td>
+}
+function Td({ children, colSpan }: { children: React.ReactNode; colSpan?: number }) {
+  return <td colSpan={colSpan} className="px-3 py-2">{children}</td>
 }
