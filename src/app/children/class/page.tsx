@@ -303,7 +303,8 @@ export default function ClassPage() {
           const s = String(raw ?? '').trim()
           if (!s) continue
           const mm = s.match(/\]\s*\[\s*([^\]]*?)\s*\]\s*(.*)$/)
-          const type = mm ? mm[1].trim() : ''
+          // 보육통합 반유형은 '.' 구분자('4.5세이상 반') → 인천시 표기('4,5세이상 반')처럼 ',' 로 통일
+          const type = (mm ? mm[1].trim() : '').replace(/\./g, ',')
           const name = (mm ? mm[2].trim() : s) || s
           const cur = m.get(name) || { type: '', count: 0 }
           cur.count++
