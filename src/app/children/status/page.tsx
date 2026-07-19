@@ -183,6 +183,27 @@ const RELATE_OPTIONS = ['부', '모', '조부', '조모', '기타']
 /** 휴대폰 앞자리 — 010 기본 */
 const PHONE_PREFIXES = ['010', '011', '016', '017', '018', '019']
 
+/**
+ * 보육료 지원자격 표시 순서 — 가나다순이면 관련 항목이 흩어져서, 연령(영아→유아)·유형별로 묶어 보기 좋게 정렬.
+ * (드롭다운 옵션은 실제 수집값에서 뽑되, 이 순서대로 나열. 여기에 없는 값은 뒤에 가나다순으로 붙는다.)
+ */
+const ELIGIBILITY_ORDER: string[] = [
+  '기본보육',
+  '일반아동',
+  '영아(만0~2세)',
+  '맞춤형영아',
+  '종일형영아(만0~2세)',
+  '연장보육(만0~2세)',
+  '영유아(만3~4세아)',
+  '누리(만3~5세)',
+  '누리(만3~5세법정)',
+  '만5세아',
+  '만5세아(법정)',
+  '영유아(100%)',
+  '영유아(30%)',
+  '두자녀(30%)',
+]
+
 /** YYYYMMDD → YYYY-MM-DD (<input type="date"> 가 요구하는 형식) */
 function fmtDate(v: string | null | undefined): string {
   if (!v) return ''
@@ -364,10 +385,10 @@ export default function ChildStatusPage() {
     () => distinctRawValues('birthOrder', ['첫째', '둘째', '셋째', '넷째', '다섯째']),
     [cisRaw],
   )
-  const eligibilityOptions = useMemo(
-    () => distinctRawValues('childcareEligibilityType').sort((a, b) => a.localeCompare(b, 'ko')),
-    [cisRaw],
-  )
+  const eligibilityOptions = useMemo(() => {
+    const idx = (v: string) => { const i = ELIGIBILITY_ORDER.indexOf(v); return i < 0 ? ELIGIBILITY_ORDER.length : i }
+    return distinctRawValues('childcareEligibilityType').sort((a, b) => idx(a) - idx(b) || a.localeCompare(b, 'ko'))
+  }, [cisRaw])
 
   /** 지금 화면에 보여줄 목록 — 소스 토글에 따라 전환 */
   const rows = source === 'cis' ? cisChildren : children
