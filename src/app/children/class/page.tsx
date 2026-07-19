@@ -184,6 +184,7 @@ export default function ClassPage() {
   const [cisYearSel, setCisYearSel] = useState(year) // 드롭다운 선택값(대기) — [조회] 눌러야 cisYear 로 반영
   const [cisLoading, setCisLoading] = useState(false)
   const [cisClasStore, setCisClasStore] = useState<CisClas[]>([]) // 보육통합 반정보(저장분, incheon-cis-clas) — 인천시와 별개
+  const [srcClasStore, setSrcClasStore] = useState<IncheonClas[]>([]) // 인천시 반정보 참조본(incheon-src-clas) — 통합e 작업본과 별개
 
   // 반 추가 팝업 — 여러 반을 표로 입력 → clasAdds 저장. 자동채움: 보육통합/인천시 반에서 세팅.
   const addKeyRef = useRef(1)
@@ -251,6 +252,7 @@ export default function ClassPage() {
       const j = await res.json()
       if (j.success) {
         setRows((j.clasList || []) as IncheonClas[])
+        setSrcClasStore((j.srcClasList || []) as IncheonClas[])
         setCodes((j.codes || []) as IncheonCode[])
         setSavedAt(j.savedAt || null)
       } else {
@@ -331,27 +333,48 @@ export default function ClassPage() {
     }
   }
 
+  /**
+   * [🏛 인천시 반정보 → 🔄 업데이트] — 인천시 시스템의 현재 반 목록을 "참조 스냅샷"(incheon-src-clas)에만
+   * 저장한다. ★ 통합e 작업본(메인 표=incheon-clas)은 절대 안 건드린다(사용자 확정: 자동저장 금지).
+   * 통합e 반정보로 가져오려면 [+ 반정보추가 → 🏛 인천시 반정보 세팅]으로 사용자가 명시적으로 복사한다.
+   */
   const handleSync = async () => {
-    if (dirtyCount > 0 && !confirm(`저장하지 않은 수정 ${dirtyCount}건이 있습니다.\n\n인천시에서 가져오면 인천시 값으로 덮어써져 수정 내용이 사라집니다.\n계속할까요?`)) return
-    setSyncing(true); setMsg('인천시 조회 중… (로컬 에이전트 경유, 수십 초 걸립니다)')
+    setSyncing(true); setMsg('인천시 반정보 조회 중… (로컬 에이전트 경유, 수십 초 걸립니다)')
     try {
       const res = await fetch('/api/incheon/children', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year }),
+        body: JSON.stringify({ year, clasTarget: 'src' }),   // ★ 통합e 작업본 말고 참조 스냅샷에만 저장
       })
       const j = await res.json()
       if (j.success) {
-        setMsg(`✅ 반 ${j.clasCount}개 · 아동 ${j.childCount}명 · 키워드 ${j.keywordCount}건${j.codeCount ? ` · 코드 ${j.codeCount}건` : ''} 가져왔습니다.`)
-        setEdits({}); setNews([])
+        setMsg(`✅ 인천시 반정보 ${j.srcClasCount}개 조회 (통합e 반정보는 그대로 — 자동저장 안 함)`)
         await load()
       } else {
-        setMsg(`❌ ${j.error || '가져오기 실패'}`)
+        setMsg(`❌ ${j.error || '인천시 반정보 조회 실패'}`)
       }
     } catch {
       setMsg('❌ 통합e 서버에 연결할 수 없습니다.')
     } finally {
       setSyncing(false)
+    }
+  }
+
+  /** [🏛 인천시 반정보 → 🗑 삭제] — 참조 스냅샷(incheon-src-clas)만 삭제. 통합e 작업본은 무관. */
+  const handleSrcDelete = async () => {
+    if (srcClasStore.length === 0) { setMsg('삭제할 인천시 반정보가 없습니다.'); return }
+    if (!confirm(`${year}년 인천시 반정보(참조본) ${srcClasStore.length}개를 삭제합니다.\n(통합e 반정보(메인 표)와는 별개라 메인 표엔 영향 없습니다)\n\n계속할까요?`)) return
+    try {
+      const res = await fetch('/api/incheon/children', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, srcClasClear: true }),
+      })
+      const j = await res.json()
+      if (j.success) { setMsg(`🗑 인천시 반정보 ${j.srcCleared}개 삭제 (${year}년)`); await load() }
+      else setMsg(`❌ ${j.error || '삭제 실패'}`)
+    } catch {
+      setMsg('❌ 통합e 서버에 연결할 수 없습니다.')
     }
   }
 
@@ -484,14 +507,14 @@ export default function ClassPage() {
     finally { setAddBusy(false) }
   }
 
-  /** ⑤ 인천시 반정보로 자동 세팅 — 선택 보육년도의 인천시 반을 조회해 채움 */
+  /** ⑤ 인천시 반정보로 자동 세팅 — 인천시 참조본(incheon-src-clas)에서 채움(통합e 반정보로 명시적 복사) */
   const fillFromIncheon = async (yr = addYear) => {
     setAddBusy(true); setMsg('')
     try {
       const res = await fetch(`/api/incheon/children?year=${yr}`)
       const j = res.ok ? await res.json() : null
-      const src = ((j?.clasList || []) as IncheonClas[]).filter(c => c.DEL_AT !== 'Y')
-      if (src.length === 0) { setMsg(`${yr}년 인천시 반이 없습니다. [🏛 인천시 반정보 → 업데이트]로 먼저 가져오세요.`); setAddRows([mkAddRow()]); return }
+      const src = ((j?.srcClasList || []) as IncheonClas[]).filter(c => c.DEL_AT !== 'Y')
+      if (src.length === 0) { setMsg(`${yr}년 인천시 반정보가 없습니다. [🏛 인천시 반정보 → 업데이트]로 먼저 조회하세요.`); setAddRows([mkAddRow()]); return }
       setAddRows(src.map(c => mkAddRow({
         CLAS_NM: c.CLAS_NM || '', CLAS_NM_NRTR: c.CLAS_NM_NRTR || '',
         AGE_CD: c.AGE_CD || '', STTUS: c.STTUS || '000', RM: c.RM || '',
@@ -751,14 +774,23 @@ export default function ClassPage() {
                     className="px-3 py-1.5 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg"
                   >🗑 삭제</button>
                 )}
+                {popup === 'incheon' && srcClasStore.length > 0 && (
+                  <button
+                    onClick={handleSrcDelete}
+                    className="px-3 py-1.5 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg"
+                  >🗑 삭제</button>
+                )}
                 <button onClick={() => setPopup(null)} className="ml-1 px-2 text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
               </div>
             </div>
 
             <div className="p-5 overflow-y-auto flex-1">
               {popup === 'incheon' ? (
-                filtered.length === 0 ? (
-                  <div className="py-10 text-center text-[12px] text-slate-400">저장된 인천시 반이 없습니다. [🔄 업데이트]를 눌러 인천시에서 가져오세요.</div>
+                srcClasStore.length === 0 ? (
+                  <div className="py-10 text-center text-[12px] text-slate-400">
+                    {year}년 인천시 반정보가 없습니다. [🔄 업데이트]를 눌러 인천시에서 조회하세요.<br />
+                    <span className="text-[11px]">(조회는 참조용으로만 저장됩니다 — 통합e 반정보(메인 표)에는 자동저장되지 않습니다)</span>
+                  </div>
                 ) : (
                   <table className="w-full text-[11px]">
                     <thead><tr className="bg-blue-50 border-b border-slate-300">
@@ -769,7 +801,7 @@ export default function ClassPage() {
                       <th className="px-2 py-2 text-center font-bold text-slate-600">상태</th>
                     </tr></thead>
                     <tbody>
-                      {filtered.map(c => (
+                      {srcClasStore.map(c => (
                         <tr key={c.CLAS_SN} className="border-b border-slate-100">
                           <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.GRP_CLAS_NM || '-'}</td>
                           <td className="px-2 py-1.5 text-center border-r border-slate-100">{c.CLAS_NM || '-'}</td>
