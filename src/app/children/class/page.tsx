@@ -119,7 +119,8 @@ export default function ClassPage() {
   // 반정보 참고 팝업 — 'cis'(보육통합) / 'incheon'(인천시). 반정보추가(신규등록)는 팝업과 무관한 공통 기본.
   const [popup, setPopup] = useState<null | 'cis' | 'incheon'>(null)
   const [cisChildren, setCisChildren] = useState<Array<Record<string, unknown>>>([])
-  const [cisYear, setCisYear] = useState(year)   // 보육통합 반정보 팝업의 보육년도 필터(기본=현재 보육년도)
+  const [cisYear, setCisYear] = useState(year)       // 적용된 보육년도(집계에 실제로 쓰이는 값)
+  const [cisYearSel, setCisYearSel] = useState(year) // 드롭다운 선택값(대기) — [조회] 눌러야 cisYear 로 반영
   const [cisLoading, setCisLoading] = useState(false)
 
   /**
@@ -416,7 +417,7 @@ export default function ClassPage() {
               {saving ? '저장 중…' : dirtyCount > 0 ? `💾 저장 (${dirtyCount})` : '💾 저장'}
             </button>
             <button
-              onClick={() => { setCisYear(year); setPopup('cis'); fetchCisClasses() }}
+              onClick={() => { setCisYear(year); setCisYearSel(year); setPopup('cis'); fetchCisClasses() }}
               className="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded"
             >
               📚 보육통합 반정보
@@ -568,12 +569,15 @@ export default function ClassPage() {
                   : '인천시 어린이집관리시스템에 등록된 반 목록입니다 (읽기 전용).'}
               </div>
               {popup === 'cis' && (
-                <label className="text-[11px] text-slate-500 flex items-center gap-1">
-                  보육년도
-                  <select value={cisYear} onChange={e => setCisYear(e.target.value)} className={`${inputCls} !w-20`}>
-                    {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}년</option>)}
-                  </select>
-                </label>
+                <form onSubmit={e => { e.preventDefault(); setCisYear(cisYearSel) }} className="flex items-center gap-1.5">
+                  <label className="text-[11px] text-slate-500 flex items-center gap-1">
+                    보육년도
+                    <select value={cisYearSel} onChange={e => setCisYearSel(e.target.value)} className={`${inputCls} !w-20`}>
+                      {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}년</option>)}
+                    </select>
+                  </label>
+                  <button type="submit" className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-500 hover:bg-teal-600 rounded">조회</button>
+                </form>
               )}
               <div className="ml-auto flex items-center gap-1.5">
                 <button
