@@ -394,15 +394,23 @@ export default function ClassPage() {
     setAddRows(p => p.map(r => r.key === key ? { ...r, [field]: v } : r))
   const removeAddRow = (key: number) => setAddRows(p => p.filter(r => r.key !== key))
 
-  /** ④ 보육통합(CIS) 아동 배정 반으로 빈칸 자동채움 (반명/연령/사용여부) */
-  const fillFromCis = async () => {
+  /** ④ 보육통합(CIS) 반으로 빈칸 자동채움 — 선택 보육년도 기준(현원=현재년도 / 퇴소=퇴소한해) */
+  const fillFromCis = async (yr = addYear) => {
     setAddBusy(true); setMsg('')
     try {
       const res = await fetch('/api/sync/children', { cache: 'no-store' })
       const j = res.ok ? await res.json() : null
       const kids = (j?.children || []) as Array<Record<string, unknown>>
+      const Y = Number(yr) || new Date().getFullYear()
+      const now = new Date()
+      const curFY = now.getMonth() + 1 >= 3 ? now.getFullYear() : now.getFullYear() - 1
+      const d8 = (v: unknown) => Number(String(v ?? '').replace(/\D/g, '').slice(0, 8)) || 0
+      const fyOf = (n: number): number | null => { if (!n) return null; const y = Math.floor(n / 10000), mo = Math.floor((n % 10000) / 100); return mo >= 3 ? y : y - 1 }
       const m = new Map<string, string>()
       for (const c of kids) {
+        const isW = String(c.status) === '퇴소'
+        const belongFY = isW ? fyOf(d8(c.leaveDate) || d8((c._raw as Record<string, unknown> | undefined)?.serviceStartDate)) : curFY
+        if (belongFY !== Y) continue
         for (const raw of [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]) {
           const s = String(raw ?? '').trim()
           if (!s || ['없음', '미배정', '해당없음', '-'].includes(s)) continue
@@ -416,19 +424,25 @@ export default function ClassPage() {
       const built = Array.from(m, ([name, type]) =>
         mkAddRow({ CLAS_NM: name, CLAS_NM_NRTR: name, AGE_CD: AGE_OPTIONS.find(a => a.nm === type)?.cd ?? type, STTUS: '000' }))
       setAddRows(built.length ? built : [mkAddRow()])
-      if (built.length === 0) setMsg('보육통합(CIS)에서 수집된 반이 없습니다. 통합e에서 아동을 먼저 수집하세요.')
+      if (built.length === 0) setMsg(`${yr}년 보육년도에 속한 보육통합 반이 없습니다.`)
     } catch { setMsg('❌ 보육통합 반 불러오기 실패') }
     finally { setAddBusy(false) }
   }
 
-  /** ⑤ 인천시 반정보(현재 로드된 저장분)로 자동 세팅 */
-  const fillFromIncheon = () => {
-    const src = rows.filter(c => c.DEL_AT !== 'Y')
-    if (src.length === 0) { setMsg('인천시 반이 없습니다. [🏛 인천시 반정보 → 업데이트]로 먼저 가져오세요.'); return }
-    setAddRows(src.map(c => mkAddRow({
-      CLAS_NM: c.CLAS_NM || '', CLAS_NM_NRTR: c.CLAS_NM_NRTR || '',
-      AGE_CD: c.AGE_CD || '', STTUS: c.STTUS || '000', RM: c.RM || '',
-    })))
+  /** ⑤ 인천시 반정보로 자동 세팅 — 선택 보육년도의 인천시 반을 조회해 채움 */
+  const fillFromIncheon = async (yr = addYear) => {
+    setAddBusy(true); setMsg('')
+    try {
+      const res = await fetch(`/api/incheon/children?year=${yr}`)
+      const j = res.ok ? await res.json() : null
+      const src = ((j?.clasList || []) as IncheonClas[]).filter(c => c.DEL_AT !== 'Y')
+      if (src.length === 0) { setMsg(`${yr}년 인천시 반이 없습니다. [🏛 인천시 반정보 → 업데이트]로 먼저 가져오세요.`); setAddRows([mkAddRow()]); return }
+      setAddRows(src.map(c => mkAddRow({
+        CLAS_NM: c.CLAS_NM || '', CLAS_NM_NRTR: c.CLAS_NM_NRTR || '',
+        AGE_CD: c.AGE_CD || '', STTUS: c.STTUS || '000', RM: c.RM || '',
+      })))
+    } catch { setMsg('❌ 인천시 반 불러오기 실패') }
+    finally { setAddBusy(false) }
   }
 
   /** ① 저장 — 반명 있는 행만 clasAdds 로 추가 */
@@ -761,14 +775,14 @@ export default function ClassPage() {
               <div className="text-base font-bold text-slate-800">＋ 반 추가</div>
               <label className="text-[11px] text-slate-600 flex items-center gap-1">
                 보육년도
-                <select value={addYear} onChange={e => setAddYear(e.target.value)} className={`${inputCls} !w-20`}>
+                <select value={addYear} onChange={e => { const y = e.target.value; setAddYear(y); fillFromIncheon(y) }} className={`${inputCls} !w-20`}>
                   {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}년</option>)}
                 </select>
               </label>
               <div className="text-[11px] text-slate-400 hidden lg:block">선택한 보육년도에 저장됩니다.</div>
               <div className="ml-auto flex items-center gap-1.5">
-                <button onClick={fillFromCis} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 rounded">📚 보육통합 반 자동채움</button>
-                <button onClick={fillFromIncheon} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded">🏛 인천시 반정보 세팅</button>
+                <button onClick={() => fillFromCis()} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 rounded">📚 보육통합 반 자동채움</button>
+                <button onClick={() => fillFromIncheon()} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded">🏛 인천시 반정보 세팅</button>
                 <button onClick={addEmptyRow} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">＋ 추가</button>
                 <button onClick={handleAddSave} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded">{addBusy ? '저장 중…' : '💾 저장'}</button>
                 <button onClick={() => setAddOpen(false)} className="ml-1 px-2 text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
