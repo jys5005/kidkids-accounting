@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 
 /**
  * 반편성관리 — 인천시어린이집관리시스템 [설정 > 반설정] 인터페이스와 동일 구성.
@@ -124,6 +124,12 @@ export default function ClassPage() {
   const [cisYear, setCisYear] = useState(year)       // 적용된 보육년도(집계에 실제로 쓰이는 값)
   const [cisYearSel, setCisYearSel] = useState(year) // 드롭다운 선택값(대기) — [조회] 눌러야 cisYear 로 반영
   const [cisLoading, setCisLoading] = useState(false)
+
+  // 반 추가 팝업 — 여러 반을 표로 입력 → clasAdds 저장. 자동채움: 보육통합/인천시 반에서 세팅.
+  const addKeyRef = useRef(1)
+  const [addOpen, setAddOpen] = useState(false)
+  const [addRows, setAddRows] = useState<NewClas[]>([])
+  const [addBusy, setAddBusy] = useState(false)
 
   /**
    * 연령 코드 후보 — 인천시 공통코드에서 찾는다.
@@ -378,10 +384,72 @@ export default function ClassPage() {
   }
   const allChecked = filtered.length > 0 && filtered.every(c => checked.has(c.CLAS_SN))
 
-  const addRow = () => setNews(prev => [...prev, {
-    key: Date.now() + prev.length,
-    CLAS_NM: '', CLAS_NM_NRTR: '', AGE_CD: '', STTUS: '000', RM: '',
-  }])
+  // ── 반 추가 팝업 핸들러 ──
+  const mkAddRow = (patch: Partial<NewClas> = {}): NewClas =>
+    ({ key: addKeyRef.current++, CLAS_NM: '', CLAS_NM_NRTR: '', AGE_CD: '', STTUS: '000', RM: '', ...patch })
+  const openAdd = () => { setAddRows([mkAddRow()]); setAddOpen(true) }
+  const addEmptyRow = () => setAddRows(p => [...p, mkAddRow()])
+  const editAddRow = (key: number, field: keyof Omit<NewClas, 'key'>, v: string) =>
+    setAddRows(p => p.map(r => r.key === key ? { ...r, [field]: v } : r))
+  const removeAddRow = (key: number) => setAddRows(p => p.filter(r => r.key !== key))
+
+  /** ④ 보육통합(CIS) 아동 배정 반으로 빈칸 자동채움 (반명/연령/사용여부) */
+  const fillFromCis = async () => {
+    setAddBusy(true); setMsg('')
+    try {
+      const res = await fetch('/api/sync/children', { cache: 'no-store' })
+      const j = res.ok ? await res.json() : null
+      const kids = (j?.children || []) as Array<Record<string, unknown>>
+      const m = new Map<string, string>()
+      for (const c of kids) {
+        for (const raw of [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]) {
+          const s = String(raw ?? '').trim()
+          if (!s || ['없음', '미배정', '해당없음', '-'].includes(s)) continue
+          const mm = s.match(/\]\s*\[\s*([^\]]*?)\s*\]\s*(.*)$/)
+          const type = (mm ? mm[1].trim() : '').replace(/\./g, ',')
+          const name = (mm ? mm[2].trim() : s) || s
+          if (!name || ['없음', '미배정', '해당없음', '-'].includes(name)) continue
+          if (!m.has(name)) m.set(name, type)
+        }
+      }
+      const built = Array.from(m, ([name, type]) =>
+        mkAddRow({ CLAS_NM: name, CLAS_NM_NRTR: name, AGE_CD: AGE_OPTIONS.find(a => a.nm === type)?.cd ?? type, STTUS: '000' }))
+      setAddRows(built.length ? built : [mkAddRow()])
+      if (built.length === 0) setMsg('보육통합(CIS)에서 수집된 반이 없습니다. 통합e에서 아동을 먼저 수집하세요.')
+    } catch { setMsg('❌ 보육통합 반 불러오기 실패') }
+    finally { setAddBusy(false) }
+  }
+
+  /** ⑤ 인천시 반정보(현재 로드된 저장분)로 자동 세팅 */
+  const fillFromIncheon = () => {
+    const src = rows.filter(c => c.DEL_AT !== 'Y')
+    if (src.length === 0) { setMsg('인천시 반이 없습니다. [🏛 인천시 반정보 → 업데이트]로 먼저 가져오세요.'); return }
+    setAddRows(src.map(c => mkAddRow({
+      CLAS_NM: c.CLAS_NM || '', CLAS_NM_NRTR: c.CLAS_NM_NRTR || '',
+      AGE_CD: c.AGE_CD || '', STTUS: c.STTUS || '000', RM: c.RM || '',
+    })))
+  }
+
+  /** ① 저장 — 반명 있는 행만 clasAdds 로 추가 */
+  const handleAddSave = async () => {
+    const valid = addRows.filter(r => r.CLAS_NM.trim() !== '')
+    if (valid.length === 0) { setMsg('❌ 반명을 입력해주세요.'); return }
+    setAddBusy(true); setMsg('')
+    try {
+      const res = await fetch('/api/incheon/children', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          year,
+          clasAdds: valid.map(r => ({ CLAS_NM: r.CLAS_NM, CLAS_NM_NRTR: r.CLAS_NM_NRTR, AGE_CD: r.AGE_CD, STTUS: r.STTUS, RM: r.RM })),
+        }),
+      })
+      const j = await res.json()
+      if (j.success) { setMsg(`💾 반 ${j.added ?? valid.length}개 추가 (통합e 에만 저장 — 인천시 원본은 그대로입니다)`); setAddOpen(false); await load() }
+      else setMsg(`❌ ${j.error || '추가 실패'}`)
+    } catch { setMsg('❌ 통합e 서버에 연결할 수 없습니다.') }
+    finally { setAddBusy(false) }
+  }
   const editNew = (key: number, field: keyof Omit<NewClas, 'key'>, v: string) =>
     setNews(prev => prev.map(n => n.key === key ? { ...n, [field]: v } : n))
 
@@ -415,7 +483,7 @@ export default function ClassPage() {
             {savedAt && (
               <span className="text-[11px] text-slate-400 mr-1">최근 동기화 {new Date(savedAt).toLocaleString('ko-KR')}</span>
             )}
-            <button onClick={addRow} className="px-3 py-1.5 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">
+            <button onClick={openAdd} className="px-3 py-1.5 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">
               + 반정보추가
             </button>
             <button
@@ -673,6 +741,69 @@ export default function ClassPage() {
               {popup === 'cis'
                 ? '※ 현원은 현재 보육년도에, 퇴소 원아는 퇴소한 그 보육년도에 표시됩니다. [🔄 업데이트]는 CIS 최신 아동을 다시 불러옵니다.'
                 : '※ [🔄 업데이트]는 인천시에서 최신 반 목록을 다시 가져옵니다(로컬 에이전트 경유, 수십 초). 편집·저장은 뒤 화면 표에서 하세요.'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 반 추가 팝업 — ①저장 ②+추가 ③빈행(반명/보육통합반명/연령/사용여부) ④보육통합 자동채움 ⑤인천시 세팅 */}
+      {addOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setAddOpen(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[860px] max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-slate-200 flex items-center gap-2 flex-wrap">
+              <div className="text-base font-bold text-slate-800">＋ 반 추가</div>
+              <div className="text-[11px] text-slate-400">여러 반을 한 번에 등록 — 자동채움으로 빠르게 세팅하세요.</div>
+              <div className="ml-auto flex items-center gap-1.5">
+                <button onClick={fillFromCis} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 rounded">📚 보육통합 반 자동채움</button>
+                <button onClick={fillFromIncheon} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded">🏛 인천시 반정보 세팅</button>
+                <button onClick={addEmptyRow} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded">＋ 추가</button>
+                <button onClick={handleAddSave} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded">{addBusy ? '저장 중…' : '💾 저장'}</button>
+                <button onClick={() => setAddOpen(false)} className="ml-1 px-2 text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
+              </div>
+            </div>
+
+            <div className="p-4 overflow-y-auto flex-1">
+              <table className="w-full text-[11px]">
+                <thead><tr className="bg-teal-50 border-b border-slate-300">
+                  <th className="px-2 py-2 w-8"></th>
+                  <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
+                  <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">보육통합 반명</th>
+                  <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[160px]">연령</th>
+                  <th className="px-2 py-2 text-center font-bold text-slate-600 w-[90px]">사용여부</th>
+                </tr></thead>
+                <tbody>
+                  {addRows.map(n => (
+                    <tr key={n.key} className="border-b border-slate-100">
+                      <td className="px-2 py-1 text-center">
+                        <button onClick={() => removeAddRow(n.key)} className="text-rose-500 hover:text-rose-700" title="행 삭제">✕</button>
+                      </td>
+                      <td className="px-1 py-1 border-r border-slate-100">
+                        <input value={n.CLAS_NM} onChange={e => editAddRow(n.key, 'CLAS_NM', e.target.value)} placeholder="반명 (필수)" className={`${editCls} border-slate-300 bg-white`} />
+                      </td>
+                      <td className="px-1 py-1 border-r border-slate-100">
+                        <input value={n.CLAS_NM_NRTR} onChange={e => editAddRow(n.key, 'CLAS_NM_NRTR', e.target.value)} placeholder="보육통합 반명" className={`${editCls} border-slate-300 bg-white`} />
+                      </td>
+                      <td className="px-1 py-1 border-r border-slate-100">
+                        <select value={n.AGE_CD} onChange={e => editAddRow(n.key, 'AGE_CD', e.target.value)} className={`${selCls} border-slate-300 bg-white`}>
+                          <option value="">선택</option>
+                          {AGE_OPTIONS.map(a => <option key={a.cd} value={a.cd}>{a.nm}</option>)}
+                          {n.AGE_CD && !AGE_OPTIONS.some(a => a.cd === n.AGE_CD) && <option value={n.AGE_CD}>{ageLabel(n.AGE_CD)}</option>}
+                        </select>
+                      </td>
+                      <td className="px-1 py-1">
+                        <select value={n.STTUS} onChange={e => editAddRow(n.key, 'STTUS', e.target.value)} className={`${selCls} border-slate-300 bg-white`}>
+                          {CLAS_STATUS.map(s => <option key={s.cd} value={s.cd}>{s.nm}</option>)}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {addRows.length === 0 && <div className="py-6 text-center text-[12px] text-slate-400">행이 없습니다. [＋ 추가] 또는 자동채움을 눌러주세요.</div>}
+            </div>
+
+            <div className="px-5 py-3 border-t border-slate-200 text-[11px] text-slate-500">
+              ※ 저장하면 통합e 저장분에 반이 추가됩니다(인천시 원본은 안 바뀜). [📚 보육통합 반 자동채움]=CIS 아동 배정 반 / [🏛 인천시 반정보 세팅]=현재 인천시 저장분에서 채웁니다.
             </div>
           </div>
         </div>
