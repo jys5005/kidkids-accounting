@@ -348,7 +348,11 @@ export default function ClassPage() {
       })
       const j = await res.json()
       if (j.success) {
-        setMsg(`✅ 인천시 반정보 ${j.srcClasCount}개 조회 (통합e 반정보는 그대로 — 자동저장 안 함)`)
+        const per = j.perYear && typeof j.perYear === 'object'
+          ? Object.entries(j.perYear as Record<string, number>)
+              .sort((a, b) => b[0].localeCompare(a[0])).map(([y, n]) => `${y}년 ${n}개`).join(' · ')
+          : `${j.srcClasCount}개`
+        setMsg(`✅ 인천시 반정보 조회 — ${per} (통합e 반정보는 그대로 — 자동저장 안 함)`)
         await load()
       } else {
         setMsg(`❌ ${j.error || '인천시 반정보 조회 실패'}`)
@@ -360,19 +364,25 @@ export default function ClassPage() {
     }
   }
 
-  /** [🏛 인천시 반정보 → 🗑 삭제] — 참조 스냅샷(incheon-src-clas)만 삭제. 통합e 작업본은 무관. */
+  /** [🏛 인천시 반정보 → 🗑 삭제] — 참조 스냅샷(incheon-src-clas)만 삭제(표시 중인 연도 전부). 통합e 작업본은 무관. */
   const handleSrcDelete = async () => {
     if (srcClasStore.length === 0) { setMsg('삭제할 인천시 반정보가 없습니다.'); return }
-    if (!confirm(`${year}년 인천시 반정보(참조본) ${srcClasStore.length}개를 삭제합니다.\n(통합e 반정보(메인 표)와는 별개라 메인 표엔 영향 없습니다)\n\n계속할까요?`)) return
+    const yrs = srcClasYears.map(([y]) => y)
+    if (!confirm(`인천시 반정보(참조본)를 삭제합니다.\n대상 연도: ${yrs.join(', ')} · 총 ${srcClasStore.length}개\n(통합e 반정보(메인 표)와는 별개라 메인 표엔 영향 없습니다)\n\n계속할까요?`)) return
     try {
-      const res = await fetch('/api/incheon/children', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year, srcClasClear: true }),
-      })
-      const j = await res.json()
-      if (j.success) { setMsg(`🗑 인천시 반정보 ${j.srcCleared}개 삭제 (${year}년)`); await load() }
-      else setMsg(`❌ ${j.error || '삭제 실패'}`)
+      let total = 0
+      for (const y of yrs) {
+        const res = await fetch('/api/incheon/children', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ year: y, srcClasClear: true }),
+        })
+        const j = await res.json()
+        if (j.success) total += Number(j.srcCleared || 0)
+        else { setMsg(`❌ ${j.error || '삭제 실패'}`); return }
+      }
+      setMsg(`🗑 인천시 반정보 ${total}개 삭제 (${yrs.join(', ')}년)`)
+      await load()
     } catch {
       setMsg('❌ 통합e 서버에 연결할 수 없습니다.')
     }
@@ -438,6 +448,23 @@ export default function ClassPage() {
 
   // 보육통합 팝업 열려있는 동안 보육년도 바뀌면 그 연도 저장분을 다시 로드
   useEffect(() => { if (popup === 'cis') loadCisStore(cisYear) }, [popup, cisYear, loadCisStore])
+
+  /** 인천시 반정보 참조본을 보육년도별로 그룹핑 (최신 연도부터) — 인천시 반설정 화면처럼 분리 표시 */
+  const srcClasYears = useMemo(() => {
+    const m = new Map<string, IncheonClas[]>()
+    for (const c of srcClasStore) {
+      if (c.DEL_AT === 'Y') continue
+      const y = String((c as unknown as { _year?: string })._year ?? '')
+      if (!m.has(y)) m.set(y, [])
+      m.get(y)!.push(c)
+    }
+    for (const list of m.values()) {
+      list.sort((a, b) =>
+        (AGE_ORDER[a.AGE_CD] ?? 999) - (AGE_ORDER[b.AGE_CD] ?? 999)
+        || (a.CLAS_NM || '').localeCompare(b.CLAS_NM || '', 'ko'))
+    }
+    return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]))  // 최신 연도 먼저
+  }, [srcClasStore])
 
   // 인천시 화면과 동일 — 삭제된 반(DEL_AT='Y')은 목록에서 제외
   const filtered = rows
@@ -513,7 +540,9 @@ export default function ClassPage() {
     try {
       const res = await fetch(`/api/incheon/children?year=${yr}`)
       const j = res.ok ? await res.json() : null
-      const src = ((j?.srcClasList || []) as IncheonClas[]).filter(c => c.DEL_AT !== 'Y')
+      // 참조본은 최근 3년치가 통째로 오므로 선택 보육년도(_year)만 골라 쓴다
+      const src = ((j?.srcClasList || []) as IncheonClas[])
+        .filter(c => c.DEL_AT !== 'Y' && String((c as unknown as { _year?: string })._year ?? '') === String(yr))
       if (src.length === 0) { setMsg(`${yr}년 인천시 반정보가 없습니다. [🏛 인천시 반정보 → 업데이트]로 먼저 조회하세요.`); setAddRows([mkAddRow()]); return }
       setAddRows(src.map(c => mkAddRow({
         CLAS_NM: c.CLAS_NM || '', CLAS_NM_NRTR: c.CLAS_NM_NRTR || '',
@@ -788,30 +817,43 @@ export default function ClassPage() {
               {popup === 'incheon' ? (
                 srcClasStore.length === 0 ? (
                   <div className="py-10 text-center text-[12px] text-slate-400">
-                    {year}년 인천시 반정보가 없습니다. [🔄 업데이트]를 눌러 인천시에서 조회하세요.<br />
+                    인천시 반정보가 없습니다. [🔄 업데이트]를 눌러 인천시에서 조회하세요 (최근 3년치).<br />
                     <span className="text-[11px]">(조회는 참조용으로만 저장됩니다 — 통합e 반정보(메인 표)에는 자동저장되지 않습니다)</span>
                   </div>
                 ) : (
-                  <table className="w-full text-[11px]">
-                    <thead><tr className="bg-blue-50 border-b border-slate-300">
-                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">통합반명</th>
-                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
-                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">보육통합 반명</th>
-                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">연령</th>
-                      <th className="px-2 py-2 text-center font-bold text-slate-600">상태</th>
-                    </tr></thead>
-                    <tbody>
-                      {srcClasStore.map(c => (
-                        <tr key={c.CLAS_SN} className="border-b border-slate-100">
-                          <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.GRP_CLAS_NM || '-'}</td>
-                          <td className="px-2 py-1.5 text-center border-r border-slate-100">{c.CLAS_NM || '-'}</td>
-                          <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{c.CLAS_NM_NRTR || '-'}</td>
-                          <td className="px-2 py-1.5 text-center border-r border-slate-100">{ageLabel(c.AGE_CD)}</td>
-                          <td className={`px-2 py-1.5 text-center ${c.STTUS === '000' ? 'text-emerald-600' : 'text-slate-400'}`}>{STTUS_LABEL[c.STTUS] || c.STTUS}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  /* 최근 3년치를 인천시 반설정 화면처럼 보육년도별로 분리해 표시 (최신 연도부터) */
+                  <div className="space-y-4">
+                    {srcClasYears.map(([yr, list]) => (
+                      <div key={yr}>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="px-2 py-0.5 text-[11px] font-bold text-white bg-blue-600 rounded">{yr}년</span>
+                          <span className="text-[11px] text-slate-500">반 {list.length}개</span>
+                        </div>
+                        <table className="w-full text-[11px]">
+                          <thead><tr className="bg-blue-50 border-b border-slate-300">
+                            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-10">번호</th>
+                            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">통합반명</th>
+                            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
+                            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">보육통합 반명</th>
+                            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">연령</th>
+                            <th className="px-2 py-2 text-center font-bold text-slate-600">상태</th>
+                          </tr></thead>
+                          <tbody>
+                            {list.map((c, i) => (
+                              <tr key={`${yr}-${c.CLAS_SN}`} className="border-b border-slate-100">
+                                <td className="px-2 py-1.5 text-center text-slate-400 border-r border-slate-100">{i + 1}</td>
+                                <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.GRP_CLAS_NM || '-'}</td>
+                                <td className="px-2 py-1.5 text-center border-r border-slate-100">{c.CLAS_NM || '-'}</td>
+                                <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{c.CLAS_NM_NRTR || '-'}</td>
+                                <td className="px-2 py-1.5 text-center border-r border-slate-100">{ageLabel(c.AGE_CD)}</td>
+                                <td className={`px-2 py-1.5 text-center ${c.STTUS === '000' ? 'text-emerald-600' : 'text-slate-400'}`}>{STTUS_LABEL[c.STTUS] || c.STTUS}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ))}
+                  </div>
                 )
               ) : (
                 cisLoading ? (
