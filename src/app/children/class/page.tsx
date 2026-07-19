@@ -321,12 +321,16 @@ export default function ClassPage() {
     const d8 = (v: unknown) => Number(String(v ?? '').replace(/\D/g, '').slice(0, 8)) || 0
     const m = new Map<string, { type: string; total: Set<string>; withdrawn: Set<string> }>()
     for (const c of cisChildren) {
-      const enter = d8(c.enterDate)
-      const lv = d8(c.leaveDate)
-      const leave = lv || Number.MAX_SAFE_INTEGER   // 미퇴소(현원) = 무한대
-      if (!(enter > 0 && enter < fyEndExcl && leave >= fyStart)) continue
-      const key = String(c._key || `${c.name ?? ''}|${c.birth ?? ''}`)
       const isW = String(c.status) === '퇴소'
+      // ⚠ 퇴소 아동은 입소일(enterDate)이 비어있는 경우가 많다 → 서비스시작일로 보완, 시작 미상이면 퇴소일 기준.
+      const rawStart = String((c._raw as Record<string, unknown> | undefined)?.serviceStartDate ?? '')
+      const start = d8(c.enterDate) || d8(rawStart)
+      const lv = d8(c.leaveDate)
+      const end = lv || (isW ? start : Number.MAX_SAFE_INTEGER)  // 퇴소=퇴소일(없으면 시작일), 현원=무한대
+      const s = start || end                                     // 시작 미상이면 종료(퇴소)일 기준 그 해에 편입
+      // 재원 판정: 시작 ≤ 회계연도말 AND 종료 ≥ 회계연도초
+      if (!(s > 0 && s < fyEndExcl && end >= fyStart)) continue
+      const key = String(c._key || `${c.name ?? ''}|${c.birth ?? ''}`)
       for (const raw of [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]) {
         const s2 = String(raw ?? '').trim()
         // 미배정 반 필드는 '없음' 등으로 오므로 반으로 세지 않는다(휴일/연장/새벽/야간연장 대부분 '없음')
