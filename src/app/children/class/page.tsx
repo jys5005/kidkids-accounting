@@ -328,10 +328,12 @@ export default function ClassPage() {
       const isW = String(c.status) === '퇴소'
       for (const raw of [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]) {
         const s2 = String(raw ?? '').trim()
-        if (!s2) continue
+        // 미배정 반 필드는 '없음' 등으로 오므로 반으로 세지 않는다(휴일/연장/새벽/야간연장 대부분 '없음')
+        if (!s2 || ['없음', '미배정', '해당없음', '-'].includes(s2)) continue
         const mm = s2.match(/\]\s*\[\s*([^\]]*?)\s*\]\s*(.*)$/)
         const type = (mm ? mm[1].trim() : '').replace(/\./g, ',')
         const name = (mm ? mm[2].trim() : s2) || s2
+        if (!name || ['없음', '미배정', '해당없음', '-'].includes(name)) continue
         let e = m.get(name)
         if (!e) { e = { type: '', total: new Set(), withdrawn: new Set() }; m.set(name, e) }
         if (!e.type && type) e.type = type
