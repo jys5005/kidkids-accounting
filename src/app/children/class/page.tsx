@@ -233,22 +233,21 @@ export default function ClassPage() {
     }
   }
 
-  /** 통합e 에서 추가한 반 삭제 (인천시에서 온 반은 서버가 거부) */
+  /** 반 삭제 — 통합e 저장분에서 삭제(인천시 반 포함). 인천시 원본은 못 지워서 다음 [업데이트] 때 되살아남 */
   const handleDelete = async () => {
     const targets = filtered.filter(c => checked.has(c.CLAS_SN))
-    const localOnly = targets.filter(c => c._local)
     if (targets.length === 0) { setMsg('삭제할 반을 선택해주세요.'); return }
-    if (localOnly.length === 0) {
-      setMsg('❌ 인천시에서 가져온 반은 삭제할 수 없습니다 (지워도 인천시엔 남아있어 다시 가져오면 되살아납니다). 통합e 에서 추가한 반만 삭제됩니다.')
-      return
-    }
-    if (!confirm(`통합e 에서 추가한 반 ${localOnly.length}개를 삭제합니다.${targets.length > localOnly.length ? `\n(인천시에서 가져온 ${targets.length - localOnly.length}개는 제외됩니다)` : ''}\n\n계속할까요?`)) return
+    const remoteCount = targets.filter(c => !c._local).length
+    const warn = remoteCount > 0
+      ? `\n\n⚠ 이 중 ${remoteCount}개는 인천시에서 가져온 반입니다. 통합e 저장분에서만 지워지고 인천시 원본은 그대로라, [🏛 인천시 반정보 → 업데이트]를 다시 누르면 되살아납니다.`
+      : ''
+    if (!confirm(`반 ${targets.length}개를 삭제합니다.${warn}\n\n계속할까요?`)) return
     setSaving(true)
     try {
       const res = await fetch('/api/incheon/children', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year, clasDeletes: localOnly.map(c => c.CLAS_SN) }),
+        body: JSON.stringify({ year, clasDeletes: targets.map(c => c.CLAS_SN) }),
       })
       const j = await res.json()
       if (j.success) {
