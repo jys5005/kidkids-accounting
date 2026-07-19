@@ -87,6 +87,15 @@ const AGE_CODE_MAP: Record<string, string> = Object.fromEntries(AGE_OPTIONS.map(
 /** 연령(AGE_CD) → 나열 순서 인덱스 — 표를 0세아→1세아→2세아… 순으로 정렬(딱 봐도 연령 순) */
 const AGE_ORDER: Record<string, number> = Object.fromEntries(AGE_OPTIONS.map((o, i) => [o.cd, i]))
 
+/** 표 컬럼 정렬 키. 연령은 AGE_ORDER(0세→1세…) 기준, 나머지는 한글 가나다. */
+type SortKey = 'clas' | 'nrtr' | 'age' | 'status'
+const SORT_CMP: Record<SortKey, (a: IncheonClas, b: IncheonClas) => number> = {
+  clas:   (a, b) => (a.CLAS_NM || '').localeCompare(b.CLAS_NM || '', 'ko'),
+  nrtr:   (a, b) => (a.CLAS_NM_NRTR || '').localeCompare(b.CLAS_NM_NRTR || '', 'ko'),
+  age:    (a, b) => (AGE_ORDER[a.AGE_CD] ?? 999) - (AGE_ORDER[b.AGE_CD] ?? 999),
+  status: (a, b) => (a.STTUS || '').localeCompare(b.STTUS || ''),
+}
+
 const CLAS_STATUS: Array<{ cd: string; nm: string }> = [
   { cd: '000', nm: '사용' },
   { cd: '999', nm: '미사용' },
@@ -112,6 +121,7 @@ export default function ClassPage() {
   const [msg, setMsg] = useState('')
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const [checked, setChecked] = useState<Set<number>>(new Set())
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'age', dir: 1 }) // 기본=연령 순
 
   const [edits, setEdits] = useState<Record<number, Partial<IncheonClas>>>({})
   const [news, setNews] = useState<NewClas[]>([])
@@ -371,9 +381,9 @@ export default function ClassPage() {
     .filter(c => c.DEL_AT !== 'Y')
     .filter(c => search === '' || (c.CLAS_NM || '').includes(search) || (c.GRP_CLAS_NM || '').includes(search))
     .slice()
-    // 연령 순(0세아→1세아→2세아…) 정렬, 같은 연령은 반명 가나다순
+    // 컬럼 헤더 클릭 정렬(기본=연령 순). 동률이면 반명 가나다순.
     .sort((a, b) =>
-      (AGE_ORDER[a.AGE_CD] ?? 999) - (AGE_ORDER[b.AGE_CD] ?? 999)
+      (SORT_CMP[sort.key](a, b) * sort.dir)
       || (a.CLAS_NM || '').localeCompare(b.CLAS_NM || '', 'ko'))
 
   const toggle = (sn: number) => {
@@ -384,6 +394,11 @@ export default function ClassPage() {
     })
   }
   const allChecked = filtered.length > 0 && filtered.every(c => checked.has(c.CLAS_SN))
+
+  // 컬럼 헤더 클릭 정렬 — 같은 컬럼 다시 클릭하면 오름/내림 토글
+  const toggleSort = (key: SortKey) =>
+    setSort(s => s.key === key ? { key, dir: (s.dir === 1 ? -1 : 1) } : { key, dir: 1 })
+  const sortArrow = (key: SortKey) => sort.key === key ? (sort.dir === 1 ? ' ▲' : ' ▼') : ''
 
   // ── 반 추가 팝업 핸들러 ──
   const mkAddRow = (patch: Partial<NewClas> = {}): NewClas =>
@@ -550,10 +565,10 @@ export default function ClassPage() {
                 onChange={() => setChecked(allChecked ? new Set() : new Set(filtered.map(c => c.CLAS_SN)))}
               />
             </th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[220px]">반명</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[190px]">보육통합 반명</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[150px]">연령</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">상태</th>
+            <th onClick={() => toggleSort('clas')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[220px] cursor-pointer select-none hover:bg-teal-100">반명{sortArrow('clas')}</th>
+            <th onClick={() => toggleSort('nrtr')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[190px] cursor-pointer select-none hover:bg-teal-100">보육통합 반명{sortArrow('nrtr')}</th>
+            <th onClick={() => toggleSort('age')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[150px] cursor-pointer select-none hover:bg-teal-100">연령{sortArrow('age')}</th>
+            <th onClick={() => toggleSort('status')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px] cursor-pointer select-none hover:bg-teal-100">상태{sortArrow('status')}</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600">비고</th>
           </tr></thead>
           <tbody>
