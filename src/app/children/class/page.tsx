@@ -306,30 +306,36 @@ export default function ClassPage() {
   }, [])
 
   /**
-   * 선택 보육년도(cisYear, 3/1~익2/28)에 재원했던 CIS 아동으로 반 목록 도출.
-   *  - 재원 판정: 입소일 ≤ 회계연도말 AND (미퇴소 OR 퇴소일 ≥ 회계연도초)
+   * 선택 보육년도(cisYear, 3/1~익2/28)에 '속한' CIS 아동으로 반 목록 도출.
+   *  - 현원 → 현재 보육년도(오늘 기준)에만 편입.
+   *  - 퇴소 → 퇴소한 그 보육년도에 편입(퇴소일 기준, 없으면 서비스시작일).
+   *    → 연도마다 겹치지 않게 딱 한 해에만 잡힌다(2025년=그해 퇴소 위주 / 2026년=현원+올해 퇴소).
    *  - 반명/반유형은 '[1][ 4.5세이상 반 ] 푸른하늘26' → 유형 '4,5세이상 반' + 반명 '푸른하늘26'
-   *    (유형의 '.' 구분자는 인천시 표기처럼 ',' 로 치환)
-   *  - 같은 반에서 현원/퇴소를 나눠 집계(원아 단위 dedup).
-   * ⚠ CIS 는 아동의 '현재/최종 배정 반'만 주므로, 과년도의 실제 반이 지금과 다르면 현재 반명으로 보인다
-   *   (과거 반 이력은 CIS 응답에 없음). 퇴소 원아는 퇴소 시점 반이라 정확하다.
+   *    (유형의 '.' 구분자는 인천시 표기처럼 ',' 로 치환). 같은 반에서 현원/퇴소 나눠 집계.
+   * ⚠ 현원의 반명은 '현재 반'이라 과년도엔 안 나온다(현재 보육년도에만). 퇴소는 퇴소 시점 반이라 정확.
    */
   const cisClasses = useMemo(() => {
     const Y = Number(cisYear) || new Date().getFullYear()
-    const fyStart = Y * 10000 + 301          // 회계연도초 = Y-03-01
-    const fyEndExcl = (Y + 1) * 10000 + 301  // 회계연도말 다음날 = (Y+1)-03-01 (미만)
+    const now = new Date()
+    const curFY = now.getMonth() + 1 >= 3 ? now.getFullYear() : now.getFullYear() - 1  // 현재 보육년도(3월 시작)
     const d8 = (v: unknown) => Number(String(v ?? '').replace(/\D/g, '').slice(0, 8)) || 0
+    const fyOf = (n: number): number | null => {
+      if (!n) return null
+      const y = Math.floor(n / 10000), mo = Math.floor((n % 10000) / 100)
+      return mo >= 3 ? y : y - 1
+    }
     const m = new Map<string, { type: string; total: Set<string>; withdrawn: Set<string> }>()
     for (const c of cisChildren) {
       const isW = String(c.status) === '퇴소'
-      // ⚠ 퇴소 아동은 입소일(enterDate)이 비어있는 경우가 많다 → 서비스시작일로 보완, 시작 미상이면 퇴소일 기준.
-      const rawStart = String((c._raw as Record<string, unknown> | undefined)?.serviceStartDate ?? '')
-      const start = d8(c.enterDate) || d8(rawStart)
-      const lv = d8(c.leaveDate)
-      const end = lv || (isW ? start : Number.MAX_SAFE_INTEGER)  // 퇴소=퇴소일(없으면 시작일), 현원=무한대
-      const s = start || end                                     // 시작 미상이면 종료(퇴소)일 기준 그 해에 편입
-      // 재원 판정: 시작 ≤ 회계연도말 AND 종료 ≥ 회계연도초
-      if (!(s > 0 && s < fyEndExcl && end >= fyStart)) continue
+      // 현원=현재 보육년도 / 퇴소=퇴소일(없으면 서비스시작일)의 보육년도
+      let belongFY: number | null
+      if (!isW) {
+        belongFY = curFY
+      } else {
+        const rawStart = String((c._raw as Record<string, unknown> | undefined)?.serviceStartDate ?? '')
+        belongFY = fyOf(d8(c.leaveDate) || d8(rawStart))
+      }
+      if (belongFY !== Y) continue
       const key = String(c._key || `${c.name ?? ''}|${c.birth ?? ''}`)
       for (const raw of [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]) {
         const s2 = String(raw ?? '').trim()
@@ -631,7 +637,7 @@ export default function ClassPage() {
                   </div>
                 ) : cisClasses.length === 0 ? (
                   <div className="py-10 text-center text-[12px] text-slate-400">
-                    {cisYear}년 보육년도(3/1~익2/28)에 재원한 보육통합 아동이 없습니다.<br />
+                    {cisYear}년 보육년도에 속한 아동이 없습니다 (현원은 현재 보육년도, 퇴소는 퇴소한 해에 표시).<br />
                     다른 보육년도를 선택해 보세요.
                   </div>
                 ) : (
@@ -661,7 +667,7 @@ export default function ClassPage() {
 
             <div className="px-5 py-3 border-t border-slate-200 text-[11px] text-slate-500">
               {popup === 'cis'
-                ? '※ 보육년도별로 그 해 재원(현원+그해 퇴소)했던 원아 기준입니다. [🔄 업데이트]는 CIS 최신 아동을 다시 불러옵니다. ⚠ CIS 는 현재 반만 주므로 과년도 반명은 지금 반으로 보일 수 있습니다(퇴소 원아는 퇴소 시점 반이라 정확).'
+                ? '※ 현원은 현재 보육년도에, 퇴소 원아는 퇴소한 그 보육년도에 표시됩니다. [🔄 업데이트]는 CIS 최신 아동을 다시 불러옵니다.'
                 : '※ [🔄 업데이트]는 인천시에서 최신 반 목록을 다시 가져옵니다(로컬 에이전트 경유, 수십 초). 편집·저장은 뒤 화면 표에서 하세요.'}
             </div>
           </div>
