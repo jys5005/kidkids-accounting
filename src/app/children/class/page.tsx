@@ -572,7 +572,7 @@ export default function ClassPage() {
                 <form onSubmit={e => { e.preventDefault(); setCisYear(cisYearSel) }} className="flex items-center gap-1.5">
                   <label className="text-[11px] text-slate-500 flex items-center gap-1">
                     보육년도
-                    <select value={cisYearSel} onChange={e => setCisYearSel(e.target.value)} className={`${inputCls} !w-20`}>
+                    <select value={cisYearSel} onChange={e => { setCisYearSel(e.target.value); setCisYear(e.target.value) }} className={`${inputCls} !w-20`}>
                       {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}년</option>)}
                     </select>
                   </label>
