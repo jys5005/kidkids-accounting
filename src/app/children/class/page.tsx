@@ -84,6 +84,8 @@ const AGE_OPTIONS: Array<{ cd: string; nm: string }> = [
 ]
 /** cd → nm 빠른 조회 (표시용). 실측 코드(003 등)와 이름코드(방과후반 등) 모두 커버. */
 const AGE_CODE_MAP: Record<string, string> = Object.fromEntries(AGE_OPTIONS.map(o => [o.cd, o.nm]))
+/** 연령(AGE_CD) → 나열 순서 인덱스 — 표를 0세아→1세아→2세아… 순으로 정렬(딱 봐도 연령 순) */
+const AGE_ORDER: Record<string, number> = Object.fromEntries(AGE_OPTIONS.map((o, i) => [o.cd, i]))
 
 const CLAS_STATUS: Array<{ cd: string; nm: string }> = [
   { cd: '000', nm: '사용' },
@@ -362,6 +364,11 @@ export default function ClassPage() {
   const filtered = rows
     .filter(c => c.DEL_AT !== 'Y')
     .filter(c => search === '' || (c.CLAS_NM || '').includes(search) || (c.GRP_CLAS_NM || '').includes(search))
+    .slice()
+    // 연령 순(0세아→1세아→2세아…) 정렬, 같은 연령은 반명 가나다순
+    .sort((a, b) =>
+      (AGE_ORDER[a.AGE_CD] ?? 999) - (AGE_ORDER[b.AGE_CD] ?? 999)
+      || (a.CLAS_NM || '').localeCompare(b.CLAS_NM || '', 'ko'))
 
   const toggle = (sn: number) => {
     setChecked(prev => {
