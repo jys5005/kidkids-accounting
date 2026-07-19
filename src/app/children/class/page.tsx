@@ -118,7 +118,8 @@ export default function ClassPage() {
 
   // 반정보 참고 팝업 — 'cis'(보육통합) / 'incheon'(인천시). 반정보추가(신규등록)는 팝업과 무관한 공통 기본.
   const [popup, setPopup] = useState<null | 'cis' | 'incheon'>(null)
-  const [cisClasses, setCisClasses] = useState<Array<{ name: string; type: string; count: number }>>([])
+  const [cisChildren, setCisChildren] = useState<Array<Record<string, unknown>>>([])
+  const [cisYear, setCisYear] = useState(year)   // 보육통합 반정보 팝업의 보육년도 필터(기본=현재 보육년도)
   const [cisLoading, setCisLoading] = useState(false)
 
   /**
@@ -286,40 +287,63 @@ export default function ClassPage() {
   }
 
   /**
-   * 보육통합(CIS) 반 목록 — 통합e 가 수집한 CIS 아동(/api/sync/children)이 배정된 반에서 도출.
-   * CIS 반 전용 조회 API 가 따로 없어, 아동의 배정 반명(generalClassId 등)을 distinct 집계한다.
-   * '[1][ 4.5세이상 반 ] 푸른하늘26' 형태 → 반유형 '4.5세이상 반' + 반명 '푸른하늘26' 으로 분리.
+   * 보육통합(CIS) 아동 조회 — 통합e 가 수집한 CIS 아동(/api/sync/children, 현원+퇴소).
+   * CIS 반 전용 조회 API 가 없어 아동의 배정 반(generalClassId 등)에서 반 목록을 도출한다.
+   * 연도 필터는 재조회 없이 클라이언트(useMemo)에서 처리하므로 여기선 원본만 저장한다.
    */
   const fetchCisClasses = useCallback(async () => {
     setCisLoading(true)
     try {
       const res = await fetch('/api/sync/children', { cache: 'no-store' })
       const j = res.ok ? await res.json() : null
-      const kids = (j?.children || []) as Array<Record<string, unknown>>
-      const m = new Map<string, { type: string; count: number }>()
-      for (const c of kids) {
-        const raws = [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]
-        for (const raw of raws) {
-          const s = String(raw ?? '').trim()
-          if (!s) continue
-          const mm = s.match(/\]\s*\[\s*([^\]]*?)\s*\]\s*(.*)$/)
-          // 보육통합 반유형은 '.' 구분자('4.5세이상 반') → 인천시 표기('4,5세이상 반')처럼 ',' 로 통일
-          const type = (mm ? mm[1].trim() : '').replace(/\./g, ',')
-          const name = (mm ? mm[2].trim() : s) || s
-          const cur = m.get(name) || { type: '', count: 0 }
-          cur.count++
-          if (!cur.type && type) cur.type = type
-          m.set(name, cur)
-        }
-      }
-      setCisClasses(Array.from(m, ([name, v]) => ({ name, type: v.type, count: v.count }))
-        .sort((a, b) => a.name.localeCompare(b.name, 'ko')))
+      setCisChildren((j?.children || []) as Array<Record<string, unknown>>)
     } catch {
-      setCisClasses([])
+      setCisChildren([])
     } finally {
       setCisLoading(false)
     }
   }, [])
+
+  /**
+   * 선택 보육년도(cisYear, 3/1~익2/28)에 재원했던 CIS 아동으로 반 목록 도출.
+   *  - 재원 판정: 입소일 ≤ 회계연도말 AND (미퇴소 OR 퇴소일 ≥ 회계연도초)
+   *  - 반명/반유형은 '[1][ 4.5세이상 반 ] 푸른하늘26' → 유형 '4,5세이상 반' + 반명 '푸른하늘26'
+   *    (유형의 '.' 구분자는 인천시 표기처럼 ',' 로 치환)
+   *  - 같은 반에서 현원/퇴소를 나눠 집계(원아 단위 dedup).
+   * ⚠ CIS 는 아동의 '현재/최종 배정 반'만 주므로, 과년도의 실제 반이 지금과 다르면 현재 반명으로 보인다
+   *   (과거 반 이력은 CIS 응답에 없음). 퇴소 원아는 퇴소 시점 반이라 정확하다.
+   */
+  const cisClasses = useMemo(() => {
+    const Y = Number(cisYear) || new Date().getFullYear()
+    const fyStart = Y * 10000 + 301          // 회계연도초 = Y-03-01
+    const fyEndExcl = (Y + 1) * 10000 + 301  // 회계연도말 다음날 = (Y+1)-03-01 (미만)
+    const d8 = (v: unknown) => Number(String(v ?? '').replace(/\D/g, '').slice(0, 8)) || 0
+    const m = new Map<string, { type: string; total: Set<string>; withdrawn: Set<string> }>()
+    for (const c of cisChildren) {
+      const enter = d8(c.enterDate)
+      const lv = d8(c.leaveDate)
+      const leave = lv || Number.MAX_SAFE_INTEGER   // 미퇴소(현원) = 무한대
+      if (!(enter > 0 && enter < fyEndExcl && leave >= fyStart)) continue
+      const key = String(c._key || `${c.name ?? ''}|${c.birth ?? ''}`)
+      const isW = String(c.status) === '퇴소'
+      for (const raw of [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]) {
+        const s2 = String(raw ?? '').trim()
+        if (!s2) continue
+        const mm = s2.match(/\]\s*\[\s*([^\]]*?)\s*\]\s*(.*)$/)
+        const type = (mm ? mm[1].trim() : '').replace(/\./g, ',')
+        const name = (mm ? mm[2].trim() : s2) || s2
+        let e = m.get(name)
+        if (!e) { e = { type: '', total: new Set(), withdrawn: new Set() }; m.set(name, e) }
+        if (!e.type && type) e.type = type
+        e.total.add(key)
+        if (isW) e.withdrawn.add(key)
+      }
+    }
+    return Array.from(m, ([name, v]) => ({
+      name, type: v.type,
+      cur: v.total.size - v.withdrawn.size, left: v.withdrawn.size, total: v.total.size,
+    })).sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+  }, [cisChildren, cisYear])
 
   // 인천시 화면과 동일 — 삭제된 반(DEL_AT='Y')은 목록에서 제외
   const filtered = rows
@@ -390,7 +414,7 @@ export default function ClassPage() {
               {saving ? '저장 중…' : dirtyCount > 0 ? `💾 저장 (${dirtyCount})` : '💾 저장'}
             </button>
             <button
-              onClick={() => { setPopup('cis'); fetchCisClasses() }}
+              onClick={() => { setCisYear(year); setPopup('cis'); fetchCisClasses() }}
               className="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded"
             >
               📚 보육통합 반정보
@@ -538,9 +562,17 @@ export default function ClassPage() {
               </div>
               <div className="text-[11px] text-slate-400">
                 {popup === 'cis'
-                  ? '보육통합(CIS) 아동이 배정된 반 목록입니다 (읽기 전용).'
+                  ? '선택한 보육년도에 재원했던 보육통합(CIS) 아동으로 만든 반 목록입니다 (읽기 전용).'
                   : '인천시 어린이집관리시스템에 등록된 반 목록입니다 (읽기 전용).'}
               </div>
+              {popup === 'cis' && (
+                <label className="text-[11px] text-slate-500 flex items-center gap-1">
+                  보육년도
+                  <select value={cisYear} onChange={e => setCisYear(e.target.value)} className={`${inputCls} !w-20`}>
+                    {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}년</option>)}
+                  </select>
+                </label>
+              )}
               <div className="ml-auto flex items-center gap-1.5">
                 <button
                   onClick={popup === 'cis' ? fetchCisClasses : handleSync}
@@ -582,24 +614,33 @@ export default function ClassPage() {
               ) : (
                 cisLoading ? (
                   <div className="py-10 text-center text-[12px] text-slate-400">불러오는 중…</div>
-                ) : cisClasses.length === 0 ? (
+                ) : cisChildren.length === 0 ? (
                   <div className="py-10 text-center text-[12px] text-slate-400">
                     보육통합(CIS)에서 수집된 아동/반 정보가 없습니다.<br />
                     통합e 에서 CIS 아동을 먼저 수집한 뒤 [🔄 업데이트]를 눌러주세요.
+                  </div>
+                ) : cisClasses.length === 0 ? (
+                  <div className="py-10 text-center text-[12px] text-slate-400">
+                    {cisYear}년 보육년도(3/1~익2/28)에 재원한 보육통합 아동이 없습니다.<br />
+                    다른 보육년도를 선택해 보세요.
                   </div>
                 ) : (
                   <table className="w-full text-[11px]">
                     <thead><tr className="bg-indigo-50 border-b border-slate-300">
                       <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
                       <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반유형(연령)</th>
-                      <th className="px-2 py-2 text-center font-bold text-slate-600">배정 아동 수</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">현원</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">퇴소</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600">계</th>
                     </tr></thead>
                     <tbody>
                       {cisClasses.map(cl => (
                         <tr key={cl.name} className="border-b border-slate-100">
                           <td className="px-2 py-1.5 text-center border-r border-slate-100">{cl.name}</td>
                           <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{cl.type || '-'}</td>
-                          <td className="px-2 py-1.5 text-center text-slate-600">{cl.count}명</td>
+                          <td className="px-2 py-1.5 text-center text-emerald-600 border-r border-slate-100">{cl.cur}</td>
+                          <td className="px-2 py-1.5 text-center text-pink-600 border-r border-slate-100">{cl.left}</td>
+                          <td className="px-2 py-1.5 text-center text-slate-700 font-medium">{cl.total}명</td>
                         </tr>
                       ))}
                     </tbody>
@@ -610,7 +651,7 @@ export default function ClassPage() {
 
             <div className="px-5 py-3 border-t border-slate-200 text-[11px] text-slate-500">
               {popup === 'cis'
-                ? '※ 보육통합 반정보는 참고용입니다. 반 편성은 [＋ 반정보추가]로 통합e 에 등록하세요.'
+                ? '※ 보육년도별로 그 해 재원(현원+그해 퇴소)했던 원아 기준입니다. [🔄 업데이트]는 CIS 최신 아동을 다시 불러옵니다. ⚠ CIS 는 현재 반만 주므로 과년도 반명은 지금 반으로 보일 수 있습니다(퇴소 원아는 퇴소 시점 반이라 정확).'
                 : '※ [🔄 업데이트]는 인천시에서 최신 반 목록을 다시 가져옵니다(로컬 에이전트 경유, 수십 초). 편집·저장은 뒤 화면 표에서 하세요.'}
             </div>
           </div>
