@@ -348,6 +348,27 @@ export default function ChildStatusPage() {
   /** 보육통합(CIS) 아동을 인천시 스키마로 변환한 목록 */
   const cisChildren = useMemo(() => cisRaw.map(cisToIncheon), [cisRaw])
 
+  /**
+   * 신규/편집 폼 코드값 드롭다운 옵션 — 임의로 만들지 않고 이 시설이 실제 수집한 CIS 아동의 값에서 뽑는다.
+   * (출생순위/보육료 지원자격은 보육통합 코드값 필드라 자유 입력이 아니라 드롭다운이어야 함)
+   */
+  const distinctRawValues = (key: string, base: string[] = []): string[] => {
+    const set = new Set<string>(base)
+    for (const c of cisRaw) {
+      const v = String((c._raw ?? {})[key] ?? '').trim()
+      if (v) set.add(v)
+    }
+    return Array.from(set)
+  }
+  const birthOrderOptions = useMemo(
+    () => distinctRawValues('birthOrder', ['첫째', '둘째', '셋째', '넷째', '다섯째']),
+    [cisRaw],
+  )
+  const eligibilityOptions = useMemo(
+    () => distinctRawValues('childcareEligibilityType').sort((a, b) => a.localeCompare(b, 'ko')),
+    [cisRaw],
+  )
+
   /** 지금 화면에 보여줄 목록 — 소스 토글에 따라 전환 */
   const rows = source === 'cis' ? cisChildren : children
   const isCis = source === 'cis'
@@ -1031,7 +1052,13 @@ export default function ChildStatusPage() {
                         <Th>주민번호 구분</Th><Td><input className={inputCls} value={rg('residentIdType')} placeholder="주민등록번호" onChange={e => editRaw(cur.CHIL_SN, 'residentIdType', e.target.value)} /></Td>
                       </tr>
                       <tr className="border-b border-slate-100">
-                        <Th>출생순위</Th><Td><input className={inputCls} value={rg('birthOrder')} onChange={e => editRaw(cur.CHIL_SN, 'birthOrder', e.target.value)} /></Td>
+                        <Th>출생순위</Th><Td>
+                          <select className={inputCls} value={rg('birthOrder')} onChange={e => editRaw(cur.CHIL_SN, 'birthOrder', e.target.value)}>
+                            <option value="">선택</option>
+                            {birthOrderOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                            {rg('birthOrder') && !birthOrderOptions.includes(rg('birthOrder')) && <option value={rg('birthOrder')}>{rg('birthOrder')}</option>}
+                          </select>
+                        </Td>
                         <Th>출생순위 확정</Th><Td>
                           <select className={inputCls} value={rg('birthOrderConfirmedYn')} onChange={e => editRaw(cur.CHIL_SN, 'birthOrderConfirmedYn', e.target.value)}>
                             <option value="">선택</option><option value="Y">예</option><option value="N">아니오</option>
@@ -1039,7 +1066,13 @@ export default function ChildStatusPage() {
                         </Td>
                       </tr>
                       <tr className="border-b border-slate-100">
-                        <Th>보육료 지원자격</Th><Td><input className={inputCls} value={rg('childcareEligibilityType')} onChange={e => editRaw(cur.CHIL_SN, 'childcareEligibilityType', e.target.value)} /></Td>
+                        <Th>보육료 지원자격</Th><Td>
+                          <select className={inputCls} value={rg('childcareEligibilityType')} onChange={e => editRaw(cur.CHIL_SN, 'childcareEligibilityType', e.target.value)}>
+                            <option value="">선택</option>
+                            {eligibilityOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                            {rg('childcareEligibilityType') && !eligibilityOptions.includes(rg('childcareEligibilityType')) && <option value={rg('childcareEligibilityType')}>{rg('childcareEligibilityType')}</option>}
+                          </select>
+                        </Td>
                         <Th>서비스 시작일</Th><Td><input type="date" className={inputCls} value={fmtDate(rg('serviceStartDate'))} onChange={e => editRaw(cur.CHIL_SN, 'serviceStartDate', toRawDate(e.target.value))} /></Td>
                       </tr>
                       <tr className="border-b border-slate-100">
