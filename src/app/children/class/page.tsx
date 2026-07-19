@@ -36,8 +36,7 @@ type IncheonClas = {
 type IncheonCode = { CD_GRP: string; CD: string; CD_NM: string }
 
 /**
- * 인천시 반구분(연령) 전체 목록 — 인천시 어린이집관리시스템 [반 추가] 드롭다운 실제 화면 순서 그대로.
- * (스크린샷 2026-07-18: 반구분 셀렉트 전체 스크롤 캡처)
+ * 반구분(연령) 전체 목록.
  *
  * cd  = AGE_CD (실측 확인된 8개만 코드값, 나머지는 코드 미상 → 이름 자체를 값으로 사용)
  * nm  = 인천시 화면 표기 그대로 (구분자 ',' — 예: '연령혼합반(0,1세)', '4,5세이상 반' (인천시 표기))
@@ -45,27 +44,27 @@ type IncheonCode = { CD_GRP: string; CD: string; CD_NM: string }
  * ✅ 실측 대조 완료 (미소지움 10개 반, page_data incheon-clas):
  *    000=0세아 반 / 001=1세아 반 / 002=2세아 반 / 003=3세아 반 / 008=4,5세이상 반
  *    M01=연령혼합반(0,1세) / T10=연장반(영아) / T11=연장반(유아)   — 전부 일치.
+ *
+ * ⚠ 나열 순서 = 사용자 지정(2026-07-19): "인천시처럼 0세아·1세아·2세아·3세아…" 일관되게.
+ *   → 세아 반(0~5)을 먼저 연속으로, 그다음 연령혼합반 → 연장반 → 특수·기타반.
+ *   (옛날엔 인천시 [반 추가] 화면 스크롤 순서(세아반↔연령혼합반 교대)를 그대로 썼으나,
+ *    보기 어렵다는 피드백으로 세아반을 묶어 순서대로 나열하도록 변경. 코드값은 그대로.)
  */
 const AGE_OPTIONS: Array<{ cd: string; nm: string }> = [
+  // 세아 반 — 0세아부터 순서대로
   { cd: '000', nm: '0세아 반' },
-  { cd: 'M01', nm: '연령혼합반(0,1세)' },
   { cd: '001', nm: '1세아 반' },
-  { cd: '연령혼합반(1,2세)', nm: '연령혼합반(1,2세)' },
   { cd: '002', nm: '2세아 반' },
-  { cd: '연령혼합반(2,3세)', nm: '연령혼합반(2,3세)' },
   { cd: '003', nm: '3세아 반' },
-  { cd: '연령혼합반(3,4세 이상)', nm: '연령혼합반(3,4세 이상)' },
   { cd: '4세아 반', nm: '4세아 반' },
-  { cd: '008', nm: '4,5세이상 반' },
   { cd: '5세아 반', nm: '5세아 반' },
-  { cd: '방과후반', nm: '방과후반' },
-  { cd: '야간연장반', nm: '야간연장반' },
-  { cd: '장애아기본반', nm: '장애아기본반' },
-  { cd: '장애아방과후반', nm: '장애아방과후반' },
-  { cd: '누리장애아반', nm: '누리장애아반' },
-  { cd: '휴일반', nm: '휴일반' },
-  { cd: '시간제독립반(1:3)', nm: '시간제독립반(1:3)' },
-  { cd: '시간제독립반(1:2)', nm: '시간제독립반(1:2)' },
+  { cd: '008', nm: '4,5세이상 반' },
+  // 연령혼합반
+  { cd: 'M01', nm: '연령혼합반(0,1세)' },
+  { cd: '연령혼합반(1,2세)', nm: '연령혼합반(1,2세)' },
+  { cd: '연령혼합반(2,3세)', nm: '연령혼합반(2,3세)' },
+  { cd: '연령혼합반(3,4세 이상)', nm: '연령혼합반(3,4세 이상)' },
+  // 연장반
   { cd: '연장반(0세)', nm: '연장반(0세)' },
   { cd: 'T10', nm: '연장반(영아)' },
   { cd: 'T11', nm: '연장반(유아)' },
@@ -73,6 +72,15 @@ const AGE_OPTIONS: Array<{ cd: string; nm: string }> = [
   { cd: '연장반(0~2세영아)', nm: '연장반(0~2세영아)' },
   { cd: '영·유아 연장반(2~3세)', nm: '영·유아 연장반(2~3세)' },
   { cd: '영·유아 연장반(2~5세)', nm: '영·유아 연장반(2~5세)' },
+  // 특수·기타반
+  { cd: '방과후반', nm: '방과후반' },
+  { cd: '야간연장반', nm: '야간연장반' },
+  { cd: '휴일반', nm: '휴일반' },
+  { cd: '시간제독립반(1:3)', nm: '시간제독립반(1:3)' },
+  { cd: '시간제독립반(1:2)', nm: '시간제독립반(1:2)' },
+  { cd: '장애아기본반', nm: '장애아기본반' },
+  { cd: '장애아방과후반', nm: '장애아방과후반' },
+  { cd: '누리장애아반', nm: '누리장애아반' },
 ]
 /** cd → nm 빠른 조회 (표시용). 실측 코드(003 등)와 이름코드(방과후반 등) 모두 커버. */
 const AGE_CODE_MAP: Record<string, string> = Object.fromEntries(AGE_OPTIONS.map(o => [o.cd, o.nm]))
@@ -107,6 +115,11 @@ export default function ClassPage() {
   const [news, setNews] = useState<NewClas[]>([])
   const [saving, setSaving] = useState(false)
   const dirtyCount = Object.keys(edits).length + news.length
+
+  // 반정보 참고 팝업 — 'cis'(보육통합) / 'incheon'(인천시). 반정보추가(신규등록)는 팝업과 무관한 공통 기본.
+  const [popup, setPopup] = useState<null | 'cis' | 'incheon'>(null)
+  const [cisClasses, setCisClasses] = useState<Array<{ name: string; type: string; count: number }>>([])
+  const [cisLoading, setCisLoading] = useState(false)
 
   /**
    * 연령 코드 후보 — 인천시 공통코드에서 찾는다.
@@ -272,6 +285,41 @@ export default function ClassPage() {
     }
   }
 
+  /**
+   * 보육통합(CIS) 반 목록 — 통합e 가 수집한 CIS 아동(/api/sync/children)이 배정된 반에서 도출.
+   * CIS 반 전용 조회 API 가 따로 없어, 아동의 배정 반명(generalClassId 등)을 distinct 집계한다.
+   * '[1][ 4.5세이상 반 ] 푸른하늘26' 형태 → 반유형 '4.5세이상 반' + 반명 '푸른하늘26' 으로 분리.
+   */
+  const fetchCisClasses = useCallback(async () => {
+    setCisLoading(true)
+    try {
+      const res = await fetch('/api/sync/children', { cache: 'no-store' })
+      const j = res.ok ? await res.json() : null
+      const kids = (j?.children || []) as Array<Record<string, unknown>>
+      const m = new Map<string, { type: string; count: number }>()
+      for (const c of kids) {
+        const raws = [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]
+        for (const raw of raws) {
+          const s = String(raw ?? '').trim()
+          if (!s) continue
+          const mm = s.match(/\]\s*\[\s*([^\]]*?)\s*\]\s*(.*)$/)
+          const type = mm ? mm[1].trim() : ''
+          const name = (mm ? mm[2].trim() : s) || s
+          const cur = m.get(name) || { type: '', count: 0 }
+          cur.count++
+          if (!cur.type && type) cur.type = type
+          m.set(name, cur)
+        }
+      }
+      setCisClasses(Array.from(m, ([name, v]) => ({ name, type: v.type, count: v.count }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'ko')))
+    } catch {
+      setCisClasses([])
+    } finally {
+      setCisLoading(false)
+    }
+  }, [])
+
   // 인천시 화면과 동일 — 삭제된 반(DEL_AT='Y')은 목록에서 제외
   const filtered = rows
     .filter(c => c.DEL_AT !== 'Y')
@@ -341,11 +389,16 @@ export default function ClassPage() {
               {saving ? '저장 중…' : dirtyCount > 0 ? `💾 저장 (${dirtyCount})` : '💾 저장'}
             </button>
             <button
-              onClick={handleSync}
-              disabled={syncing}
-              className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded"
+              onClick={() => { setPopup('cis'); fetchCisClasses() }}
+              className="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded"
             >
-              {syncing ? '가져오는 중…' : '📥 인천시에서 가져오기'}
+              📚 보육통합 반정보
+            </button>
+            <button
+              onClick={() => setPopup('incheon')}
+              className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded"
+            >
+              🏛 인천시 반정보
             </button>
           </div>
         </div>
@@ -377,7 +430,7 @@ export default function ClassPage() {
             ) : filtered.length === 0 && news.length === 0 ? (
               <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">
                 {rows.length === 0
-                  ? '저장된 반이 없습니다. [📥 인천시에서 가져오기]를 눌러주세요.'
+                  ? '저장된 반이 없습니다. [＋ 반정보추가]로 직접 등록하거나 [🏛 인천시 반정보 → 업데이트]를 눌러주세요.'
                   : '검색 결과가 없습니다.'}
               </td></tr>
             ) : filtered.map(c => {
@@ -468,11 +521,100 @@ export default function ClassPage() {
             {dirtyCount > 0 && <span className="text-amber-600 font-medium">✏️ 미저장 {dirtyCount}건</span>}
             <span className="ml-auto text-slate-400">
               <b className="text-slate-500">수정·추가는 통합e 에만 저장되고 인천시 원본은 바뀌지 않습니다</b>
-              {' '}— [인천시에서 가져오기]를 다시 누르면 인천시 값으로 덮어써집니다.
+              {' '}— [🏛 인천시 반정보 → 업데이트]를 누르면 인천시 값으로 덮어써집니다.
             </span>
           </div>
         )}
       </div>
+
+      {/* 반정보 참고 팝업 — [보육통합 반정보] / [인천시 반정보]. 읽기 전용 + [업데이트] */}
+      {popup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setPopup(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[760px] max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-slate-200 flex items-center gap-2 flex-wrap">
+              <div className="text-base font-bold text-slate-800">
+                {popup === 'cis' ? '📚 보육통합 반정보' : '🏛 인천시 반정보'}
+              </div>
+              <div className="text-[11px] text-slate-400">
+                {popup === 'cis'
+                  ? '보육통합(CIS) 아동이 배정된 반 목록입니다 (읽기 전용).'
+                  : '인천시 어린이집관리시스템에 등록된 반 목록입니다 (읽기 전용).'}
+              </div>
+              <div className="ml-auto flex items-center gap-1.5">
+                <button
+                  onClick={popup === 'cis' ? fetchCisClasses : handleSync}
+                  disabled={popup === 'cis' ? cisLoading : syncing}
+                  className="px-3 py-1.5 text-[11px] font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 rounded-lg"
+                >
+                  {(popup === 'cis' ? cisLoading : syncing) ? '업데이트 중…' : '🔄 업데이트'}
+                </button>
+                <button onClick={() => setPopup(null)} className="ml-1 px-2 text-slate-400 hover:text-slate-700 text-xl leading-none">✕</button>
+              </div>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex-1">
+              {popup === 'incheon' ? (
+                filtered.length === 0 ? (
+                  <div className="py-10 text-center text-[12px] text-slate-400">저장된 인천시 반이 없습니다. [🔄 업데이트]를 눌러 인천시에서 가져오세요.</div>
+                ) : (
+                  <table className="w-full text-[11px]">
+                    <thead><tr className="bg-blue-50 border-b border-slate-300">
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">통합반명</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">보육통합 반명</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">연령</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600">상태</th>
+                    </tr></thead>
+                    <tbody>
+                      {filtered.map(c => (
+                        <tr key={c.CLAS_SN} className="border-b border-slate-100">
+                          <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.GRP_CLAS_NM || '-'}</td>
+                          <td className="px-2 py-1.5 text-center border-r border-slate-100">{c.CLAS_NM || '-'}</td>
+                          <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{c.CLAS_NM_NRTR || '-'}</td>
+                          <td className="px-2 py-1.5 text-center border-r border-slate-100">{ageLabel(c.AGE_CD)}</td>
+                          <td className={`px-2 py-1.5 text-center ${c.STTUS === '000' ? 'text-emerald-600' : 'text-slate-400'}`}>{STTUS_LABEL[c.STTUS] || c.STTUS}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )
+              ) : (
+                cisLoading ? (
+                  <div className="py-10 text-center text-[12px] text-slate-400">불러오는 중…</div>
+                ) : cisClasses.length === 0 ? (
+                  <div className="py-10 text-center text-[12px] text-slate-400">
+                    보육통합(CIS)에서 수집된 아동/반 정보가 없습니다.<br />
+                    통합e 에서 CIS 아동을 먼저 수집한 뒤 [🔄 업데이트]를 눌러주세요.
+                  </div>
+                ) : (
+                  <table className="w-full text-[11px]">
+                    <thead><tr className="bg-indigo-50 border-b border-slate-300">
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반유형(연령)</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600">배정 아동 수</th>
+                    </tr></thead>
+                    <tbody>
+                      {cisClasses.map(cl => (
+                        <tr key={cl.name} className="border-b border-slate-100">
+                          <td className="px-2 py-1.5 text-center border-r border-slate-100">{cl.name}</td>
+                          <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{cl.type || '-'}</td>
+                          <td className="px-2 py-1.5 text-center text-slate-600">{cl.count}명</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )
+              )}
+            </div>
+
+            <div className="px-5 py-3 border-t border-slate-200 text-[11px] text-slate-500">
+              {popup === 'cis'
+                ? '※ 보육통합 반정보는 참고용입니다. 반 편성은 [＋ 반정보추가]로 통합e 에 등록하세요.'
+                : '※ [🔄 업데이트]는 인천시에서 최신 반 목록을 다시 가져옵니다(로컬 에이전트 경유, 수십 초). 편집·저장은 뒤 화면 표에서 하세요.'}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
