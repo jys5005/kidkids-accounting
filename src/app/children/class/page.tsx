@@ -452,7 +452,7 @@ export default function ClassPage() {
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-[11px]">
-          {/* 컬럼 구성 = 인천시 ClasSetting.xml 그대로: 선택/통합반명/반명/보육통합 반명/연령/상태/비고 */}
+          {/* 컬럼 구성 = 선택/반명/보육통합 반명/연령/상태/비고 (통합반명은 반명과 중복이라 화면에서 제외, GRP_CLAS_NM 데이터는 유지) */}
           <thead><tr className="bg-teal-50 border-b border-slate-300">
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[45px]">
               <input
@@ -461,8 +461,7 @@ export default function ClassPage() {
                 onChange={() => setChecked(allChecked ? new Set() : new Set(filtered.map(c => c.CLAS_SN)))}
               />
             </th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[160px]">통합반명</th>
-            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[190px]">반명</th>
+            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[220px]">반명</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[190px]">보육통합 반명</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[150px]">연령</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px]">상태</th>
@@ -470,9 +469,9 @@ export default function ClassPage() {
           </tr></thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">불러오는 중…</td></tr>
+              <tr><td colSpan={6} className="px-2 py-8 text-center text-slate-400">불러오는 중…</td></tr>
             ) : filtered.length === 0 && news.length === 0 ? (
-              <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">
+              <tr><td colSpan={6} className="px-2 py-8 text-center text-slate-400">
                 {rows.length === 0
                   ? '저장된 반이 없습니다. [＋ 반정보추가]로 직접 등록하거나 [🏛 인천시 반정보 → 업데이트]를 눌러주세요.'
                   : '검색 결과가 없습니다.'}
@@ -484,12 +483,11 @@ export default function ClassPage() {
                 <td className="px-2 py-1.5 text-center border-r border-slate-100">
                   <input type="checkbox" checked={checked.has(c.CLAS_SN)} onChange={() => toggle(c.CLAS_SN)} />
                 </td>
-                <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">
-                  {c.GRP_CLAS_NM || '-'}
-                  {c._local && <span className="ml-1 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 추가한 반 — 인천시에는 없습니다">통합e</span>}
-                </td>
                 <td className="px-1 py-1 border-r border-slate-100">
-                  <input value={valueOf(c, 'CLAS_NM')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM', e.target.value)} className={editCls} />
+                  <div className="flex items-center gap-1">
+                    {c._local && <span className="shrink-0 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 추가한 반 — 인천시에는 없습니다">통합e</span>}
+                    <input value={valueOf(c, 'CLAS_NM')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM', e.target.value)} className={`${editCls} flex-1 min-w-0`} />
+                  </div>
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <input value={valueOf(c, 'CLAS_NM_NRTR')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM_NRTR', e.target.value)} className={editCls} />
@@ -530,11 +528,11 @@ export default function ClassPage() {
                 <td className="px-2 py-1.5 text-center border-r border-slate-100">
                   <button onClick={() => setNews(p => p.filter(x => x.key !== n.key))} className="text-rose-500 hover:text-rose-700" title="이 행 취소">✕</button>
                 </td>
-                <td className="px-2 py-1.5 text-center text-slate-400 border-r border-slate-100">
-                  <span className="px-1 py-0.5 text-[9px] bg-violet-200 text-violet-800 rounded">신규</span>
-                </td>
                 <td className="px-1 py-1 border-r border-slate-100">
-                  <input value={n.CLAS_NM} onChange={e => editNew(n.key, 'CLAS_NM', e.target.value)} placeholder="반명 (필수)" className={`${editCls} border-slate-300 bg-white`} />
+                  <div className="flex items-center gap-1">
+                    <span className="shrink-0 px-1 py-0.5 text-[9px] bg-violet-200 text-violet-800 rounded">신규</span>
+                    <input value={n.CLAS_NM} onChange={e => editNew(n.key, 'CLAS_NM', e.target.value)} placeholder="반명 (필수)" className={`${editCls} flex-1 min-w-0 border-slate-300 bg-white`} />
+                  </div>
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <input value={n.CLAS_NM_NRTR} onChange={e => editNew(n.key, 'CLAS_NM_NRTR', e.target.value)} placeholder="보육통합 반명" className={`${editCls} border-slate-300 bg-white`} />
