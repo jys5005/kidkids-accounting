@@ -130,6 +130,7 @@ export default function ClassPage() {
   const [addOpen, setAddOpen] = useState(false)
   const [addRows, setAddRows] = useState<NewClas[]>([])
   const [addBusy, setAddBusy] = useState(false)
+  const [addYear, setAddYear] = useState(year)   // 반 추가 팝업의 저장 대상 보육년도
 
   /**
    * 연령 코드 후보 — 인천시 공통코드에서 찾는다.
@@ -387,7 +388,7 @@ export default function ClassPage() {
   // ── 반 추가 팝업 핸들러 ──
   const mkAddRow = (patch: Partial<NewClas> = {}): NewClas =>
     ({ key: addKeyRef.current++, CLAS_NM: '', CLAS_NM_NRTR: '', AGE_CD: '', STTUS: '000', RM: '', ...patch })
-  const openAdd = () => { setAddRows([mkAddRow()]); setAddOpen(true) }
+  const openAdd = () => { setAddYear(year); setAddRows([mkAddRow()]); setAddOpen(true) }
   const addEmptyRow = () => setAddRows(p => [...p, mkAddRow()])
   const editAddRow = (key: number, field: keyof Omit<NewClas, 'key'>, v: string) =>
     setAddRows(p => p.map(r => r.key === key ? { ...r, [field]: v } : r))
@@ -440,12 +441,18 @@ export default function ClassPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          year,
+          year: addYear,
           clasAdds: valid.map(r => ({ CLAS_NM: r.CLAS_NM, CLAS_NM_NRTR: r.CLAS_NM_NRTR, AGE_CD: r.AGE_CD, STTUS: r.STTUS, RM: r.RM })),
         }),
       })
       const j = await res.json()
-      if (j.success) { setMsg(`💾 반 ${j.added ?? valid.length}개 추가 (통합e 에만 저장 — 인천시 원본은 그대로입니다)`); setAddOpen(false); await load() }
+      if (j.success) {
+        setMsg(`💾 ${addYear}년 반 ${j.added ?? valid.length}개 추가 (통합e 에만 저장 — 인천시 원본은 그대로입니다)`)
+        setAddOpen(false)
+        // 저장한 연도로 화면 전환(다르면) → 방금 추가한 반이 보이게. 같으면 그냥 새로고침.
+        if (addYear !== year) { setEdits({}); setNews([]); setChecked(new Set()); setYear(addYear) }
+        else await load()
+      }
       else setMsg(`❌ ${j.error || '추가 실패'}`)
     } catch { setMsg('❌ 통합e 서버에 연결할 수 없습니다.') }
     finally { setAddBusy(false) }
@@ -752,7 +759,13 @@ export default function ClassPage() {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-[860px] max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-slate-200 flex items-center gap-2 flex-wrap">
               <div className="text-base font-bold text-slate-800">＋ 반 추가</div>
-              <div className="text-[11px] text-slate-400">여러 반을 한 번에 등록 — 자동채움으로 빠르게 세팅하세요.</div>
+              <label className="text-[11px] text-slate-600 flex items-center gap-1">
+                보육년도
+                <select value={addYear} onChange={e => setAddYear(e.target.value)} className={`${inputCls} !w-20`}>
+                  {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}년</option>)}
+                </select>
+              </label>
+              <div className="text-[11px] text-slate-400 hidden lg:block">선택한 보육년도에 저장됩니다.</div>
               <div className="ml-auto flex items-center gap-1.5">
                 <button onClick={fillFromCis} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 rounded">📚 보육통합 반 자동채움</button>
                 <button onClick={fillFromIncheon} disabled={addBusy} className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded">🏛 인천시 반정보 세팅</button>
