@@ -84,6 +84,8 @@ const AGE_OPTIONS: Array<{ cd: string; nm: string }> = [
 ]
 /** cd → nm 빠른 조회 (표시용). 실측 코드(003 등)와 이름코드(방과후반 등) 모두 커버. */
 const AGE_CODE_MAP: Record<string, string> = Object.fromEntries(AGE_OPTIONS.map(o => [o.cd, o.nm]))
+/** nm → cd 역조회 — 보육통합 반유형 라벨('3세아 반')을 통합e AGE_CD('003')로 맞출 때 쓴다. */
+const AGE_NAME_MAP: Record<string, string> = Object.fromEntries(AGE_OPTIONS.map(o => [o.nm, o.cd]))
 /** 연령(AGE_CD) → 나열 순서 인덱스 — 표를 0세아→1세아→2세아… 순으로 정렬(딱 봐도 연령 순) */
 const AGE_ORDER: Record<string, number> = Object.fromEntries(AGE_OPTIONS.map((o, i) => [o.cd, i]))
 
@@ -184,6 +186,10 @@ export default function ClassPage() {
   const [cisYearSel, setCisYearSel] = useState(year) // 드롭다운 선택값(대기) — [조회] 눌러야 cisYear 로 반영
   const [cisLoading, setCisLoading] = useState(false)
   const [cisClasStore, setCisClasStore] = useState<CisClas[]>([]) // 보육통합 반정보(저장분, incheon-cis-clas) — 인천시와 별개
+  // ★ 등록여부 비교용 — cisYear 기준 통합e 반정보(incheon-clas). 팝업 연도가 메인 표 연도와 달라도
+  //   그 연도 기준으로 정확히 비교하려고 별도로 들고 있는다(같은 GET 응답의 clasList 를 재활용).
+  const [cisCmpRows, setCisCmpRows] = useState<IncheonClas[]>([])
+  const [cisRegBusy, setCisRegBusy] = useState(false)
   const [srcClasStore, setSrcClasStore] = useState<IncheonClas[]>([]) // 인천시 반정보 참조본(incheon-src-clas) — 통합e 작업본과 별개
 
   // 반 추가 팝업 — 여러 반을 표로 입력 → clasAdds 저장. 자동채움: 보육통합/인천시 반에서 세팅.
@@ -398,9 +404,77 @@ export default function ClassPage() {
     try {
       const res = await fetch(`/api/incheon/children?year=${y}`)
       const j = await res.json()
-      if (j.success) setCisClasStore((j.cisClasList || []) as CisClas[])
+      if (j.success) {
+        setCisClasStore((j.cisClasList || []) as CisClas[])
+        // 같은 응답의 통합e 작업본(clasList)도 받아둔다 — 행별 [등록] 버튼의 등록여부 판정용
+        setCisCmpRows((j.clasList || []) as IncheonClas[])
+      }
     } catch { /* 무시 */ }
   }, [])
+
+  /** 보육통합 반유형 라벨 → 통합e AGE_CD. 목록에 없는 낯선 라벨은 라벨 자체를 코드로 쓴다(AGE_OPTIONS 관례). */
+  const cisAgeCd = useCallback((type: string): string => AGE_NAME_MAP[type] ?? (type || ''), [])
+
+  /**
+   * 보육통합 반이 통합e 반정보(incheon-clas)에 이미 등록됐는지 판정.
+   *   'same' → 반명 매칭 + 연령까지 일치 → 재등록 불필요(회색 비활성)
+   *   'diff' → 반명은 있는데 연령이 다름 → [업데이트](연령·반명을 보육통합 기준으로 맞춤)
+   *   'none' → 통합e 에 없음 → [등록]
+   * 반명은 통합e 의 CLAS_NM / CLAS_NM_NRTR 어느 쪽과 같아도 같은 반으로 본다.
+   */
+  const cisRegState = useCallback((cl: CisClas): { state: 'same' | 'diff' | 'none'; row?: IncheonClas } => {
+    const nm = (cl.name || '').trim()
+    if (!nm) return { state: 'none' }
+    const row = cisCmpRows.find(r => (r.CLAS_NM || '').trim() === nm || (r.CLAS_NM_NRTR || '').trim() === nm)
+    if (!row) return { state: 'none' }
+    return { state: (row.AGE_CD || '') === cisAgeCd(cl.type) ? 'same' : 'diff', row }
+  }, [cisCmpRows, cisAgeCd])
+
+  /** 아직 통합e 에 반영 안 된 보육통합 반(등록 필요 + 연령 불일치) — [일괄등록] 대상 */
+  const cisPending = useMemo(
+    () => cisClasStore.filter(cl => cisRegState(cl).state !== 'same'),
+    [cisClasStore, cisRegState],
+  )
+
+  /**
+   * 보육통합 반을 통합e 반정보로 등록/갱신.
+   *  - 없으면 clasAdds(신규), 연령이 다르면 clasEdits(갱신)
+   *  - **반명은 보육통합 기준으로 통일** — CLAS_NM 과 CLAS_NM_NRTR 을 모두 보육통합 반명으로 맞춘다
+   *  - 저장 대상 보육년도는 팝업에서 고른 cisYear (메인 표 연도와 달라도 그 연도에 저장)
+   */
+  const registerCisClasses = useCallback(async (targets: CisClas[]) => {
+    const adds: Array<Record<string, string>> = []
+    const upds: Array<Record<string, unknown>> = []
+    for (const cl of targets) {
+      const { state, row } = cisRegState(cl)
+      const AGE_CD = cisAgeCd(cl.type)
+      if (state === 'none') {
+        adds.push({ CLAS_NM: cl.name, CLAS_NM_NRTR: cl.name, AGE_CD, STTUS: '000', RM: '' })
+      } else if (state === 'diff' && row) {
+        upds.push({ CLAS_SN: row.CLAS_SN, CLAS_NM: cl.name, CLAS_NM_NRTR: cl.name, AGE_CD })
+      }
+    }
+    if (!adds.length && !upds.length) { setMsg('등록할 반이 없습니다 — 모두 등록되어 있습니다.'); return }
+    setCisRegBusy(true)
+    try {
+      const res = await fetch('/api/incheon/children', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year: cisYear, clasAdds: adds, clasEdits: upds }),
+      })
+      const j = await res.json()
+      if (j.success) {
+        const parts = [j.added ? `등록 ${j.added}` : '', j.updated ? `갱신 ${j.updated}` : ''].filter(Boolean).join(' · ')
+        setMsg(`💾 통합e 반정보에 ${parts} (${cisYear}년) — 인천시 원본은 그대로입니다`)
+        await loadCisStore(cisYear)          // 비교용 clasList 갱신 → 버튼이 즉시 '등록됨'으로 바뀜
+        if (cisYear === year) await load()   // 뒤 화면 메인 표도 같은 연도면 같이 갱신
+      } else setMsg(`❌ ${j.error || '등록 실패'}`)
+    } catch {
+      setMsg('❌ 통합e 서버에 연결할 수 없습니다.')
+    } finally {
+      setCisRegBusy(false)
+    }
+  }, [cisRegState, cisAgeCd, cisYear, year, loadCisStore, load])
 
   /**
    * [🔄 업데이트](보육통합) — CIS 아동을 실시간 조회해 그 보육년도 반을 도출하고
@@ -790,6 +864,19 @@ export default function ClassPage() {
                 </form>
               )}
               <div className="ml-auto flex items-center gap-1.5">
+                {/* ★ 일괄등록 — 통합e 에 아직 없거나 연령이 다른 반만 골라 한 번에 등록/갱신 */}
+                {popup === 'cis' && cisClasStore.length > 0 && (
+                  <button
+                    onClick={() => registerCisClasses(cisPending)}
+                    disabled={cisRegBusy || cisPending.length === 0}
+                    title={cisPending.length === 0
+                      ? '모든 반이 통합e 반정보에 등록되어 있습니다'
+                      : `통합e 에 없는 반 ${cisPending.length}개를 한 번에 등록합니다`}
+                    className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 rounded-lg"
+                  >
+                    {cisRegBusy ? '등록 중…' : cisPending.length === 0 ? '✓ 전부 등록됨' : `＋ 일괄등록 (${cisPending.length})`}
+                  </button>
+                )}
                 <button
                   onClick={popup === 'cis' ? handleCisUpdate : handleSync}
                   disabled={popup === 'cis' ? cisLoading : syncing}
@@ -870,18 +957,40 @@ export default function ClassPage() {
                       <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반유형(연령)</th>
                       <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">현원</th>
                       <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">퇴소</th>
-                      <th className="px-2 py-2 text-center font-bold text-slate-600">계</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">계</th>
+                      <th className="px-2 py-2 text-center font-bold text-slate-600 w-24">등록</th>
                     </tr></thead>
                     <tbody>
-                      {cisClasStore.map(cl => (
+                      {cisClasStore.map(cl => {
+                        const { state } = cisRegState(cl)
+                        return (
                         <tr key={cl.name} className="border-b border-slate-100">
                           <td className="px-2 py-1.5 text-center border-r border-slate-100">{cl.name}</td>
                           <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{cl.type || '-'}</td>
                           <td className="px-2 py-1.5 text-center text-emerald-600 border-r border-slate-100">{cl.cur}</td>
                           <td className="px-2 py-1.5 text-center text-pink-600 border-r border-slate-100">{cl.left}</td>
-                          <td className="px-2 py-1.5 text-center text-slate-700 font-medium">{cl.total}명</td>
+                          <td className="px-2 py-1.5 text-center text-slate-700 font-medium border-r border-slate-100">{cl.total}명</td>
+                          {/* 등록됨(연령까지 일치) → 회색 비활성 / 연령 다름 → 업데이트 / 없음 → 등록 */}
+                          <td className="px-2 py-1.5 text-center">
+                            {state === 'same' ? (
+                              <span
+                                title="통합e 반정보에 같은 반명·연령으로 이미 등록되어 있습니다"
+                                className="inline-block px-2 py-1 text-[10px] font-bold text-slate-400 bg-slate-100 border border-slate-200 rounded cursor-default"
+                              >✓ 등록됨</span>
+                            ) : (
+                              <button
+                                onClick={() => registerCisClasses([cl])}
+                                disabled={cisRegBusy}
+                                title={state === 'diff'
+                                  ? '통합e 에 같은 반명이 있으나 연령이 다릅니다 — 연령·반명을 보육통합 기준으로 갱신합니다'
+                                  : '통합e 반정보에 이 반을 새로 등록합니다'}
+                                className="px-2 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded"
+                              >{state === 'diff' ? '↻ 업데이트' : '＋ 등록'}</button>
+                            )}
+                          </td>
                         </tr>
-                      ))}
+                        )
+                      })}
                     </tbody>
                   </table>
                 )
@@ -890,7 +999,7 @@ export default function ClassPage() {
 
             <div className="px-5 py-3 border-t border-slate-200 text-[11px] text-slate-500">
               {popup === 'cis'
-                ? '※ 현원은 현재 보육년도에, 퇴소 원아는 퇴소한 그 보육년도에 표시됩니다. [🔄 업데이트]는 CIS 최신 아동을 다시 불러옵니다.'
+                ? '※ 현원은 현재 보육년도에, 퇴소 원아는 퇴소한 그 보육년도에 표시됩니다. [🔄 업데이트]는 CIS 최신 아동을 다시 불러옵니다. · [＋ 등록]은 이 반을 통합e 반정보에 넣습니다(반명은 보육통합 기준으로 통일). 반명·연령이 이미 같으면 [✓ 등록됨]으로 잠기고, 연령만 다르면 [↻ 업데이트]로 맞춥니다.'
                 : '※ [🔄 업데이트]는 인천시에서 최신 반 목록을 다시 가져옵니다(로컬 에이전트 경유, 수십 초). 편집·저장은 뒤 화면 표에서 하세요.'}
             </div>
           </div>
