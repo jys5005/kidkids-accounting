@@ -21,6 +21,7 @@ const selCls = 'w-full text-center text-[11px] px-0.5 py-0.5 rounded border bord
 /**
  * 출처 뱃지 — 3칸 그리드의 한 슬롯을 꽉 채우는 고정 규격.
  * 색은 저장소별 고정: 통합e=violet / 보육통합(CIS)=indigo / 인천시=blue.
+ * ★ 읽기 전용 표시(입력칸 아님)라 본문 11px 보다 작게 — 눈에 덜 걸리게 9px.
  * (Tailwind purge 때문에 클래스 문자열을 조립하지 않고 통째로 적는다)
  */
 const BADGE = {
@@ -29,9 +30,9 @@ const BADGE = {
   blue:   'bg-blue-100 text-blue-700',
 } as const
 const badgeCls = (tone: keyof typeof BADGE) =>
-  `px-1 py-[3px] text-[10px] leading-none text-center rounded font-medium ${BADGE[tone]}`
+  `px-0.5 py-[2px] text-[9px] leading-none text-center rounded font-medium ${BADGE[tone]}`
 /** 없는 출처 자리 — 자리만 차지해서 세로 정렬을 유지한다 */
-const badgeEmptyCls = 'py-[3px] text-[10px] leading-none rounded border border-dashed border-slate-200'
+const badgeEmptyCls = 'py-[2px] text-[9px] leading-none rounded border border-dashed border-slate-200'
 
 /** 인천시 반 (ClasConfigList.do → ClasList[]) — 필드명 원본 그대로 */
 type IncheonClas = {
@@ -208,6 +209,76 @@ export default function ClassPage() {
   const [srcClasStore, setSrcClasStore] = useState<IncheonClas[]>([]) // 인천시 반정보 참조본(incheon-src-clas) — 통합e 작업본과 별개
   // 메인 표 [CIS] 뱃지용 — 조회연도의 보육통합 반명 집합(load 에서 채움). 팝업용 cisClasStore 와 별개.
   const [cisNamesOfYear, setCisNamesOfYear] = useState<Set<string>>(new Set())
+  // 메인 표 [보육통합 원아수] 컬럼용 — 보육통합 반명 → 그 반의 실제 원아 카운트(현원/퇴소/계).
+  // CIS 아동의 배정 반에서 도출된 값이라 통합e 가 임의로 만든 숫자가 아니다(deriveCisClasses 참조).
+  const [cisCountByName, setCisCountByName] = useState<Map<string, CisClas>>(new Map())
+
+  /*
+   * 인천시 로그인 세션 — [인천형] 뱃지 클릭으로 등록한다.
+   * ⚠ 여기서 보는 건 "세션쿠키가 저장돼 있는가"(exists)지 "지금 살아있는가"가 아니다.
+   *   살아있는지는 통합e 의 keepalive 프로브가 20분마다 따로 판정한다. 그래서 뱃지에는
+   *   '등록됨 + 저장시각'만 쓰고, 만료된 것 같으면 다시 눌러 재로그인하도록 안내한다.
+   */
+  const [incheonSession, setIncheonSession] = useState<{ exists: boolean; savedAt?: string } | null>(null)
+  const [incheonLoginBusy, setIncheonLoginBusy] = useState(false)
+
+  const reloadIncheonSession = useCallback(async () => {
+    try {
+      const j = await fetch('/api/incheon/session-status').then(r => r.json())
+      setIncheonSession(j.success ? { exists: !!j.exists, savedAt: j.savedAt } : { exists: false })
+    } catch { setIncheonSession({ exists: false }) }
+  }, [])
+  useEffect(() => { reloadIncheonSession() }, [reloadIncheonSession])
+
+  /**
+   * [인천형] 뱃지 클릭 — 인천시 공동인증서(UniSign) 로그인 → 이어서 아동관리 > 반설정 화면까지 이동.
+   * 화면은 원장님 PC 브라우저(에이전트가 띄운 창)에 열린다.
+   * ⚠ 로컬 에이전트 경유라 로그인만 최대 5분, 화면 이동에 추가로 수십 초 걸린다.
+   *   로그인은 됐는데 이동만 실패할 수 있어(탭 라벨 변동 등) 두 단계를 따로 보고한다.
+   */
+  const handleIncheonLogin = useCallback(async () => {
+    if (incheonLoginBusy) return
+    if (!confirm('인천시에 공동인증서로 로그인한 뒤 [아동관리 > 반설정] 화면까지 엽니다.\n원장님 PC의 로컬 에이전트를 통해 실행되며 최대 5분까지 걸립니다.\n\n계속할까요?')) return
+    setIncheonLoginBusy(true)
+    setMsg('⏳ 인천시 로그인 중… (에이전트가 인증서로 로그인합니다, 최대 5분)')
+    try {
+      const res = await fetch('/api/incheon/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ useSavedCert: true }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!j.success) {
+        if (j.agentOffline) setMsg('❌ 로컬 에이전트가 꺼져 있습니다. 원장님 PC에서 에이전트를 켠 뒤 다시 시도해주세요.')
+        else setMsg(`❌ 인천시 로그인 실패 — ${j.error || '알 수 없는 오류'}`)
+        return
+      }
+      await reloadIncheonSession()
+
+      // 로그인 성공 → 아동관리 > 반설정 이동. 여기서 실패해도 세션 자체는 이미 등록된 상태다.
+      setMsg('✅ 로그인 완료 — ⏳ [아동관리 > 반설정] 화면 여는 중…')
+      const nav = await fetch('/api/incheon/navigate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ menuName: '반관리' }),
+      }).then(r => r.json()).catch(() => ({}))
+
+      if (nav.success) {
+        setMsg('✅ 인천시 [아동관리 > 반설정] 화면을 열었습니다. (원장님 PC 브라우저를 확인해주세요)')
+      } else {
+        setMsg(`⚠ 세션 등록은 완료됐지만 화면 이동에 실패했습니다 — ${nav.error || '알 수 없는 오류'}`)
+      }
+    } catch {
+      setMsg('❌ 통합e 서버에 연결할 수 없습니다.')
+    } finally {
+      setIncheonLoginBusy(false)
+    }
+  }, [incheonLoginBusy, reloadIncheonSession])
+
+  /** [인천형] 뱃지 툴팁 — 세션 등록 여부·저장시각을 같이 보여준다 */
+  const incheonBadgeTitle = incheonLoginBusy
+    ? '인천시 로그인 중…'
+    : incheonSession?.exists
+      ? `인천시 반정보에도 같은 반명이 있습니다.\n인천시 세션 등록됨${incheonSession.savedAt ? ` (${new Date(incheonSession.savedAt).toLocaleString('ko-KR')})` : ''}\n클릭하면 다시 로그인하고 [아동관리 > 반설정] 화면을 엽니다.`
+      : '인천시 반정보에도 같은 반명이 있습니다.\n인천시 세션이 등록돼 있지 않습니다 — 클릭하면 인증서로 로그인하고 [아동관리 > 반설정] 화면을 엽니다.'
 
   // 반 추가 팝업 — 여러 반을 표로 입력 → clasAdds 저장. 자동채움: 보육통합/인천시 반에서 세팅.
   const addKeyRef = useRef(1)
@@ -276,9 +347,11 @@ export default function ClassPage() {
       if (j.success) {
         setRows((j.clasList || []) as IncheonClas[])
         setSrcClasStore((j.srcClasList || []) as IncheonClas[])
-        // 메인 표 [CIS] 뱃지용 — 이 조회연도에 보육통합 반정보로 저장된 반명 집합.
+        // 메인 표 [CIS] 뱃지 + [보육통합 원아수] 컬럼용 — 이 조회연도에 보육통합 반정보로 저장된 반.
         // (팝업의 cisClasStore 는 전 연도를 담으므로 덮어쓰지 않고 별도로 둔다)
-        setCisNamesOfYear(new Set(((j.cisClasList || []) as CisClas[]).map(c => (c.name || '').trim())))
+        const cisOfYear = (j.cisClasList || []) as CisClas[]
+        setCisNamesOfYear(new Set(cisOfYear.map(c => (c.name || '').trim())))
+        setCisCountByName(new Map(cisOfYear.map(c => [(c.name || '').trim(), c])))
         setCodes((j.codes || []) as IncheonCode[])
         setSavedAt(j.savedAt || null)
       } else {
@@ -914,20 +987,24 @@ export default function ClassPage() {
               />
             </th>
             <th
-              className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[190px]"
+              className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[140px]"
               title="이 반이 지금 어느 저장소에 있는지 — 통합e / 보육통합(CIS) / 인천시. 자리는 항상 고정이라 세로로 비교됩니다."
             >출처</th>
-            <th onClick={() => toggleSort('clas')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[230px] cursor-pointer select-none hover:bg-teal-100">반명{sortArrow('clas')}</th>
-            <th onClick={() => toggleSort('nrtr')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[230px] cursor-pointer select-none hover:bg-teal-100">보육통합 반명{sortArrow('nrtr')}</th>
+            <th onClick={() => toggleSort('clas')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[255px] cursor-pointer select-none hover:bg-teal-100">반명{sortArrow('clas')}</th>
             <th onClick={() => toggleSort('age')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[170px] cursor-pointer select-none hover:bg-teal-100">연령{sortArrow('age')}</th>
+            <th onClick={() => toggleSort('nrtr')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[255px] cursor-pointer select-none hover:bg-teal-100">보육통합 반명{sortArrow('nrtr')}</th>
+            <th
+              className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[120px]"
+              title="보육통합(CIS) 아동의 배정 반에서 실제로 센 원아 수입니다. 숫자=현원, 괄호=퇴소. 보육통합 반명으로 매칭합니다."
+            >보육통합 원아수</th>
             <th onClick={() => toggleSort('status')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[90px] cursor-pointer select-none hover:bg-teal-100">상태{sortArrow('status')}</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600">비고</th>
           </tr></thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">불러오는 중…</td></tr>
+              <tr><td colSpan={8} className="px-2 py-8 text-center text-slate-400">불러오는 중…</td></tr>
             ) : filtered.length === 0 && news.length === 0 ? (
-              <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">
+              <tr><td colSpan={8} className="px-2 py-8 text-center text-slate-400">
                 {rows.length === 0
                   ? '저장된 반이 없습니다. [＋ 반정보추가]로 직접 등록하거나 [🏛 인천시 반정보 → 업데이트]를 눌러주세요.'
                   : '검색 결과가 없습니다.'}
@@ -955,15 +1032,25 @@ export default function ClassPage() {
                       ? <span className={badgeCls('indigo')} title="보육통합(CIS) 반정보에도 같은 반명이 있습니다">CIS</span>
                       : <span className={badgeEmptyCls} />}
                     {srcNamesOfYear.has(valueOf(c, 'CLAS_NM').trim())
-                      ? <span className={badgeCls('blue')} title="인천시 반정보에도 같은 반명이 있습니다">인천형</span>
+                      ? (
+                        /* 클릭 = 인천시 세션 로그인. 세션 미등록이면 점선 테두리로 눈에 띄게 한다. */
+                        <button
+                          type="button"
+                          onClick={handleIncheonLogin}
+                          disabled={incheonLoginBusy}
+                          title={incheonBadgeTitle}
+                          className={`${badgeCls('blue')} cursor-pointer hover:ring-1 hover:ring-blue-400 disabled:opacity-50 disabled:cursor-wait ${
+                            incheonSession && !incheonSession.exists ? 'border border-dashed border-blue-400' : ''
+                          }`}
+                        >
+                          {incheonLoginBusy ? '…' : '인천형'}
+                        </button>
+                      )
                       : <span className={badgeEmptyCls} />}
                   </div>
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <input value={valueOf(c, 'CLAS_NM')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM', e.target.value)} className={editCls} />
-                </td>
-                <td className="px-1 py-1 border-r border-slate-100">
-                  <input value={valueOf(c, 'CLAS_NM_NRTR')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM_NRTR', e.target.value)} className={editCls} />
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100" title={`인천시 원본 코드: ${valueOf(c, 'AGE_CD') || '(없음)'}`}>
                   {/* 인천시 [반 추가] 반구분 드롭다운 순서·이름 그대로 (AGE_OPTIONS) */}
@@ -975,6 +1062,25 @@ export default function ClassPage() {
                       <option value={valueOf(c, 'AGE_CD')}>{ageLabel(valueOf(c, 'AGE_CD'))}</option>
                     )}
                   </select>
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <input value={valueOf(c, 'CLAS_NM_NRTR')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM_NRTR', e.target.value)} className={editCls} />
+                </td>
+                {/*
+                  보육통합 원아수 — 보육통합 반명으로 저장분(incheon-cis-clas)을 찾아 실제 카운트를 보여준다.
+                  매칭 실패(반명이 다르거나 그 해 보육통합 반정보를 아직 안 받음)는 '–' 로 두고 0 으로 속이지 않는다.
+                */}
+                <td className="px-1 py-1 text-center border-r border-slate-100">
+                  {(() => {
+                    const hit = cisCountByName.get(valueOf(c, 'CLAS_NM_NRTR').trim())
+                    if (!hit) return <span className="text-slate-300" title="보육통합 반정보에 같은 반명이 없습니다. [📚 보육통합 반정보 → 업데이트] 후 다시 확인해주세요.">–</span>
+                    return (
+                      <span title={`현원 ${hit.cur}명 · 퇴소 ${hit.left}명 · 계 ${hit.total}명`}>
+                        <b className="text-slate-700">{hit.cur}</b>
+                        {hit.left > 0 && <span className="ml-0.5 text-[10px] text-slate-400">({hit.left})</span>}
+                      </span>
+                    )
+                  })()}
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <select
@@ -1003,7 +1109,7 @@ export default function ClassPage() {
                 </td>
                 <td className="px-2 py-1 border-r border-slate-100">
                   <div className="grid grid-cols-3 gap-1">
-                    <span className="px-1 py-[3px] text-[10px] leading-none text-center rounded bg-violet-200 text-violet-800 font-medium">신규</span>
+                    <span className="px-0.5 py-[2px] text-[9px] leading-none text-center rounded bg-violet-200 text-violet-800 font-medium">신규</span>
                     <span className={badgeEmptyCls} />
                     <span className={badgeEmptyCls} />
                   </div>
@@ -1012,15 +1118,17 @@ export default function ClassPage() {
                   <input value={n.CLAS_NM} onChange={e => editNew(n.key, 'CLAS_NM', e.target.value)} placeholder="반명 (필수)" className={`${editCls} border-slate-300 bg-white`} />
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
-                  <input value={n.CLAS_NM_NRTR} onChange={e => editNew(n.key, 'CLAS_NM_NRTR', e.target.value)} placeholder="보육통합 반명" className={`${editCls} border-slate-300 bg-white`} />
-                </td>
-                <td className="px-1 py-1 border-r border-slate-100">
                   {/* 반 추가 시 반구분 — 인천시 [반 추가] 드롭다운 그대로 */}
                   <select value={n.AGE_CD} onChange={e => editNew(n.key, 'AGE_CD', e.target.value)} className={`${selCls} border-slate-300 bg-white`}>
                     <option value="">선택</option>
                     {AGE_OPTIONS.map(a => <option key={a.cd} value={a.cd}>{a.nm}</option>)}
                   </select>
                 </td>
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <input value={n.CLAS_NM_NRTR} onChange={e => editNew(n.key, 'CLAS_NM_NRTR', e.target.value)} placeholder="보육통합 반명" className={`${editCls} border-slate-300 bg-white`} />
+                </td>
+                {/* 저장 전이라 보육통합 매칭이 없다 — 원아수는 빈 칸 */}
+                <td className="px-1 py-1 text-center border-r border-slate-100 text-slate-300">–</td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <select value={n.STTUS} onChange={e => editNew(n.key, 'STTUS', e.target.value)} className={`${selCls} border-slate-300 bg-white`}>
                     {CLAS_STATUS.map(s => <option key={s.cd} value={s.cd}>{s.nm}</option>)}
