@@ -922,13 +922,28 @@ export default function DataMigrationPage() {
   // 걸음마회계 출발지는 아이사랑꿈터 유형만 노출 (어린이집은 기존 목록 그대로)
   const [isIlovechild, setIsIlovechild] = useState(false)
   const [centerName, setCenterName] = useState('')  // 로그인 시설명 (경기도 캐시/수집 키)
+  // ★ 지역형(설정>지역시스템)으로 출발지를 정했으면 아래 자동선택이 덮어쓰지 않게 하는 플래그
+  const regionPickedRef = useRef(false)
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json())
       .then(d => {
         const ilove = ((d?.institutionType || d?.profile?.institutionType || 'childcare') as string) === 'ilovechild'
         setIsIlovechild(ilove)
-        if (ilove) setSource('walk') // 아이사랑꿈터는 걸음마만 사용
         setCenterName(String(d?.centerName || d?.profile?.centerName || '').trim())
+        if (ilove) { regionPickedRef.current = true; setSource('walk'); return } // 아이사랑꿈터는 걸음마만 사용
+        /**
+         * ★ 지역형으로 등록한 시설이면 그 지역 시스템을 출발지 기본값으로 (2026-07-20).
+         *
+         * 옛 코드는 regionSystem 을 아예 안 봐서, [설정]에서 '인천형'으로 등록해둔 시설도
+         * 데이터이관을 열면 보육나라(by24, 기본값)가 떴다. 인천형 시설이 보육나라에서
+         * 가져올 일은 없으므로 매번 드롭다운을 손으로 바꿔야 했다.
+         * REGION_SYSTEMS 와 SOURCE_OPTIONS 는 같은 코드('incheon'/'gbccm'/'gyeonggi'…)를 쓴다.
+         */
+        const rs = String(d?.profile?.regionSystem || '').trim()
+        if (rs && SOURCE_OPTIONS.some(o => o.value === rs)) {
+          regionPickedRef.current = true
+          setSource(rs as SourceType)
+        }
       })
       .catch(() => {})
   }, [])
@@ -950,7 +965,8 @@ export default function DataMigrationPage() {
         // 저장된 인증정보가 있는 출발지 중 by24(보육나라 기본) 이 아닌 것을 우선 선택
         const pick = saved.find(s => s !== 'by24' && SOURCE_OPTIONS.some(o => o.value === s))
           || saved.find(s => SOURCE_OPTIONS.some(o => o.value === s))
-        if (pick) setSource(pick as SourceType)
+        // ⚠ 지역형(인천형 등)으로 이미 정해졌으면 덮어쓰지 않는다 — 두 fetch 의 완료 순서와 무관하게 지역형 우선
+        if (pick && !regionPickedRef.current) setSource(pick as SourceType)
       })
       .catch(() => {})
   }, [])
