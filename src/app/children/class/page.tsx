@@ -191,6 +191,8 @@ export default function ClassPage() {
   const [cisCmpByYear, setCisCmpByYear] = useState<Record<string, IncheonClas[]>>({})
   const [cisRegBusy, setCisRegBusy] = useState(false)
   const [srcClasStore, setSrcClasStore] = useState<IncheonClas[]>([]) // 인천시 반정보 참조본(incheon-src-clas) — 통합e 작업본과 별개
+  // 메인 표 [CIS] 뱃지용 — 조회연도의 보육통합 반명 집합(load 에서 채움). 팝업용 cisClasStore 와 별개.
+  const [cisNamesOfYear, setCisNamesOfYear] = useState<Set<string>>(new Set())
 
   // 반 추가 팝업 — 여러 반을 표로 입력 → clasAdds 저장. 자동채움: 보육통합/인천시 반에서 세팅.
   const addKeyRef = useRef(1)
@@ -259,6 +261,9 @@ export default function ClassPage() {
       if (j.success) {
         setRows((j.clasList || []) as IncheonClas[])
         setSrcClasStore((j.srcClasList || []) as IncheonClas[])
+        // 메인 표 [CIS] 뱃지용 — 이 조회연도에 보육통합 반정보로 저장된 반명 집합.
+        // (팝업의 cisClasStore 는 전 연도를 담으므로 덮어쓰지 않고 별도로 둔다)
+        setCisNamesOfYear(new Set(((j.cisClasList || []) as CisClas[]).map(c => (c.name || '').trim())))
         setCodes((j.codes || []) as IncheonCode[])
         setSavedAt(j.savedAt || null)
       } else {
@@ -695,6 +700,13 @@ export default function ClassPage() {
     }
   }, [srcRegState, fetchClasByYears, year, load])
 
+  /** 메인 표 [인천형] 뱃지용 — 조회연도의 인천시 반명 집합(참조본 srcClasStore 는 전 연도를 담는다) */
+  const srcNamesOfYear = useMemo(() => new Set(
+    srcClasStore
+      .filter(c => c.DEL_AT !== 'Y' && String((c as unknown as { _year?: string })._year ?? '') === year)
+      .map(c => (c.CLAS_NM || '').trim())
+  ), [srcClasStore, year])
+
   // 인천시 화면과 동일 — 삭제된 반(DEL_AT='Y')은 목록에서 제외
   const filtered = rows
     .filter(c => c.DEL_AT !== 'Y')
@@ -910,15 +922,20 @@ export default function ClassPage() {
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <div className="flex items-center gap-1">
-                    {/* 출처 뱃지 — 어디서 들어온 반인지 한눈에. CIS/인천형은 각 팝업의 [등록]으로 넣은 반. */}
-                    {c._local && (
-                      c._src === 'cis' ? (
-                        <span className="shrink-0 px-1 py-0.5 text-[9px] bg-indigo-100 text-indigo-700 rounded" title="보육통합(CIS) 반정보에서 등록한 반">CIS</span>
-                      ) : c._src === 'incheon' ? (
-                        <span className="shrink-0 px-1 py-0.5 text-[9px] bg-blue-100 text-blue-700 rounded" title="인천시 반정보에서 등록한 반">인천형</span>
-                      ) : (
-                        <span className="shrink-0 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 직접 추가한 반 — 인천시에는 없습니다">통합e</span>
-                      )
+                    {/*
+                      존재 뱃지 — **배타가 아니라 누적**. 이 반이 지금 어느 저장소에 있는지 다 보여준다.
+                        [통합e] 이 표(incheon-clas)에 등록돼 있음 → 항상
+                        [CIS]   같은 이름이 보육통합 반정보(incheon-cis-clas)에도 있음
+                        [인천형] 같은 이름이 인천시 반정보(incheon-src-clas)에도 있음
+                      셋 다 해당되면 뱃지 3개가 함께 뜬다. 등록 경로(_src)가 아니라 **현재 존재 여부**라
+                      반명을 고치면 뱃지도 따라 사라진다(그게 대조에 유용).
+                    */}
+                    <span className="shrink-0 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 반정보에 등록된 반">통합e</span>
+                    {cisNamesOfYear.has(valueOf(c, 'CLAS_NM_NRTR').trim()) && (
+                      <span className="shrink-0 px-1 py-0.5 text-[9px] bg-indigo-100 text-indigo-700 rounded" title="보육통합(CIS) 반정보에도 같은 반명이 있습니다">CIS</span>
+                    )}
+                    {srcNamesOfYear.has(valueOf(c, 'CLAS_NM').trim()) && (
+                      <span className="shrink-0 px-1 py-0.5 text-[9px] bg-blue-100 text-blue-700 rounded" title="인천시 반정보에도 같은 반명이 있습니다">인천형</span>
                     )}
                     <input value={valueOf(c, 'CLAS_NM')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM', e.target.value)} className={`${editCls} flex-1 min-w-0`} />
                   </div>
