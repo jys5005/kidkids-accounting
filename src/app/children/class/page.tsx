@@ -30,6 +30,7 @@ type IncheonClas = {
   GRP_CLAS_NM: string | null    // 통합반명
   PSNCPA: number | null         // 정원
   _local?: boolean              // 통합e 에서 추가한 반(인천시에 없음)
+  _src?: string | null          // 출처 — 'cis'(보육통합에서 등록) / 'incheon'(인천시에서 등록) / 없으면 수기
 }
 
 /** 인천시 공통코드 (getCodeList.do → tcmCodeList) — CD_GRP 로 그룹핑된 원본 코드표 */
@@ -482,9 +483,9 @@ export default function ClassPage() {
       const b = byYear.get(y)!
       const AGE_CD = cisAgeCd(cl.type)
       if (state === 'none') {
-        b.adds.push({ CLAS_NM: cl.name, CLAS_NM_NRTR: cl.name, AGE_CD, STTUS: '000', RM: '' })
+        b.adds.push({ CLAS_NM: cl.name, CLAS_NM_NRTR: cl.name, AGE_CD, STTUS: '000', RM: '', _src: 'cis' })
       } else if (row) {
-        b.upds.push({ CLAS_SN: row.CLAS_SN, CLAS_NM: cl.name, CLAS_NM_NRTR: cl.name, AGE_CD })
+        b.upds.push({ CLAS_SN: row.CLAS_SN, CLAS_NM: cl.name, CLAS_NM_NRTR: cl.name, AGE_CD, _src: 'cis' })
       }
     }
     if (!byYear.size) { setMsg('등록할 반이 없습니다 — 모두 등록되어 있습니다.'); return }
@@ -658,12 +659,12 @@ export default function ClassPage() {
       if (state === 'none') {
         b.adds.push({
           CLAS_NM: nm, CLAS_NM_NRTR: c.CLAS_NM_NRTR || nm, GRP_CLAS_NM: c.GRP_CLAS_NM || '',
-          AGE_CD: c.AGE_CD || '', STTUS: c.STTUS || '000', RM: c.RM || '',
+          AGE_CD: c.AGE_CD || '', STTUS: c.STTUS || '000', RM: c.RM || '', _src: 'incheon',
         })
       } else if (row) {
         b.upds.push({
           CLAS_SN: row.CLAS_SN, CLAS_NM: nm, CLAS_NM_NRTR: c.CLAS_NM_NRTR || nm,
-          GRP_CLAS_NM: c.GRP_CLAS_NM || '', AGE_CD: c.AGE_CD || '',
+          GRP_CLAS_NM: c.GRP_CLAS_NM || '', AGE_CD: c.AGE_CD || '', _src: 'incheon',
         })
       }
     }
@@ -909,7 +910,16 @@ export default function ClassPage() {
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <div className="flex items-center gap-1">
-                    {c._local && <span className="shrink-0 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 추가한 반 — 인천시에는 없습니다">통합e</span>}
+                    {/* 출처 뱃지 — 어디서 들어온 반인지 한눈에. CIS/인천형은 각 팝업의 [등록]으로 넣은 반. */}
+                    {c._local && (
+                      c._src === 'cis' ? (
+                        <span className="shrink-0 px-1 py-0.5 text-[9px] bg-indigo-100 text-indigo-700 rounded" title="보육통합(CIS) 반정보에서 등록한 반">CIS</span>
+                      ) : c._src === 'incheon' ? (
+                        <span className="shrink-0 px-1 py-0.5 text-[9px] bg-blue-100 text-blue-700 rounded" title="인천시 반정보에서 등록한 반">인천형</span>
+                      ) : (
+                        <span className="shrink-0 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 에서 직접 추가한 반 — 인천시에는 없습니다">통합e</span>
+                      )
+                    )}
                     <input value={valueOf(c, 'CLAS_NM')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM', e.target.value)} className={`${editCls} flex-1 min-w-0`} />
                   </div>
                 </td>
