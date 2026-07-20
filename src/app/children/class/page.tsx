@@ -209,9 +209,24 @@ export default function ClassPage() {
   const [srcClasStore, setSrcClasStore] = useState<IncheonClas[]>([]) // 인천시 반정보 참조본(incheon-src-clas) — 통합e 작업본과 별개
   // 메인 표 [CIS] 뱃지용 — 조회연도의 보육통합 반명 집합(load 에서 채움). 팝업용 cisClasStore 와 별개.
   const [cisNamesOfYear, setCisNamesOfYear] = useState<Set<string>>(new Set())
-  // 메인 표 [보육통합 원아수] 컬럼용 — 보육통합 반명 → 그 반의 실제 원아 카운트(현원/퇴소/계).
-  // CIS 아동의 배정 반에서 도출된 값이라 통합e 가 임의로 만든 숫자가 아니다(deriveCisClasses 참조).
-  const [cisCountByName, setCisCountByName] = useState<Map<string, CisClas>>(new Map())
+  /*
+   * 메인 표 [보육통합 원아수] — ★ 저장분(incheon-cis-clas)이 아니라 **아동 정보에서 직접 센다**.
+   * 저장분을 보면 [📚 보육통합 반정보 → 업데이트]를 누르기 전까지 전부 '–' 로 보이는데,
+   * 아동 정보(/api/sync/children)는 이미 수집돼 있으므로 그걸 그 자리에서 집계하면 된다.
+   * 집계 로직은 팝업과 동일한 deriveCisClasses — 두 화면 숫자가 어긋나지 않는다.
+   */
+  const [cisChildren, setCisChildren] = useState<Array<Record<string, unknown>>>([])
+  useEffect(() => {
+    fetch('/api/sync/children', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => setCisChildren((j?.children || []) as Array<Record<string, unknown>>))
+      .catch(() => setCisChildren([]))
+  }, [])
+  /** 보육통합 반명 → 그 반의 실제 원아 카운트(현원/퇴소/계). 선택 보육년도 기준. */
+  const cisCountByName = useMemo(
+    () => new Map(deriveCisClasses(cisChildren, year).map(c => [c.name.trim(), c])),
+    [cisChildren, year],
+  )
 
   /*
    * 인천시 로그인 세션 — [인천형] 뱃지 클릭으로 등록한다.
@@ -347,11 +362,10 @@ export default function ClassPage() {
       if (j.success) {
         setRows((j.clasList || []) as IncheonClas[])
         setSrcClasStore((j.srcClasList || []) as IncheonClas[])
-        // 메인 표 [CIS] 뱃지 + [보육통합 원아수] 컬럼용 — 이 조회연도에 보육통합 반정보로 저장된 반.
+        // 메인 표 [CIS] 뱃지용 — 이 조회연도에 보육통합 반정보로 저장된 반명 집합.
         // (팝업의 cisClasStore 는 전 연도를 담으므로 덮어쓰지 않고 별도로 둔다)
-        const cisOfYear = (j.cisClasList || []) as CisClas[]
-        setCisNamesOfYear(new Set(cisOfYear.map(c => (c.name || '').trim())))
-        setCisCountByName(new Map(cisOfYear.map(c => [(c.name || '').trim(), c])))
+        // ⚠ 원아수는 여기서 안 쓴다 — 저장분이 아니라 아동 정보에서 직접 센다(cisCountByName 참조).
+        setCisNamesOfYear(new Set(((j.cisClasList || []) as CisClas[]).map(c => (c.name || '').trim())))
         setCodes((j.codes || []) as IncheonCode[])
         setSavedAt(j.savedAt || null)
       } else {
@@ -995,7 +1009,7 @@ export default function ClassPage() {
             <th onClick={() => toggleSort('nrtr')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[255px] cursor-pointer select-none hover:bg-teal-100">보육통합 반명{sortArrow('nrtr')}</th>
             <th
               className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[120px]"
-              title="보육통합(CIS) 아동의 배정 반에서 실제로 센 원아 수입니다. 숫자=현원, 괄호=퇴소. 보육통합 반명으로 매칭합니다."
+              title="아동 정보(보육통합 CIS 아동)의 배정 반에서 실제로 센 원아 수입니다. 숫자=현원, 괄호=퇴소. 보육통합 반명으로 매칭합니다."
             >보육통합 원아수</th>
             <th onClick={() => toggleSort('status')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[90px] cursor-pointer select-none hover:bg-teal-100">상태{sortArrow('status')}</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600">비고</th>
@@ -1067,13 +1081,13 @@ export default function ClassPage() {
                   <input value={valueOf(c, 'CLAS_NM_NRTR')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM_NRTR', e.target.value)} className={editCls} />
                 </td>
                 {/*
-                  보육통합 원아수 — 보육통합 반명으로 저장분(incheon-cis-clas)을 찾아 실제 카운트를 보여준다.
-                  매칭 실패(반명이 다르거나 그 해 보육통합 반정보를 아직 안 받음)는 '–' 로 두고 0 으로 속이지 않는다.
+                  보육통합 원아수 — 아동 정보(CIS 아동의 배정 반)에서 보육통합 반명으로 직접 센 값.
+                  매칭 실패(그 반에 배정된 아동이 없거나 반명이 다름)는 '–' 로 두고 0 으로 속이지 않는다.
                 */}
                 <td className="px-1 py-1 text-center border-r border-slate-100">
                   {(() => {
                     const hit = cisCountByName.get(valueOf(c, 'CLAS_NM_NRTR').trim())
-                    if (!hit) return <span className="text-slate-300" title="보육통합 반정보에 같은 반명이 없습니다. [📚 보육통합 반정보 → 업데이트] 후 다시 확인해주세요.">–</span>
+                    if (!hit) return <span className="text-slate-300" title={`${year}년 보육통합 아동 중 이 반(보육통합 반명)에 배정된 아동이 없습니다. 반명이 아동 정보의 반 이름과 정확히 같아야 매칭됩니다.`}>–</span>
                     return (
                       <span title={`현원 ${hit.cur}명 · 퇴소 ${hit.left}명 · 계 ${hit.total}명`}>
                         <b className="text-slate-700">{hit.cur}</b>
