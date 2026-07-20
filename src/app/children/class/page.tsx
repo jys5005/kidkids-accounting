@@ -540,6 +540,104 @@ export default function ClassPage() {
     return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]))  // 최신 연도 먼저
   }, [srcClasStore])
 
+  // ─── 인천시 반정보 → 통합e 반정보 등록 (보육통합 팝업과 동일 프로세스) ───
+  /**
+   * 등록여부 판정용 통합e 반정보(incheon-clas) — **연도별**.
+   * 보육통합 팝업은 한 연도만 보지만 인천시 팝업은 최근 3년치를 한 화면에 보여주므로 연도별로 들고 있는다.
+   */
+  const [srcCmpByYear, setSrcCmpByYear] = useState<Record<string, IncheonClas[]>>({})
+  const [srcRegBusy, setSrcRegBusy] = useState(false)
+
+  const fetchClasByYears = useCallback(async (yrs: string[]) => {
+    const pairs = await Promise.all(yrs.map(y =>
+      fetch(`/api/incheon/children?year=${y}`)
+        .then(r => r.json())
+        .then(j => [y, (j?.clasList || []) as IncheonClas[]] as const)
+        .catch(() => [y, [] as IncheonClas[]] as const)))
+    return Object.fromEntries(pairs) as Record<string, IncheonClas[]>
+  }, [])
+
+  useEffect(() => {
+    if (popup !== 'incheon') return
+    const yrs = srcClasYears.map(([y]) => y).filter(Boolean)
+    if (!yrs.length) { setSrcCmpByYear({}); return }
+    let cancelled = false
+    fetchClasByYears(yrs).then(m => { if (!cancelled) setSrcCmpByYear(m) })
+    return () => { cancelled = true }
+  }, [popup, srcClasYears, fetchClasByYears])
+
+  /** 인천시 반이 통합e 에 등록됐는지 — 보육통합과 동일 규칙(반명으로 찾고 연령 비교), 단 같은 연도끼리만 비교 */
+  const srcRegState = useCallback((c: IncheonClas): { state: 'same' | 'diff' | 'none'; row?: IncheonClas } => {
+    const y = String((c as unknown as { _year?: string })._year ?? '')
+    const nm = (c.CLAS_NM || '').trim()
+    if (!nm) return { state: 'none' }
+    const row = (srcCmpByYear[y] || []).find(r =>
+      (r.CLAS_NM || '').trim() === nm || (r.CLAS_NM_NRTR || '').trim() === nm)
+    if (!row) return { state: 'none' }
+    return { state: (row.AGE_CD || '') === (c.AGE_CD || '') ? 'same' : 'diff', row }
+  }, [srcCmpByYear])
+
+  /** 아직 통합e 에 반영 안 된 인천시 반 — [일괄등록] 대상(표시 중인 모든 연도) */
+  const srcPending = useMemo(
+    () => srcClasStore.filter(c => c.DEL_AT !== 'Y' && srcRegState(c).state !== 'same'),
+    [srcClasStore, srcRegState],
+  )
+
+  /**
+   * 인천시 반을 통합e 반정보(incheon-clas)로 등록/갱신.
+   *  - 없으면 clasAdds, 연령이 다르면 clasEdits — 반명은 인천시 기준으로 통일
+   *  - 통합반명(GRP_CLAS_NM)·연령·상태·비고도 함께 복사
+   *  - **연도별로 나눠 저장** (인천시 팝업은 최근 3년치를 한 번에 보여준다)
+   */
+  const registerSrcClasses = useCallback(async (targets: IncheonClas[]) => {
+    const byYear = new Map<string, { adds: Array<Record<string, string>>; upds: Array<Record<string, unknown>> }>()
+    for (const c of targets) {
+      const y = String((c as unknown as { _year?: string })._year ?? '')
+      if (!y) continue
+      const { state, row } = srcRegState(c)
+      if (state === 'same') continue
+      if (!byYear.has(y)) byYear.set(y, { adds: [], upds: [] })
+      const b = byYear.get(y)!
+      const nm = c.CLAS_NM || ''
+      if (state === 'none') {
+        b.adds.push({
+          CLAS_NM: nm, CLAS_NM_NRTR: c.CLAS_NM_NRTR || nm, GRP_CLAS_NM: c.GRP_CLAS_NM || '',
+          AGE_CD: c.AGE_CD || '', STTUS: c.STTUS || '000', RM: c.RM || '',
+        })
+      } else if (row) {
+        b.upds.push({
+          CLAS_SN: row.CLAS_SN, CLAS_NM: nm, CLAS_NM_NRTR: c.CLAS_NM_NRTR || nm,
+          GRP_CLAS_NM: c.GRP_CLAS_NM || '', AGE_CD: c.AGE_CD || '',
+        })
+      }
+    }
+    if (!byYear.size) { setMsg('등록할 반이 없습니다 — 모두 등록되어 있습니다.'); return }
+    setSrcRegBusy(true)
+    try {
+      let added = 0, updated = 0
+      for (const [y, b] of byYear) {
+        const res = await fetch('/api/incheon/children', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ year: y, clasAdds: b.adds, clasEdits: b.upds }),
+        })
+        const j = await res.json()
+        if (!j.success) { setMsg(`❌ ${y}년: ${j.error || '등록 실패'}`); return }
+        added += Number(j.added || 0); updated += Number(j.updated || 0)
+      }
+      const yrs = Array.from(byYear.keys())
+      const parts = [added ? `등록 ${added}` : '', updated ? `갱신 ${updated}` : ''].filter(Boolean).join(' · ')
+      setMsg(`💾 통합e 반정보에 ${parts} (${yrs.join(', ')}년) — 인천시 원본은 그대로입니다`)
+      const fresh = await fetchClasByYears(yrs)              // 버튼이 즉시 '등록됨'으로 바뀌게 재로드
+      setSrcCmpByYear(prev => ({ ...prev, ...fresh }))
+      if (yrs.includes(year)) await load()                   // 메인 표도 같은 연도면 갱신
+    } catch {
+      setMsg('❌ 통합e 서버에 연결할 수 없습니다.')
+    } finally {
+      setSrcRegBusy(false)
+    }
+  }, [srcRegState, fetchClasByYears, year, load])
+
   // 인천시 화면과 동일 — 삭제된 반(DEL_AT='Y')은 목록에서 제외
   const filtered = rows
     .filter(c => c.DEL_AT !== 'Y')
@@ -877,6 +975,19 @@ export default function ClassPage() {
                     {cisRegBusy ? '등록 중…' : cisPending.length === 0 ? '✓ 전부 등록됨' : `＋ 일괄등록 (${cisPending.length})`}
                   </button>
                 )}
+                {/* ★ 인천시도 동일 — 표시 중인 모든 연도에서 미등록 반만 골라 한 번에(연도별로 나눠 저장) */}
+                {popup === 'incheon' && srcClasStore.length > 0 && (
+                  <button
+                    onClick={() => registerSrcClasses(srcPending)}
+                    disabled={srcRegBusy || srcPending.length === 0}
+                    title={srcPending.length === 0
+                      ? '표시 중인 모든 연도의 반이 통합e 반정보에 등록되어 있습니다'
+                      : `통합e 에 없는 반 ${srcPending.length}개를 한 번에 등록합니다(연도별로 저장)`}
+                    className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 rounded-lg"
+                  >
+                    {srcRegBusy ? '등록 중…' : srcPending.length === 0 ? '✓ 전부 등록됨' : `＋ 일괄등록 (${srcPending.length})`}
+                  </button>
+                )}
                 <button
                   onClick={popup === 'cis' ? handleCisUpdate : handleSync}
                   disabled={popup === 'cis' ? cisLoading : syncing}
@@ -923,19 +1034,41 @@ export default function ClassPage() {
                             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">반명</th>
                             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">보육통합 반명</th>
                             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">연령</th>
-                            <th className="px-2 py-2 text-center font-bold text-slate-600">상태</th>
+                            <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200">상태</th>
+                            <th className="px-2 py-2 text-center font-bold text-slate-600 w-24">등록</th>
                           </tr></thead>
                           <tbody>
-                            {list.map((c, i) => (
+                            {list.map((c, i) => {
+                              const { state } = srcRegState(c)
+                              return (
                               <tr key={`${yr}-${c.CLAS_SN}`} className="border-b border-slate-100">
                                 <td className="px-2 py-1.5 text-center text-slate-400 border-r border-slate-100">{i + 1}</td>
                                 <td className="px-2 py-1.5 text-center text-slate-600 border-r border-slate-100">{c.GRP_CLAS_NM || '-'}</td>
                                 <td className="px-2 py-1.5 text-center border-r border-slate-100">{c.CLAS_NM || '-'}</td>
                                 <td className="px-2 py-1.5 text-center text-slate-500 border-r border-slate-100">{c.CLAS_NM_NRTR || '-'}</td>
                                 <td className="px-2 py-1.5 text-center border-r border-slate-100">{ageLabel(c.AGE_CD)}</td>
-                                <td className={`px-2 py-1.5 text-center ${c.STTUS === '000' ? 'text-emerald-600' : 'text-slate-400'}`}>{STTUS_LABEL[c.STTUS] || c.STTUS}</td>
+                                <td className={`px-2 py-1.5 text-center border-r border-slate-100 ${c.STTUS === '000' ? 'text-emerald-600' : 'text-slate-400'}`}>{STTUS_LABEL[c.STTUS] || c.STTUS}</td>
+                                {/* 등록됨(반명+연령 일치) → 회색 비활성 / 연령 다름 → 업데이트 / 없음 → 등록 */}
+                                <td className="px-2 py-1.5 text-center">
+                                  {state === 'same' ? (
+                                    <span
+                                      title={`${yr}년 통합e 반정보에 같은 반명·연령으로 이미 등록되어 있습니다`}
+                                      className="inline-block px-2 py-1 text-[10px] font-bold text-slate-400 bg-slate-100 border border-slate-200 rounded cursor-default"
+                                    >✓ 등록됨</span>
+                                  ) : (
+                                    <button
+                                      onClick={() => registerSrcClasses([c])}
+                                      disabled={srcRegBusy}
+                                      title={state === 'diff'
+                                        ? `${yr}년 통합e 에 같은 반명이 있으나 연령이 다릅니다 — 연령·반명을 인천시 기준으로 갱신합니다`
+                                        : `${yr}년 통합e 반정보에 이 반을 새로 등록합니다`}
+                                      className="px-2 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded"
+                                    >{state === 'diff' ? '↻ 업데이트' : '＋ 등록'}</button>
+                                  )}
+                                </td>
                               </tr>
-                            ))}
+                              )
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -1000,7 +1133,7 @@ export default function ClassPage() {
             <div className="px-5 py-3 border-t border-slate-200 text-[11px] text-slate-500">
               {popup === 'cis'
                 ? '※ 현원은 현재 보육년도에, 퇴소 원아는 퇴소한 그 보육년도에 표시됩니다. [🔄 업데이트]는 CIS 최신 아동을 다시 불러옵니다. · [＋ 등록]은 이 반을 통합e 반정보에 넣습니다(반명은 보육통합 기준으로 통일). 반명·연령이 이미 같으면 [✓ 등록됨]으로 잠기고, 연령만 다르면 [↻ 업데이트]로 맞춥니다.'
-                : '※ [🔄 업데이트]는 인천시에서 최신 반 목록을 다시 가져옵니다(로컬 에이전트 경유, 수십 초). 편집·저장은 뒤 화면 표에서 하세요.'}
+                : '※ [🔄 업데이트]는 인천시에서 최신 반 목록을 다시 가져옵니다(로컬 에이전트 경유, 수십 초). · [＋ 등록]은 이 반을 그 연도의 통합e 반정보에 넣습니다(반명은 인천시 기준으로 통일). 반명·연령이 이미 같으면 [✓ 등록됨]으로 잠기고, 연령만 다르면 [↻ 업데이트]로 맞춥니다.'}
             </div>
           </div>
         </div>
