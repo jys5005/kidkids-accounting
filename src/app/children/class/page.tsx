@@ -133,6 +133,37 @@ function deriveCisClasses(cisChildren: Array<Record<string, unknown>>, cisYear: 
     const y = Math.floor(n / 10000), mo = Math.floor((n % 10000) / 100)
     return mo >= 3 ? y : y - 1
   }
+  /*
+   * ★ 현재 회계연도 편성 반은 과년도에 넣지 않는다 (사용자 확정 2026-07-20).
+   *
+   * CIS 는 아동의 **현재 배정 반만** 준다 — 2021년 입소자도 반이 '푸른하늘26' 으로 온다(실측).
+   * 그래서 2026-02-28 처럼 회계연도 말에 퇴소한 아동은 이미 26년 반으로 옮겨진 뒤라,
+   * 그대로 두면 2025년 목록에 '맑은샘물26'·'예쁜새싹26' 같은 26년 반이 섞인다(실제로 섞였음).
+   *
+   * 판정: 재원(현원) 아동이 지금 배정된 반 = 현재 회계연도 편성. 과년도(Y !== curFY) 집계에선 뺀다.
+   * 모르는 걸 지어내느니 비우는 쪽이 맞다 — 그 해 실제 반은 CIS 가 알려주지 않는다.
+   */
+  const currentFyNames = new Set<string>()
+  const classNamesOf = (c: Record<string, unknown>) => {
+    const out: Array<{ name: string; type: string }> = []
+    for (const raw of [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]) {
+      const s2 = String(raw ?? '').trim()
+      if (!s2 || ['없음', '미배정', '해당없음', '-'].includes(s2)) continue
+      const mm = s2.match(/\]\s*\[\s*([^\]]*?)\s*\]\s*(.*)$/)
+      const type = (mm ? mm[1].trim() : '').replace(/\./g, ',')
+      const name = (mm ? mm[2].trim() : s2) || s2
+      if (!name || ['없음', '미배정', '해당없음', '-'].includes(name)) continue
+      out.push({ name, type })
+    }
+    return out
+  }
+  if (Y !== curFY) {
+    for (const c of cisChildren) {
+      if (String(c.status) === '퇴소') continue
+      for (const { name } of classNamesOf(c)) currentFyNames.add(name)
+    }
+  }
+
   const m = new Map<string, { type: string; total: Set<string>; withdrawn: Set<string> }>()
   for (const c of cisChildren) {
     const isW = String(c.status) === '퇴소'
@@ -145,13 +176,8 @@ function deriveCisClasses(cisChildren: Array<Record<string, unknown>>, cisYear: 
     }
     if (belongFY !== Y) continue
     const key = String(c._key || `${c.name ?? ''}|${c.birth ?? ''}`)
-    for (const raw of [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]) {
-      const s2 = String(raw ?? '').trim()
-      if (!s2 || ['없음', '미배정', '해당없음', '-'].includes(s2)) continue
-      const mm = s2.match(/\]\s*\[\s*([^\]]*?)\s*\]\s*(.*)$/)
-      const type = (mm ? mm[1].trim() : '').replace(/\./g, ',')
-      const name = (mm ? mm[2].trim() : s2) || s2
-      if (!name || ['없음', '미배정', '해당없음', '-'].includes(name)) continue
+    for (const { name, type } of classNamesOf(c)) {
+      if (currentFyNames.has(name)) continue   // 26년 편성 반 → 과년도엔 넣지 않는다
       let e = m.get(name)
       if (!e) { e = { type: '', total: new Set(), withdrawn: new Set() }; m.set(name, e) }
       if (!e.type && type) e.type = type
@@ -163,6 +189,65 @@ function deriveCisClasses(cisChildren: Array<Record<string, unknown>>, cisYear: 
     name, type: v.type,
     cur: v.total.size - v.withdrawn.size, left: v.withdrawn.size, total: v.total.size,
   })).sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+}
+
+/**
+ * 그 해 보육통합 아동의 **실인원**(중복 제거).
+ *
+ * ⚠ 반별 원아수를 그냥 더하면 실제 인원보다 많이 나온다 — 한 아동이 일반반과 연장반에
+ *   동시에 배정되면 두 반 모두에 잡히기 때문. 그래서 아동 키(_key) 기준으로 한 번만 센다.
+ *   연도 편입 규칙은 deriveCisClasses 와 동일해야 두 숫자가 같은 모집단을 본다.
+ */
+function countCisChildrenUnique(cisChildren: Array<Record<string, unknown>>, cisYear: string) {
+  const Y = Number(cisYear) || new Date().getFullYear()
+  const now = new Date()
+  const curFY = now.getMonth() + 1 >= 3 ? now.getFullYear() : now.getFullYear() - 1
+  const d8 = (v: unknown) => Number(String(v ?? '').replace(/\D/g, '').slice(0, 8)) || 0
+  const fyOf = (n: number): number | null => {
+    if (!n) return null
+    const y = Math.floor(n / 10000), mo = Math.floor((n % 10000) / 100)
+    return mo >= 3 ? y : y - 1
+  }
+  // 표(deriveCisClasses)와 **같은 규칙**으로 세야 합계가 어긋나지 않는다 — 반 이름 도출도, 과년도에서
+  // 현재 회계연도 편성 반을 빼는 것도 동일하게 적용한다.
+  const nameSetOf = (c: Record<string, unknown>) => {
+    const out: string[] = []
+    for (const raw of [c.generalClassId, c.holidayClassId, c.extendedClassId, c.nightClassId, c.nightCareClassId]) {
+      const s2 = String(raw ?? '').trim()
+      if (!s2 || ['없음', '미배정', '해당없음', '-'].includes(s2)) continue
+      const mm = s2.match(/\]\s*\[\s*([^\]]*?)\s*\]\s*(.*)$/)
+      const name = (mm ? mm[2].trim() : s2) || s2
+      if (!name || ['없음', '미배정', '해당없음', '-'].includes(name)) continue
+      out.push(name)
+    }
+    return out
+  }
+  const currentFyNames = new Set<string>()
+  if (Y !== curFY) {
+    for (const c of cisChildren) {
+      if (String(c.status) === '퇴소') continue
+      for (const n of nameSetOf(c)) currentFyNames.add(n)
+    }
+  }
+
+  const all = new Set<string>(), withdrawn = new Set<string>()
+  for (const c of cisChildren) {
+    const isW = String(c.status) === '퇴소'
+    let belongFY: number | null
+    if (!isW) {
+      belongFY = curFY
+    } else {
+      const rawStart = String((c._raw as Record<string, unknown> | undefined)?.serviceStartDate ?? '')
+      belongFY = fyOf(d8(c.leaveDate) || d8(rawStart))
+    }
+    if (belongFY !== Y) continue
+    // 표에 행이 생기지 않는 아동(반 없음, 또는 과년도인데 26년 편성 반뿐)은 실인원에서도 뺀다
+    if (nameSetOf(c).filter(n => !currentFyNames.has(n)).length === 0) continue
+    const key = String(c._key || `${c.name ?? ''}|${c.birth ?? ''}`)
+    all.add(key)
+    if (isW) withdrawn.add(key)
+  }
+  return { cur: all.size - withdrawn.size, left: withdrawn.size, total: all.size }
 }
 
 const CLAS_STATUS: Array<{ cd: string; nm: string }> = [
@@ -209,6 +294,8 @@ export default function ClassPage() {
   const [srcClasStore, setSrcClasStore] = useState<IncheonClas[]>([]) // 인천시 반정보 참조본(incheon-src-clas) — 통합e 작업본과 별개
   // 메인 표 [CIS] 뱃지용 — 조회연도의 보육통합 반명 집합(load 에서 채움). 팝업용 cisClasStore 와 별개.
   const [cisNamesOfYear, setCisNamesOfYear] = useState<Set<string>>(new Set())
+  // 조회연도의 보육통합 반정보 저장분 — 헤더 버튼 '전부 등록됨' 판정에 쓴다(팝업 열지 않아도 알 수 있게).
+  const [cisClasOfYear, setCisClasOfYear] = useState<CisClas[]>([])
   /*
    * 메인 표 [보육통합 원아수] — ★ 저장분(incheon-cis-clas)이 아니라 **아동 정보에서 직접 센다**.
    * 저장분을 보면 [📚 보육통합 반정보 → 업데이트]를 누르기 전까지 전부 '–' 로 보이는데,
@@ -368,10 +455,12 @@ export default function ClassPage() {
       if (j.success) {
         setRows((j.clasList || []) as IncheonClas[])
         setSrcClasStore((j.srcClasList || []) as IncheonClas[])
-        // 메인 표 [CIS] 뱃지용 — 이 조회연도에 보육통합 반정보로 저장된 반명 집합.
+        // 메인 표 [CIS] 뱃지 + 헤더 버튼 회색 처리용 — 이 조회연도의 보육통합 반정보 저장분.
         // (팝업의 cisClasStore 는 전 연도를 담으므로 덮어쓰지 않고 별도로 둔다)
         // ⚠ 원아수는 여기서 안 쓴다 — 저장분이 아니라 아동 정보에서 직접 센다(cisCountByName 참조).
-        setCisNamesOfYear(new Set(((j.cisClasList || []) as CisClas[]).map(c => (c.name || '').trim())))
+        const cisOfYear = (j.cisClasList || []) as CisClas[]
+        setCisClasOfYear(cisOfYear)
+        setCisNamesOfYear(new Set(cisOfYear.map(c => (c.name || '').trim())))
         setCodes((j.codes || []) as IncheonCode[])
         setSavedAt(j.savedAt || null)
       } else {
@@ -553,6 +642,33 @@ export default function ClassPage() {
 
   /** 보육통합 반유형 라벨 → 통합e AGE_CD. 목록에 없는 낯선 라벨은 라벨 자체를 코드로 쓴다(AGE_OPTIONS 관례). */
   const cisAgeCd = useCallback((type: string): string => AGE_NAME_MAP[type] ?? (type || ''), [])
+
+  /*
+   * 헤더의 [보육통합 반정보] / [인천시 반정보] 버튼 색 판정 — **선택한 보육년도 기준**.
+   * 그 해 반이 전부 통합e 에 같은 값으로 들어와 있으면(= 등록할 게 없으면) 버튼을 회색으로 낮춘다.
+   *
+   * ⚠ 팝업의 cisPending/srcPending 은 **전 연도** 대상이라 여기 쓰면 안 된다. 또 팝업을 열어야
+   *   채워지는 cisClasStore/srcCmpByYear 대신, load() 가 이미 받아둔 그 해 데이터만으로 계산해
+   *   페이지를 열자마자 색이 맞게 한다(추가 요청 없음).
+   */
+  const isSameNm = (a?: string | null, b?: string | null) => (a || '').trim() === (b || '').trim()
+  const cisPendingYear = useMemo(() => cisClasOfYear.filter(cl => {
+    const nm = (cl.name || '').trim()
+    if (!nm) return false
+    const row = rows.find(r => r.DEL_AT !== 'Y' && isSameNm(r.CLAS_NM_NRTR, nm))
+    if (!row) return true                                   // 통합e 에 없음 → 등록 필요
+    return (row.AGE_CD || '') !== cisAgeCd(cl.type)         // 연령 다름 → 갱신 필요
+  }), [cisClasOfYear, rows, cisAgeCd])
+
+  const srcPendingYear = useMemo(() => srcClasStore.filter(c => {
+    if (c.DEL_AT === 'Y') return false
+    if (String((c as unknown as { _year?: string })._year ?? '') !== year) return false
+    const nm = (c.CLAS_NM || '').trim()
+    if (!nm) return false
+    const row = rows.find(r => r.DEL_AT !== 'Y' && isSameNm(r.CLAS_NM, nm))
+    if (!row) return true
+    return (row.AGE_CD || '') !== (c.AGE_CD || '')
+  }), [srcClasStore, rows, year])
 
   /**
    * 보육통합 반이 통합e 반정보(incheon-clas)에 이미 등록됐는지 판정.
@@ -825,6 +941,22 @@ export default function ClassPage() {
       (SORT_CMP[sort.key](a, b) * sort.dir)
       || (a.CLAS_NM || '').localeCompare(b.CLAS_NM || '', 'ko'))
 
+  /*
+   * 보육통합 원아수 합계 — 화면에 보이는 행(filtered) 기준.
+   *  sum    = 컬럼을 그대로 더한 값. 연장반 중복이 포함된다.
+   *  unique = 아동 단위 실인원(중복 제거). sum 보다 작으면 그 차이가 곧 중복 배정 수다.
+   */
+  const cisSum = useMemo(() => {
+    let cur = 0, left = 0, matched = 0
+    for (const c of filtered) {
+      const hit = cisCountByName.get((edits[c.CLAS_SN]?.CLAS_NM_NRTR ?? c.CLAS_NM_NRTR ?? '').trim())
+      if (!hit) continue
+      cur += hit.cur; left += hit.left; matched++
+    }
+    return { cur, left, matched }
+  }, [filtered, cisCountByName, edits])
+  const cisUnique = useMemo(() => countCisChildrenUnique(cisChildren, year), [cisChildren, year])
+
   const toggle = (sn: number) => {
     setChecked(prev => {
       const n = new Set(prev)
@@ -977,17 +1109,36 @@ export default function ClassPage() {
             >
               {saving ? '저장 중…' : dirtyCount > 0 ? `💾 저장 (${dirtyCount})` : '💾 저장'}
             </button>
+            {/*
+              선택 보육년도 기준 등록할 게 남아 있으면 원래 색 + 깜박임(animate-pulse)으로 눈에 띄게,
+              다 등록됐으면 회색 + 깜박임 없음.
+              회색이어도 클릭은 되고 팝업은 열린다 — '할 일 없음'을 알릴 뿐 기능을 막지 않는다.
+            */}
             <button
               onClick={() => { setPopup('cis'); loadAllCisStore() }}
-              className="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded"
+              title={cisPendingYear.length === 0
+                ? `${year}년 보육통합 반이 모두 통합e 반정보에 등록되어 있습니다.`
+                : `${year}년 등록·갱신할 보육통합 반 ${cisPendingYear.length}개`}
+              className={`px-3 py-1.5 text-[11px] font-bold rounded ${
+                cisPendingYear.length === 0
+                  ? 'text-slate-500 bg-slate-200 hover:bg-slate-300'
+                  : 'text-white bg-indigo-600 hover:bg-indigo-700 animate-pulse'
+              }`}
             >
-              📚 보육통합 반정보
+              📚 보육통합 반정보{cisPendingYear.length > 0 && ` (${cisPendingYear.length})`}
             </button>
             <button
               onClick={() => setPopup('incheon')}
-              className="px-3 py-1.5 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded"
+              title={srcPendingYear.length === 0
+                ? `${year}년 인천시 반이 모두 통합e 반정보에 등록되어 있습니다.`
+                : `${year}년 등록·갱신할 인천시 반 ${srcPendingYear.length}개`}
+              className={`px-3 py-1.5 text-[11px] font-bold rounded ${
+                srcPendingYear.length === 0
+                  ? 'text-slate-500 bg-slate-200 hover:bg-slate-300'
+                  : 'text-white bg-blue-600 hover:bg-blue-700 animate-pulse'
+              }`}
             >
-              🏛 인천시 반정보
+              🏛 인천시 반정보{srcPendingYear.length > 0 && ` (${srcPendingYear.length})`}
             </button>
           </div>
         </div>
@@ -1160,11 +1311,49 @@ export default function ClassPage() {
               </tr>
             ))}
           </tbody>
+
+          {/* 합계 행 — 보육통합 원아수 컬럼만 집계(다른 컬럼은 더할 성질이 아니다) */}
+          {!loading && filtered.length > 0 && (
+            <tfoot>
+              <tr className="bg-teal-50 border-t-2 border-teal-200 font-bold text-slate-700">
+                <td className="px-2 py-2 border-r border-slate-200" />
+                <td className="px-2 py-2 border-r border-slate-200" />
+                <td className="px-2 py-2 border-r border-slate-200" />
+                <td className="px-2 py-2 border-r border-slate-200" />
+                <td className="px-2 py-2 text-right border-r border-slate-200">합계</td>
+                <td
+                  className="px-2 py-2 text-center border-r border-slate-200"
+                  title={`반별 원아수를 그대로 더한 값입니다 (매칭된 ${cisSum.matched}개 반).\n한 아동이 일반반과 연장반에 함께 배정되면 양쪽에 잡혀 실인원보다 큽니다.\n실인원(중복 제거): 현원 ${cisUnique.cur}명 · 퇴소 ${cisUnique.left}명`}
+                >
+                  {cisSum.cur}
+                  {cisSum.left > 0 && <span className="ml-0.5 text-[10px] font-normal text-slate-400">({cisSum.left})</span>}
+                </td>
+                <td className="px-2 py-2 border-r border-slate-200" />
+                <td className="px-2 py-2" />
+              </tr>
+            </tfoot>
+          )}
         </table>
 
         {!loading && (filtered.length > 0 || news.length > 0) && (
           <div className="px-4 py-2 border-t border-slate-200 text-[11px] text-slate-500 flex items-center gap-3 flex-wrap">
             <span>총 {filtered.length}개 반{checked.size > 0 && <> · 선택 {checked.size}개</>}</span>
+            {/*
+              합계는 두 가지를 같이 보여준다 — 반별 합(중복 포함)만 내면 실제 원아 수로 오해한다.
+              둘이 다르면 그 차이가 곧 연장반 등 중복 배정 인원이다.
+            */}
+            {cisUnique.total > 0 && (
+              <span className="text-slate-600">
+                보육통합 원아수 · 반별 합 <b className="text-slate-700">{cisSum.cur}</b>명
+                {' · '}실인원 <b className="text-slate-700">{cisUnique.cur}</b>명
+                {cisSum.cur !== cisUnique.cur && (
+                  <span className="ml-1 text-slate-400" title="한 아동이 일반반과 연장반 등 여러 반에 배정되면 반별 합에서 여러 번 세어집니다.">
+                    (중복 배정 {cisSum.cur - cisUnique.cur}명)
+                  </span>
+                )}
+                {cisUnique.left > 0 && <span className="ml-1 text-slate-400">· 퇴소 {cisUnique.left}명</span>}
+              </span>
+            )}
             {dirtyCount > 0 && <span className="text-amber-600 font-medium">✏️ 미저장 {dirtyCount}건</span>}
             <span className="ml-auto text-slate-400">
               <b className="text-slate-500">수정·추가는 통합e 에만 저장되고 인천시 원본은 바뀌지 않습니다</b>
