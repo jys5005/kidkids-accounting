@@ -18,6 +18,21 @@ const inputCls = 'border border-teal-300 rounded px-2 py-1 text-[11px] focus:out
 const editCls = 'w-full text-center text-[11px] px-1 py-0.5 rounded border border-transparent bg-transparent hover:border-slate-300 focus:outline-none focus:border-teal-500 focus:bg-white'
 const selCls = 'w-full text-center text-[11px] px-0.5 py-0.5 rounded border border-transparent bg-transparent hover:border-slate-300 focus:outline-none focus:border-teal-500 focus:bg-white'
 
+/**
+ * 출처 뱃지 — 3칸 그리드의 한 슬롯을 꽉 채우는 고정 규격.
+ * 색은 저장소별 고정: 통합e=violet / 보육통합(CIS)=indigo / 인천시=blue.
+ * (Tailwind purge 때문에 클래스 문자열을 조립하지 않고 통째로 적는다)
+ */
+const BADGE = {
+  violet: 'bg-violet-100 text-violet-700',
+  indigo: 'bg-indigo-100 text-indigo-700',
+  blue:   'bg-blue-100 text-blue-700',
+} as const
+const badgeCls = (tone: keyof typeof BADGE) =>
+  `px-1 py-[3px] text-[10px] leading-none text-center rounded font-medium ${BADGE[tone]}`
+/** 없는 출처 자리 — 자리만 차지해서 세로 정렬을 유지한다 */
+const badgeEmptyCls = 'py-[3px] text-[10px] leading-none rounded border border-dashed border-slate-200'
+
 /** 인천시 반 (ClasConfigList.do → ClasList[]) — 필드명 원본 그대로 */
 type IncheonClas = {
   CLAS_SN: number          // ★ 반 고유키 (통합e 에서 추가한 반은 음수 임시키)
@@ -889,7 +904,7 @@ export default function ClassPage() {
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-[11px]">
-          {/* 컬럼 구성 = 선택/반명/보육통합 반명/연령/상태/비고 (통합반명은 반명과 중복이라 화면에서 제외, GRP_CLAS_NM 데이터는 유지) */}
+          {/* 컬럼 구성 = 선택/출처/반명/보육통합 반명/연령/상태/비고 (통합반명은 반명과 중복이라 화면에서 제외, GRP_CLAS_NM 데이터는 유지) */}
           <thead><tr className="bg-teal-50 border-b border-slate-300">
             <th className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[45px]">
               <input
@@ -898,17 +913,21 @@ export default function ClassPage() {
                 onChange={() => setChecked(allChecked ? new Set() : new Set(filtered.map(c => c.CLAS_SN)))}
               />
             </th>
-            <th onClick={() => toggleSort('clas')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[220px] cursor-pointer select-none hover:bg-teal-100">반명{sortArrow('clas')}</th>
-            <th onClick={() => toggleSort('nrtr')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[190px] cursor-pointer select-none hover:bg-teal-100">보육통합 반명{sortArrow('nrtr')}</th>
-            <th onClick={() => toggleSort('age')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[150px] cursor-pointer select-none hover:bg-teal-100">연령{sortArrow('age')}</th>
-            <th onClick={() => toggleSort('status')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[80px] cursor-pointer select-none hover:bg-teal-100">상태{sortArrow('status')}</th>
+            <th
+              className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[190px]"
+              title="이 반이 지금 어느 저장소에 있는지 — 통합e / 보육통합(CIS) / 인천시. 자리는 항상 고정이라 세로로 비교됩니다."
+            >출처</th>
+            <th onClick={() => toggleSort('clas')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[230px] cursor-pointer select-none hover:bg-teal-100">반명{sortArrow('clas')}</th>
+            <th onClick={() => toggleSort('nrtr')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[230px] cursor-pointer select-none hover:bg-teal-100">보육통합 반명{sortArrow('nrtr')}</th>
+            <th onClick={() => toggleSort('age')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[170px] cursor-pointer select-none hover:bg-teal-100">연령{sortArrow('age')}</th>
+            <th onClick={() => toggleSort('status')} className="px-2 py-2 text-center font-bold text-slate-600 border-r border-slate-200 w-[90px] cursor-pointer select-none hover:bg-teal-100">상태{sortArrow('status')}</th>
             <th className="px-2 py-2 text-center font-bold text-slate-600">비고</th>
           </tr></thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="px-2 py-8 text-center text-slate-400">불러오는 중…</td></tr>
+              <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">불러오는 중…</td></tr>
             ) : filtered.length === 0 && news.length === 0 ? (
-              <tr><td colSpan={6} className="px-2 py-8 text-center text-slate-400">
+              <tr><td colSpan={7} className="px-2 py-8 text-center text-slate-400">
                 {rows.length === 0
                   ? '저장된 반이 없습니다. [＋ 반정보추가]로 직접 등록하거나 [🏛 인천시 반정보 → 업데이트]를 눌러주세요.'
                   : '검색 결과가 없습니다.'}
@@ -920,25 +939,28 @@ export default function ClassPage() {
                 <td className="px-2 py-1.5 text-center border-r border-slate-100">
                   <input type="checkbox" checked={checked.has(c.CLAS_SN)} onChange={() => toggle(c.CLAS_SN)} />
                 </td>
-                <td className="px-1 py-1 border-r border-slate-100">
-                  <div className="flex items-center gap-1">
-                    {/*
-                      존재 뱃지 — **배타가 아니라 누적**. 이 반이 지금 어느 저장소에 있는지 다 보여준다.
-                        [통합e] 이 표(incheon-clas)에 등록돼 있음 → 항상
-                        [CIS]   같은 이름이 보육통합 반정보(incheon-cis-clas)에도 있음
-                        [인천형] 같은 이름이 인천시 반정보(incheon-src-clas)에도 있음
-                      셋 다 해당되면 뱃지 3개가 함께 뜬다. 등록 경로(_src)가 아니라 **현재 존재 여부**라
-                      반명을 고치면 뱃지도 따라 사라진다(그게 대조에 유용).
-                    */}
-                    <span className="shrink-0 px-1 py-0.5 text-[9px] bg-violet-100 text-violet-700 rounded" title="통합e 반정보에 등록된 반">통합e</span>
-                    {cisNamesOfYear.has(valueOf(c, 'CLAS_NM_NRTR').trim()) && (
-                      <span className="shrink-0 px-1 py-0.5 text-[9px] bg-indigo-100 text-indigo-700 rounded" title="보육통합(CIS) 반정보에도 같은 반명이 있습니다">CIS</span>
-                    )}
-                    {srcNamesOfYear.has(valueOf(c, 'CLAS_NM').trim()) && (
-                      <span className="shrink-0 px-1 py-0.5 text-[9px] bg-blue-100 text-blue-700 rounded" title="인천시 반정보에도 같은 반명이 있습니다">인천형</span>
-                    )}
-                    <input value={valueOf(c, 'CLAS_NM')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM', e.target.value)} className={`${editCls} flex-1 min-w-0`} />
+                {/*
+                  출처 컬럼 — **배타가 아니라 누적**. 이 반이 지금 어느 저장소에 있는지 다 보여준다.
+                    [통합e] 이 표(incheon-clas)에 등록돼 있음 → 항상
+                    [CIS]   같은 이름이 보육통합 반정보(incheon-cis-clas)에도 있음
+                    [인천형] 같은 이름이 인천시 반정보(incheon-src-clas)에도 있음
+                  셋 다 해당되면 뱃지 3개가 함께 뜬다. 등록 경로(_src)가 아니라 **현재 존재 여부**라
+                  반명을 고치면 뱃지도 따라 사라진다(그게 대조에 유용).
+                */}
+                <td className="px-2 py-1 border-r border-slate-100">
+                  {/* 슬롯 3칸 고정 — 없는 출처는 빈 칸으로 남겨 세로 정렬이 흐트러지지 않게 한다 */}
+                  <div className="grid grid-cols-3 gap-1">
+                    <span className={badgeCls('violet')} title="통합e 반정보에 등록된 반">통합e</span>
+                    {cisNamesOfYear.has(valueOf(c, 'CLAS_NM_NRTR').trim())
+                      ? <span className={badgeCls('indigo')} title="보육통합(CIS) 반정보에도 같은 반명이 있습니다">CIS</span>
+                      : <span className={badgeEmptyCls} />}
+                    {srcNamesOfYear.has(valueOf(c, 'CLAS_NM').trim())
+                      ? <span className={badgeCls('blue')} title="인천시 반정보에도 같은 반명이 있습니다">인천형</span>
+                      : <span className={badgeEmptyCls} />}
                   </div>
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <input value={valueOf(c, 'CLAS_NM')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM', e.target.value)} className={editCls} />
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <input value={valueOf(c, 'CLAS_NM_NRTR')} onChange={e => editField(c.CLAS_SN, 'CLAS_NM_NRTR', e.target.value)} className={editCls} />
@@ -979,11 +1001,15 @@ export default function ClassPage() {
                 <td className="px-2 py-1.5 text-center border-r border-slate-100">
                   <button onClick={() => setNews(p => p.filter(x => x.key !== n.key))} className="text-rose-500 hover:text-rose-700" title="이 행 취소">✕</button>
                 </td>
-                <td className="px-1 py-1 border-r border-slate-100">
-                  <div className="flex items-center gap-1">
-                    <span className="shrink-0 px-1 py-0.5 text-[9px] bg-violet-200 text-violet-800 rounded">신규</span>
-                    <input value={n.CLAS_NM} onChange={e => editNew(n.key, 'CLAS_NM', e.target.value)} placeholder="반명 (필수)" className={`${editCls} flex-1 min-w-0 border-slate-300 bg-white`} />
+                <td className="px-2 py-1 border-r border-slate-100">
+                  <div className="grid grid-cols-3 gap-1">
+                    <span className="px-1 py-[3px] text-[10px] leading-none text-center rounded bg-violet-200 text-violet-800 font-medium">신규</span>
+                    <span className={badgeEmptyCls} />
+                    <span className={badgeEmptyCls} />
                   </div>
+                </td>
+                <td className="px-1 py-1 border-r border-slate-100">
+                  <input value={n.CLAS_NM} onChange={e => editNew(n.key, 'CLAS_NM', e.target.value)} placeholder="반명 (필수)" className={`${editCls} border-slate-300 bg-white`} />
                 </td>
                 <td className="px-1 py-1 border-r border-slate-100">
                   <input value={n.CLAS_NM_NRTR} onChange={e => editNew(n.key, 'CLAS_NM_NRTR', e.target.value)} placeholder="보육통합 반명" className={`${editCls} border-slate-300 bg-white`} />
