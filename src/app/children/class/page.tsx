@@ -253,7 +253,7 @@ export default function ClassPage() {
    */
   const handleIncheonLogin = useCallback(async () => {
     if (incheonLoginBusy) return
-    if (!confirm('인천시에 공동인증서로 로그인한 뒤 [아동관리 > 반설정] 화면까지 엽니다.\n원장님 PC의 로컬 에이전트를 통해 실행되며 최대 5분까지 걸립니다.\n\n계속할까요?')) return
+    if (!confirm('인천시에 공동인증서로 로그인합니다.\n로그인 후 [아동관리 > 반설정] 화면 열기도 시도하지만, 안 되면 로그인까지만 처리합니다.\n원장님 PC의 로컬 에이전트를 통해 실행되며 최대 5분까지 걸립니다.\n\n계속할까요?')) return
     setIncheonLoginBusy(true)
     setMsg('⏳ 인천시 로그인 중… (에이전트가 인증서로 로그인합니다, 최대 5분)')
     try {
@@ -269,7 +269,12 @@ export default function ClassPage() {
       }
       await reloadIncheonSession()
 
-      // 로그인 성공 → 아동관리 > 반설정 이동. 여기서 실패해도 세션 자체는 이미 등록된 상태다.
+      /*
+       * 로그인 성공 → 아동관리 > 반설정 이동 시도.
+       * ⚠ 화면 이동은 **덤**이다. 인천시 하위 탭 라벨이 확정되지 않아 실패할 수 있는데,
+       *   그때는 실패로 몰지 않고 "로그인까지 완료"로 끝낸다(사용자 확정: 안 되면 그냥 로그인만).
+       *   세션은 이미 등록된 상태라 [🏛 인천시 반정보 → 업데이트]는 정상 동작한다.
+       */
       setMsg('✅ 로그인 완료 — ⏳ [아동관리 > 반설정] 화면 여는 중…')
       const nav = await fetch('/api/incheon/navigate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -279,7 +284,8 @@ export default function ClassPage() {
       if (nav.success) {
         setMsg('✅ 인천시 [아동관리 > 반설정] 화면을 열었습니다. (원장님 PC 브라우저를 확인해주세요)')
       } else {
-        setMsg(`⚠ 세션 등록은 완료됐지만 화면 이동에 실패했습니다 — ${nav.error || '알 수 없는 오류'}`)
+        setMsg('✅ 인천시 세션 등록 완료 — 화면 자동 이동은 안 돼서 로그인까지만 했습니다. [🏛 인천시 반정보 → 업데이트]는 이대로 쓰실 수 있습니다.')
+        console.warn('[인천형] 화면 이동 실패(로그인은 성공):', nav.error || nav)
       }
     } catch {
       setMsg('❌ 통합e 서버에 연결할 수 없습니다.')
