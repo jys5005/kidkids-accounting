@@ -420,12 +420,15 @@ export default function ClassPage() {
    *   'same' → 반명 매칭 + 연령까지 일치 → 재등록 불필요(회색 비활성)
    *   'diff' → 반명은 있는데 연령이 다름 → [업데이트](연령·반명을 보육통합 기준으로 맞춤)
    *   'none' → 통합e 에 없음 → [등록]
-   * 반명은 통합e 의 CLAS_NM / CLAS_NM_NRTR 어느 쪽과 같아도 같은 반으로 본다.
+   * ⚠ 매칭은 **통합e 의 '보육통합 반명'(CLAS_NM_NRTR) 과 정확히 일치**할 때만 같은 반으로 본다.
+   *   옛 코드는 CLAS_NM 또는 CLAS_NM_NRTR 중 하나만 같아도 매칭해서, 보육통합 반명이
+   *   '예쁜새싹261'(1 더 붙은 오타)인데 반명 '예쁜새싹26' 이 같다는 이유로 [등록됨]으로 잠겼다.
+   *   글자가 한 자라도 다르면 다른 반 → [＋ 등록] 이 떠야 한다.
    */
   const cisRegState = useCallback((cl: CisClas): { state: 'same' | 'diff' | 'none'; row?: IncheonClas } => {
     const nm = (cl.name || '').trim()
     if (!nm) return { state: 'none' }
-    const row = cisCmpRows.find(r => (r.CLAS_NM || '').trim() === nm || (r.CLAS_NM_NRTR || '').trim() === nm)
+    const row = cisCmpRows.find(r => (r.CLAS_NM_NRTR || '').trim() === nm)
     if (!row) return { state: 'none' }
     return { state: (row.AGE_CD || '') === cisAgeCd(cl.type) ? 'same' : 'diff', row }
   }, [cisCmpRows, cisAgeCd])
@@ -566,13 +569,15 @@ export default function ClassPage() {
     return () => { cancelled = true }
   }, [popup, srcClasYears, fetchClasByYears])
 
-  /** 인천시 반이 통합e 에 등록됐는지 — 보육통합과 동일 규칙(반명으로 찾고 연령 비교), 단 같은 연도끼리만 비교 */
+  /**
+   * 인천시 반이 통합e 에 등록됐는지 — 같은 연도끼리, **반명(CLAS_NM)이 정확히 일치**할 때만 같은 반.
+   * ⚠ 보육통합과 마찬가지로 CLAS_NM/CLAS_NM_NRTR 을 섞어 매칭하면 안 된다(한 자만 달라도 다른 반).
+   */
   const srcRegState = useCallback((c: IncheonClas): { state: 'same' | 'diff' | 'none'; row?: IncheonClas } => {
     const y = String((c as unknown as { _year?: string })._year ?? '')
     const nm = (c.CLAS_NM || '').trim()
     if (!nm) return { state: 'none' }
-    const row = (srcCmpByYear[y] || []).find(r =>
-      (r.CLAS_NM || '').trim() === nm || (r.CLAS_NM_NRTR || '').trim() === nm)
+    const row = (srcCmpByYear[y] || []).find(r => (r.CLAS_NM || '').trim() === nm)
     if (!row) return { state: 'none' }
     return { state: (row.AGE_CD || '') === (c.AGE_CD || '') ? 'same' : 'diff', row }
   }, [srcCmpByYear])
