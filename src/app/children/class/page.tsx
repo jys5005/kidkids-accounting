@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { REGION_SYSTEMS } from '@/lib/region-systems'
 
 /**
  * 반편성관리 — 인천시어린이집관리시스템 [설정 > 반설정] 인터페이스와 동일 구성.
@@ -292,6 +293,29 @@ export default function ClassPage() {
   const [cisCmpByYear, setCisCmpByYear] = useState<Record<string, IncheonClas[]>>({})
   const [cisRegBusy, setCisRegBusy] = useState(false)
   const [srcClasStore, setSrcClasStore] = useState<IncheonClas[]>([]) // 인천시 반정보 참조본(incheon-src-clas) — 통합e 작업본과 별개
+
+  /*
+   * 이 시설의 지역형(regionSystem) — 헤더 뱃지("인천형" 등)와 같은 값(profile.regionSystem).
+   *
+   * ⚠ 반정보 조회도 아동과 마찬가지로 **인천형만 구현돼 있다.** 충남·경북은 지역형으로 등록되지만
+   *   반/아동 API 가 없다(그쪽은 현금출납부만 연동). 지역 확인 없이 [업데이트]를 누르면 남의
+   *   시스템(인천) API 를 찌르게 되므로 반드시 가드한다.
+   *   새 지역의 반 조회가 구현되면 CLAS_SYNC_REGIONS 에 한 줄 추가하면 자동으로 켜진다.
+   */
+  const CLAS_SYNC_REGIONS: Record<string, string> = { incheon: '인천시' }
+  const [regionSystem, setRegionSystem] = useState<string>('')
+  const [regionLoaded, setRegionLoaded] = useState(false)
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => setRegionSystem(String(d?.profile?.regionSystem || '')))
+      .catch(() => setRegionSystem(''))
+      .finally(() => setRegionLoaded(true))
+  }, [])
+  const regionLabel = REGION_SYSTEMS.find(r => r.value === regionSystem)?.label || regionSystem
+  /** 이 지역에서 반정보 조회가 되는가 — 미설정(빈값)은 기존 사용자 호환을 위해 인천으로 본다 */
+  const clasSyncSource = !regionSystem ? '인천시' : CLAS_SYNC_REGIONS[regionSystem] || ''
+  const clasSyncSupported = !!clasSyncSource
   // 메인 표 [CIS] 뱃지용 — 조회연도의 보육통합 반명 집합(load 에서 채움). 팝업용 cisClasStore 와 별개.
   const [cisNamesOfYear, setCisNamesOfYear] = useState<Set<string>>(new Set())
   // 조회연도의 보육통합 반정보 저장분 — 헤더 버튼 '전부 등록됨' 판정에 쓴다(팝업 열지 않아도 알 수 있게).
@@ -340,6 +364,12 @@ export default function ClassPage() {
    */
   const handleIncheonLogin = useCallback(async () => {
     if (incheonLoginBusy) return
+    // ⚠ 인천형 전용 — 다른 지역에서 이 뱃지가 뜰 일은 없지만(참조본이 비어 뱃지 자체가 안 생김),
+    //    혹시 뜨더라도 인천 로그인 잡이 걸리지 않게 막는다.
+    if (!clasSyncSupported) {
+      setMsg(`❌ ${regionLabel || '이 지역'}은 인천시 로그인 대상이 아닙니다.`)
+      return
+    }
     if (!confirm('인천시에 공동인증서로 로그인합니다.\n로그인 후 [아동관리 > 반설정] 화면 열기도 시도하지만, 안 되면 로그인까지만 처리합니다.\n원장님 PC의 로컬 에이전트를 통해 실행되며 최대 5분까지 걸립니다.\n\n계속할까요?')) return
     setIncheonLoginBusy(true)
     setMsg('⏳ 인천시 로그인 중… (에이전트가 인증서로 로그인합니다, 최대 5분)')
@@ -547,7 +577,12 @@ export default function ClassPage() {
    * 통합e 반정보로 가져오려면 [+ 반정보추가 → 🏛 인천시 반정보 세팅]으로 사용자가 명시적으로 복사한다.
    */
   const handleSync = async () => {
-    setSyncing(true); setMsg('인천시 반정보 조회 중… (로컬 에이전트 경유, 수십 초 걸립니다)')
+    // ⚠ 지역 가드 — 반 조회가 없는 지역에서 누르면 인천 API 를 찌르게 되므로 여기서 차단
+    if (!clasSyncSupported) {
+      setMsg(`❌ ${regionLabel || '이 지역'}은 아직 반정보 조회를 지원하지 않습니다. (현재 인천형만 가능)`)
+      return
+    }
+    setSyncing(true); setMsg(`${clasSyncSource} 반정보 조회 중… (로컬 에이전트 경유, 수십 초 걸립니다)`)
     try {
       const res = await fetch('/api/incheon/children', {
         method: 'POST',
@@ -1127,18 +1162,27 @@ export default function ClassPage() {
             >
               📚 보육통합 반정보{cisPendingYear.length > 0 && ` (${cisPendingYear.length})`}
             </button>
+            {/* 지역형 반정보 — 라벨·동작 모두 시설의 regionSystem 기준.
+                미지원 지역은 비활성 + 툴팁(눌러서 인천 API 를 찌르는 사고 방지). */}
             <button
               onClick={() => setPopup('incheon')}
-              title={srcPendingYear.length === 0
-                ? `${year}년 인천시 반이 모두 통합e 반정보에 등록되어 있습니다.`
-                : `${year}년 등록·갱신할 인천시 반 ${srcPendingYear.length}개`}
+              disabled={regionLoaded && !clasSyncSupported}
+              title={regionLoaded && !clasSyncSupported
+                ? `${regionLabel || '이 지역'}은 아직 반정보 조회를 지원하지 않습니다 (현재 인천형만 가능)`
+                : srcPendingYear.length === 0
+                  ? `${year}년 ${clasSyncSource} 반이 모두 통합e 반정보에 등록되어 있습니다.`
+                  : `${year}년 등록·갱신할 ${clasSyncSource} 반 ${srcPendingYear.length}개`}
               className={`px-3 py-1.5 text-[11px] font-bold rounded ${
-                srcPendingYear.length === 0
-                  ? 'text-slate-500 bg-slate-200 hover:bg-slate-300'
-                  : 'text-white bg-blue-600 hover:bg-blue-700 animate-pulse'
+                regionLoaded && !clasSyncSupported
+                  ? 'text-slate-400 bg-slate-100 cursor-not-allowed'
+                  : srcPendingYear.length === 0
+                    ? 'text-slate-500 bg-slate-200 hover:bg-slate-300'
+                    : 'text-white bg-blue-600 hover:bg-blue-700 animate-pulse'
               }`}
             >
-              🏛 인천시 반정보{srcPendingYear.length > 0 && ` (${srcPendingYear.length})`}
+              {regionLoaded && !clasSyncSupported
+                ? '🏛 지역형 반정보 (미지원)'
+                : `🏛 ${clasSyncSource} 반정보${srcPendingYear.length > 0 ? ` (${srcPendingYear.length})` : ''}`}
             </button>
           </div>
         </div>
@@ -1177,7 +1221,7 @@ export default function ClassPage() {
             ) : filtered.length === 0 && news.length === 0 ? (
               <tr><td colSpan={8} className="px-2 py-8 text-center text-slate-400">
                 {rows.length === 0
-                  ? '저장된 반이 없습니다. [＋ 반정보추가]로 직접 등록하거나 [🏛 인천시 반정보 → 업데이트]를 눌러주세요.'
+                  ? `저장된 반이 없습니다. [＋ 반정보추가]로 직접 등록하거나${clasSyncSupported ? ` [🏛 ${clasSyncSource} 반정보 → 업데이트]를 눌러주세요.` : ' 직접 입력해주세요.'}`
                   : '검색 결과가 없습니다.'}
               </td></tr>
             ) : filtered.map(c => {
@@ -1369,7 +1413,7 @@ export default function ClassPage() {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-[760px] max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-slate-200 flex items-center gap-2 flex-wrap">
               <div className="text-base font-bold text-slate-800">
-                {popup === 'cis' ? '📚 보육통합 반정보' : '🏛 인천시 반정보'}
+                {popup === 'cis' ? '📚 보육통합 반정보' : `🏛 ${clasSyncSource} 반정보`}
               </div>
               <div className="text-[11px] text-slate-400">
                 {popup === 'cis'

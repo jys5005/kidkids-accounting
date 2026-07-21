@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { REGION_SYSTEMS } from '@/lib/region-systems'
 
 /**
  * 아동현황 — 인천시어린이집관리시스템 [아동 > 아동 등록/수정] 인터페이스와 동일 구성.
@@ -308,6 +309,29 @@ export default function ChildStatusPage() {
   // 신규등록 — 아직 저장 안 한 draft 아동(음수 CHIL_SN). 저장 시 childAdds 로 PUT.
   const [draftChild, setDraftChild] = useState<IncheonChild | null>(null)
 
+  /*
+   * 이 시설의 지역형(regionSystem) — 헤더 뱃지("인천형" 등)와 같은 값(profile.regionSystem).
+   *
+   * ⚠ 아동 조회는 **인천형만 구현돼 있다.** 충남·경북 등은 지역형으로 등록은 되지만
+   *   아동/반 API 가 아예 없다(그쪽 시스템은 현금출납부만 연동됨). 그래서 지역 확인 없이
+   *   [가져오기]를 누르면 남의 시스템(인천) API 를 찌르게 되므로 반드시 가드한다.
+   *   새 지역의 아동 조회가 구현되면 CHILD_SYNC_REGIONS 에 추가하면 된다.
+   */
+  const CHILD_SYNC_REGIONS: Record<string, string> = { incheon: '인천시' }
+  const [regionSystem, setRegionSystem] = useState<string>('')
+  const [regionLoaded, setRegionLoaded] = useState(false)
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => setRegionSystem(String(d?.profile?.regionSystem || '')))
+      .catch(() => setRegionSystem(''))
+      .finally(() => setRegionLoaded(true))
+  }, [])
+  const regionLabel = REGION_SYSTEMS.find(r => r.value === regionSystem)?.label || regionSystem
+  /** 이 지역에서 아동 조회가 되는가 — 미설정(빈값)은 기존 사용자 호환을 위해 인천으로 본다 */
+  const childSyncSource = !regionSystem ? '인천시' : CHILD_SYNC_REGIONS[regionSystem] || ''
+  const childSyncSupported = !!childSyncSource
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -340,11 +364,16 @@ export default function ChildStatusPage() {
   }, [])
 
   const handleSync = async () => {
+    // ⚠ 지역 가드 — 아동 조회가 없는 지역에서 누르면 인천 API 를 찌르게 되므로 여기서 차단
+    if (!childSyncSupported) {
+      setMsg(`❌ ${regionLabel || '이 지역'}은 아직 아동 조회를 지원하지 않습니다. (현재 인천형만 가능)`)
+      return
+    }
     if (dirtyCount > 0 && !confirm(`저장하지 않은 수정 ${dirtyCount}건이 있습니다.
 
-인천시에서 가져오면 인천시 값으로 덮어써져 수정 내용이 사라집니다.
+${childSyncSource}에서 가져오면 ${childSyncSource} 값으로 덮어써져 수정 내용이 사라집니다.
 계속할까요?`)) return
-    setSyncing(true); setMsg('인천시 조회 중… (로컬 에이전트 경유, 수십 초 걸립니다)')
+    setSyncing(true); setMsg(`${childSyncSource} 조회 중… (로컬 에이전트 경유, 수십 초 걸립니다)`)
     try {
       const res = await fetch('/api/incheon/children', {
         method: 'POST',
@@ -713,12 +742,23 @@ export default function ChildStatusPage() {
           >
             ＋ 신규등록
           </button>
+          {/*
+            지역형 아동 가져오기 — 라벨·동작 모두 시설의 regionSystem 기준.
+            미지원 지역은 비활성 + 툴팁으로 이유를 알린다(눌러서 인천 API 를 찌르는 사고 방지).
+          */}
           <button
             onClick={handleSync}
-            disabled={syncing}
-            className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 rounded-lg whitespace-nowrap"
+            disabled={syncing || (regionLoaded && !childSyncSupported)}
+            title={regionLoaded && !childSyncSupported
+              ? `${regionLabel || '이 지역'}은 아직 아동 조회를 지원하지 않습니다 (현재 인천형만 가능)`
+              : `${childSyncSource}에서 아동 정보를 가져옵니다`}
+            className="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg whitespace-nowrap"
           >
-            {syncing ? '가져오는 중…' : '📥 인천시에서 가져오기'}
+            {syncing
+              ? '가져오는 중…'
+              : regionLoaded && !childSyncSupported
+                ? '📥 지역형 아동 가져오기 (미지원)'
+                : `📥 ${childSyncSource}에서 가져오기`}
           </button>
         </div>
       </div>
@@ -845,7 +885,9 @@ export default function ChildStatusPage() {
                   {rows.length === 0
                     ? (isCis
                         ? '보육통합에서 수집된 아동이 없습니다. 통합e 아동정보에서 [CIS 갱신]을 먼저 실행해주세요.'
-                        : '저장된 아동이 없습니다. [📥 인천시에서 가져오기]를 눌러주세요.')
+                        : childSyncSupported
+                          ? `저장된 아동이 없습니다. [📥 ${childSyncSource}에서 가져오기]를 눌러주세요.`
+                          : `저장된 아동이 없습니다. ${regionLabel || '이 지역'}은 아직 아동 조회를 지원하지 않아, [＋ 신규등록]으로 직접 등록해주세요.`)
                     : '조회된 아동이 없습니다.'}
                 </td></tr>
               ) : filtered.map((c, idx) => {
