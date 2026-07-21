@@ -1250,6 +1250,31 @@ export default function DataMigrationPage() {
     }
   }, [gbccmCookieInput, reloadGbccmSession, source])
 
+  /**
+   * 등록된 세션쿠키 삭제 — 잘못된 값을 넣었거나 다른 계정으로 바꿀 때.
+   * 삭제해도 출발지 사이트의 로그인 상태와는 무관하다(통합e 저장분만 지움).
+   */
+  const [gbccmDeleting, setGbccmDeleting] = useState(false)
+  const handleGbccmDeleteSession = useCallback(async () => {
+    if (!confirm('등록된 세션쿠키를 삭제합니다.\n(출발지 사이트 로그인에는 영향 없고, 통합e 저장분만 지웁니다)\n\n계속할까요?')) return
+    setGbccmDeleting(true); setGbccmRegisterMsg('')
+    try {
+      const res = await fetch(`/api/${source}/register-session`, { method: 'DELETE' })
+      const j = await res.json().catch(() => ({}))
+      if (j.success) {
+        setGbccmRegisterMsg('🗑 세션쿠키를 삭제했습니다. 다시 등록해주세요.')
+        setGbccmCookieInput('')
+        await reloadGbccmSession()
+      } else {
+        setGbccmRegisterMsg(`❌ ${j.error || '삭제 실패'}`)
+      }
+    } catch (e) {
+      setGbccmRegisterMsg(`❌ ${e instanceof Error ? e.message : '연결 실패'}`)
+    } finally {
+      setGbccmDeleting(false)
+    }
+  }, [source, reloadGbccmSession])
+
   // 자동로그인 — 저장된 세션(DCPU_SSID)으로 로컬 에이전트가 로그인된 화면을 새 브라우저창으로 띄움
   // (서버는 원장 브라우저 탭에 gbccm 쿠키를 못 심음 → 원장 PC 에이전트가 헤드풀 브라우저에 주입)
   const [gbccmOpening, setGbccmOpening] = useState('')
@@ -2538,6 +2563,16 @@ export default function DataMigrationPage() {
                       className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white"
                     >
                       {gbccmRegistering ? '등록 중…' : '재등록'}
+                    </button>
+                    {/* 잘못된 쿠키값을 넣었거나 계정을 바꿀 때 — 통합e 저장분만 삭제 */}
+                    <button
+                      type="button"
+                      onClick={handleGbccmDeleteSession}
+                      disabled={gbccmDeleting || gbccmRegistering}
+                      title="등록된 세션쿠키를 삭제합니다 (출발지 사이트 로그인에는 영향 없음)"
+                      className="px-3 py-1.5 text-[11px] font-semibold rounded-lg border border-rose-300 bg-white hover:bg-rose-50 disabled:opacity-50 text-rose-600"
+                    >
+                      {gbccmDeleting ? '삭제 중…' : '🗑 삭제'}
                     </button>
                   </div>
                   {gbccmRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{gbccmRegisterMsg}</p>}
