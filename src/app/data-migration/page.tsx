@@ -1237,6 +1237,17 @@ export default function DataMigrationPage() {
    */
   const SESSION_COOKIE_SOURCES = ['gbccm', 'cnccm']
   const isSessionCookieSource = SESSION_COOKIE_SOURCES.includes(source)
+
+  /*
+   * 영수증 이미지 동시 수집 — 전표 조회할 때 이미지도 같이 받는다(withReceipts).
+   * ⚠ 기본 off: 첨부 전표가 월 70건·전표당 2장·장당 최대 2MB라 3년치를 켜면 수천 장(수 GB)이라
+   *   오래 걸린다. 켤 때도 서버가 receiptLimit(기본 300장)으로 상한을 둔다.
+   * 현재 이미지 수집 경로가 확인된 출발지는 충남(cnccm) 뿐이다(경북은 같은 솔루션이라 될 가능성이
+   * 높지만 실측 안 함) — 그래서 cnccm 에서만 노출한다.
+   */
+  const RECEIPT_CAPABLE_SOURCES = ['cnccm']
+  const canFetchReceipts = RECEIPT_CAPABLE_SOURCES.includes(source)
+  const [withReceipts, setWithReceipts] = useState(false)
   const [gbccmSession, setGbccmSession] = useState<{ exists: boolean; savedAt?: string } | null>(null)
   const [gbccmSessionLoading, setGbccmSessionLoading] = useState(false)
   const gbccmSessionRegistered = !!gbccmSession?.exists
@@ -1851,10 +1862,12 @@ export default function DataMigrationPage() {
           : currentSource.authType === 'session'
             ? {}
             : { userId: sourceId, password: sourcePw }
+      // 영수증 이미지 동시 수집 플래그 — 지원 출발지에서 체크했을 때만 보낸다
+      const receiptOpt = canFetchReceipts && withReceipts ? { withReceipts: true } : {}
       const body =
         mode === 'single'
-          ? { ...authFields, yearMonth }
-          : { ...authFields, startYm, endYm }
+          ? { ...authFields, ...receiptOpt, yearMonth }
+          : { ...authFields, ...receiptOpt, startYm, endYm }
 
       const res = await fetch(`/api/${source}/cash-ledger`, {
         method: 'POST',
@@ -2948,6 +2961,25 @@ export default function DataMigrationPage() {
                 기간 조회
               </button>
             </div>
+
+            {/* 영수증 이미지 동시 수집 — 지원 출발지에서만 노출 */}
+            {canFetchReceipts && (
+              <label className="flex items-start gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={withReceipts}
+                  onChange={(e) => setWithReceipts(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span className="text-[11px] leading-relaxed">
+                  <b className="text-emerald-800">🧾 영수증 이미지도 함께 가져오기</b>
+                  <span className="block text-slate-500 mt-0.5">
+                    전표에 첨부된 영수증 사진까지 같이 받습니다. 시간이 오래 걸리니
+                    <b> 기간이 길면 나눠서</b> 받으세요. 이미 받은 사진은 다시 안 받습니다.
+                  </span>
+                </span>
+              </label>
+            )}
 
             {mode === 'single' ? (
               <div>
