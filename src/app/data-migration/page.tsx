@@ -97,9 +97,9 @@ const SOURCE_OPTIONS = [
   { value: 'gbccm', label: '경상북도어린이집관리시스템', url: 'gbccm.co.kr', features: ['현금출납부'], authType: 'session' as const },
   // 충남(농협)은 경북과 같은 NH 솔루션의 형제 시스템 — 엔드포인트·세션쿠키(DCPU_SSID)가 동일해
   // 통합e 가 gbccm 로직을 site='cnccm' 으로 재사용한다(2026-07-21 실측 검증).
-  // ⚠ unverified — 엔드포인트·세션쿠키가 경북과 동일한 것은 실측했으나, 실제 계정으로 데이터를
-  //    받아본 적이 없다. 첫 실사용에서 조회·계정코드 매핑이 확인되면 이 플래그를 지운다.
-  { value: 'cnccm', label: '충청남도어린이집관리시스템(농협)', url: 'cnccm.co.kr', features: ['현금출납부'], authType: 'session' as const, unverified: true },
+  // ✅ 2026-07-21 실사용 검증 완료 — 세션쿠키 등록 후 9,012건(2023.03~2026.06) 정상 조회,
+  //    주요 계정코드가 매핑표와 일치함을 실데이터로 확인해 unverified 플래그 제거.
+  { value: 'cnccm', label: '충청남도어린이집관리시스템(농협)', url: 'cnccm.co.kr', features: ['현금출납부'], authType: 'session' as const },
 ] as const
 
 type SourceType = typeof SOURCE_OPTIONS[number]['value']
@@ -683,12 +683,41 @@ const MAPPING_TABLE_BASE = {
 } as const
 
 /**
- * 충남(농협, cnccm)은 경북(gbccm)과 **같은 NH 솔루션**이라 계정체계·응답필드가 동일하다
- * (2026-07-21 실측: 엔드포인트·에러코드·세션쿠키까지 일치). 그래서 매핑표를 복제하지 않고
- * gbccm 것을 그대로 참조한다 — 복제하면 나중에 한쪽만 고쳐져 두 지역 매핑이 어긋난다.
- * ⚠ 충남 실데이터로 계정코드를 검증한 적은 아직 없다. 첫 이관 때 매핑표와 실제 값을 대조할 것.
+ * 충남(농협, cnccm) 매핑 — ★ 경북(gbccm)과 **분리**한다 (사용자 확정 2026-07-21).
+ *
+ * 솔루션은 같지만 **지자체 고유 제도가 달라 계정 구성이 다르다.** 충남 실데이터 9,012건
+ * (2023.03~2026.06) 을 뽑아 확인한 결과, 경북에 없는 "충남형 필요경비" 계열이 실재한다:
+ *   1324 그 밖의 지원금 [충남형 필요경비 지원금]        42건
+ *   2313 행사비 [충남형 필요경비]                    127건
+ *   2313 행사비 [충남형 필요경비(특별활동비)]            59건
+ *   2313 행사비 [충남형 필요경비(기타시도특성화비)]        29건
+ *   2313 행사비 [충남형 필요경비(부모부담행사비)]          13건
+ * 이들은 목 코드(1324/2313) 자체가 원본 시스템이 부여한 값이라 그대로 통과시키면 맞다
+ * (세목은 설명일 뿐 별도 sunote 세목코드로 쪼개지 않는다).
+ *
+ * ⚠ 경북 것을 참조(공유)하면 한쪽을 고칠 때 다른 지역이 같이 바뀐다 — 지자체 제도가 다르므로
+ *   앞으로는 각자 고친다. 공통 부분은 스프레드로 물려받고 충남 고유 항목만 덧붙인다.
  */
-const MAPPING_TABLE = { ...MAPPING_TABLE_BASE, cnccm: MAPPING_TABLE_BASE.gbccm } as const
+const CNCCM_MAPPING = {
+  income: [
+    ...MAPPING_TABLE_BASE.gbccm.income,
+    { by24: '324', by24Name: '그 밖의 지원금 [충남형 필요경비 지원금]', sunote: '1324', sunoteNote: '충남 고유 · 목코드 그대로(실측 42건)', sub: true },
+  ],
+  expense: [
+    ...MAPPING_TABLE_BASE.gbccm.expense,
+    { by24: '313', by24Name: '행사비 [충남형 필요경비]', sunote: '2313', sunoteNote: '충남 고유 · 목코드 그대로(실측 127건)', sub: true },
+    { by24: '313', by24Name: '행사비 [충남형 필요경비(특별활동비)]', sunote: '2313', sunoteNote: '충남 고유(실측 59건)', sub: true },
+    { by24: '313', by24Name: '행사비 [충남형 필요경비(기타시도특성화비)]', sunote: '2313', sunoteNote: '충남 고유(실측 29건)', sub: true },
+    { by24: '313', by24Name: '행사비 [충남형 필요경비(부모부담행사비)]', sunote: '2313', sunoteNote: '충남 고유(실측 13건)', sub: true },
+  ],
+  pattern: '충청남도(농협, cnccm) SCRN_MKNM(3자리) → sunote 코드 (수입=앞에1·지출=앞에2, 경북과 동일 체계). '
+    + '2026-07-21 실데이터 9,012건(2023.03~2026.06)으로 검증 — 주요 계정(1111 정부지원보육료 2,683건 / '
+    + '2211 수용비및수수료 784건 / 2121 보육교직원급여 701건 / 2315 급식·간식재료비 624건) 정확 확인. '
+    + '★ 충남 고유 "충남형 필요경비" 계열(1324·2313)은 목코드 그대로 통과. '
+    + '세목 5계정(기타필요경비 수입/지출·퇴직적립금·기타운영비·자산취득비)은 세목명 우선 매칭 후 적요 폴백.',
+} as const
+
+const MAPPING_TABLE = { ...MAPPING_TABLE_BASE, cnccm: CNCCM_MAPPING } as const
 
 // 세목 코드(XXXX-YYY 형식) → 수전자장부 확정 5자리 코드(목4자리+세목순번1자리)
 // (src/lib/accounts.ts subAccountCodeMap 과 동일 기준, 2026-07-07 확정 규칙)
