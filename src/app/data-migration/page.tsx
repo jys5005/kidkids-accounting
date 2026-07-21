@@ -1910,14 +1910,55 @@ export default function DataMigrationPage() {
       try {
         json = JSON.parse(raw)
       } catch {
+        /*
+         * ⚠ 504 는 "기능이 없다"가 아니라 **nginx 게이트웨이 타임아웃**이다(2026-07-21 실사고).
+         *   인천시 13분짜리 조회가 실제로는 정상 완료됐는데 60초에 끊겨 504 가 왔고,
+         *   화면은 "조회 기능이 없거나 서버 오류"라는 엉뚱한 안내를 띄워 실패한 줄 알게 만들었다.
+         *   → 504/502 는 시간초과로 정확히 안내하고, 백그라운드에서 계속 돌고 있음을 알린다.
+         */
+        if (res.status === 504 || res.status === 502) {
+          throw new Error(
+            '조회가 오래 걸려 응답 대기가 끊겼습니다(시간 초과). ' +
+            '수집은 백그라운드에서 계속 진행 중이니, 잠시 후 [저장된 데이터 불러오기]를 눌러 확인해주세요.',
+          )
+        }
         throw new Error(
           res.ok
             ? '조회 서버가 예상치 못한 응답을 반환했습니다. (준비 중 출발지이거나 서버 오류)'
-            : `조회 실패 (HTTP ${res.status}) — 해당 출발지 조회 기능이 없거나 서버 오류입니다.`,
+            : `조회 실패 (HTTP ${res.status}) — 서버 오류입니다.`,
         )
       }
 
       if (!res.ok) throw new Error(json.error || '조회 실패')
+
+      /*
+       * 202 = 아직 진행 중(nginx 60초 제한을 피해 서버가 즉시 반환). 에이전트는 백그라운드에서
+       * 계속 수집하므로, 완료될 때까지 폴링한 뒤 저장분을 불러온다.
+       */
+      if (res.status === 202 && json.pending) {
+        const jobId = Number(json.jobId)
+        const deadline = Date.now() + 15 * 60_000   // 최대 15분 (인천 3~4개월치 실측 13분)
+        let done = false
+        while (Date.now() < deadline) {
+          await new Promise(r => setTimeout(r, 3000))
+          try {
+            const j = await fetch(`/api/jobs/active?type=${encodeURIComponent(`${source}-cash-ledger`)}`, { cache: 'no-store' })
+              .then(r => r.json())
+            // 진행 중인 잡이 사라졌다 = 완료(또는 실패) — 저장분으로 확인한다
+            if (!j?.job || (jobId && j.job.id !== jobId)) { done = true; break }
+          } catch { /* 폴링 실패는 무시하고 계속 */ }
+        }
+        if (!done) throw new Error('조회가 15분을 넘겨 대기를 중단했습니다. [저장된 데이터 불러오기]로 확인해주세요.')
+        /*
+         * 완료 — 수집 결과는 서버 scrape-store 에 저장돼 있다.
+         * ⚠ 여기서 바로 화면에 그리려면 autoMap/정렬이 필요한데 둘 다 이 아래에 선언돼 있어
+         *   쓸 수 없다(TDZ). 억지로 끌어쓰지 않고 완료 사실을 명확히 알린다 — 버튼 한 번이면 된다.
+         */
+        setLoading(false)
+        setError('')
+        setTransferResult('✅ 수집 완료 — [저장된 데이터 불러오기]를 눌러 결과를 확인하세요.')
+        return
+      }
 
       // 계정명(+적요 세목) → sunote 코드 자동 매핑
       const autoMap = (rawResults: CashLedgerResult[]) => {
