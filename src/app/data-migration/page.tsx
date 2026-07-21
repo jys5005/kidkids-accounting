@@ -2510,7 +2510,8 @@ export default function DataMigrationPage() {
                 {certImportMsg && <p className="text-[11px] mt-1.5 text-slate-600">{certImportMsg}</p>}
               </div>
             ) : currentSource.authType === 'session' ? (
-              gbccmSessionRegistered ? (
+              <>
+              {gbccmSessionRegistered ? (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
                   <div className="flex items-center gap-2">
                     <span className="text-emerald-600 text-lg">&#x2713;</span>
@@ -2601,7 +2602,61 @@ export default function DataMigrationPage() {
                   </div>
                   {gbccmRegisterMsg && <p className="text-[11px] mt-1.5 text-slate-600">{gbccmRegisterMsg}</p>}
                 </div>
-              )
+              )}
+
+              {/*
+                세션 방식 출발지의 아이디/비번 — **기록용**이다.
+                이 시스템(경북·충남농협)은 로컬 보안프로그램(npPfs)이 비밀번호를 암호화해 보내서
+                (USR_PW_ENC_VAL_*) 저장된 비번으로 자동 로그인을 만들 수 없다. 그래서 로그인은 계속
+                원장이 직접 하고, 여기 저장한 값은 "어느 계정으로 로그인하는지" 기억용으로만 쓴다.
+                ⚠ 자동 로그인이 되는 것처럼 읽히지 않게 문구를 분명히 할 것.
+              */}
+              <div className="mt-3 border-t border-slate-100 pt-3 space-y-2">
+                <p className="text-[11px] font-medium text-slate-600">
+                  로그인 계정 기록 <span className="text-slate-400 font-normal">(선택)</span>
+                </p>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  이 시스템은 보안프로그램 때문에 저장된 비밀번호로 자동 로그인할 수 없습니다.
+                  아래 값은 <b>어느 계정으로 {currentSource.url}에 로그인하는지 기억해두는 용도</b>입니다.
+                </p>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">아이디</label>
+                  <input
+                    type="text"
+                    value={sourceId}
+                    onChange={(e) => setSourceId(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
+                    placeholder={`${currentSource.label} 아이디`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">비밀번호</label>
+                  <input
+                    type="password"
+                    value={sourcePw}
+                    onChange={(e) => setSourcePw(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
+                    placeholder="비밀번호"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={saveMigrationAuth}
+                    disabled={authSaving}
+                    className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-[#1A73E8] hover:bg-[#1557b0] disabled:bg-[#8ab4f8] text-white transition-colors"
+                  >
+                    {authSaving ? '저장 중…' : '💾 이 업체 로그인정보 저장'}
+                  </button>
+                  {savedAuthAt && (
+                    <span className="text-[11px] text-emerald-600">
+                      저장됨 · {new Date(savedAuthAt).toLocaleDateString('ko-KR')}
+                    </span>
+                  )}
+                  {authSaveMsg && <span className="text-[11px] text-slate-500">{authSaveMsg}</span>}
+                </div>
+              </div>
+              </>
             ) : (
               <>
                 <div>
