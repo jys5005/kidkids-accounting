@@ -56,10 +56,11 @@ interface CashLedgerRow {
   _slipNo?: string              // 출발지 전표 고유번호 (cnccm=NSR_SLPNO) — 영수증 재조회 키
   _cardInfo?: GgCardInfo[]       // accgg 카드매핑 정보
   _payMethod?: string           // 결제방식 코드(stlmMtcd, accgg)
-  demandCoName?: string         // 거래처 (gbccm 등)
-  _note?: string                // 비고 (gbccm)
+  demandCoName?: string         // 거래처 (gbccm=NSR_CLNTNM / incheon=CREDITOR)
+  _note?: string                // 비고 (gbccm=TRBRK_MEMO_CNTN / incheon=BILL_BIGO)
   _paymentMethod?: string       // 결제방식 명칭 (gbccm — accgg 의 _payMethod 코드값과 별개)
-  _subsidyType?: string         // 보조금 유형 (gbccm)
+  _bankbookName?: string        // 통장구분 (gbccm=NSR_AC_ANONM / incheon=ACCOUNT_NICKNAME)
+  _subsidyType?: string         // 보조금 유형 (gbccm=ASTMNY_TPNM. 인천 응답엔 없음)
   // 실제 이미지/상세는 못 가져오지만 있다/없다 여부만 아는 경우(gbccm) — 존재 배지 표시용
   _receiptExists?: boolean
   _cardMappingExists?: boolean
@@ -2223,7 +2224,9 @@ export default function DataMigrationPage() {
         [`[${label}] 현금출납부`],
         [`전월이월: ${fmtAmt(result.summary.monthStart)}원`, '', '', `수입합계: ${fmtAmt(result.summary.monthIncome)}원`, '', `지출합계: ${fmtAmt(result.summary.monthExpense)}원`],
         [],
-        ['일자', '발행번호', '계정코드', '계정과목', '세목', '적요', '수입금액', '지출금액', '잔액'],
+        // ⚠ 화면 미리보기 컬럼과 같은 순서로 유지할 것 — 예전엔 비고/거래처/통장구분/결제방식/
+        //   보조금유형이 엑셀에만 빠져 있어 "화면엔 보이는데 받아보면 없다" 가 됐다.
+        ['일자', '발행번호', '계정코드', '계정과목', '세목', '적요', '비고', '거래처', '통장구분', '결제방식', '보조금유형', '수입금액', '지출금액', '잔액'],
         ...result.rows.map((r) => {
           // 날짜에 하이픈이 이미 포함된 경우(YYYY-MM-DD)와 순수 숫자(YYYYMMDD) 모두 처리
           const digits = r.date.replace(/\D/g, '')
@@ -2240,6 +2243,11 @@ export default function DataMigrationPage() {
           r.accountName,
           r.subAccountName || '',
           r.summary,
+          r._note || '',
+          r.demandCoName || '',
+          r._bankbookName || '',
+          r._paymentMethod || '',
+          r._subsidyType || '',
           r.income || '',
           r.expense || '',
           r.balance || '',
@@ -2249,7 +2257,9 @@ export default function DataMigrationPage() {
       const ws = XLSX.utils.aoa_to_sheet(rows)
       // 열 너비 설정
       ws['!cols'] = [
-        { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+        { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 30 },
+        { wch: 18 }, { wch: 22 }, { wch: 16 }, { wch: 12 }, { wch: 14 },
+        { wch: 15 }, { wch: 15 }, { wch: 15 },
       ]
       XLSX.utils.book_append_sheet(wb, ws, label)
     }
@@ -2267,7 +2277,7 @@ export default function DataMigrationPage() {
 
     const wb = XLSX.utils.book_new()
     const rows: (string | number)[][] = [
-      ['날짜', '발행번호', '계정코드', '계정과목', '세목', '적요', '수입금액', '지출금액', '잔액'],
+      ['날짜', '발행번호', '계정코드', '계정과목', '세목', '적요', '비고', '거래처', '통장구분', '결제방식', '보조금유형', '수입금액', '지출금액', '잔액'],
     ]
 
     for (const result of allData) {
@@ -2289,6 +2299,11 @@ export default function DataMigrationPage() {
           r.accountName,
           r.subAccountName || '',
           r.summary,
+          r._note || '',
+          r.demandCoName || '',
+          r._bankbookName || '',
+          r._paymentMethod || '',
+          r._subsidyType || '',
           r.income || '',
           r.expense || '',
           r.balance || '',
@@ -2298,7 +2313,9 @@ export default function DataMigrationPage() {
 
     const ws = XLSX.utils.aoa_to_sheet(rows)
     ws['!cols'] = [
-      { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+      { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 30 },
+      { wch: 18 }, { wch: 22 }, { wch: 16 }, { wch: 12 }, { wch: 14 },
+      { wch: 15 }, { wch: 15 }, { wch: 15 },
     ]
     XLSX.utils.book_append_sheet(wb, ws, '현금출납부')
 
@@ -3590,6 +3607,7 @@ export default function DataMigrationPage() {
                       <th className="px-3 py-2 text-left">적요</th>
                       <th className="px-3 py-2 text-left whitespace-nowrap">비고</th>
                       <th className="px-3 py-2 text-left whitespace-nowrap">거래처</th>
+                      <th className="px-3 py-2 text-left whitespace-nowrap">통장구분</th>
                       <th className="px-3 py-2 text-left whitespace-nowrap">결제방식</th>
                       <th className="px-3 py-2 text-left whitespace-nowrap">보조금유형</th>
                       <th className="px-3 py-2 text-center w-20 whitespace-nowrap">카드매핑</th>
@@ -3645,6 +3663,7 @@ export default function DataMigrationPage() {
                         <td className="px-3 py-2 text-slate-600">{row.summary}<GgRowExtra row={row} onOpen={(urls, i) => setGallery({ urls, idx: i })} /></td>
                         <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row._note || ''}</td>
                         <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row.demandCoName || ''}</td>
+                        <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row._bankbookName || ''}</td>
                         <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row._paymentMethod || ''}</td>
                         <td className="px-3 py-2 text-slate-500 whitespace-nowrap">{row._subsidyType || ''}</td>
                         {/* 카드매핑 컬럼 — 매핑된 전표만 빨간 C (지역형 시스템과 동일). 상세(_cardInfo)
