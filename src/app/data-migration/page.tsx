@@ -1251,7 +1251,8 @@ export default function DataMigrationPage() {
    * 현재 이미지 수집 경로가 확인된 출발지는 충남(cnccm) 뿐이다(경북은 같은 솔루션이라 될 가능성이
    * 높지만 실측 안 함) — 그래서 cnccm 에서만 노출한다.
    */
-  const RECEIPT_CAPABLE_SOURCES = ['cnccm']
+  // 인천은 옛날엔 영수증을 **항상** 받아서 4개월 조회에 13분이 걸렸다 — 이제 이 체크박스로 고른다.
+  const RECEIPT_CAPABLE_SOURCES = ['cnccm', 'incheon']
   const canFetchReceipts = RECEIPT_CAPABLE_SOURCES.includes(source)
   const [withReceipts, setWithReceipts] = useState(false)
 
