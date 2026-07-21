@@ -95,12 +95,15 @@ const SOURCE_OPTIONS = [
   { value: 'cykids', label: '꼬마집', url: 'center.cykids.net', features: [], authType: 'idpw' as const },
   { value: 'walk', label: '걸음마회계', url: '', features: [], authType: 'idpw' as const },
   { value: 'gbccm', label: '경상북도어린이집관리시스템', url: 'gbccm.co.kr', features: ['현금출납부'], authType: 'session' as const },
+  // 충남(농협)은 경북과 같은 NH 솔루션의 형제 시스템 — 엔드포인트·세션쿠키(DCPU_SSID)가 동일해
+  // 통합e 가 gbccm 로직을 site='cnccm' 으로 재사용한다(2026-07-21 실측 검증).
+  { value: 'cnccm', label: '충청남도어린이집관리시스템(농협)', url: 'cnccm.co.kr', features: ['현금출납부'], authType: 'session' as const },
 ] as const
 
 type SourceType = typeof SOURCE_OPTIONS[number]['value']
 
 // 보육나라 ↔ 수전자장부 매핑 테이블
-const MAPPING_TABLE = {
+const MAPPING_TABLE_BASE = {
   by24: {
     income: [
       { by24: '1111', by24Name: '정부지원보육료', sunote: '1111', sunoteNote: '' },
@@ -677,6 +680,14 @@ const MAPPING_TABLE = {
   },
 } as const
 
+/**
+ * 충남(농협, cnccm)은 경북(gbccm)과 **같은 NH 솔루션**이라 계정체계·응답필드가 동일하다
+ * (2026-07-21 실측: 엔드포인트·에러코드·세션쿠키까지 일치). 그래서 매핑표를 복제하지 않고
+ * gbccm 것을 그대로 참조한다 — 복제하면 나중에 한쪽만 고쳐져 두 지역 매핑이 어긋난다.
+ * ⚠ 충남 실데이터로 계정코드를 검증한 적은 아직 없다. 첫 이관 때 매핑표와 실제 값을 대조할 것.
+ */
+const MAPPING_TABLE = { ...MAPPING_TABLE_BASE, cnccm: MAPPING_TABLE_BASE.gbccm } as const
+
 // 세목 코드(XXXX-YYY 형식) → 수전자장부 확정 5자리 코드(목4자리+세목순번1자리)
 // (src/lib/accounts.ts subAccountCodeMap 과 동일 기준, 2026-07-07 확정 규칙)
 const SUBCODE_TO_5DIGIT: Record<string, string> = {
@@ -1182,19 +1193,31 @@ export default function DataMigrationPage() {
     }
   }, [])
 
-  // 경상북도(gbccm) 세션쿠키 등록 여부 — 이 시스템은 로컬 보안프로그램(npPfs) 의존성 때문에
-  // 자동 로그인이 안 됨(2026-07-10 확인) → 원장이 실제 브라우저로 로그인 후 DCPU_SSID 쿠키값을 1회 붙여넣기.
+  /*
+   * 세션쿠키(DCPU_SSID) 붙여넣기로 인증하는 출발지 — 경북(gbccm) / 충남농협(cnccm).
+   * 둘은 같은 NH 솔루션이라 등록·조회 흐름이 동일하고, API 네임스페이스만 소스명으로 갈린다.
+   *
+   * 경북은 로컬 보안프로그램(npPfs) 때문에 자동 로그인이 안 돼서(2026-07-10 확인) 원장이 실제 브라우저로
+   * 로그인 후 DCPU_SSID 를 1회 붙여넣는다. 충남은 로그인 화면에 보안프로그램 안내가 없었지만 실제
+   * 로그인 자동화는 미검증이라, 일단 경북과 같은 수동 등록 방식으로 연다.
+   *
+   * ⚠ 상태 변수명은 gbccm* 을 그대로 두었다(호출처가 많아 일괄 개명 시 회귀 위험) — 실제로는
+   *   "세션쿠키 방식 출발지 공용" 상태다.
+   */
+  const SESSION_COOKIE_SOURCES = ['gbccm', 'cnccm']
+  const isSessionCookieSource = SESSION_COOKIE_SOURCES.includes(source)
   const [gbccmSession, setGbccmSession] = useState<{ exists: boolean; savedAt?: string } | null>(null)
   const [gbccmSessionLoading, setGbccmSessionLoading] = useState(false)
   const gbccmSessionRegistered = !!gbccmSession?.exists
   const reloadGbccmSession = useCallback(async () => {
-    if (source !== 'gbccm') { setGbccmSession(null); return }
+    if (!SESSION_COOKIE_SOURCES.includes(source)) { setGbccmSession(null); return }
     setGbccmSessionLoading(true)
     try {
-      const j = await fetch('/api/gbccm/register-session').then(r => r.json())
+      const j = await fetch(`/api/${source}/register-session`).then(r => r.json())
       setGbccmSession({ exists: !!j.exists, savedAt: j.savedAt })
     } catch { setGbccmSession({ exists: false }) }
     finally { setGbccmSessionLoading(false) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source])
   useEffect(() => { reloadGbccmSession() }, [reloadGbccmSession])
 
@@ -1205,7 +1228,8 @@ export default function DataMigrationPage() {
     if (!gbccmCookieInput.trim()) { setGbccmRegisterMsg('❌ 쿠키값을 입력하세요'); return }
     setGbccmRegistering(true); setGbccmRegisterMsg(''); setError('')
     try {
-      const res = await fetch('/api/gbccm/register-session', {
+      // 세션쿠키 방식 출발지(경북/충남농협) 공용 — 소스명이 곧 API 네임스페이스
+      const res = await fetch(`/api/${source}/register-session`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionCookie: gbccmCookieInput.trim() }),
       })
@@ -1222,7 +1246,7 @@ export default function DataMigrationPage() {
     } finally {
       setGbccmRegistering(false)
     }
-  }, [gbccmCookieInput, reloadGbccmSession])
+  }, [gbccmCookieInput, reloadGbccmSession, source])
 
   // 자동로그인 — 저장된 세션(DCPU_SSID)으로 로컬 에이전트가 로그인된 화면을 새 브라우저창으로 띄움
   // (서버는 원장 브라우저 탭에 gbccm 쿠키를 못 심음 → 원장 PC 에이전트가 헤드풀 브라우저에 주입)
