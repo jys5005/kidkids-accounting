@@ -97,7 +97,9 @@ const SOURCE_OPTIONS = [
   { value: 'gbccm', label: '경상북도어린이집관리시스템', url: 'gbccm.co.kr', features: ['현금출납부'], authType: 'session' as const },
   // 충남(농협)은 경북과 같은 NH 솔루션의 형제 시스템 — 엔드포인트·세션쿠키(DCPU_SSID)가 동일해
   // 통합e 가 gbccm 로직을 site='cnccm' 으로 재사용한다(2026-07-21 실측 검증).
-  { value: 'cnccm', label: '충청남도어린이집관리시스템(농협)', url: 'cnccm.co.kr', features: ['현금출납부'], authType: 'session' as const },
+  // ⚠ unverified — 엔드포인트·세션쿠키가 경북과 동일한 것은 실측했으나, 실제 계정으로 데이터를
+  //    받아본 적이 없다. 첫 실사용에서 조회·계정코드 매핑이 확인되면 이 플래그를 지운다.
+  { value: 'cnccm', label: '충청남도어린이집관리시스템(농협)', url: 'cnccm.co.kr', features: ['현금출납부'], authType: 'session' as const, unverified: true },
 ] as const
 
 type SourceType = typeof SOURCE_OPTIONS[number]['value']
@@ -2348,8 +2350,13 @@ export default function DataMigrationPage() {
                   className="px-2 py-1 border border-slate-200 rounded-lg text-[11px] font-medium text-blue-700 bg-blue-50"
                 >
                   {/* 아이사랑꿈터는 걸음마만(어린이집 이관원 제외), 어린이집은 걸음마 제외 */}
+                  {/* (가능)=조회 기능 구현됨. 단 실데이터로 검증 안 된 출발지는 (가능·미검증)으로 구분해
+                      "동작이 보장된 것"처럼 읽히지 않게 한다. */}
                   {SOURCE_OPTIONS.filter((o) => isIlovechild ? o.value === 'walk' : o.value !== 'walk').map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}{o.features.length > 0 ? '  (가능)' : ''}</option>
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                      {o.features.length > 0 ? ('unverified' in o && o.unverified ? '  (가능·미검증)' : '  (가능)') : ''}
+                    </option>
                   ))}
                 </select>
                 {source in MAPPING_TABLE && (
@@ -2543,16 +2550,18 @@ export default function DataMigrationPage() {
                       "정산/결산 > 보육통합 결산보고"(결산관리)로 열림 — 결산관리로 재배정.
                       예산관리/월회계보고는 정확한 코드가 미확인이라 안전한 기본 진입점(M01T01=회계현황,
                       docs 상 확정값)으로 열고 상단 탭에서 직접 클릭하도록 안내. */}
+                  {/* ⚠ 주소는 선택된 출발지(currentSource.url) 기준 — 경북 주소를 박으면 충남에서 오작동.
+                      화면 코드(m=...)는 경북 실측값이라 충남에서도 같은지는 미검증(같은 솔루션이라 확률 높음). */}
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M01T01D000" target="_blank" rel="noopener noreferrer"
+                    <a href={`https://www.${currentSource.url}/ccmc_2040.act?m=U02M01T01D000`} target="_blank" rel="noopener noreferrer"
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
                       📊 예산관리 바로가기
                     </a>
-                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M01T01D000" target="_blank" rel="noopener noreferrer"
+                    <a href={`https://www.${currentSource.url}/ccmc_2040.act?m=U02M01T01D000`} target="_blank" rel="noopener noreferrer"
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
                       📅 월회계보고 바로가기
                     </a>
-                    <a href="https://www.gbccm.co.kr/ccmc_2040.act?m=U02M02T01D000" target="_blank" rel="noopener noreferrer"
+                    <a href={`https://www.${currentSource.url}/ccmc_2040.act?m=U02M02T01D000`} target="_blank" rel="noopener noreferrer"
                       className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-700">
                       📑 결산관리 바로가기
                     </a>
@@ -2563,9 +2572,14 @@ export default function DataMigrationPage() {
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                   <p className="text-[11px] text-amber-700 font-medium">세션쿠키가 등록되지 않았습니다.</p>
                   <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                    {/*
+                      ⚠ 주소를 하드코딩하지 말 것 — 세션쿠키 방식 출발지가 경북/충남농협 둘이라,
+                      경북 주소를 박아두면 충남 원장이 엉뚱한 사이트(경북)로 가서 없는 쿠키를 찾게 된다.
+                      currentSource.url 로 선택된 출발지 주소를 그대로 쓴다.
+                    */}
                     이 시스템은 로컬 보안프로그램 때문에 자동 로그인이 안 됩니다. 아래 순서로 1회만 등록하면 됩니다:<br />
-                    1) 실제 브라우저로 <a href="https://www.gbccm.co.kr" target="_blank" rel="noopener noreferrer" className="underline">gbccm.co.kr</a>에 로그인<br />
-                    2) F12(개발자도구) → Application → Cookies → gbccm.co.kr → <b>DCPU_SSID</b> 값 복사<br />
+                    1) 실제 브라우저로 <a href={`https://www.${currentSource.url}`} target="_blank" rel="noopener noreferrer" className="underline">{currentSource.url}</a>에 로그인<br />
+                    2) F12(개발자도구) → Application → Cookies → {currentSource.url} → <b>DCPU_SSID</b> 값 복사<br />
                     3) 아래에 붙여넣고 [등록]
                   </p>
                   <div className="mt-2 flex items-center gap-2">
