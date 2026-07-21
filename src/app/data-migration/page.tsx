@@ -1254,6 +1254,31 @@ export default function DataMigrationPage() {
   const RECEIPT_CAPABLE_SOURCES = ['cnccm']
   const canFetchReceipts = RECEIPT_CAPABLE_SOURCES.includes(source)
   const [withReceipts, setWithReceipts] = useState(false)
+
+  /*
+   * 조회 진행상황 — 로컬 에이전트 경유(인천시 등)는 몇 분씩 걸리는데, 응답이 올 때까지
+   * 화면엔 "조회 중…"만 떠서 멈춘 건지 도는 건지 알 수 없었다. 서버는 이미
+   * "수집: 202605 (431건)" 같은 progress 를 갖고 있으므로 조회 중에 폴링해 그대로 보여준다.
+   */
+  const [jobProgress, setJobProgress] = useState('')
+  useEffect(() => {
+    if (!loading) { setJobProgress(''); return }
+    let stop = false
+    const tick = async () => {
+      try {
+        const j = await fetch('/api/jobs/active', { cache: 'no-store' }).then(r => r.json())
+        if (stop) return
+        const msg = j?.job?.progress?.message
+        const secs = Number(j?.job?.secondsElapsed) || 0
+        const el = secs >= 60 ? `${Math.floor(secs / 60)}분 ${secs % 60}초` : `${secs}초`
+        // 진행 메시지가 없으면(잡 없음/막 시작) 경과시간만이라도 보여준다 — 멈춘 게 아님을 알리려고
+        setJobProgress(j?.job ? `${msg ? `${msg} · ` : '작업 중 · '}${el} 경과` : '')
+      } catch { /* 폴링 실패는 무시 — 조회 자체엔 영향 없음 */ }
+    }
+    tick()
+    const t = setInterval(tick, 3000)
+    return () => { stop = true; clearInterval(t) }
+  }, [loading])
   const [gbccmSession, setGbccmSession] = useState<{ exists: boolean; savedAt?: string } | null>(null)
   const [gbccmSessionLoading, setGbccmSessionLoading] = useState(false)
   const gbccmSessionRegistered = !!gbccmSession?.exists
@@ -3042,7 +3067,9 @@ export default function DataMigrationPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  로그인 + 데이터 조회 중...
+                  {/* 에이전트 경유(인천시 등)는 몇 분씩 걸린다 — 서버가 아는 진행상황을 그대로 보여준다.
+                      이게 없으면 "조회 중…"만 떠서 멈춘 건지 도는 건지 알 수 없다(실사용 불만). */}
+                  {jobProgress || '로그인 + 데이터 조회 중...'}
                 </span>
               ) : (
                 '데이터 가져오기'
