@@ -52,6 +52,8 @@ interface CashLedgerRow {
   balance: number
   agreeDate: string
   _receiptImages?: string[]     // accgg 영수증 이미지 URL
+  _receiptUrls?: string[]       // cnccm 영수증 이미지 URL (통합e 서빙 경로)
+  _slipNo?: string              // 출발지 전표 고유번호 (cnccm=NSR_SLPNO) — 영수증 재조회 키
   _cardInfo?: GgCardInfo[]       // accgg 카드매핑 정보
   _payMethod?: string           // 결제방식 코드(stlmMtcd, accgg)
   demandCoName?: string         // 거래처 (gbccm 등)
@@ -939,9 +941,13 @@ function parseAccggChits(rawRows: unknown[]): CashLedgerResult[] {
   return results
 }
 
-// 미리보기 셀 — accgg 영수증 이미지 썸네일 (카드매핑은 별도 컬럼)
+/*
+ * 미리보기 셀 — 영수증 이미지 썸네일 (카드매핑은 별도 컬럼)
+ * ⚠ 출발지마다 필드명이 다르다: 경기도(accgg)=_receiptImages / 충남(cnccm)=_receiptUrls.
+ *   둘 다 받아야 충남 영수증이 화면에 뜬다(하나만 보면 조용히 안 보임).
+ */
 function GgRowExtra({ row, onOpen }: { row: CashLedgerRow; onOpen: (urls: string[], i: number) => void }) {
-  const imgs = row._receiptImages || []
+  const imgs = row._receiptImages?.length ? row._receiptImages : (row._receiptUrls || [])
   if (!imgs.length) return null
   return (
     <div className="flex flex-wrap items-center gap-1 mt-1">
@@ -3589,12 +3595,17 @@ export default function DataMigrationPage() {
                             </span>
                           ) : ''}
                         </td>
-                        {/* 영수증 존재여부만 표시 — 실제 이미지(_receiptImages)는 적요 셀의 GgRowExtra 가 따로
-                            처리(썸네일+갤러리). 이미지 못 가져오는 출발지(gbccm)는 있다/없다만 아이콘으로 */}
+                        {/* 영수증 컬럼 — 실제 이미지는 적요 셀의 GgRowExtra 가 썸네일+갤러리로 보여준다.
+                            여기선 "이미지를 아직 안 받은 첨부"만 📎 로 표시한다.
+                            ⚠ 이미지 필드가 출발지마다 다르다(accgg=_receiptImages / cnccm=_receiptUrls) —
+                              둘 다 봐야 충남에서 이미지를 받았는데도 📎 가 남는 일이 없다. */}
                         <td className="px-3 py-2 text-center">
-                          {!row._receiptImages?.length && row._receiptExists ? (
-                            <span title="영수증 있음 (이미지는 조회 불가)" className="text-emerald-600 text-[13px]">📎</span>
-                          ) : ''}
+                          {(() => {
+                            const got = (row._receiptImages?.length || 0) + (row._receiptUrls?.length || 0)
+                            if (got > 0) return <span title={`영수증 ${got}장 수집됨`} className="text-blue-600 text-[11px] font-semibold">🧾{got}</span>
+                            if (row._receiptExists) return <span title="영수증 있음 — [영수증 이미지도 함께 가져오기]를 켜고 조회하면 사진까지 받습니다" className="text-emerald-600 text-[13px]">📎</span>
+                            return ''
+                          })()}
                         </td>
                         <td className="px-3 py-2 text-right text-blue-600 font-medium">
                           {row.income ? fmtAmt(row.income) : ''}
