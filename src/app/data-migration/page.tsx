@@ -1895,8 +1895,12 @@ export default function DataMigrationPage() {
           : currentSource.authType === 'session'
             ? {}
             : { userId: sourceId, password: sourcePw }
-      // 영수증 이미지 동시 수집 플래그 — 지원 출발지에서 체크했을 때만 보낸다
-      const receiptOpt = canFetchReceipts && withReceipts ? { withReceipts: true } : {}
+      // 영수증 이미지(+ 인천시 카드매핑) 동시 수집 플래그 — 지원 출발지에서 체크했을 때만 보낸다.
+      // ⚠ 인천시는 withCard 를 보내야 백엔드(aincheon.ts)가 카드매핑을 조회한다 — 안 보내면
+      //   카드매핑 컬럼이 항상 빈칸이었다(영수증만 조회되던 버그, 2026-07-22 수정).
+      const receiptOpt = canFetchReceipts && withReceipts
+        ? { withReceipts: true, ...(source === 'incheon' ? { withCard: true } : {}) }
+        : {}
       const body =
         mode === 'single'
           ? { ...authFields, ...receiptOpt, yearMonth }
@@ -3062,7 +3066,7 @@ export default function DataMigrationPage() {
                   className="mt-0.5"
                 />
                 <span className="text-[11px] leading-relaxed">
-                  <b className="text-emerald-800">🧾 영수증 이미지도 함께 가져오기</b>
+                  <b className="text-emerald-800">{source === 'incheon' ? '🧾 영수증·카드매핑 함께 가져오기' : '🧾 영수증 이미지도 함께 가져오기'}</b>
                   <span className="block text-slate-500 mt-0.5">
                     전표에 첨부된 영수증 사진까지 같이 받습니다. 시간이 오래 걸리니
                     <b> 기간이 길면 나눠서</b> 받으세요. 이미 받은 사진은 다시 안 받습니다.
